@@ -1,4 +1,5 @@
 import type { Terminal as XTerm } from '@xterm/xterm'
+import type { MutableRefObject } from 'react'
 import type { TerminalGlobals } from './types.js'
 import { BUFFER_KEY, ERROR_HANDLER_KEY, MAX_BUFFER_CHUNKS } from './constants.js'
 
@@ -162,12 +163,14 @@ export function formatPathsForBackend(paths: string[], backend?: 'default' | 'cl
 }
 
 // Custom paste handler for xterm
-export async function handlePaste(term: XTerm, ptyId: string, backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'): Promise<void> {
+export async function handlePaste(term: XTerm, ptyId: string, backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider', currentLineInputRef?: MutableRefObject<string>): Promise<void> {
   try {
     // Check if clipboard has an image or file
     const imageResult = await window.electronAPI?.readClipboardImage()
     if (imageResult?.success && imageResult.hasImage && imageResult.path) {
-      window.electronAPI?.writePty(ptyId, formatPathForBackend(imageResult.path, backend))
+      const formatted = formatPathForBackend(imageResult.path, backend)
+      window.electronAPI?.writePty(ptyId, formatted)
+      if (currentLineInputRef) currentLineInputRef.current += formatted
       return
     }
 
@@ -182,7 +185,9 @@ export async function handlePaste(term: XTerm, ptyId: string, backend?: 'default
           .map(line => decodeURIComponent(line.replace('file://', '')))
           .join(' ')
       }
-      window.electronAPI?.writePty(ptyId, cleanText || text)
+      const pasteText = cleanText || text
+      window.electronAPI?.writePty(ptyId, pasteText)
+      if (currentLineInputRef) currentLineInputRef.current += pasteText
     }
   } catch (e) {
     console.error('Paste failed:', e)

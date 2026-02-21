@@ -9,6 +9,8 @@ import {
 } from '../constants.js'
 import { handlePaste, isTerminalAtBottom } from '../utils.js'
 
+type BackendType = 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
+
 /**
  * Creates a wheel event handler for terminal zoom and scroll tracking.
  */
@@ -53,7 +55,8 @@ export function createWheelHandler(
 export function createContextMenuHandler(
   terminal: XTerm,
   ptyId: string,
-  backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
+  backend?: BackendType,
+  currentLineInputRef?: MutableRefObject<string>
 ): (e: MouseEvent) => void {
   return (e: MouseEvent) => {
     e.preventDefault()
@@ -61,7 +64,7 @@ export function createContextMenuHandler(
     if (selection) {
       navigator.clipboard.writeText(selection)
     } else {
-      handlePaste(terminal, ptyId, backend)
+      handlePaste(terminal, ptyId, backend, currentLineInputRef)
     }
   }
 }
@@ -72,12 +75,13 @@ export function createContextMenuHandler(
 export function createAuxClickHandler(
   terminal: XTerm,
   ptyId: string,
-  backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
+  backend?: BackendType,
+  currentLineInputRef?: MutableRefObject<string>
 ): (e: MouseEvent) => void {
   return (e: MouseEvent) => {
     if (e.button === 1) {
       e.preventDefault()
-      handlePaste(terminal, ptyId, backend)
+      handlePaste(terminal, ptyId, backend, currentLineInputRef)
     }
   }
 }

@@ -168,11 +168,11 @@ function setupEventHandlers(
   })
 
   // Context menu handler
-  const contextmenuHandler = createContextMenuHandler(terminal, ptyId, options.backend)
+  const contextmenuHandler = createContextMenuHandler(terminal, ptyId, options.backend, currentLineInputRef)
   container.addEventListener('contextmenu', contextmenuHandler)
 
   // Middle-click paste
-  const auxclickHandler = createAuxClickHandler(terminal, ptyId, options.backend)
+  const auxclickHandler = createAuxClickHandler(terminal, ptyId, options.backend, currentLineInputRef)
   container.addEventListener('auxclick', auxclickHandler)
 
   // Auto-scroll on mousedown
@@ -226,7 +226,8 @@ function setupEventHandlers(
     terminal,
     ptyOperations.writePty,
     ptyId,
-    options.backend
+    options.backend,
+    currentLineInputRef
   )
   terminal.attachCustomKeyEventHandler(keyEventHandler)
 

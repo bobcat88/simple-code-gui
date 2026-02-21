@@ -204,11 +204,9 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     // Suppress user keyboard input to prevent race conditions
     inputSuppressedRef.current = true
 
-    // Clear the current line with Ctrl+U
-    if (savedInput) {
-      writePty(ptyId, '\x15') // Ctrl+U clears line
-      currentLineInputRef.current = ''
-    }
+    // Always send Ctrl+C to cancel any input (works for multiline too)
+    writePty(ptyId, '\x03')
+    currentLineInputRef.current = ''
 
     // Send /clear command
     const backendCommand = resolveBackendCommand(backend, 'clear')
@@ -221,6 +219,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
           if (savedInput) {
             setTimeout(() => {
               writePty(ptyId, savedInput)
+              currentLineInputRef.current = savedInput
               // Re-enable input and allow next operation
               setTimeout(() => {
                 inputSuppressedRef.current = false
@@ -234,7 +233,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
             }, 500)
           }
         }, 100)
-      }, 150) // Increased from 50ms for Ctrl+U to be processed
+      }, 300) // Wait for Ctrl+C to process and show fresh prompt
     } else {
       inputSuppressedRef.current = false
       clearInProgressRef.current = false
@@ -251,11 +250,9 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     // Suppress user keyboard input to prevent race conditions
     inputSuppressedRef.current = true
 
-    // Clear the current line with Ctrl+U
-    if (savedInput) {
-      writePty(ptyId, '\x15') // Ctrl+U clears line
-      currentLineInputRef.current = ''
-    }
+    // Always send Ctrl+C to cancel any input (works for multiline too)
+    writePty(ptyId, '\x03')
+    currentLineInputRef.current = ''
 
     // Send /compact command
     const backendCommand = resolveBackendCommand(backend, 'compact')
@@ -268,6 +265,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
           if (savedInput) {
             setTimeout(() => {
               writePty(ptyId, savedInput)
+              currentLineInputRef.current = savedInput
               // Re-enable input and allow next operation
               setTimeout(() => {
                 inputSuppressedRef.current = false
@@ -281,7 +279,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
             }, 500)
           }
         }, 100)
-      }, 150) // Increased from 50ms for Ctrl+U to be processed
+      }, 300) // Wait for Ctrl+C to process and show fresh prompt
     } else {
       inputSuppressedRef.current = false
       clearInProgressRef.current = false
