@@ -31,6 +31,8 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:44.525Z
+    status:
+      implementation: implemented
   - _ulid: 01KK67D2TP6ANDE0XJR4WWXKAF
     slugs:
       - kspec-backend
