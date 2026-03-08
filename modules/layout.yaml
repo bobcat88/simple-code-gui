@@ -46,3 +46,18 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:15.480Z
+  - _ulid: 01KK67C5G8P9DBB3ZC020NS5MQ
+    slugs:
+      - tile-resizing
+    title: Tile Resizing
+    type: feature
+    tags: []
+    description: Resize tiles by dragging edges. Proportional resizing spreads width/height among
+      adjacent tiles. Visual edge highlighting on hover.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    notes: []
+    created: 2026-03-08T08:00:16.905Z
