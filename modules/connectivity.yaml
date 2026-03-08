@@ -75,6 +75,11 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:59.986Z
+    acceptance_criteria:
+      - id: ac-1
+        given: the mobile server is running
+        when: a connection attempt is made without a valid token
+        then: the connection is rejected with 401 unauthorized
   - _ulid: 01KK67DHDD4MZ13MB7CKSBGPMP
     slugs:
       - dual-env
