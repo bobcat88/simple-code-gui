@@ -61,3 +61,19 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:48.254Z
+  - _ulid: 01KK67D5YWCHVC8RJGVH5MGVKD
+    slugs:
+      - task-panel
+    title: Task Panel UI
+    type: feature
+    tags: []
+    description: "Collapsible bottom panel showing task list with filtering, sorting, inline editing,
+      status cycling, create/detail modals, and resizable height. State machine: loading →
+      not_installed → not_initialized → ready."
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    notes: []
+    created: 2026-03-08T08:00:50.140Z
