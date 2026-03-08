@@ -31,3 +31,18 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:01.811Z
+  - _ulid: 01KK67BRJR4864JXD28BE8HNK2
+    slugs:
+      - multi-backend
+    title: Multi-Backend Support
+    type: feature
+    tags: []
+    description: Support multiple AI CLI backends (Claude, Gemini, Codex, OpenCode, Aider) with
+      backend-specific argument mapping for permissions, session resumption, and tool acceptance.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    notes: []
+    created: 2026-03-08T08:00:03.672Z
