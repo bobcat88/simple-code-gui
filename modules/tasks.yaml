@@ -1,0 +1,17 @@
+_ulid: 01KK67BEXPK9TT6168Q1FM5PYD
+slugs:
+  - tasks
+title: Task Management
+type: module
+status:
+  maturity: draft
+  implementation: not_started
+description: Integrated task tracking via Beads and Kspec backends with unified adapter pattern
+tags:
+  - feature
+depends_on: []
+implements: []
+relates_to: []
+tests: []
+traits: []
+notes: []

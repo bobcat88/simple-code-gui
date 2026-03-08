@@ -8,3 +8,4 @@ includes:
   - modules/terminal.yaml
   - modules/layout.yaml
   - modules/voice.yaml
+  - modules/tasks.yaml
