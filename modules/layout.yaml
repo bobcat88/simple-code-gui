@@ -76,6 +76,8 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:16.905Z
+    status:
+      implementation: implemented
   - _ulid: 01KK67C74KF39CXGH08EAA3089
     slugs:
       - canvas-panning
