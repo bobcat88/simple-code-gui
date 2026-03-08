@@ -49,6 +49,12 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:58.082Z
+    acceptance_criteria:
+      - id: ac-1
+        given: multiple PTY sessions are running
+        when: GET /sessions is called on localhost:19836
+        then: a JSON array of all sessions is returned with id, cwd, backend, projectPath, projectName, and
+          spawnedAt
   - _ulid: 01KK67DFJH7RN2ATAG7E69AZVN
     slugs:
       - mobile-server
