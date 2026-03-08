@@ -59,6 +59,8 @@ features:
         given: TTS is enabled and a project has a custom voice configured
         when: the active tab switches to that project
         then: the TTS engine and voice are switched to the project-specific settings
+    status:
+      implementation: implemented
   - _ulid: 01KK67CS1JS018H9N2C3H7880X
     slugs:
       - voice-cloning
