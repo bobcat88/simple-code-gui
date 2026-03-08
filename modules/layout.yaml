@@ -61,3 +61,18 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:16.905Z
+  - _ulid: 01KK67C74KF39CXGH08EAA3089
+    slugs:
+      - canvas-panning
+    title: Canvas Panning
+    type: feature
+    tags: []
+    description: Middle-mouse-button horizontal panning across a virtual canvas wider than the viewport.
+      3px threshold before drag starts, suppresses paste during panning.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    notes: []
+    created: 2026-03-08T08:00:18.579Z
