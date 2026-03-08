@@ -133,3 +133,18 @@ constraints:
     traits: []
     notes: []
     created: 2026-03-08T08:01:50.912Z
+  - _ulid: 01KK67F39FMSKW6S55K009Q60A
+    slugs:
+      - no-shell-injection
+    title: Shell Injection Prevention
+    type: constraint
+    tags: []
+    description: All subprocess spawning uses spawn() with argument arrays, never exec() with string
+      interpolation. Task IDs validated with strict regex.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    notes: []
+    created: 2026-03-08T08:01:52.944Z
