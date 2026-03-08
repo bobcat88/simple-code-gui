@@ -1,0 +1,17 @@
+_ulid: 01KK67BHT4MRS4W6W1T2Y0GN21
+slugs:
+  - extensions
+title: Extensions & Configuration
+type: module
+status:
+  maturity: draft
+  implementation: not_started
+description: Extension/MCP registry, installation, per-project configuration, settings management, and theming
+tags:
+  - feature
+depends_on: []
+implements: []
+relates_to: []
+tests: []
+traits: []
+notes: []
