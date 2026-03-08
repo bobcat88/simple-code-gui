@@ -1,5 +1,51 @@
 kynetic_meta: "1.0"
-agents: []
+agents:
+  - _ulid: 01KK672F8BMSW2KDX95DC1PRPR
+    id: task-worker
+    name: Task Worker
+    description: Autonomous task worker. Picks up automation-eligible ready and needs_work tasks.
+    capabilities:
+      - code
+      - test
+      - refactor
+    tools:
+      - kspec
+      - git
+      - npm
+    conventions: []
+    dispatch:
+      - on: task.in_progress
+        filter:
+          automation: eligible
+      - on: task.ready
+        filter:
+          automation: eligible
+      - on: task.needs_work
+        filter:
+          automation: eligible
+    skills:
+      - task-work
+    concurrency:
+      max_concurrent: 1
+    auto_approve: true
+  - _ulid: 01KK672F8EP6W56DA342BDJQRR
+    id: pr-reviewer
+    name: PR Reviewer
+    description: Automated PR reviewer. Reviews pending_review tasks and merges when quality gates pass.
+    capabilities:
+      - review
+    tools:
+      - kspec
+      - git
+      - gh
+    conventions: []
+    dispatch:
+      - on: task.pending_review
+    skills:
+      - pr-review
+    concurrency:
+      max_concurrent: 1
+    auto_approve: false
 workflows: []
 conventions: []
 observations: []
