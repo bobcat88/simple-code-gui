@@ -32,3 +32,18 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:34.225Z
+  - _ulid: 01KK67CQ3Q3D97KVYWK5MW5WKP
+    slugs:
+      - tts
+    title: Text-to-Speech Output
+    type: feature
+    tags: []
+    description: Queue-based audio playback with Piper (lightweight) and XTTS (high quality with voice
+      cloning) engines. Per-project voice override, volume/speed control, skip-on-new option.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    notes: []
+    created: 2026-03-08T08:00:34.935Z
