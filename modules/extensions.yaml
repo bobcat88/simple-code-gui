@@ -49,6 +49,8 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:01:07.846Z
+    status:
+      implementation: implemented
   - _ulid: 01KK67DSGPZC2E734KX4377R9S
     slugs:
       - workspace-persist
