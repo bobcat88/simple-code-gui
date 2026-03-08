@@ -47,3 +47,19 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:01:07.846Z
+  - _ulid: 01KK67DSGPZC2E734KX4377R9S
+    slugs:
+      - workspace-persist
+    title: Workspace Persistence
+    type: feature
+    tags: []
+    description: Persist projects, open tabs, tile layout, categories, and view mode to workspace.json.
+      Atomic saves with temp file + rename, backup restoration, and data migration from old app
+      names.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    notes: []
+    created: 2026-03-08T08:01:10.166Z
