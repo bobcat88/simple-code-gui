@@ -33,6 +33,8 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:55.507Z
+    status:
+      implementation: implemented
   - _ulid: 01KK67DDQ2F5G1QH5Q04JRF943
     slugs:
       - orchestrator
