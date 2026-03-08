@@ -107,6 +107,8 @@ features:
         when: the user connects with host, port, and token
         then: HttpBackend is created using WebSocket for PTY data and HTTP for all other operations,
           providing the same Api interface as ElectronBackend
+    status:
+      implementation: implemented
 constraints:
   - _ulid: 01KK67F4TXEGT9PY2C2KGSNBW2
     slugs:
