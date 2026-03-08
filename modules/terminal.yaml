@@ -108,6 +108,8 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:07.658Z
+    status:
+      implementation: implemented
   - _ulid: 01KK67BXW9RQP8D62KHVSF3CW9
     slugs:
       - cli-install
