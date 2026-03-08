@@ -76,3 +76,19 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:18.579Z
+  - _ulid: 01KK67C9AQPXS2BZXTN88KXCNT
+    slugs:
+      - sidebar
+    title: Sidebar Navigation
+    type: feature
+    tags: []
+    description: "Project tree with categories, session lists, inline rename, drag-to-reorder, context
+      menus. Desktop: collapsible left panel with resize handle. Mobile: drawer overlay with
+      hamburger toggle."
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    notes: []
+    created: 2026-03-08T08:00:20.824Z
