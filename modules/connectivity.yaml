@@ -84,6 +84,8 @@ features:
         given: the mobile server is running
         when: a connection attempt is made without a valid token
         then: the connection is rejected with 401 unauthorized
+    status:
+      implementation: implemented
   - _ulid: 01KK67DHDD4MZ13MB7CKSBGPMP
     slugs:
       - dual-env
