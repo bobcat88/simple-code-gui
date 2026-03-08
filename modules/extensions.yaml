@@ -31,3 +31,19 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:01:06.126Z
+  - _ulid: 01KK67DQ85HYPGA16RS2R2WB1K
+    slugs:
+      - settings
+    title: Settings & Theming
+    type: feature
+    tags: []
+    description: "Global and per-project settings: default directory, theme with custom colors,
+      auto-accept tools, permission modes, backend selection. Persisted to JSON with atomic writes
+      and backup."
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    notes: []
+    created: 2026-03-08T08:01:07.846Z
