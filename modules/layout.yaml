@@ -59,6 +59,8 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:15.480Z
+    status:
+      implementation: implemented
   - _ulid: 01KK67C5G8P9DBB3ZC020NS5MQ
     slugs:
       - tile-resizing
