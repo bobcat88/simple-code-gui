@@ -74,6 +74,8 @@ features:
         when: a session is spawned
         then: "backend-specific CLI flags are applied: Claude uses --permission-mode, Gemini uses
           --approval-mode, Codex uses --full-auto, Aider uses --yes"
+    status:
+      implementation: implemented
   - _ulid: 01KK67BTQMCZXZ3WPE6KE4K8FF
     slugs:
       - session-discovery
