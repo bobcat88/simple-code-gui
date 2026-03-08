@@ -46,3 +46,18 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:03.672Z
+  - _ulid: 01KK67BTQMCZXZ3WPE6KE4K8FF
+    slugs:
+      - session-discovery
+    title: Session Discovery
+    type: feature
+    tags: []
+    description: Discover previous sessions from Claude (~/.claude/projects/), OpenCode
+      (.opencode/opencode.db via SQLite), and other backends to enable session resumption.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    notes: []
+    created: 2026-03-08T08:00:05.876Z
