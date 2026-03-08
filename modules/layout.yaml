@@ -31,6 +31,12 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:13.357Z
+    acceptance_criteria:
+      - id: ac-1
+        given: user is in tiled view mode
+        when: a new session is opened
+        then: a new tile is added to the layout with percentage-based coordinates and the terminal renders
+          inside it
   - _ulid: 01KK67C43QN01EYHYHABV8BBVE
     slugs:
       - tile-drag-drop
