@@ -16,3 +16,19 @@ relates_to: []
 tests: []
 traits: []
 notes: []
+features:
+  - _ulid: 01KK67CPDHGPV96JR19N00FJR2
+    slugs:
+      - stt
+    title: Speech-to-Text Input
+    type: feature
+    tags: []
+    description: WebRTC audio capture with Whisper.js models (tiny to large-v3). Silence detection for
+      auto-submit, live transcription display, configurable microphone and silence threshold.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    notes: []
+    created: 2026-03-08T08:00:34.225Z
