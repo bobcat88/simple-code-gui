@@ -32,6 +32,11 @@ features:
     traits: []
     notes: []
     created: 2026-03-08T08:00:34.225Z
+    acceptance_criteria:
+      - id: ac-1
+        given: whisper model is loaded and microphone is active
+        when: the user speaks and then pauses beyond the silence threshold
+        then: the audio is transcribed and the text is auto-submitted to the active terminal
   - _ulid: 01KK67CQ3Q3D97KVYWK5MW5WKP
     slugs:
       - tts
