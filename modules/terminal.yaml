@@ -37,6 +37,11 @@ features:
         when: a terminal session is spawned
         then: a PTY process is created with node-pty using the resolved backend executable, correct cwd, and
           xterm-256color terminal type
+      - id: ac-2
+        given: a PTY session is running
+        when: terminal output is produced
+        then: output is captured in a 200-line ring buffer with ANSI codes stripped and relayed to renderer
+          via IPC
   - _ulid: 01KK67BRJR4864JXD28BE8HNK2
     slugs:
       - multi-backend
