@@ -112,25 +112,47 @@ tasks:
     notes: []
     todos: []
     automation: eligible
-  - title: "Bug audit: workspace persistence and settings"
+  - _ulid: 01KKAWM2RXD9TWVAHK8BMMSEC2
+    slugs:
+      - bug-persistence
+    title: "Bug audit: workspace persistence and settings"
+    type: bug
     description: "Investigate and fix bugs in data persistence. Check: atomic write race conditions,
       backup restore staleness, workspace.json corruption recovery, settings migration, empty
       workspace overwrite protection, meta-project sync, category name sanitization."
-    type: bug
     spec_ref: "@workspace-persist"
     meta_ref: null
     plan_ref: null
+    status: pending
+    blocked_by: []
+    depends_on: []
+    context: []
     priority: 2
+    tags: []
+    vcs_refs: []
+    created_at: 2026-03-10T03:28:34.077Z
+    notes: []
+    todos: []
+    automation: eligible
+  - title: "Bug audit: session discovery"
+    description: "Investigate and fix bugs in session discovery. Check: encoded path handling for
+      special chars, OpenCode SQLite connection leaks, JSONL parsing for corrupted files, empty
+      session filtering, race between discovery and active writes."
+    type: bug
+    spec_ref: "@session-discovery"
+    meta_ref: null
+    plan_ref: null
+    priority: 3
     slugs:
-      - bug-persistence
+      - bug-discovery
     tags: []
     depends_on: []
     automation: eligible
-    _ulid: 01KKAWM2RXD9TWVAHK8BMMSEC2
+    _ulid: 01KKAWM3WS24742Z491YVVGYV4
     status: pending
     blocked_by: []
     context: []
     vcs_refs: []
-    created_at: 2026-03-10T03:28:34.077Z
+    created_at: 2026-03-10T03:28:35.225Z
     notes: []
     todos: []
