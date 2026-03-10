@@ -40,10 +40,30 @@ tasks:
     tags: []
     vcs_refs: []
     created_at: 2026-03-10T03:28:27.465Z
-    notes: []
+    started_at: 2026-03-10T03:54:12.373Z
+    notes:
+      - _ulid: 01KKAYDYAHYHNHEHJ9Y7HF65J5
+        created_at: 2026-03-10T04:00:10.065Z
+        author: "@claude"
+        content: >-
+          Execution context:
+
+          - Background: Bug audit of tiled layout and drag-drop system
+
+          - Scope: Fix bugs in splitTile, drag-split gaps, validateLayout thresholds and overlap
+          handling
+
+          - Files: src/renderer/components/tiled-layout-utils.ts,
+          src/renderer/components/tiled/useTileDragDrop.ts
+
+          - Bugs found:
+            1. splitTile doesn't enforce MIN_SIZE - can produce tiles < 10% that pass validation (threshold is 5%)
+            2. Drag-split leaves orphaned gaps - source tile space not reclaimed when split-dropping
+            3. validateLayout size threshold (5) inconsistent with MIN_SIZE (10)
+            4. validateLayout overlap detection is warn-only, doesn't attempt correction
+        supersedes: null
     todos: []
     automation: eligible
-    started_at: 2026-03-10T03:54:12.373Z
   - _ulid: 01KKAWKXNKT0YTJESTW3ES1B8D
     slugs:
       - bug-voice

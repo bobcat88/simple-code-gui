@@ -1,0 +1,631 @@
+```
+     1→export interface TileLayout {
+     2→  id: string
+     3→  tabIds: string[]    // Ordered list of OpenTab IDs in this tile
+     4→  activeTabId: string // Currently visible sub-tab
+     5→  x: number      // Left position as percentage (0-100)
+     6→  y: number      // Top position as percentage (0-100)
+     7→  width: number  // Width as percentage (0-100)
+     8→  height: number // Height as percentage (0-100)
+     9→}
+    10→
+    11→export interface OpenTab {
+    12→  id: string
+    13→  projectPath: string
+    14→  sessionId?: string
+    15→  title: string
+    16→  backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
+    17→}
+    18→
+    19→export type DropZoneType =
+    20→  | 'swap'
+    21→  | 'split-top'
+    22→  | 'split-bottom'
+    23→  | 'split-left'
+    24→  | 'split-right'
+    25→
+    26→export interface DropZone {
+    27→  type: DropZoneType
+    28→  targetTileId: string
+    29→  bounds: { x: number; y: number; width: number; height: number }
+    30→}
+    31→
+    32→interface TileRow {
+    33→  y: number
+    34→  height: number
+    35→  tiles: TileLayout[]
+    36→}
+    37→
+    38→export const MIN_SIZE = 10
+    39→const EPSILON = 1
+    40→
+    41→function tilesOverlap(a: TileLayout, b: TileLayout): boolean {
+    42→  const overlapX = a.x < b.x + b.width && a.x + a.width > b.x
+    43→  const overlapY = a.y < b.y + b.height && a.y + a.height > b.y
+    44→  return overlapX && overlapY
+    45→}
+    46→
+    47→function detectRows(layout: TileLayout[]): TileRow[] {
+    48→  const rowMap = new Map<string, TileLayout[]>()
+    49→
+    50→  for (const tile of layout) {
+    51→    const key = `${Math.round(tile.y)}-${Math.round(tile.height)}`
+    52→    const existing = rowMap.get(key) || []
+    53→    existing.push(tile)
+    54→    rowMap.set(key, existing)
+    55→  }
+    56→
+    57→  const rows: TileRow[] = []
+    58→  for (const tiles of rowMap.values()) {
+    59→    rows.push({
+    60→      y: tiles[0].y,
+    61→      height: tiles[0].height,
+    62→      tiles: tiles.sort((a, b) => a.x - b.x)
+    63→    })
+    64→  }
+    65→
+    66→  return rows.sort((a, b) => a.y - b.y)
+    67→}
+    68→
+    69→function findAdjacentTile(layout: TileLayout[], removed: TileLayout): TileLayout | null {
+    70→  const rightNeighbor = layout.find(t =>
+    71→    Math.abs(t.x - (removed.x + removed.width)) < EPSILON &&
+    72→    t.y < removed.y + removed.height + EPSILON &&
+    73→    t.y + t.height > removed.y - EPSILON
+    74→  )
+    75→  if (rightNeighbor) return rightNeighbor
+    76→
+    77→  const bottomNeighbor = layout.find(t =>
+    78→    Math.abs(t.y - (removed.y + removed.height)) < EPSILON &&
+    79→    t.x < removed.x + removed.width + EPSILON &&
+    80→    t.x + t.width > removed.x - EPSILON
+    81→  )
+    82→  if (bottomNeighbor) return bottomNeighbor
+    83→
+    84→  const leftNeighbor = layout.find(t =>
+    85→    Math.abs(t.x + t.width - removed.x) < EPSILON &&
+    86→    t.y < removed.y + removed.height + EPSILON &&
+    87→    t.y + t.height > removed.y - EPSILON
+    88→  )
+    89→  if (leftNeighbor) return leftNeighbor
+    90→
+    91→  const topNeighbor = layout.find(t =>
+    92→    Math.abs(t.y + t.height - removed.y) < EPSILON &&
+    93→    t.x < removed.x + removed.width + EPSILON &&
+    94→    t.x + t.width > removed.x - EPSILON
+    95→  )
+    96→  return topNeighbor || null
+    97→}
+    98→
+    99→/** Expand a tile into the removed tile's space along their shared edge only.
+   100→ *  Returns null if the expansion would overlap any other remaining tile. */
+   101→function expandAlongSharedEdge(
+   102→  tile: TileLayout,
+   103→  removed: TileLayout,
+   104→  remaining: TileLayout[]
+   105→): TileLayout | null {
+   106→  let candidate: TileLayout | null = null
+   107→
+   108→  // Check which edge is shared and expand only in that direction
+   109→  if (Math.abs(tile.x + tile.width - removed.x) < EPSILON) {
+   110→    // tile is to the LEFT of removed → expand width rightward
+   111→    candidate = { ...tile, width: tile.width + removed.width }
+   112→  } else if (Math.abs(removed.x + removed.width - tile.x) < EPSILON) {
+   113→    // tile is to the RIGHT of removed → expand leftward
+   114→    candidate = { ...tile, x: removed.x, width: tile.width + removed.width }
+   115→  } else if (Math.abs(tile.y + tile.height - removed.y) < EPSILON) {
+   116→    // tile is ABOVE removed → expand height downward
+   117→    candidate = { ...tile, height: tile.height + removed.height }
+   118→  } else if (Math.abs(removed.y + removed.height - tile.y) < EPSILON) {
+   119→    // tile is BELOW removed → expand upward
+   120→    candidate = { ...tile, y: removed.y, height: tile.height + removed.height }
+   121→  }
+   122→
+   123→  if (!candidate) return null
+   124→
+   125→  // Verify the expansion doesn't overlap any other tile
+   126→  for (const other of remaining) {
+   127→    if (other.id === tile.id) continue
+   128→    if (tilesOverlap(candidate, other)) return null
+   129→  }
+   130→
+   131→  return candidate
+   132→}
+   133→
+   134→function findOptimalGrid(count: number, containerWidth: number, containerHeight: number): { rows: number; cols: number } {
+   135→  if (count <= 0) return { rows: 0, cols: 0 }
+   136→  if (count === 1) return { rows: 1, cols: 1 }
+   137→
+   138→  let bestRows = 1
+   139→  let bestCols = count
+   140→  let bestDeviation = Infinity
+   141→
+   142→  for (let rows = 1; rows <= count; rows++) {
+   143→    const cols = Math.ceil(count / rows)
+   144→    const tileWidth = containerWidth / cols
+   145→    const tileHeight = containerHeight / rows
+   146→    const tileAspect = tileWidth / tileHeight
+   147→    const deviation = Math.abs(Math.log(tileAspect))
+   148→
+   149→    if (deviation < bestDeviation) {
+   150→      bestDeviation = deviation
+   151→      bestRows = rows
+   152→      bestCols = cols
+   153→    }
+   154→  }
+   155→
+   156→  return { rows: bestRows, cols: bestCols }
+   157→}
+   158→
+   159→function makeTile(id: string, x: number, y: number, width: number, height: number, tabIds?: string[], activeTabId?: string): TileLayout {
+   160→  const tIds = tabIds || [id]
+   161→  return { id, tabIds: tIds, activeTabId: activeTabId || tIds[0], x, y, width, height }
+   162→}
+   163→
+   164→export function generateDefaultLayout(tabs: OpenTab[], containerWidth = 1920, containerHeight = 1080): TileLayout[] {
+   165→  // Each tab gets its own tile (no grouping by project)
+   166→  const count = tabs.length
+   167→  if (count === 0) return []
+   168→  if (count === 1) {
+   169→    return [makeTile(tabs[0].id, 0, 0, 100, 100)]
+   170→  }
+   171→
+   172→  // For 3+ tiles, lay out in a single horizontal row where each tile gets
+   173→  // at least 50% viewport width (canvas extends beyond viewport)
+   174→  if (count >= 3) {
+   175→    const layout: TileLayout[] = []
+   176→    const tileWidth = 50  // Each tile gets 50% of viewport width
+   177→    for (let i = 0; i < count; i++) {
+   178→      layout.push(makeTile(tabs[i].id, i * tileWidth, 0, tileWidth, 100))
+   179→    }
+   180→    return layout
+   181→  }
+   182→
+   183→  const { rows, cols } = findOptimalGrid(count, containerWidth, containerHeight)
+   184→  const layout: TileLayout[] = []
+   185→  const colWidth = 100 / cols
+   186→  const rowHeight = 100 / rows
+   187→  const fullRows = Math.floor(count / cols)
+   188→  const lastRowCount = count % cols
+   189→
+   190→  let tabIndex = 0
+   191→
+   192→  for (let row = 0; row < fullRows; row++) {
+   193→    for (let col = 0; col < cols; col++) {
+   194→      layout.push(makeTile(tabs[tabIndex].id, col * colWidth, row * rowHeight, colWidth, rowHeight))
+   195→      tabIndex++
+   196→    }
+   197→  }
+   198→
+   199→  if (lastRowCount > 0) {
+   200→    const lastRowColWidth = 100 / lastRowCount
+   201→    for (let col = 0; col < lastRowCount; col++) {
+   202→      layout.push(makeTile(tabs[tabIndex].id, col * lastRowColWidth, fullRows * rowHeight, lastRowColWidth, rowHeight))
+   203→      tabIndex++
+   204→    }
+   205→  }
+   206→
+   207→  return layout
+   208→}
+   209→
+   210→export function validateLayout(layout: TileLayout[], tabs: OpenTab[], containerWidth = 1920, containerHeight = 1080): TileLayout[] {
+   211→  const tabIdSet = new Set(tabs.map(t => t.id))
+   212→
+   213→  // Filter stale tabIds that no longer correspond to actual tabs
+   214→  let cleaned = layout.map(tile => {
+   215→    const validTabIds = (tile.tabIds || []).filter(id => tabIdSet.has(id))
+   216→    if (validTabIds.length === tile.tabIds?.length) return tile
+   217→    const activeTabId = validTabIds.includes(tile.activeTabId) ? tile.activeTabId : validTabIds[0]
+   218→    return { ...tile, tabIds: validTabIds, activeTabId: activeTabId || tile.activeTabId }
+   219→  })
+   220→
+   221→  // Remove tiles that have no valid tabs and reclaim their space
+   222→  let emptyTileIds = cleaned.filter(t => t.tabIds.length === 0).map(t => t.id)
+   223→  for (const emptyId of emptyTileIds) {
+   224→    cleaned = removeTilePreservingStructure(cleaned, emptyId, tabs, containerWidth, containerHeight)
+   225→  }
+   226→
+   227→  for (const tile of cleaned) {
+   228→    if (tile.x < 0 || tile.y < 0 ||
+   229→        tile.y + tile.height > 100.5 ||
+   230→        tile.width < 5 || tile.height < 5) {
+   231→      console.warn('Detected out-of-bounds tile, resetting to default layout', tile)
+   232→      return generateDefaultLayout(tabs, containerWidth, containerHeight)
+   233→    }
+   234→    if (!tile.tabIds || tile.tabIds.length === 0) {
+   235→      console.warn('Detected tile with empty tabIds, resetting to default layout', tile)
+   236→      return generateDefaultLayout(tabs, containerWidth, containerHeight)
+   237→    }
+   238→    if (!tile.activeTabId || !tile.tabIds.includes(tile.activeTabId)) {
+   239→      console.warn('Detected tile with invalid activeTabId, fixing', tile)
+   240→      tile.activeTabId = tile.tabIds[0]
+   241→    }
+   242→  }
+   243→
+   244→  for (let i = 0; i < cleaned.length; i++) {
+   245→    for (let j = i + 1; j < cleaned.length; j++) {
+   246→      if (tilesOverlap(cleaned[i], cleaned[j])) {
+   247→        console.warn('Detected overlapping tiles:', cleaned[i], cleaned[j])
+   248→      }
+   249→    }
+   250→  }
+   251→  return cleaned
+   252→}
+   253→
+   254→export function removeTilePreservingStructure(
+   255→  layout: TileLayout[],
+   256→  removedTileId: string,
+   257→  tabs: OpenTab[],
+   258→  containerWidth: number,
+   259→  containerHeight: number
+   260→): TileLayout[] {
+   261→  const removed = layout.find(t => t.id === removedTileId)
+   262→  if (!removed) return layout
+   263→
+   264→  const remaining = layout.filter(t => t.id !== removedTileId)
+   265→  if (remaining.length === 0) return []
+   266→
+   267→  const sameRow = remaining.filter(t =>
+   268→    Math.abs(t.y - removed.y) < EPSILON &&
+   269→    Math.abs(t.height - removed.height) < EPSILON
+   270→  )
+   271→
+   272→  const sameColumn = remaining.filter(t =>
+   273→    Math.abs(t.x - removed.x) < EPSILON &&
+   274→    Math.abs(t.width - removed.width) < EPSILON
+   275→  )
+   276→
+   277→  if (sameRow.length > 0) {
+   278→    // Only expand tiles directly adjacent to the removed tile to avoid
+   279→    // repositioning distant tiles over non-sameRow tiles (causing overlaps)
+   280→    const leftNeighbor = sameRow.find(t => Math.abs(t.x + t.width - removed.x) < EPSILON)
+   281→    const rightNeighbor = sameRow.find(t => Math.abs(t.x - (removed.x + removed.width)) < EPSILON)
+   282→    const neighbors = [leftNeighbor, rightNeighbor].filter(Boolean) as TileLayout[]
+   283→
+   284→    if (neighbors.length > 0) {
+   285→      const extraWidthPerTile = removed.width / neighbors.length
+   286→      return remaining.map(t => {
+   287→        if (leftNeighbor && t.id === leftNeighbor.id) {
+   288→          return { ...t, width: t.width + extraWidthPerTile }
+   289→        }
+   290→        if (rightNeighbor && t.id === rightNeighbor.id) {
+   291→          return { ...t, x: t.x - extraWidthPerTile, width: t.width + extraWidthPerTile }
+   292→        }
+   293→        return t
+   294→      })
+   295→    }
+   296→  }
+   297→
+   298→  if (sameColumn.length > 0) {
+   299→    // Only expand tiles directly adjacent to the removed tile
+   300→    const topNeighbor = sameColumn.find(t => Math.abs(t.y + t.height - removed.y) < EPSILON)
+   301→    const bottomNeighbor = sameColumn.find(t => Math.abs(t.y - (removed.y + removed.height)) < EPSILON)
+   302→    const neighbors = [topNeighbor, bottomNeighbor].filter(Boolean) as TileLayout[]
+   303→
+   304→    if (neighbors.length > 0) {
+   305→      const extraHeightPerTile = removed.height / neighbors.length
+   306→      return remaining.map(t => {
+   307→        if (topNeighbor && t.id === topNeighbor.id) {
+   308→          return { ...t, height: t.height + extraHeightPerTile }
+   309→        }
+   310→        if (bottomNeighbor && t.id === bottomNeighbor.id) {
+   311→          return { ...t, y: t.y - extraHeightPerTile, height: t.height + extraHeightPerTile }
+   312→        }
+   313→        return t
+   314→      })
+   315→    }
+   316→  }
+   317→
+   318→  // Fallback: find ALL tiles sharing an edge with the removed tile and expand them.
+   319→  // Group by which edge they share (left, right, top, bottom of the removed tile).
+   320→  const leftOf = remaining.filter(t => Math.abs(t.x + t.width - removed.x) < EPSILON &&
+   321→    t.y < removed.y + removed.height - EPSILON && t.y + t.height > removed.y + EPSILON)
+   322→  const rightOf = remaining.filter(t => Math.abs(t.x - (removed.x + removed.width)) < EPSILON &&
+   323→    t.y < removed.y + removed.height - EPSILON && t.y + t.height > removed.y + EPSILON)
+   324→  const above = remaining.filter(t => Math.abs(t.y + t.height - removed.y) < EPSILON &&
+   325→    t.x < removed.x + removed.width - EPSILON && t.x + t.width > removed.x + EPSILON)
+   326→  const below = remaining.filter(t => Math.abs(t.y - (removed.y + removed.height)) < EPSILON &&
+   327→    t.x < removed.x + removed.width - EPSILON && t.x + t.width > removed.x + EPSILON)
+   328→
+   329→  // Try expanding tiles on one side into the gap. Prefer the side with tiles
+   330→  // that together span the full edge (so no gaps remain).
+   331→  const tryExpand = (tiles: TileLayout[], dir: 'right' | 'left' | 'down' | 'up'): TileLayout[] | null => {
+   332→    if (tiles.length === 0) return null
+   333→    const expandedIds = new Set(tiles.map(t => t.id))
+   334→    const result = remaining.map(t => {
+   335→      if (!expandedIds.has(t.id)) return t
+   336→      switch (dir) {
+   337→        case 'right': return { ...t, width: t.width + removed.width }
+   338→        case 'left': return { ...t, x: removed.x, width: t.width + removed.width }
+   339→        case 'down': return { ...t, height: t.height + removed.height }
+   340→        case 'up': return { ...t, y: removed.y, height: t.height + removed.height }
+   341→      }
+   342→    })
+   343→    // Verify no overlaps
+   344→    for (let i = 0; i < result.length; i++) {
+   345→      for (let j = i + 1; j < result.length; j++) {
+   346→        if (tilesOverlap(result[i], result[j])) return null
+   347→      }
+   348→    }
+   349→    return result
+   350→  }
+   351→
+   352→  const expanded = tryExpand(leftOf, 'right') || tryExpand(rightOf, 'left') ||
+   353→                   tryExpand(above, 'down') || tryExpand(below, 'up')
+   354→  if (expanded) return expanded
+   355→
+   356→  // If nothing else worked, just leave the remaining tiles as-is.
+   357→  // A gap is better than resetting the entire layout.
+   358→  return remaining
+   359→}
+   360→
+   361→export function splitTile(
+   362→  layout: TileLayout[],
+   363→  targetTileId: string,
+   364→  newTileId: string,
+   365→  direction: 'top' | 'bottom' | 'left' | 'right'
+   366→): TileLayout[] {
+   367→  const target = layout.find(t => t.id === targetTileId)
+   368→  if (!target) return layout
+   369→
+   370→  const isHorizontal = direction === 'top' || direction === 'bottom'
+   371→  const newLayout = layout.filter(t => t.id !== targetTileId)
+   372→
+   373→  // The target tile keeps its tabIds; the new tile gets a single tab
+   374→  const targetTabIds = target.tabIds || [targetTileId]
+   375→  const targetActiveTabId = target.activeTabId || targetTabIds[0]
+   376→
+   377→  if (isHorizontal) {
+   378→    const halfHeight = target.height / 2
+   379→    const topTileId = direction === 'top' ? newTileId : targetTileId
+   380→    const bottomTileId = direction === 'bottom' ? newTileId : targetTileId
+   381→    newLayout.push(
+   382→      makeTile(topTileId, target.x, target.y, target.width, halfHeight,
+   383→        topTileId === targetTileId ? targetTabIds : [newTileId],
+   384→        topTileId === targetTileId ? targetActiveTabId : newTileId),
+   385→      makeTile(bottomTileId, target.x, target.y + halfHeight, target.width, halfHeight,
+   386→        bottomTileId === targetTileId ? targetTabIds : [newTileId],
+   387→        bottomTileId === targetTileId ? targetActiveTabId : newTileId)
+   388→    )
+   389→  } else {
+   390→    const halfWidth = target.width / 2
+   391→    const leftTileId = direction === 'left' ? newTileId : targetTileId
+   392→    const rightTileId = direction === 'right' ? newTileId : targetTileId
+   393→    newLayout.push(
+   394→      makeTile(leftTileId, target.x, target.y, halfWidth, target.height,
+   395→        leftTileId === targetTileId ? targetTabIds : [newTileId],
+   396→        leftTileId === targetTileId ? targetActiveTabId : newTileId),
+   397→      makeTile(rightTileId, target.x + halfWidth, target.y, halfWidth, target.height,
+   398→        rightTileId === targetTileId ? targetTabIds : [newTileId],
+   399→        rightTileId === targetTileId ? targetActiveTabId : newTileId)
+   400→    )
+   401→  }
+   402→
+   403→  return newLayout
+   404→}
+   405→
+   406→export function addTileToLayout(
+   407→  layout: TileLayout[],
+   408→  newTileId: string,
+   409→  activeTabId: string | null,
+   410→  containerWidth: number,
+   411→  containerHeight: number
+   412→): TileLayout[] {
+   413→  if (layout.length === 0) {
+   414→    return [makeTile(newTileId, 0, 0, 100, 100)]
+   415→  }
+   416→
+   417→  // For 1 tile, split it so both tiles stay on-screen
+   418→  if (layout.length === 1) {
+   419→    const tile = layout[0]
+   420→    const tileAspect = (tile.width / 100 * containerWidth) / (tile.height / 100 * containerHeight)
+   421→    const direction = tileAspect > 1 ? 'right' : 'bottom'
+   422→    return splitTile(layout, tile.id, newTileId, direction)
+   423→  }
+   424→
+   425→  // For 2+ tiles, always append to the right of the rightmost edge.
+   426→  // Never split or redistribute existing tiles — that destroys custom layouts.
+   427→  const rightmostEdge = Math.max(...layout.map(t => t.x + t.width))
+   428→  return [...layout, makeTile(newTileId, rightmostEdge, 0, 50, 100)]
+   429→}
+   430→
+   431→export function computeDropZone(
+   432→  layout: TileLayout[],
+   433→  draggedTileId: string | null,
+   434→  mouseX: number,
+   435→  mouseY: number
+   436→): DropZone | null {
+   437→  // 30% edge threshold makes it easier to trigger split zones
+   438→  const EDGE_THRESHOLD = 0.30
+   439→
+   440→  const targetTile = layout.find(t =>
+   441→    t.id !== draggedTileId &&
+   442→    mouseX >= t.x && mouseX <= t.x + t.width &&
+   443→    mouseY >= t.y && mouseY <= t.y + t.height
+   444→  )
+   445→
+   446→  if (!targetTile) return null
+   447→
+   448→  const relX = (mouseX - targetTile.x) / targetTile.width
+   449→  const relY = (mouseY - targetTile.y) / targetTile.height
+   450→
+   451→  let type: DropZoneType = 'swap'
+   452→  let bounds = { x: targetTile.x, y: targetTile.y, width: targetTile.width, height: targetTile.height }
+   453→
+   454→  // Calculate distances to each edge (0 = at edge, 0.5 = at center)
+   455→  const distToLeft = relX
+   456→  const distToRight = 1 - relX
+   457→  const distToTop = relY
+   458→  const distToBottom = 1 - relY
+   459→
+   460→  // Find the closest edge
+   461→  const minDist = Math.min(distToLeft, distToRight, distToTop, distToBottom)
+   462→
+   463→  // Only trigger split zone if we're within the threshold
+   464→  if (minDist < EDGE_THRESHOLD) {
+   465→    if (minDist === distToTop) {
+   466→      type = 'split-top'
+   467→      bounds = { x: targetTile.x, y: targetTile.y, width: targetTile.width, height: targetTile.height / 2 }
+   468→    } else if (minDist === distToBottom) {
+   469→      type = 'split-bottom'
+   470→      bounds = { x: targetTile.x, y: targetTile.y + targetTile.height / 2, width: targetTile.width, height: targetTile.height / 2 }
+   471→    } else if (minDist === distToLeft) {
+   472→      type = 'split-left'
+   473→      bounds = { x: targetTile.x, y: targetTile.y, width: targetTile.width / 2, height: targetTile.height }
+   474→    } else if (minDist === distToRight) {
+   475→      type = 'split-right'
+   476→      bounds = { x: targetTile.x + targetTile.width / 2, y: targetTile.y, width: targetTile.width / 2, height: targetTile.height }
+   477→    }
+   478→  }
+   479→
+   480→  return { type, targetTileId: targetTile.id, bounds }
+   481→}
+   482→
+   483→/** Migrate a legacy tile (without tabIds) to the new format */
+   484→export function migrateTile(tile: TileLayout): TileLayout {
+   485→  if (tile.tabIds && tile.tabIds.length > 0) return tile
+   486→  return { ...tile, tabIds: [tile.id], activeTabId: tile.activeTabId || tile.id }
+   487→}
+   488→
+   489→/** Add a tab to an existing tile's tabIds */
+   490→export function addTabToExistingTile(layout: TileLayout[], tileId: string, tabId: string): TileLayout[] {
+   491→  return layout.map(tile => {
+   492→    if (tile.id === tileId) {
+   493→      const tabIds = [...tile.tabIds, tabId]
+   494→      return { ...tile, tabIds, activeTabId: tabId }
+   495→    }
+   496→    return tile
+   497→  })
+   498→}
+   499→
+   500→/** Find a tile that contains a tab for the given project */
+   501→export function findTileForProject(layout: TileLayout[], tabs: OpenTab[], projectPath: string): TileLayout | undefined {
+   502→  return layout.find(tile =>
+   503→    tile.tabIds.some(tabId => {
+   504→      const tab = tabs.find(t => t.id === tabId)
+   505→      return tab && tab.projectPath === projectPath
+   506→    })
+   507→  )
+   508→}
+   509→
+   510→/** Remove a tab from its tile. If the tile becomes empty, remove the tile and reclaim space. */
+   511→export function removeTabFromTile(
+   512→  layout: TileLayout[],
+   513→  tabId: string,
+   514→  tabs: OpenTab[],
+   515→  containerWidth: number,
+   516→  containerHeight: number
+   517→): TileLayout[] {
+   518→  const tile = layout.find(t => t.tabIds.includes(tabId))
+   519→  if (!tile) return layout
+   520→
+   521→  const newTabIds = tile.tabIds.filter(id => id !== tabId)
+   522→  if (newTabIds.length === 0) {
+   523→    // Tile is empty, remove it entirely and reclaim space
+   524→    return removeTilePreservingStructure(layout, tile.id, tabs, containerWidth, containerHeight)
+   525→  }
+   526→
+   527→  // Update the tile with the remaining tabs
+   528→  const newActiveTabId = tile.activeTabId === tabId ? newTabIds[newTabIds.length - 1] : tile.activeTabId
+   529→  return layout.map(t => {
+   530→    if (t.id === tile.id) {
+   531→      return { ...t, tabIds: newTabIds, activeTabId: newActiveTabId }
+   532→    }
+   533→    return t
+   534→  })
+   535→}
+   536→
+   537→/** Get all tab IDs across all tiles */
+   538→export function getAllTabIdsFromLayout(layout: TileLayout[]): Set<string> {
+   539→  const ids = new Set<string>()
+   540→  for (const tile of layout) {
+   541→    for (const tabId of tile.tabIds) {
+   542→      ids.add(tabId)
+   543→    }
+   544→  }
+   545→  return ids
+   546→}
+   547→
+   548→export function findTilesOnDivider(
+   549→  position: number,
+   550→  isVertical: boolean,
+   551→  side: 'before' | 'after',
+   552→  layout: TileLayout[]
+   553→): TileLayout[] {
+   554→  const EPSILON = 1
+   555→  return layout.filter(tile => {
+   556→    if (isVertical) {
+   557→      if (side === 'before') {
+   558→        return Math.abs(tile.x + tile.width - position) < EPSILON
+   559→      } else {
+   560→        return Math.abs(tile.x - position) < EPSILON
+   561→      }
+   562→    } else {
+   563→      if (side === 'before') {
+   564→        return Math.abs(tile.y + tile.height - position) < EPSILON
+   565→      } else {
+   566→        return Math.abs(tile.y - position) < EPSILON
+   567→      }
+   568→    }
+   569→  })
+   570→}
+   571→
+   572→/** Find tiles on a divider that form a contiguous segment with the anchor tile.
+   573→ *  For horizontal dividers, contiguity is horizontal adjacency.
+   574→ *  For vertical dividers, contiguity is vertical adjacency. */
+   575→export function findContiguousTilesOnDivider(
+   576→  position: number,
+   577→  isVertical: boolean,
+   578→  side: 'before' | 'after',
+   579→  layout: TileLayout[],
+   580→  anchorTile: TileLayout
+   581→): TileLayout[] {
+   582→  const allOnDivider = findTilesOnDivider(position, isVertical, side, layout)
+   583→  if (allOnDivider.length <= 1) return allOnDivider
+   584→  if (!allOnDivider.find(t => t.id === anchorTile.id)) return allOnDivider
+   585→
+   586→  const group = new Set<string>([anchorTile.id])
+   587→  let changed = true
+   588→  while (changed) {
+   589→    changed = false
+   590→    for (const tile of allOnDivider) {
+   591→      if (group.has(tile.id)) continue
+   592→      for (const memberId of group) {
+   593→        const member = allOnDivider.find(t => t.id === memberId)!
+   594→        const adjacent = isVertical
+   595→          ? (Math.abs(tile.y + tile.height - member.y) < EPSILON || Math.abs(member.y + member.height - tile.y) < EPSILON)
+   596→          : (Math.abs(tile.x + tile.width - member.x) < EPSILON || Math.abs(member.x + member.width - tile.x) < EPSILON)
+   597→        if (adjacent) {
+   598→          group.add(tile.id)
+   599→          changed = true
+   600→          break
+   601→        }
+   602→      }
+   603→    }
+   604→  }
+   605→  return allOnDivider.filter(t => group.has(t.id))
+   606→}
+   607→
+   608→/** Find tiles on the opposite side of a divider that overlap with the given group's perpendicular range */
+   609→export function findOverlappingTilesOnDivider(
+   610→  position: number,
+   611→  isVertical: boolean,
+   612→  side: 'before' | 'after',
+   613→  layout: TileLayout[],
+   614→  groupTiles: TileLayout[]
+   615→): TileLayout[] {
+   616→  if (groupTiles.length === 0) return []
+   617→  const allOnDivider = findTilesOnDivider(position, isVertical, side, layout)
+   618→  if (isVertical) {
+   619→    const minY = Math.min(...groupTiles.map(t => t.y))
+   620→    const maxY = Math.max(...groupTiles.map(t => t.y + t.height))
+   621→    return allOnDivider.filter(t => t.y + EPSILON < maxY && t.y + t.height > minY + EPSILON)
+   622→  } else {
+   623→    const minX = Math.min(...groupTiles.map(t => t.x))
+   624→    const maxX = Math.max(...groupTiles.map(t => t.x + t.width))
+   625→    return allOnDivider.filter(t => t.x + EPSILON < maxX && t.x + t.width > minX + EPSILON)
+   626→  }
+   627→}
+   628→
+   629→
+```
