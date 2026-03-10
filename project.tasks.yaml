@@ -281,16 +281,16 @@ tasks:
     spec_ref: "@orchestrator"
     meta_ref: null
     plan_ref: null
-    status: needs_work
+    status: in_progress
     blocked_by: []
     depends_on: []
     context: []
     priority: 2
     tags: []
     vcs_refs: []
-    session_id: null
+    session_id: 01KKB0TFRTYJJT65Z8F208QW43
     created_at: 2026-03-10T03:28:32.445Z
-    started_at: 2026-03-10T04:31:37.745Z
+    started_at: 2026-03-10T04:46:53.262Z
     submitted_at: 2026-03-10T04:36:42.304Z
     notes:
       - _ulid: 01KKB0D8VRKT2DAEEHVSSBNK5J
