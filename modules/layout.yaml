@@ -43,7 +43,8 @@ features:
         then: the tile divides into two tiles in the specified direction (top/bottom/left/right) each
           getting half the space
     status:
-      implementation: implemented
+      maturity: draft
+      implementation: in_progress
   - _ulid: 01KK67C43QN01EYHYHABV8BBVE
     slugs:
       - tile-drag-drop
