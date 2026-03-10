@@ -134,25 +134,47 @@ tasks:
     notes: []
     todos: []
     automation: eligible
-  - title: "Bug audit: session discovery"
+  - _ulid: 01KKAWM3WS24742Z491YVVGYV4
+    slugs:
+      - bug-discovery
+    title: "Bug audit: session discovery"
+    type: bug
     description: "Investigate and fix bugs in session discovery. Check: encoded path handling for
       special chars, OpenCode SQLite connection leaks, JSONL parsing for corrupted files, empty
       session filtering, race between discovery and active writes."
-    type: bug
     spec_ref: "@session-discovery"
+    meta_ref: null
+    plan_ref: null
+    status: pending
+    blocked_by: []
+    depends_on: []
+    context: []
+    priority: 3
+    tags: []
+    vcs_refs: []
+    created_at: 2026-03-10T03:28:35.225Z
+    notes: []
+    todos: []
+    automation: eligible
+  - title: "Bug audit: sidebar and project management"
+    description: "Investigate and fix bugs in sidebar UI. Check: drag-to-reorder losing position, inline
+      rename not saving on blur, context menu positioning at screen edges, category collapse state,
+      project color picker, close-all-tabs not cleaning tile layout, session count badge."
+    type: bug
+    spec_ref: "@sidebar"
     meta_ref: null
     plan_ref: null
     priority: 3
     slugs:
-      - bug-discovery
+      - bug-sidebar
     tags: []
     depends_on: []
     automation: eligible
-    _ulid: 01KKAWM3WS24742Z491YVVGYV4
+    _ulid: 01KKAWM4Y4E24TFEAPSDXZS99G
     status: pending
     blocked_by: []
     context: []
     vcs_refs: []
-    created_at: 2026-03-10T03:28:35.225Z
+    created_at: 2026-03-10T03:28:36.292Z
     notes: []
     todos: []
