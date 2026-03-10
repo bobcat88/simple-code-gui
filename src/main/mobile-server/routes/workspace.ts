@@ -70,18 +70,23 @@ export function setupWorkspaceRoutes(
       if (!sessionStore) {
         return res.status(500).json({ error: 'Session store not available' })
       }
-      // Protect against overwriting populated workspace with empty one
+      // POST expects { workspace: {...} } wrapper format
       const incoming = req.body
-      const incomingProjects = incoming?.workspace?.projects?.length || 0
+      const workspace = incoming?.workspace
+      if (!workspace) {
+        return res.status(400).json({ error: 'Missing workspace field in request body' })
+      }
+      // Protect against overwriting populated workspace with empty one
+      const incomingProjects = workspace?.projects?.length || 0
       if (incomingProjects === 0) {
         const current = sessionStore.getWorkspace()
-        const currentProjects = current?.workspace?.projects?.length || 0
+        const currentProjects = current?.projects?.length || 0
         if (currentProjects > 0) {
           log('Rejected empty workspace save - current has projects', { currentProjects })
           return res.status(400).json({ error: 'Cannot overwrite populated workspace with empty one' })
         }
       }
-      sessionStore.saveWorkspace(req.body)
+      sessionStore.saveWorkspace(workspace)
       res.json({ success: true })
     } catch (error) {
       res.status(500).json({ error: String(error) })

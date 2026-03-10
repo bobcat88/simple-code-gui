@@ -225,13 +225,14 @@ export function syncMetaProjects(workspace: Workspace): void {
       desiredSymlinks.set(project.path, symlinkName)
     }
 
-    // Remove symlinks that shouldn't exist or point to wrong targets
+    // Remove symlinks that shouldn't exist, point to wrong targets, or are broken
     for (const [name, target] of currentSymlinks) {
-      // Check if this symlink is still needed
+      // Check if this symlink is still needed and its target exists
       let shouldKeep = false
       for (const [projectPath, desiredName] of desiredSymlinks) {
         if (target === projectPath && name === desiredName) {
-          shouldKeep = true
+          // Also verify target still exists on disk
+          shouldKeep = existsSync(target)
           break
         }
       }
