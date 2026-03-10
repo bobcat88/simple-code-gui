@@ -283,6 +283,7 @@ tasks:
     plan_ref: null
     status: completed
     blocked_by: []
+    closed_reason: null
     depends_on: []
     context: []
     priority: 2
@@ -292,6 +293,7 @@ tasks:
     created_at: 2026-03-10T03:28:32.445Z
     started_at: 2026-03-10T04:46:53.262Z
     submitted_at: 2026-03-10T04:46:53.500Z
+    completed_at: 2026-03-10T05:08:00.377Z
     notes:
       - _ulid: 01KKB0D8VRKT2DAEEHVSSBNK5J
         created_at: 2026-03-10T04:34:45.240Z
@@ -364,8 +366,6 @@ tasks:
         supersedes: null
     todos: []
     automation: eligible
-    completed_at: 2026-03-10T05:08:00.377Z
-    closed_reason: null
   - _ulid: 01KKAWM2RXD9TWVAHK8BMMSEC2
     slugs:
       - bug-persistence
@@ -431,7 +431,24 @@ tasks:
     session_id: 01KKB1KC7Z6WSZWA9EEXE76QHZ
     created_at: 2026-03-10T03:28:35.225Z
     started_at: 2026-03-10T05:02:25.314Z
-    notes: []
+    notes:
+      - _ulid: 01KKB2BTBQRAMGWTB0JCG78QR1
+        created_at: 2026-03-10T05:08:54.776Z
+        author: "@claude"
+        content: >-
+          3 bugs fixed in session-discovery.ts:
+
+          1. SQLite connection leak: db.close() was not in try-finally — if prepare/all threw,
+          connection stayed open. Wrapped in try-finally with safe close.
+
+          2. Race condition: stat() was called before readFile(), so mtime/size could mismatch
+          content. Swapped order (read first, then stat). Added parse error counting with warning
+          for multi-line corruption (>1 failed line).
+
+          3. Legacy path encoding: Claude used two different encoding schemes (old: no leading dash,
+          spaces preserved; new: leading dash, spaces→dashes). Only new scheme was checked. Added
+          encodeProjectPathLegacy() and multi-dir scanning with deduplication by sessionId.
+        supersedes: null
     todos: []
     automation: eligible
   - _ulid: 01KKAWM4Y4E24TFEAPSDXZS99G
