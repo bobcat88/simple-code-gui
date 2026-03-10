@@ -75,7 +75,8 @@ features:
         when: user clicks upgrade to kspec
         then: tasks are migrated from beads to kspec format and the adapter switches to kspec backend
     status:
-      implementation: implemented
+      maturity: draft
+      implementation: in_progress
   - _ulid: 01KK67D5YWCHVC8RJGVH5MGVKD
     slugs:
       - task-panel
