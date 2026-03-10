@@ -1,5 +1,5 @@
 import { app } from 'electron'
-import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, statSync } from 'fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, statSync, unlinkSync } from 'fs'
 import { join } from 'path'
 import { syncMetaProjects } from './meta-project-sync'
 
@@ -142,9 +142,11 @@ export class SessionStore {
     if (backup && (backup.workspace.projects?.length || 0) > 0) {
       console.log('[SessionStore] Main config empty/corrupt, restored from backup (' +
         backup.workspace.projects.length + ' projects)')
-      // Restore backup as main file immediately
+      // Restore backup as main file atomically (temp + rename)
       try {
-        writeFileSync(this.configPath, JSON.stringify(backup, null, 2))
+        const tmpPath = this.configPath + '.tmp'
+        writeFileSync(tmpPath, JSON.stringify(backup, null, 2))
+        renameSync(tmpPath, this.configPath)
       } catch (e) {
         console.error('[SessionStore] Failed to restore backup to main:', e)
       }
@@ -178,7 +180,10 @@ export class SessionStore {
             // Only update backup if existing file is valid and has projects
             const existing = this.loadFile(this.configPath)
             if (existing && (existing.workspace.projects?.length || 0) > 0) {
-              writeFileSync(this.backupPath, readFileSync(this.configPath))
+              // Atomic backup: write to temp file, then rename
+              const tmpBackup = this.backupPath + '.tmp'
+              writeFileSync(tmpBackup, readFileSync(this.configPath))
+              renameSync(tmpBackup, this.backupPath)
             }
           }
         } catch (e) {
@@ -190,11 +195,16 @@ export class SessionStore {
       const tmpPath = this.configPath + '.tmp'
       writeFileSync(tmpPath, json)
 
-      // Verify the temp file was written completely
-      const written = readFileSync(tmpPath, 'utf-8')
-      JSON.parse(written) // throws if truncated/corrupt
-
-      renameSync(tmpPath, this.configPath)
+      try {
+        // Verify the temp file was written completely
+        const written = readFileSync(tmpPath, 'utf-8')
+        JSON.parse(written) // throws if truncated/corrupt
+        renameSync(tmpPath, this.configPath)
+      } catch (verifyErr) {
+        // Clean up temp file on verification or rename failure
+        try { unlinkSync(tmpPath) } catch { /* ignore cleanup errors */ }
+        throw verifyErr
+      }
     } catch (e) {
       console.error('[SessionStore] Failed to save workspace:', e)
     }
