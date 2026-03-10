@@ -171,7 +171,7 @@ tasks:
     spec_ref: "@task-adapter"
     meta_ref: null
     plan_ref: null
-    status: pending_review
+    status: completed
     blocked_by: []
     depends_on: []
     context: []
@@ -265,6 +265,10 @@ tasks:
         supersedes: null
     todos: []
     automation: eligible
+    completed_at: 2026-03-10T04:45:30.442Z
+    closed_reason: "Merged in PR #11. All 6 bug fixes verified: cycleStatus routing, status name
+      mapping, daemon crash recovery, WS reconnect with backoff, migration status preservation,
+      project-switch daemon flag reset."
   - _ulid: 01KKAWM15XTDNE9XPRPADT9R88
     slugs:
       - bug-connectivity
