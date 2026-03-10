@@ -3,5 +3,7 @@ task_id: "@01KKAWM3WS24742Z491YVVGYV4"
 agent_type: claude-agent-acp
 agent_id: task-worker
 trigger: task.ready
-status: active
+status: completed
 started_at: 2026-03-10T05:02:07.332Z
+ended_at: 2026-03-10T05:09:25.763Z
+close_reason: Invocation completed normally
