@@ -63,7 +63,7 @@ features:
         then: the text followed by carriage return is written to the PTY, simulating user keyboard input
     status:
       maturity: draft
-      implementation: in_progress
+      implementation: implemented
   - _ulid: 01KK67DFJH7RN2ATAG7E69AZVN
     slugs:
       - mobile-server
