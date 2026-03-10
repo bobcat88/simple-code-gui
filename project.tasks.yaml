@@ -32,7 +32,7 @@ tasks:
     spec_ref: "@tiled-layout"
     meta_ref: null
     plan_ref: null
-    status: pending
+    status: in_progress
     blocked_by: []
     depends_on: []
     context: []
@@ -43,6 +43,7 @@ tasks:
     notes: []
     todos: []
     automation: eligible
+    started_at: 2026-03-10T03:54:12.373Z
   - _ulid: 01KKAWKXNKT0YTJESTW3ES1B8D
     slugs:
       - bug-voice
@@ -156,25 +157,25 @@ tasks:
     notes: []
     todos: []
     automation: eligible
-  - title: "Bug audit: sidebar and project management"
+  - _ulid: 01KKAWM4Y4E24TFEAPSDXZS99G
+    slugs:
+      - bug-sidebar
+    title: "Bug audit: sidebar and project management"
+    type: bug
     description: "Investigate and fix bugs in sidebar UI. Check: drag-to-reorder losing position, inline
       rename not saving on blur, context menu positioning at screen edges, category collapse state,
       project color picker, close-all-tabs not cleaning tile layout, session count badge."
-    type: bug
     spec_ref: "@sidebar"
     meta_ref: null
     plan_ref: null
-    priority: 3
-    slugs:
-      - bug-sidebar
-    tags: []
-    depends_on: []
-    automation: eligible
-    _ulid: 01KKAWM4Y4E24TFEAPSDXZS99G
     status: pending
     blocked_by: []
+    depends_on: []
     context: []
+    priority: 3
+    tags: []
     vcs_refs: []
     created_at: 2026-03-10T03:28:36.292Z
     notes: []
     todos: []
+    automation: eligible
