@@ -251,7 +251,7 @@ tasks:
     spec_ref: "@orchestrator"
     meta_ref: null
     plan_ref: null
-    status: in_progress
+    status: pending_review
     blocked_by: []
     depends_on: []
     context: []
@@ -282,6 +282,7 @@ tasks:
         supersedes: null
     todos: []
     automation: eligible
+    submitted_at: 2026-03-10T04:36:42.304Z
   - _ulid: 01KKAWM2RXD9TWVAHK8BMMSEC2
     slugs:
       - bug-persistence
