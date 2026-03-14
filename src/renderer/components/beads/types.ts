@@ -10,7 +10,7 @@ export const PRIORITY_LABELS = ['Critical', 'High', 'Medium', 'Low', 'Lowest']
 
 // Task status ordering for sorting
 export type TaskStatus = 'open' | 'in_progress' | 'closed'
-export const STATUS_ORDER: Record<TaskStatus, number> = { open: 0, in_progress: 1, closed: 2 }
+export const STATUS_ORDER: Record<TaskStatus, number> = { in_progress: 0, open: 1, closed: 2 }
 
 export function getStatusOrder(status: string): number {
   return status in STATUS_ORDER ? STATUS_ORDER[status as TaskStatus] : 0

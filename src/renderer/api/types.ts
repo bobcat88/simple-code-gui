@@ -59,6 +59,7 @@ export interface Settings {
   voiceSpeed?: number
   voiceSkipOnNew?: boolean
   voiceSilenceThreshold?: number
+  voicePushToTalk?: boolean
   autoAcceptTools?: string[]
   permissionMode?: string
   backend?: BackendSelection
@@ -129,6 +130,7 @@ export interface Workspace {
   activeTabId: string | null
   viewMode?: 'tabs' | 'tiled'
   tileLayout?: TileLayout[]
+  tileTree?: any
   categories: ProjectCategory[]
 }
 

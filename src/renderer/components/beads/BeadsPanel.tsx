@@ -225,6 +225,7 @@ export function BeadsPanel({
                 onComplete={taskOps.handleCompleteTask}
                 onStart={handleStartButtonClick}
                 onCycleStatus={taskOps.handleCycleStatus}
+                onChangePriority={taskOps.handleChangePriority}
                 onDelete={taskOps.handleDeleteTask}
                 onOpenDetail={detailOps.handleOpenDetail}
                 setEditingTitle={taskOps.setEditingTitle}
@@ -298,6 +299,7 @@ export function BeadsPanel({
         onComplete={taskOps.handleCompleteTask}
         onStart={handleStartButtonClick}
         onCycleStatus={taskOps.handleCycleStatus}
+        onChangePriority={taskOps.handleChangePriority}
         onDelete={taskOps.handleDeleteTask}
         onOpenDetail={detailOps.handleOpenDetail}
         onClearCompleted={taskOps.handleClearCompleted}

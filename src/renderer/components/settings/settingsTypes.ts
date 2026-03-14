@@ -95,9 +95,10 @@ export interface VoiceSettings {
   whisperStatus: { installed: boolean; models: string[]; currentModel: string | null }
   ttsStatus: { installed: boolean; voices: string[]; currentVoice: string | null }
   selectedVoice: string
-  selectedEngine: 'piper' | 'xtts'
+  selectedEngine: 'piper' | 'xtts' | 'tada'
   ttsSpeed: number
   installedVoices: Array<{ key: string; displayName: string; source: string }>
+  tadaVoiceSample?: string | null
 }
 
 export interface XttsSettings {
@@ -134,7 +135,8 @@ export const DEFAULT_VOICE: VoiceSettings = {
   selectedVoice: 'en_US-libritts_r-medium',
   selectedEngine: 'piper',
   ttsSpeed: 1.0,
-  installedVoices: []
+  installedVoices: [],
+  tadaVoiceSample: null
 }
 
 export const DEFAULT_XTTS: XttsSettings = {

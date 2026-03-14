@@ -36,6 +36,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }): Reac
         window.electronAPI?.voiceApplySettings?.({ ttsSpeed: settings.voiceSpeed })
       }
       if (settings.voiceSkipOnNew !== undefined) tts.setSkipOnNewState(settings.voiceSkipOnNew)
+      if (settings.voicePushToTalk !== undefined) stt.setPushToTalkEnabledState(settings.voicePushToTalk)
       setSettingsLoaded(true)
     }).catch(() => setSettingsLoaded(true))
 
@@ -106,7 +107,10 @@ export function VoiceProvider({ children }: { children: React.ReactNode }): Reac
     silenceThreshold: stt.silenceThreshold,
     setSilenceThreshold: stt.setSilenceThreshold,
     startRecording: stt.startRecording,
-    stopRecording: stt.stopRecording
+    stopRecording: stt.stopRecording,
+    // Push-to-Talk
+    pushToTalkEnabled: stt.pushToTalkEnabled,
+    setPushToTalkEnabled: stt.setPushToTalkEnabled
   }), [
     tts.voiceOutputEnabled,
     tts.setVoiceOutputEnabled,
@@ -132,7 +136,9 @@ export function VoiceProvider({ children }: { children: React.ReactNode }): Reac
     stt.silenceThreshold,
     stt.setSilenceThreshold,
     stt.startRecording,
-    stt.stopRecording
+    stt.stopRecording,
+    stt.pushToTalkEnabled,
+    stt.setPushToTalkEnabled
   ])
 
   return (

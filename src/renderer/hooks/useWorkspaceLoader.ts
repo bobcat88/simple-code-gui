@@ -5,12 +5,14 @@ import type { AppSettings } from './useSettings'
 import { useWorkspaceStore } from '../stores/workspace'
 import { Theme, getThemeById, applyTheme, themes } from '../themes'
 import { cleanupOrphanedBuffers } from '../components/terminal/Terminal'
+import type { TileNode } from '../components/tile-tree.js'
+import { deserializeTree, migrateFromFlat, remapTabIds, filterTabs } from '../components/tile-tree.js'
 
 interface UseWorkspaceLoaderOptions {
   api: Api
   checkInstallation: () => Promise<void>
   setViewMode: (mode: 'tabs' | 'tiled') => void
-  setTileLayout: (layout: any[]) => void
+  setTileTree: (tree: TileNode | null) => void
 }
 
 interface UseWorkspaceLoaderReturn {
@@ -25,7 +27,7 @@ export function useWorkspaceLoader({
   api,
   checkInstallation,
   setViewMode,
-  setTileLayout
+  setTileTree
 }: UseWorkspaceLoaderOptions): UseWorkspaceLoaderReturn {
   const {
     setProjects,
@@ -164,38 +166,41 @@ export function useWorkspaceLoader({
         if (workspace.viewMode) {
           setViewMode(workspace.viewMode)
         }
-        // Restore tileLayout with mapped IDs and migrate legacy format
-        if (workspace.tileLayout && workspace.tileLayout.length > 0 && idMapping.size > 0) {
-          const mappedLayout = workspace.tileLayout
-            .map(tile => {
-              // Migrate legacy tiles: add tabIds/activeTabId if missing
-              const tabIds = tile.tabIds || [tile.id]
-              const mappedTabIds = tabIds
-                .map(id => idMapping.get(id) || id)
-                .filter(id => {
-                  // Only keep tab IDs that exist in the current session
-                  const currentTabs = useWorkspaceStore.getState().openTabs
-                  return currentTabs.some(t => t.id === id)
-                })
 
-              if (mappedTabIds.length === 0) return null
+        // Restore tile tree with mapped IDs
+        if (idMapping.size > 0) {
+          const currentTabIds = new Set(useWorkspaceStore.getState().openTabs.map(t => t.id))
 
-              const newId = idMapping.get(tile.id) || mappedTabIds[0]
-              const activeTabId = tile.activeTabId
-                ? (idMapping.get(tile.activeTabId) || mappedTabIds[0])
-                : mappedTabIds[0]
+          let restoredTree: TileNode | null = null
 
-              return {
-                ...tile,
-                id: newId,
-                tabIds: mappedTabIds,
-                activeTabId
-              }
-            })
-            .filter((tile): tile is NonNullable<typeof tile> => tile !== null)
+          // Prefer tileTree (new format)
+          if (workspace.tileTree) {
+            restoredTree = deserializeTree(workspace.tileTree)
+          }
+          // Fall back to tileLayout (legacy flat format)
+          else if (workspace.tileLayout && workspace.tileLayout.length > 0) {
+            // Remap IDs in the flat layout before migrating
+            const mappedLayout = workspace.tileLayout
+              .map((tile: any) => {
+                const tabIds = (tile.tabIds || [tile.id]).map((id: string) => idMapping.get(id) || id)
+                const newId = idMapping.get(tile.id) || tabIds[0]
+                const activeTabId = tile.activeTabId
+                  ? (idMapping.get(tile.activeTabId) || tabIds[0])
+                  : tabIds[0]
+                return { ...tile, id: newId, tabIds, activeTabId }
+              })
+            restoredTree = migrateFromFlat(mappedLayout)
+          }
 
-          if (mappedLayout.length > 0) {
-            setTileLayout(mappedLayout)
+          if (restoredTree) {
+            // Remap IDs in the tree
+            restoredTree = remapTabIds(restoredTree, idMapping)
+            // Filter out tabs that don't exist in the current session
+            restoredTree = filterTabs(restoredTree, currentTabIds)
+          }
+
+          if (restoredTree) {
+            setTileTree(restoredTree)
           }
         }
       } catch (e) {
@@ -204,7 +209,7 @@ export function useWorkspaceLoader({
       setLoading(false)
     }
     loadWorkspace()
-  }, [api, addTab, clearTabs, checkInstallation, setProjects, setCategories, setViewMode, setTileLayout])
+  }, [api, addTab, clearTabs, checkInstallation, setProjects, setCategories, setViewMode, setTileTree])
 
   return {
     loading,

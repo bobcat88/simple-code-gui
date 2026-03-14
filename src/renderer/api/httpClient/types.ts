@@ -126,6 +126,7 @@ export interface Workspace {
   activeTabId: string | null
   viewMode?: 'tabs' | 'tiled'
   tileLayout?: TileLayout[]
+  tileTree?: any
   categories: ProjectCategory[]
 }
 

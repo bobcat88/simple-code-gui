@@ -56,16 +56,29 @@ declare global {
       ttsInstallInstructions: (projectPath: string) => Promise<{ success: boolean }>
       voiceGetInstalled?: () => Promise<Array<{ key: string; displayName: string; source: 'builtin' | 'downloaded' | 'custom'; quality?: string; language?: string }>>
       xttsGetVoices?: () => Promise<Array<{ id: string; name: string; language: string; createdAt: number }>>
-      voiceGetSettings?: () => Promise<{ ttsVoice?: string; ttsEngine?: string; ttsSpeed?: number; xttsTemperature?: number; xttsTopK?: number; xttsTopP?: number; xttsRepetitionPenalty?: number }>
+      voiceGetSettings?: () => Promise<{ ttsVoice?: string; ttsEngine?: string; ttsSpeed?: number; xttsTemperature?: number; xttsTopK?: number; xttsTopP?: number; xttsRepetitionPenalty?: number; tadaVoiceSample?: string | null }>
       voiceCheckWhisper?: () => Promise<{ installed: boolean; models: string[]; currentModel: string | null }>
       voiceCheckTTS?: () => Promise<{ installed: boolean; engine: string | null; voices: string[]; currentVoice: string | null }>
       voiceInstallWhisper?: (model: string) => Promise<{ success: boolean; error?: string }>
-      voiceApplySettings?: (settings: { ttsVoice?: string; ttsEngine?: string; ttsSpeed?: number; xttsTemperature?: number; xttsTopK?: number; xttsTopP?: number; xttsRepetitionPenalty?: number }) => Promise<{ success: boolean }>
-      voiceSetVoice?: (voice: string | { voice: string; engine: 'piper' | 'xtts' }) => Promise<{ success: boolean }>
+      voiceApplySettings?: (settings: { ttsVoice?: string; ttsEngine?: string; ttsSpeed?: number; xttsTemperature?: number; xttsTopK?: number; xttsTopP?: number; xttsRepetitionPenalty?: number; tadaVoiceSample?: string | null }) => Promise<{ success: boolean }>
+      voiceSetVoice?: (voice: string | { voice: string; engine: 'piper' | 'xtts' | 'tada' }) => Promise<{ success: boolean }>
       ttsRemoveInstructions?: (projectPath: string) => Promise<{ success: boolean }>
       extensionsGetInstalled?: () => Promise<Array<{ id: string; name: string; type: string }>>
       voiceSpeak: (text: string) => Promise<{ success: boolean; audioData?: string; error?: string }>
       voiceStopSpeaking: () => Promise<{ success: boolean }>
+
+      // TADA (neural voice cloning)
+      tadaCheck?: () => Promise<{ installed: boolean; pythonPath: string | null; venvExists: boolean; hfAuthenticated?: boolean; error?: string }>
+      tadaLoginHuggingFace?: (token: string) => Promise<{ success: boolean; error?: string }>
+      tadaSelectVoiceSample?: () => Promise<{ success: boolean; path?: string; error?: string }>
+      tadaSetVoiceSample?: (samplePath: string) => Promise<{ success: boolean; error?: string }>
+      tadaGetVoiceSample?: () => Promise<{ path: string | null }>
+      tadaSpeak?: (text: string) => Promise<{ success: boolean; audioData?: string; error?: string }>
+      tadaGetSampleVoices?: () => Promise<Array<{ id: string; name: string; description: string; available: boolean }>>
+      tadaUseSampleVoice?: (sampleId: string) => Promise<{ success: boolean; path?: string; error?: string }>
+
+      // XTTS speech synthesis
+      xttsSpeak?: (text: string, voiceId: string, language?: string) => Promise<{ success: boolean; audioData?: string; error?: string }>
 
       // Events
       onApiOpenSession: (callback: (data: { projectPath: string; autoClose: boolean; model?: string }) => void) => () => void

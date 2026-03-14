@@ -1,16 +1,16 @@
 import { useState, useCallback } from 'react'
-import { TileLayout } from '../components/TiledTerminalView'
+import type { TileNode } from '../components/tile-tree.js'
 
 type ViewMode = 'tabs' | 'tiled'
 
 interface UseViewStateReturn {
   viewMode: ViewMode
-  tileLayout: TileLayout[]
+  tileTree: TileNode | null
   lastFocusedTabId: string | null
   sidebarWidth: number
   sidebarCollapsed: boolean
   setViewMode: (mode: ViewMode) => void
-  setTileLayout: (layout: TileLayout[]) => void
+  setTileTree: (tree: TileNode | null) => void
   setLastFocusedTabId: (id: string | null) => void
   setSidebarWidth: (width: number) => void
   setSidebarCollapsed: (collapsed: boolean) => void
@@ -19,7 +19,7 @@ interface UseViewStateReturn {
 
 export function useViewState(): UseViewStateReturn {
   const [viewMode, setViewModeState] = useState<ViewMode>('tabs')
-  const [tileLayout, setTileLayout] = useState<TileLayout[]>([])
+  const [tileTree, setTileTree] = useState<TileNode | null>(null)
   const [lastFocusedTabId, setLastFocusedTabId] = useState<string | null>(null)
   const [sidebarWidth, setSidebarWidth] = useState(280)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -38,12 +38,12 @@ export function useViewState(): UseViewStateReturn {
 
   return {
     viewMode,
-    tileLayout,
+    tileTree,
     lastFocusedTabId,
     sidebarWidth,
     sidebarCollapsed,
     setViewMode,
-    setTileLayout,
+    setTileTree,
     setLastFocusedTabId,
     setSidebarWidth,
     setSidebarCollapsed,

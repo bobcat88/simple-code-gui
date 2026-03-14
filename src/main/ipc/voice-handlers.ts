@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { voiceManager, WHISPER_MODELS, PIPER_VOICES, WhisperModelName, PiperVoiceName } from '../voice-manager'
 import { xttsManager, XTTS_LANGUAGES, XTTS_SAMPLE_VOICES } from '../xtts-manager'
+import { tadaTTS, TADA_SAMPLE_VOICES, getTadaSamplePath } from '../voice/tada-tts'
 
 const TTS_INSTRUCTIONS_START = '\n\n<!-- TTS_VOICE_OUTPUT_START -->'
 const TTS_INSTRUCTIONS_END = '<!-- TTS_VOICE_OUTPUT_END -->\n'
@@ -209,7 +210,7 @@ export function registerVoiceHandlers(getMainWindow: () => BrowserWindow | null)
     }
   })
 
-  ipcMain.handle('voice:setVoice', async (_, voice: string | { voice: string; engine: 'piper' | 'xtts' }) => {
+  ipcMain.handle('voice:setVoice', async (_, voice: string | { voice: string; engine: 'piper' | 'xtts' | 'tada' }) => {
     try {
       if (typeof voice === 'string') {
         voiceManager.setTTSVoice(voice)
@@ -451,6 +452,89 @@ export function registerVoiceHandlers(getMainWindow: () => BrowserWindow | null)
         duration: duration.success ? duration.duration : undefined,
         error: duration.error
       }
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+  })
+
+  // TADA (neural voice cloning)
+  ipcMain.handle('tada:check', async () => {
+    try {
+      return await tadaTTS.checkInstallation()
+    } catch (e) {
+      return { installed: false, pythonPath: null, venvExists: false, error: e instanceof Error ? e.message : String(e) }
+    }
+  })
+
+  ipcMain.handle('tada:loginHuggingFace', async (_, token: string) => {
+    try {
+      return await tadaTTS.loginHuggingFace(token)
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+  })
+
+  ipcMain.handle('tada:selectVoiceSample', async () => {
+    try {
+      const win = getMainWindow()
+      if (!win) {
+        return { success: false, error: 'No window available' }
+      }
+
+      const result = await dialog.showOpenDialog(win, {
+        title: 'Select Voice Sample for TADA',
+        filters: [{ name: 'Audio Files', extensions: ['wav', 'mp3', 'ogg', 'flac', 'm4a'] }],
+        properties: ['openFile']
+      })
+
+      if (result.canceled || !result.filePaths[0]) {
+        return { success: false, error: 'No file selected' }
+      }
+
+      const samplePath = result.filePaths[0]
+      voiceManager.setTadaVoiceSample(samplePath)
+      return { success: true, path: samplePath }
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+  })
+
+  ipcMain.handle('tada:setVoiceSample', async (_, samplePath: string) => {
+    try {
+      voiceManager.setTadaVoiceSample(samplePath)
+      return { success: true }
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+  })
+
+  ipcMain.handle('tada:getVoiceSample', async () => {
+    return { path: voiceManager.getTadaVoiceSample() }
+  })
+
+  ipcMain.handle('tada:speak', async (_, text: string) => {
+    try {
+      return await tadaTTS.speak(text)
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+  })
+
+  ipcMain.handle('tada:getSampleVoices', async () => {
+    return TADA_SAMPLE_VOICES.map(s => ({
+      ...s,
+      available: getTadaSamplePath(s.id) !== null
+    }))
+  })
+
+  ipcMain.handle('tada:useSampleVoice', async (_, sampleId: string) => {
+    try {
+      const samplePath = getTadaSamplePath(sampleId)
+      if (!samplePath) {
+        return { success: false, error: `Sample voice "${sampleId}" not found` }
+      }
+      voiceManager.setTadaVoiceSample(samplePath)
+      return { success: true, path: samplePath }
     } catch (e) {
       return { success: false, error: e instanceof Error ? e.message : String(e) }
     }

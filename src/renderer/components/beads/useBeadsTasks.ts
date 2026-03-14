@@ -15,6 +15,7 @@ export interface TaskCrudCallbacks {
   handleCompleteTask: (taskId: string) => Promise<void>
   handleDeleteTask: (taskId: string) => Promise<void>
   handleCycleStatus: (taskId: string, currentStatus: string) => Promise<void>
+  handleChangePriority: (taskId: string, priority: number) => Promise<void>
   handleSaveEdit: () => Promise<void>
   handleCancelEdit: () => void
   handleClearCompleted: () => Promise<void>
@@ -95,8 +96,14 @@ export function useBeadsTasks({
       if (currentProjectRef.current !== loadingForProject) return
 
       if (!currentAdapter) {
+        // On mobile (no electronAPI), we can't install beads — just show not initialized
+        if (!window.electronAPI) {
+          setBeadsState({ status: 'not_initialized', initializing: false, availableBackends: ['kspec'] })
+          return
+        }
+
         // Check if beads is at least installable
-        const beadsStatus = await window.electronAPI?.beadsCheck(loadingForProject)
+        const beadsStatus = await window.electronAPI.beadsCheck(loadingForProject)
         if (currentProjectRef.current !== loadingForProject) return
 
         if (!beadsStatus?.installed) {
@@ -282,6 +289,7 @@ export function useBeadsTasks({
     setTasks(updatedTasks)
     tasksCache.set(projectPath, updatedTasks)
 
+    suppressWatcherReloadRef.current = true
     try {
       const result = await adapter.complete(projectPath, taskId)
       if (!result.success) {
@@ -293,6 +301,8 @@ export function useBeadsTasks({
       setTasks(previousTasks)
       tasksCache.set(projectPath, previousTasks)
       setError(String(e))
+    } finally {
+      suppressWatcherReloadRef.current = false
     }
   }
 
@@ -304,6 +314,7 @@ export function useBeadsTasks({
     setTasks(updatedTasks)
     tasksCache.set(projectPath, updatedTasks)
 
+    suppressWatcherReloadRef.current = true
     try {
       const result = await adapter.delete(projectPath, taskId)
       if (!result.success) {
@@ -315,6 +326,8 @@ export function useBeadsTasks({
       setTasks(previousTasks)
       tasksCache.set(projectPath, previousTasks)
       setError(String(e))
+    } finally {
+      suppressWatcherReloadRef.current = false
     }
   }
 
@@ -333,9 +346,8 @@ export function useBeadsTasks({
     setTasks(updatedTasks)
     tasksCache.set(projectPath, updatedTasks)
 
+    suppressWatcherReloadRef.current = true
     try {
-      // Use adapter.cycleStatus() which knows the correct lifecycle endpoints
-      // (e.g., kspec uses /start and /complete instead of generic PATCH)
       const result = await adapter.cycleStatus(projectPath, taskId, currentStatus as UnifiedTask['status'])
       if (!result.success) {
         setTasks(previousTasks)
@@ -346,6 +358,33 @@ export function useBeadsTasks({
       setTasks(previousTasks)
       tasksCache.set(projectPath, previousTasks)
       setError(String(e))
+    } finally {
+      suppressWatcherReloadRef.current = false
+    }
+  }
+
+  const handleChangePriority = async (taskId: string, priority: number): Promise<void> => {
+    if (!projectPath || !adapter) return
+
+    const previousTasks = [...tasks]
+    const updatedTasks = tasks.map(t => t.id === taskId ? { ...t, priority } : t)
+    setTasks(updatedTasks)
+    tasksCache.set(projectPath, updatedTasks)
+
+    suppressWatcherReloadRef.current = true
+    try {
+      const result = await adapter.update(projectPath, taskId, { priority })
+      if (!result.success) {
+        setTasks(previousTasks)
+        tasksCache.set(projectPath, previousTasks)
+        setError(result.error || 'Failed to update priority')
+      }
+    } catch (e) {
+      setTasks(previousTasks)
+      tasksCache.set(projectPath, previousTasks)
+      setError(String(e))
+    } finally {
+      suppressWatcherReloadRef.current = false
     }
   }
 
@@ -438,6 +477,7 @@ export function useBeadsTasks({
     handleCompleteTask,
     handleDeleteTask,
     handleCycleStatus,
+    handleChangePriority,
     handleSaveEdit,
     handleCancelEdit,
     handleClearCompleted,

@@ -15,24 +15,85 @@ import type {
 } from './types.js'
 
 const DAEMON_PORT = 3456
-const API_BASE = `http://localhost:${DAEMON_PORT}`
+const DAEMON_BASE = `http://localhost:${DAEMON_PORT}`
+
+/** Get the API base URL — direct to daemon on Electron, proxy through server on mobile */
+function getApiBase(): string {
+  if (window.electronAPI) return DAEMON_BASE
+  // Mobile: proxy through the desktop server
+  const config = (window as any).__hostConfig
+  if (config) {
+    const proto = config.secure ? 'https' : 'http'
+    return `${proto}://${config.host}:${config.port}/api/projects/kspec`
+  }
+  // Fallback: try localStorage
+  try {
+    const stored = localStorage.getItem('claude-terminal-host-config')
+    if (stored) {
+      const cfg = JSON.parse(stored)
+      const proto = cfg.secure ? 'https' : 'http'
+      return `${proto}://${cfg.host}:${cfg.port}/api/projects/kspec`
+    }
+  } catch { /* ignore */ }
+  return DAEMON_BASE
+}
 
 function headers(cwd: string): HeadersInit {
-  return {
+  const h: Record<string, string> = {
     'Content-Type': 'application/json',
     'X-Kspec-Dir': cwd
   }
+  // Add auth token for proxy requests
+  if (!window.electronAPI) {
+    try {
+      const stored = localStorage.getItem('claude-terminal-host-config')
+      if (stored) {
+        const cfg = JSON.parse(stored)
+        if (cfg.token) h['Authorization'] = `Bearer ${cfg.token}`
+      }
+    } catch { /* ignore */ }
+  }
+  return h
+}
+
+function apiPath(path: string, cwd: string): string {
+  const base = getApiBase()
+  if (base === DAEMON_BASE) {
+    // Direct daemon: use /api/tasks paths
+    return `${base}${path}`
+  }
+  // Proxy: /api/projects/kspec/tasks paths — add cwd as query param for GET/DELETE
+  return `${base}${path.replace('/api/', '/')}`
 }
 
 async function api<T>(method: string, path: string, cwd: string, body?: unknown, adapter?: KspecAdapter): Promise<T> {
+  const isProxy = getApiBase() !== DAEMON_BASE
+  const url = apiPath(path, cwd)
+
+  // For proxy: inject cwd into body for POST/PATCH, or query param for GET/DELETE
+  let finalUrl = url
+  let finalBody = body
+
+  if (isProxy) {
+    if (method === 'GET' || method === 'DELETE') {
+      const sep = url.includes('?') ? '&' : '?'
+      finalUrl = `${url}${sep}cwd=${encodeURIComponent(cwd)}`
+    } else {
+      finalBody = { ...(body as Record<string, unknown> || {}), cwd }
+    }
+  }
+
   const opts: RequestInit = {
     method,
     headers: headers(cwd)
   }
-  if (body) opts.body = JSON.stringify(body)
-  let res: Response
+  if (finalBody && method !== 'GET' && method !== 'DELETE') {
+    opts.body = JSON.stringify(finalBody)
+  }
+
+  let res: globalThis.Response
   try {
-    res = await fetch(`${API_BASE}${path}`, opts)
+    res = await fetch(finalUrl, opts)
   } catch (e) {
     // Network error — daemon likely crashed, reset ensured flag on the instance
     if (adapter) adapter._daemonEnsuredFlag = false
@@ -79,6 +140,7 @@ function toUnified(raw: Record<string, unknown>): UnifiedTask {
     updated_at: typeof raw.updated_at === 'string' ? raw.updated_at : undefined,
     tags,
     automation: typeof raw.automation === 'string' ? raw.automation as UnifiedTask['automation'] : undefined,
+    hasSpec: typeof raw.spec_ref === 'string' && raw.spec_ref.length > 0,
     _backend: 'kspec'
   }
 }
@@ -98,26 +160,74 @@ export class KspecAdapter implements TaskAdapter {
 
     // Quick health check first
     try {
-      const res = await fetch(`${API_BASE}/api/health`)
+      const res = await fetch(`${DAEMON_BASE}/api/health`)
       if (res.ok) { this._daemonEnsuredFlag = true; this._daemonEnsuredForCwd = cwd; return true }
     } catch { /* daemon not running */ }
 
-    // Start daemon via IPC (always attempt if health check failed)
-    const result = await window.electronAPI?.kspecEnsureDaemon?.(cwd)
-    if (result?.success) { this._daemonEnsuredFlag = true; this._daemonEnsuredForCwd = cwd; return true }
+    // Start daemon via IPC (only available in Electron)
+    if (window.electronAPI?.kspecEnsureDaemon) {
+      const result = await window.electronAPI.kspecEnsureDaemon(cwd)
+      if (result?.success) { this._daemonEnsuredFlag = true; this._daemonEnsuredForCwd = cwd; return true }
+    }
+
+    // On mobile, the proxy handles routing — if check endpoint works, daemon is up
+    if (!window.electronAPI) {
+      const base = getApiBase()
+      if (base !== DAEMON_BASE) {
+        try {
+          const res = await fetch(`${base}/check?cwd=${encodeURIComponent(cwd)}`, { headers: headers(cwd) })
+          if (res.ok) {
+            const data = await res.json().catch(() => ({}))
+            if (data?.data?.exists) { this._daemonEnsuredFlag = true; this._daemonEnsuredForCwd = cwd; return true }
+          }
+        } catch { /* proxy unreachable */ }
+      }
+    }
+
     return false
   }
 
+  /** Try an API call; on network error, restart the daemon and retry once. */
+  private async withRetry<T>(cwd: string, fn: () => Promise<T>): Promise<T> {
+    try {
+      return await fn()
+    } catch (e) {
+      // Only retry on network errors (daemon down), not HTTP errors
+      if (!(e instanceof TypeError)) throw e
+      const started = await this.ensureDaemon(cwd)
+      if (!started) throw e
+      return await fn()
+    }
+  }
+
   async check(cwd: string): Promise<BackendStatus> {
-    // Check if .kspec/ exists via IPC (filesystem check)
-    const hasKspec = await window.electronAPI?.kspecCheck?.(cwd)
-    if (!hasKspec?.exists) {
-      return { kind: 'kspec', installed: true, initialized: false }
+    // Electron: check if .kspec/ exists via IPC
+    if (window.electronAPI?.kspecCheck) {
+      const hasKspec = await window.electronAPI.kspecCheck(cwd)
+      if (!hasKspec?.exists) {
+        return { kind: 'kspec', installed: true, initialized: false }
+      }
+      await this.ensureDaemon(cwd)
+      return { kind: 'kspec', installed: true, initialized: true }
     }
 
-    // Try to ensure daemon is running
-    await this.ensureDaemon(cwd)
-    return { kind: 'kspec', installed: true, initialized: true }
+    // Non-Electron (Android/web): check via server proxy
+    try {
+      const base = getApiBase()
+      const url = base === DAEMON_BASE
+        ? `${DAEMON_BASE}/api/tasks`
+        : `${base}/check?cwd=${encodeURIComponent(cwd)}`
+      const res = await fetch(url, { method: 'GET', headers: headers(cwd) })
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}))
+        // Proxy returns { data: { exists: true/false } }
+        if (data?.data?.exists === false) {
+          return { kind: 'kspec', installed: true, initialized: false }
+        }
+        return { kind: 'kspec', installed: true, initialized: true }
+      }
+    } catch { /* daemon not reachable */ }
+    return { kind: 'kspec', installed: true, initialized: false }
   }
 
   async init(cwd: string): Promise<{ success: boolean; error?: string }> {
@@ -127,24 +237,18 @@ export class KspecAdapter implements TaskAdapter {
 
   async list(cwd: string): Promise<UnifiedTask[]> {
     try {
-      const data = await api<{ items: Record<string, unknown>[] }>('GET', '/api/tasks', cwd, undefined, this)
+      const data = await this.withRetry(cwd, () =>
+        api<{ items: Record<string, unknown>[] }>('GET', '/api/tasks', cwd, undefined, this))
       return (data.items ?? []).map(toUnified)
     } catch {
-      // Daemon might not be running — try to start it and retry once
-      const started = await this.ensureDaemon(cwd)
-      if (started) {
-        try {
-          const data = await api<{ items: Record<string, unknown>[] }>('GET', '/api/tasks', cwd, undefined, this)
-          return (data.items ?? []).map(toUnified)
-        } catch { /* still failed */ }
-      }
       return []
     }
   }
 
   async show(cwd: string, taskId: string): Promise<UnifiedTask | null> {
     try {
-      const data = await api<Record<string, unknown>>('GET', `/api/tasks/${encodeURIComponent(taskId)}`, cwd, undefined, this)
+      const data = await this.withRetry(cwd, () =>
+        api<Record<string, unknown>>('GET', `/api/tasks/${encodeURIComponent(taskId)}`, cwd, undefined, this))
       return toUnified(data)
     } catch {
       return null
@@ -153,14 +257,14 @@ export class KspecAdapter implements TaskAdapter {
 
   async create(cwd: string, params: CreateTaskParams): Promise<{ success: boolean; error?: string }> {
     try {
-      await api('POST', '/api/tasks', cwd, {
+      await this.withRetry(cwd, () => api('POST', '/api/tasks', cwd, {
         title: params.title,
         description: params.description,
         priority: params.priority,
         type: params.type,
         tags: params.tags?.split(',').map(t => t.trim()).filter(Boolean),
         automation: params.automation || undefined
-      }, this)
+      }, this))
       return { success: true }
     } catch (e) {
       return { success: false, error: String(e) }
@@ -169,7 +273,8 @@ export class KspecAdapter implements TaskAdapter {
 
   async start(cwd: string, taskId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      await api('POST', `/api/tasks/${encodeURIComponent(taskId)}/start`, cwd, undefined, this)
+      await this.withRetry(cwd, () =>
+        api('POST', `/api/tasks/${encodeURIComponent(taskId)}/start`, cwd, undefined, this))
       return { success: true }
     } catch (e) {
       return { success: false, error: String(e) }
@@ -178,7 +283,8 @@ export class KspecAdapter implements TaskAdapter {
 
   async complete(cwd: string, taskId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      await api('POST', `/api/tasks/${encodeURIComponent(taskId)}/complete`, cwd, undefined, this)
+      await this.withRetry(cwd, () =>
+        api('POST', `/api/tasks/${encodeURIComponent(taskId)}/complete`, cwd, undefined, this))
       return { success: true }
     } catch (e) {
       return { success: false, error: String(e) }
@@ -187,7 +293,8 @@ export class KspecAdapter implements TaskAdapter {
 
   async delete(cwd: string, taskId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      await api('DELETE', `/api/tasks/${encodeURIComponent(taskId)}`, cwd, undefined, this)
+      await this.withRetry(cwd, () =>
+        api('DELETE', `/api/tasks/${encodeURIComponent(taskId)}`, cwd, undefined, this))
       return { success: true }
     } catch (e) {
       return { success: false, error: String(e) }
@@ -200,7 +307,8 @@ export class KspecAdapter implements TaskAdapter {
       const body = { ...params }
       if (body.status === 'open') body.status = 'pending' as TaskStatus
       if (body.status === 'closed') body.status = 'completed' as TaskStatus
-      await api('PATCH', `/api/tasks/${encodeURIComponent(taskId)}`, cwd, body, this)
+      await this.withRetry(cwd, () =>
+        api('PATCH', `/api/tasks/${encodeURIComponent(taskId)}`, cwd, body, this))
       return { success: true }
     } catch (e) {
       return { success: false, error: String(e) }
@@ -214,7 +322,8 @@ export class KspecAdapter implements TaskAdapter {
       default:
         // Kspec uses 'pending' internally — 'open' is only the unified status
         try {
-          await api('PATCH', `/api/tasks/${encodeURIComponent(taskId)}`, cwd, { status: 'pending' }, this)
+          await this.withRetry(cwd, () =>
+            api('PATCH', `/api/tasks/${encodeURIComponent(taskId)}`, cwd, { status: 'pending' }, this))
           return { success: true }
         } catch (e) {
           return { success: false, error: String(e) }
@@ -231,10 +340,16 @@ export class KspecAdapter implements TaskAdapter {
   private watching = false
 
   watch(cwd: string): void {
-    // If switching projects, close old connection first
-    if (this.ws && this.watchedCwd !== cwd) {
-      this.ws.close()
-      this.ws = null
+    // If switching projects, clean up old connection and pending reconnect timer
+    if (this.watchedCwd !== cwd) {
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer)
+        this.reconnectTimer = null
+      }
+      if (this.ws) {
+        this.ws.close()
+        this.ws = null
+      }
     }
     this.watching = true
     this.watchedCwd = cwd

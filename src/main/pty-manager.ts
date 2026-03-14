@@ -68,6 +68,7 @@ interface ExtendedPtyForkOptions extends pty.IPtyForkOptions {
 function getEnhancedEnv(): { [key: string]: string } {
   const env = { ...process.env } as { [key: string]: string }
   delete env.CLAUDECODE
+  env.SIMPLE_CODE_GUI = '1'
   const enhancedPath = getEnhancedPathWithPortable()
 
   // On Windows, environment variables are case-insensitive but we need to set the right one

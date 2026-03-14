@@ -19,11 +19,11 @@ export function TaskStatusButton({
     case 'in_progress':
       return (
         <button
-          className="beads-task-check"
+          className="beads-task-check in-progress"
           onClick={() => onComplete(taskId)}
           title="Mark complete"
         >
-          &#9675;
+          ◉
         </button>
       )
     default:

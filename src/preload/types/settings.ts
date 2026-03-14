@@ -23,6 +23,7 @@ export interface Settings {
   voiceSpeed?: number
   voiceSkipOnNew?: boolean
   voiceSilenceThreshold?: number
+  voicePushToTalk?: boolean
   autoAcceptTools?: string[]
   permissionMode?: string
   backend?: 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'

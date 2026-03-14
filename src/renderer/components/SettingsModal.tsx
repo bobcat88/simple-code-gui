@@ -80,12 +80,17 @@ export function SettingsModal({
   // Grouped state: UI/loading states
   const [ui, setUI] = useState<UIState>(DEFAULT_UI)
 
-  // Load installed voices (Piper and XTTS)
+  // TADA sample voices and HF auth
+  const [tadaSampleVoices, setTadaSampleVoices] = useState<Array<{ id: string; name: string; description: string; available: boolean }>>([])
+  const [tadaHfAuthenticated, setTadaHfAuthenticated] = useState<boolean | null>(null)
+
+  // Load installed voices (Piper, XTTS, and TADA)
   async function refreshInstalledVoices(): Promise<void> {
     try {
-      const [piperVoices, xttsVoices] = await Promise.all([
+      const [piperVoices, xttsVoices, tadaStatus] = await Promise.all([
         window.electronAPI?.voiceGetInstalled?.(),
-        window.electronAPI?.xttsGetVoices?.()
+        window.electronAPI?.xttsGetVoices?.(),
+        window.electronAPI?.tadaCheck?.()
       ])
       const combined: Array<{ key: string; displayName: string; source: string }> = []
       if (piperVoices) combined.push(...piperVoices)
@@ -95,6 +100,17 @@ export function SettingsModal({
           displayName: v.name,
           source: 'xtts'
         })))
+      }
+      // Add TADA as a voice option if installed (show even if HF auth needed)
+      if (tadaStatus?.installed) {
+        setTadaHfAuthenticated(tadaStatus.hfAuthenticated ?? null)
+        combined.push({
+          key: 'tada',
+          displayName: tadaStatus.hfAuthenticated === false
+            ? 'TADA (Neural Voice Clone) — HF Login Required'
+            : 'TADA (Neural Voice Clone)',
+          source: 'tada'
+        })
       }
       setVoice(prev => ({ ...prev, installedVoices: combined }))
     } catch (e) {
@@ -118,13 +134,14 @@ export function SettingsModal({
       })
 
       // Load voice settings (active voice)
-      window.electronAPI?.voiceGetSettings?.()?.then((voiceSettings: { ttsVoice?: string; ttsEngine?: string; ttsSpeed?: number; xttsTemperature?: number; xttsTopK?: number; xttsTopP?: number; xttsRepetitionPenalty?: number }) => {
+      window.electronAPI?.voiceGetSettings?.()?.then((voiceSettings: { ttsVoice?: string; ttsEngine?: string; ttsSpeed?: number; xttsTemperature?: number; xttsTopK?: number; xttsTopP?: number; xttsRepetitionPenalty?: number; tadaVoiceSample?: string | null }) => {
         if (voiceSettings) {
           setVoice(prev => ({
             ...prev,
             selectedVoice: voiceSettings.ttsVoice || 'en_US-libritts_r-medium',
-            selectedEngine: (voiceSettings.ttsEngine as 'piper' | 'xtts') || 'piper',
-            ttsSpeed: voiceSettings.ttsSpeed || 1.0
+            selectedEngine: (voiceSettings.ttsEngine as 'piper' | 'xtts' | 'tada') || 'piper',
+            ttsSpeed: voiceSettings.ttsSpeed || 1.0,
+            tadaVoiceSample: voiceSettings.tadaVoiceSample || null
           }))
           setXtts({
             temperature: voiceSettings.xttsTemperature ?? 0.65,
@@ -146,6 +163,11 @@ export function SettingsModal({
 
       refreshInstalledVoices()
 
+      // Load TADA sample voices
+      window.electronAPI?.tadaGetSampleVoices?.()?.then((samples) => {
+        if (samples) setTadaSampleVoices(samples)
+      })?.catch(() => {})
+
       // Load installed extensions
       window.electronAPI?.extensionsGetInstalled?.()?.then((exts) => {
         setInstalledExtensions(exts || [])
@@ -165,7 +187,7 @@ export function SettingsModal({
       backend: general.backend
     }
     await window.electronAPI?.saveSettings(newSettings)
-    // Save voice settings including XTTS quality settings
+    // Save voice settings including XTTS quality settings and TADA sample
     await window.electronAPI?.voiceApplySettings?.({
       ttsVoice: voice.selectedVoice,
       ttsEngine: voice.selectedEngine,
@@ -173,7 +195,8 @@ export function SettingsModal({
       xttsTemperature: xtts.temperature,
       xttsTopK: xtts.topK,
       xttsTopP: xtts.topP,
-      xttsRepetitionPenalty: xtts.repetitionPenalty
+      xttsRepetitionPenalty: xtts.repetitionPenalty,
+      tadaVoiceSample: voice.tadaVoiceSample
     })
     onSaved?.(newSettings)
     onClose()
@@ -183,8 +206,30 @@ export function SettingsModal({
     setVoice(prev => ({
       ...prev,
       selectedVoice: voiceKey,
-      selectedEngine: source === 'xtts' ? 'xtts' : 'piper'
+      selectedEngine: source === 'xtts' ? 'xtts' : source === 'tada' ? 'tada' : 'piper'
     }))
+  }
+
+  async function handleTadaSelectSample(): Promise<void> {
+    try {
+      const result = await window.electronAPI?.tadaSelectVoiceSample?.()
+      if (result?.success && result.path) {
+        setVoice(prev => ({ ...prev, tadaVoiceSample: result.path }))
+      }
+    } catch (e) {
+      console.error('Failed to select TADA voice sample:', e)
+    }
+  }
+
+  async function handleTadaUseSample(sampleId: string): Promise<void> {
+    try {
+      const result = await window.electronAPI?.tadaUseSampleVoice?.(sampleId)
+      if (result?.success && result.path) {
+        setVoice(prev => ({ ...prev, tadaVoiceSample: result.path }))
+      }
+    } catch (e) {
+      console.error('Failed to use TADA sample voice:', e)
+    }
   }
 
   function toggleTool(tool: string): void {
@@ -330,6 +375,19 @@ export function SettingsModal({
             onXttsChange={setXtts}
             onShowVoiceBrowser={() => setUI(prev => ({ ...prev, showVoiceBrowser: true }))}
             onPreviewStateChange={(state) => setUI(prev => ({ ...prev, ...state }))}
+            onTadaSelectSample={handleTadaSelectSample}
+            onTadaUseSample={handleTadaUseSample}
+            tadaVoiceSample={voice.tadaVoiceSample}
+            tadaSampleVoices={tadaSampleVoices}
+            tadaHfAuthenticated={tadaHfAuthenticated}
+            onTadaHfLogin={async (token: string) => {
+              const result = await window.electronAPI?.tadaLoginHuggingFace?.(token)
+              if (result?.success) {
+                setTadaHfAuthenticated(true)
+                refreshInstalledVoices()
+              }
+              return result ?? { success: false, error: 'API not available' }
+            }}
           />
 
           <UninstallTTSSection
@@ -368,7 +426,7 @@ export function SettingsModal({
           setVoice(prev => ({
             ...prev,
             selectedVoice: voiceKey,
-            selectedEngine: engine === 'xtts' ? 'xtts' : 'piper'
+            selectedEngine: engine === 'xtts' ? 'xtts' : engine === 'tada' ? 'tada' : 'piper'
           }))
           window.electronAPI?.voiceSetVoice?.({ voice: voiceKey, engine })
         }}

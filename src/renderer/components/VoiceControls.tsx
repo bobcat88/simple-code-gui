@@ -16,7 +16,9 @@ export function VoiceControls({
     // Voice Input
     isRecording, isModelLoading, isModelLoaded, modelLoadProgress, modelLoadStatus,
     currentTranscription, startRecording, stopRecording,
-    audioLevel, silenceThreshold, setSilenceThreshold
+    audioLevel, silenceThreshold, setSilenceThreshold,
+    // Push-to-Talk
+    pushToTalkEnabled, setPushToTalkEnabled
   } = useVoice()
 
   const [ttsInstalled, setTtsInstalled] = useState(false)
@@ -28,6 +30,16 @@ export function VoiceControls({
   useEffect(() => {
     activeTabIdRef.current = activeTabId
   }, [activeTabId])
+
+  // Refs for PTT state to avoid stale closures in event listeners
+  const pttEnabledRef = useRef(pushToTalkEnabled)
+  const isRecordingRef = useRef(isRecording)
+  const isModelLoadingRef = useRef(isModelLoading)
+  const pttActiveRef = useRef(false) // true while PTT key is held
+
+  useEffect(() => { pttEnabledRef.current = pushToTalkEnabled }, [pushToTalkEnabled])
+  useEffect(() => { isRecordingRef.current = isRecording }, [isRecording])
+  useEffect(() => { isModelLoadingRef.current = isModelLoading }, [isModelLoading])
 
   useEffect(() => {
     checkInstallation()
@@ -66,14 +78,56 @@ export function VoiceControls({
     onTranscription(text)
   }, [onTranscription])
 
+  // Stable ref for transcription callback used by PTT
+  const handleTranscriptionRef = useRef(handleTranscription)
+  useEffect(() => { handleTranscriptionRef.current = handleTranscription }, [handleTranscription])
+
+  // Push-to-Talk keyboard handler (Ctrl+Space)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!pttEnabledRef.current) return
+      if (e.code !== 'Space' || !e.ctrlKey) return
+      if (e.repeat) return // Ignore key repeat
+      if (isModelLoadingRef.current) return
+
+      e.preventDefault()
+      e.stopPropagation()
+
+      if (!isRecordingRef.current && !pttActiveRef.current) {
+        pttActiveRef.current = true
+        startRecording(handleTranscriptionRef.current)
+      }
+    }
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (!pttEnabledRef.current) return
+      if (e.code !== 'Space') return
+      if (!pttActiveRef.current) return
+
+      e.preventDefault()
+      e.stopPropagation()
+
+      pttActiveRef.current = false
+      if (isRecordingRef.current) {
+        stopRecording()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown, true)
+    window.addEventListener('keyup', handleKeyUp, true)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, true)
+      window.removeEventListener('keyup', handleKeyUp, true)
+    }
+  }, [startRecording, stopRecording])
+
   const handleVoiceInput = async () => {
     if (isModelLoading) return
 
     if (isRecording) {
-      // Stop recording
       stopRecording()
     } else {
-      // Start recording - model will auto-load if needed
       await startRecording(handleTranscription)
     }
   }
@@ -126,11 +180,11 @@ export function VoiceControls({
     if (isModelLoading) return `Loading Whisper model... ${modelLoadProgress}%`
     if (isRecording) {
       if (currentTranscription) {
-        return `Recording: "${currentTranscription}" (auto-submits after silence)`
+        return `Recording: "${currentTranscription}" ${pushToTalkEnabled ? '(release Ctrl+Space to send)' : '(auto-submits after silence)'}`
       }
-      return 'Listening... (speak now)'
+      return pushToTalkEnabled ? 'Listening... (release Ctrl+Space to send)' : 'Listening... (speak now)'
     }
-    return 'Click to start voice input'
+    return pushToTalkEnabled ? 'Push-to-Talk: Hold Ctrl+Space to record' : 'Click to start voice input'
   }
 
   return (
@@ -161,18 +215,29 @@ export function VoiceControls({
                 style={{ bottom: `${silenceThreshold}%` }}
               />
             </div>
-            <input
-              type="range"
-              className="voice-threshold-slider"
-              min="0"
-              max="50"
-              value={silenceThreshold}
-              onChange={(e) => setSilenceThreshold(Number(e.target.value))}
-              title={`Silence threshold: ${silenceThreshold}%`}
-            />
+            {!pushToTalkEnabled && (
+              <input
+                type="range"
+                className="voice-threshold-slider"
+                min="0"
+                max="50"
+                value={silenceThreshold}
+                onChange={(e) => setSilenceThreshold(Number(e.target.value))}
+                title={`Silence threshold: ${silenceThreshold}%`}
+              />
+            )}
           </div>
         )}
       </div>
+
+      <button
+        className={`action-icon-btn ${pushToTalkEnabled ? 'enabled' : ''}`}
+        onClick={() => setPushToTalkEnabled(!pushToTalkEnabled)}
+        tabIndex={-1}
+        title={pushToTalkEnabled ? 'Push-to-Talk ON (Ctrl+Space) — click to switch to auto-detect' : 'Auto-detect mode — click to enable Push-to-Talk (Ctrl+Space)'}
+      >
+        {pushToTalkEnabled ? '\u{1F3A7}' : '\u{1F50D}'}
+      </button>
 
       <button
         className={`action-icon-btn ${voiceOutputEnabled ? 'enabled' : ''} ${installingTTS ? 'installing' : ''}`}

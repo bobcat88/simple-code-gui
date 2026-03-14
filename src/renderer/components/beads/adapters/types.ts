@@ -17,6 +17,7 @@ export interface UnifiedTask {
   updated_at?: string
   tags?: string[]
   automation?: AutomationEligibility
+  hasSpec?: boolean
   // Source tracking (invisible to user, used internally for routing)
   _backend: 'beads' | 'kspec'
 }

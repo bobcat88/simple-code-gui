@@ -8,6 +8,8 @@ files:
 extraResources:
   - from: resources/icon.png
     to: icon.png
+  - from: resources/tada-samples
+    to: tada-samples
 
 publish:
   provider: github

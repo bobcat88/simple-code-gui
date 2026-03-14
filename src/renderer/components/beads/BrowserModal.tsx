@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import type { UnifiedTask } from './adapters/types.js'
-import { getPriorityClass, getPriorityLabel, formatStatusLabel, getStatusOrder } from './types.js'
+import { getPriorityClass, getPriorityLabel, PRIORITY_LABELS, formatStatusLabel, getStatusOrder } from './types.js'
 
 interface BrowserModalProps {
   show: boolean
@@ -18,6 +18,7 @@ interface BrowserModalProps {
   onComplete: (taskId: string) => void
   onStart: (e: React.MouseEvent, taskId: string) => void
   onCycleStatus: (taskId: string, status: string) => void
+  onChangePriority: (taskId: string, priority: number) => void
   onDelete: (taskId: string) => void
   onOpenDetail: (task: UnifiedTask) => void
   onClearCompleted: () => void
@@ -27,7 +28,7 @@ export function BrowserModal({
   show, onClose, projectName, backendLabel, tasks,
   filter, setFilter, sort, setSort,
   onRefresh, onCreateNew, onComplete, onStart,
-  onCycleStatus, onDelete, onOpenDetail, onClearCompleted
+  onCycleStatus, onChangePriority, onDelete, onOpenDetail, onClearCompleted
 }: BrowserModalProps) {
   if (!show) return null
 
@@ -156,9 +157,20 @@ export function BrowserModal({
                   </div>
 
                   <div className="beads-browser-item-meta">
-                    <span className={`beads-browser-priority ${getPriorityClass(task.priority)}`}>
-                      P{task.priority ?? 2} {getPriorityLabel(task.priority)}
-                    </span>
+                    <select
+                      className={`beads-browser-priority-select ${getPriorityClass(task.priority)}`}
+                      value={task.priority ?? 2}
+                      onChange={(e) => onChangePriority(task.id, Number(e.target.value))}
+                      onClick={(e) => e.stopPropagation()}
+                      title="Change priority"
+                    >
+                      {PRIORITY_LABELS.map((label, i) => (
+                        <option key={i} value={i}>P{i} {label}</option>
+                      ))}
+                    </select>
+                    {task.hasSpec && (
+                      <span className="beads-task-spec-badge" title="Has acceptance criteria">AC</span>
+                    )}
                     {task.type && (
                       <span className="beads-browser-type">{task.type}</span>
                     )}

@@ -3,7 +3,7 @@ import { TitleBar } from '../components/TitleBar'
 import { Sidebar } from '../components/Sidebar'
 import { TerminalTabs } from '../components/TerminalTabs'
 import { Terminal } from '../components/terminal/Terminal'
-import { TiledTerminalView } from '../components/TiledTerminalView'
+import { TiledTerminalView } from '../components/tiled/index.js'
 import { SettingsModal } from '../components/SettingsModal'
 import { MakeProjectModal } from '../components/MakeProjectModal'
 import { ErrorBoundary } from '../components/ErrorBoundary'
@@ -72,12 +72,12 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
   // View state from hook
   const {
     viewMode,
-    tileLayout,
+    tileTree,
     lastFocusedTabId,
     sidebarWidth,
     sidebarCollapsed,
     setViewMode,
-    setTileLayout,
+    setTileTree,
     setLastFocusedTabId,
     setSidebarWidth,
     setSidebarCollapsed,
@@ -95,7 +95,7 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
     api,
     checkInstallation,
     setViewMode,
-    setTileLayout
+    setTileTree
   })
 
   // Session polling hook
@@ -117,6 +117,7 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
     handleAddProjectsFromParent,
     handleOpenSession,
     handleOpenSessionAtPosition,
+    handleAddTabToTile,
     handleCloseTab,
     handleCloseProjectTabs,
     handleProjectCreated,
@@ -127,12 +128,12 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
     projects,
     openTabs,
     settings,
-    tileLayout,
+    tileTree,
     addProject,
     removeTab,
     addTab,
     setActiveTab,
-    setTileLayout
+    setTileTree
   })
 
   // App-specific state
@@ -194,11 +195,11 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
         })),
         activeTabId,
         viewMode,
-        tileLayout,
+        tileTree: tileTree || undefined,
         categories
       })
     }
-  }, [api, projects, openTabs, activeTabId, loading, viewMode, tileLayout, categories])
+  }, [api, projects, openTabs, activeTabId, loading, viewMode, tileTree, categories])
 
   // Mobile drawer handlers
   const openMobileDrawer = useCallback(() => {
@@ -347,10 +348,10 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
                       focusedTabId={lastFocusedTabId}
                       onCloseTab={handleCloseTab}
                       onFocusTab={setLastFocusedTabId}
-                      layout={tileLayout}
-                      onLayoutChange={setTileLayout}
+                      tileTree={tileTree}
+                      onTreeChange={setTileTree}
                       onOpenSessionAtPosition={handleOpenSessionAtPosition}
-                      onAddTab={(projectPath) => handleOpenSession(projectPath, undefined, undefined, undefined, true)}
+                      onAddTab={handleAddTabToTile}
                       onUndoCloseTab={canUndoCloseTab ? handleUndoCloseTab : undefined}
                       api={api}
                     />

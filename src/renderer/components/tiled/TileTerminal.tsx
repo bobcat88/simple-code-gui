@@ -1,14 +1,18 @@
 import React, { useCallback } from 'react'
 import { Terminal } from '../Terminal.js'
 import { ErrorBoundary } from '../ErrorBoundary.js'
-import type { TileLayout, DropZone } from '../tiled-layout-utils.js'
+import type { ComputedRect } from '../tile-tree.js'
+import type { DropZone } from '../tiled-layout-utils.js'
 import { computeDropZone } from '../tiled-layout-utils.js'
 import type { Theme } from '../../themes.js'
 import type { Api } from '../../api/types.js'
 import type { OpenTab, Project, ResizeEdge, ClientToCanvasPercent } from './types.js'
 
 interface TileTerminalProps {
-  tile: TileLayout
+  leafId: string
+  rect: ComputedRect
+  tabIds: string[]
+  activeTabId: string
   tabs: OpenTab[]
   activeSubTabId: string
   project: Project | undefined
@@ -20,15 +24,14 @@ interface TileTerminalProps {
   isDropTarget: boolean
   draggedTile: string | null
   draggedSidebarProject: string | null
-  effectiveLayout: TileLayout[]
-  containerRef: React.RefObject<HTMLDivElement | null>
+  flatLayout: { id: string; x: number; y: number; width: number; height: number }[]
   highlightedEdges: Set<string>
   viewportSize: { width: number; height: number }
   clientToCanvasPercent: ClientToCanvasPercent
   onCloseTab: (id: string) => void
   onFocusTab: (id: string) => void
-  onSwitchSubTab: (tileId: string, tabId: string) => void
-  onAddTab?: (projectPath: string) => void
+  onSwitchSubTab: (leafId: string, tabId: string) => void
+  onAddTab?: (projectPath: string, tileId: string) => void
   onDragStart: (e: React.DragEvent, tileId: string) => void
   onDragEnd: () => void
   onContainerDrop: (e: React.DragEvent) => void
@@ -40,7 +43,10 @@ interface TileTerminalProps {
 }
 
 export function TileTerminal({
-  tile,
+  leafId,
+  rect,
+  tabIds,
+  activeTabId: _activeTabId,
   tabs,
   activeSubTabId,
   project,
@@ -52,8 +58,7 @@ export function TileTerminal({
   isDropTarget,
   draggedTile,
   draggedSidebarProject,
-  effectiveLayout,
-  containerRef,
+  flatLayout,
   highlightedEdges,
   viewportSize,
   clientToCanvasPercent,
@@ -73,11 +78,10 @@ export function TileTerminal({
   const projectColor = project?.color
 
   const handleSubTabClick = useCallback((tabId: string) => {
-    onSwitchSubTab(tile.id, tabId)
+    onSwitchSubTab(leafId, tabId)
     onFocusTab(tabId)
-    // Trigger refit for the newly visible terminal
     setTimeout(() => window.dispatchEvent(new Event('resize')), 50)
-  }, [tile.id, onSwitchSubTab, onFocusTab])
+  }, [leafId, onSwitchSubTab, onFocusTab])
 
   const handleSubTabClose = useCallback((e: React.MouseEvent, tabId: string) => {
     e.stopPropagation()
@@ -90,9 +94,9 @@ export function TileTerminal({
     e.preventDefault()
     const projectPath = tabs[0]?.projectPath
     if (projectPath && onAddTab) {
-      onAddTab(projectPath)
+      onAddTab(projectPath, leafId)
     }
-  }, [tabs, onAddTab])
+  }, [tabs, onAddTab, leafId])
 
   function handleTileDragOver(e: React.DragEvent): void {
     const isSidebarDrag = e.dataTransfer.types.includes('application/x-sidebar-project')
@@ -103,9 +107,9 @@ export function TileTerminal({
         setDraggedSidebarProject('pending')
       }
       const { x: mouseX, y: mouseY } = clientToCanvasPercent(e.clientX, e.clientY)
-      const zone = computeDropZone(effectiveLayout, null, mouseX, mouseY)
+      const zone = computeDropZone(flatLayout, null, mouseX, mouseY)
       setCurrentDropZone(zone)
-      setDropTarget(zone?.targetTileId || tile.id)
+      setDropTarget(zone?.targetTileId || leafId)
     }
   }
 
@@ -122,9 +126,9 @@ export function TileTerminal({
     e.preventDefault()
     e.stopPropagation()
     const { x: mouseX, y: mouseY } = clientToCanvasPercent(e.clientX, e.clientY)
-    const zone = computeDropZone(effectiveLayout, draggedTile, mouseX, mouseY)
+    const zone = computeDropZone(flatLayout, draggedTile, mouseX, mouseY)
     setCurrentDropZone(zone)
-    setDropTarget(zone?.targetTileId || tile.id)
+    setDropTarget(zone?.targetTileId || leafId)
   }
 
   const hasMultipleTabs = tabs.length > 1
@@ -135,10 +139,10 @@ export function TileTerminal({
       className={`terminal-tile ${isFocused ? 'focused' : ''} ${isDragging ? 'dragging' : ''} ${isDropTarget ? 'drop-target' : ''}`}
       style={{
         position: 'absolute',
-        left: `${tile.x / 100 * viewportSize.width + GAP}px`,
-        top: `${tile.y / 100 * viewportSize.height + GAP}px`,
-        width: `${tile.width / 100 * viewportSize.width - GAP}px`,
-        height: `${tile.height / 100 * viewportSize.height - GAP}px`,
+        left: `${rect.x / 100 * viewportSize.width + GAP}px`,
+        top: `${rect.y / 100 * viewportSize.height + GAP}px`,
+        width: `${rect.width / 100 * viewportSize.width - GAP}px`,
+        height: `${rect.height / 100 * viewportSize.height - GAP}px`,
         display: 'flex',
         flexDirection: 'column',
         background: projectColor ? `color-mix(in srgb, ${projectColor} 20%, var(--bg-elevated))` : 'var(--bg-elevated)',
@@ -151,7 +155,7 @@ export function TileTerminal({
       <div
         className="tile-header"
         draggable
-        onDragStart={(e) => onDragStart(e, tile.id)}
+        onDragStart={(e) => onDragStart(e, leafId)}
         onDragEnd={onDragEnd}
         style={{ cursor: 'grab', background: projectColor ? `color-mix(in srgb, ${projectColor} 35%, var(--bg-surface))` : undefined }}
       >
@@ -230,7 +234,7 @@ export function TileTerminal({
           </div>
         ))}
       </div>
-      {((draggedTile && draggedTile !== tile.id) || draggedSidebarProject) && (
+      {((draggedTile && draggedTile !== leafId) || draggedSidebarProject) && (
         <div
           className="tile-drop-overlay"
           style={{
@@ -245,37 +249,37 @@ export function TileTerminal({
           onDrop={(e) => { e.preventDefault(); e.stopPropagation(); onContainerDrop(e) }}
         />
       )}
-      <div className={`tile-edge-resize tile-edge-left ${highlightedEdges.has(`${tile.id}-left`) ? 'highlighted' : ''}`}
-        onMouseDown={(e) => startTileResize(e, tile.id, 'left')}
-        onMouseEnter={() => setHoveredEdge({ tileId: tile.id, edge: 'left' })}
+      <div className={`tile-edge-resize tile-edge-left ${highlightedEdges.has(`${leafId}-left`) ? 'highlighted' : ''}`}
+        onMouseDown={(e) => startTileResize(e, leafId, 'left')}
+        onMouseEnter={() => setHoveredEdge({ tileId: leafId, edge: 'left' })}
         onMouseLeave={() => setHoveredEdge(null)} title="Drag to resize" />
-      <div className={`tile-edge-resize tile-edge-right ${highlightedEdges.has(`${tile.id}-right`) ? 'highlighted' : ''}`}
-        onMouseDown={(e) => startTileResize(e, tile.id, 'right')}
-        onMouseEnter={() => setHoveredEdge({ tileId: tile.id, edge: 'right' })}
+      <div className={`tile-edge-resize tile-edge-right ${highlightedEdges.has(`${leafId}-right`) ? 'highlighted' : ''}`}
+        onMouseDown={(e) => startTileResize(e, leafId, 'right')}
+        onMouseEnter={() => setHoveredEdge({ tileId: leafId, edge: 'right' })}
         onMouseLeave={() => setHoveredEdge(null)} title="Drag to resize" />
-      <div className={`tile-edge-resize tile-edge-top ${highlightedEdges.has(`${tile.id}-top`) ? 'highlighted' : ''}`}
-        onMouseDown={(e) => startTileResize(e, tile.id, 'top')}
-        onMouseEnter={() => setHoveredEdge({ tileId: tile.id, edge: 'top' })}
+      <div className={`tile-edge-resize tile-edge-top ${highlightedEdges.has(`${leafId}-top`) ? 'highlighted' : ''}`}
+        onMouseDown={(e) => startTileResize(e, leafId, 'top')}
+        onMouseEnter={() => setHoveredEdge({ tileId: leafId, edge: 'top' })}
         onMouseLeave={() => setHoveredEdge(null)} title="Drag to resize" />
-      <div className={`tile-edge-resize tile-edge-bottom ${highlightedEdges.has(`${tile.id}-bottom`) ? 'highlighted' : ''}`}
-        onMouseDown={(e) => startTileResize(e, tile.id, 'bottom')}
-        onMouseEnter={() => setHoveredEdge({ tileId: tile.id, edge: 'bottom' })}
+      <div className={`tile-edge-resize tile-edge-bottom ${highlightedEdges.has(`${leafId}-bottom`) ? 'highlighted' : ''}`}
+        onMouseDown={(e) => startTileResize(e, leafId, 'bottom')}
+        onMouseEnter={() => setHoveredEdge({ tileId: leafId, edge: 'bottom' })}
         onMouseLeave={() => setHoveredEdge(null)} title="Drag to resize" />
-      <div className={`tile-corner-resize tile-corner-top-left ${highlightedEdges.has(`${tile.id}-top`) || highlightedEdges.has(`${tile.id}-left`) ? 'highlighted' : ''}`}
-        onMouseDown={(e) => startTileResize(e, tile.id, 'top-left')}
-        onMouseEnter={() => setHoveredEdge({ tileId: tile.id, edge: 'top-left' })}
+      <div className={`tile-corner-resize tile-corner-top-left ${highlightedEdges.has(`${leafId}-top`) || highlightedEdges.has(`${leafId}-left`) ? 'highlighted' : ''}`}
+        onMouseDown={(e) => startTileResize(e, leafId, 'top-left')}
+        onMouseEnter={() => setHoveredEdge({ tileId: leafId, edge: 'top-left' })}
         onMouseLeave={() => setHoveredEdge(null)} title="Drag to resize" />
-      <div className={`tile-corner-resize tile-corner-top-right ${highlightedEdges.has(`${tile.id}-top`) || highlightedEdges.has(`${tile.id}-right`) ? 'highlighted' : ''}`}
-        onMouseDown={(e) => startTileResize(e, tile.id, 'top-right')}
-        onMouseEnter={() => setHoveredEdge({ tileId: tile.id, edge: 'top-right' })}
+      <div className={`tile-corner-resize tile-corner-top-right ${highlightedEdges.has(`${leafId}-top`) || highlightedEdges.has(`${leafId}-right`) ? 'highlighted' : ''}`}
+        onMouseDown={(e) => startTileResize(e, leafId, 'top-right')}
+        onMouseEnter={() => setHoveredEdge({ tileId: leafId, edge: 'top-right' })}
         onMouseLeave={() => setHoveredEdge(null)} title="Drag to resize" />
-      <div className={`tile-corner-resize tile-corner-bottom-left ${highlightedEdges.has(`${tile.id}-bottom`) || highlightedEdges.has(`${tile.id}-left`) ? 'highlighted' : ''}`}
-        onMouseDown={(e) => startTileResize(e, tile.id, 'bottom-left')}
-        onMouseEnter={() => setHoveredEdge({ tileId: tile.id, edge: 'bottom-left' })}
+      <div className={`tile-corner-resize tile-corner-bottom-left ${highlightedEdges.has(`${leafId}-bottom`) || highlightedEdges.has(`${leafId}-left`) ? 'highlighted' : ''}`}
+        onMouseDown={(e) => startTileResize(e, leafId, 'bottom-left')}
+        onMouseEnter={() => setHoveredEdge({ tileId: leafId, edge: 'bottom-left' })}
         onMouseLeave={() => setHoveredEdge(null)} title="Drag to resize" />
-      <div className={`tile-corner-resize tile-corner-bottom-right ${highlightedEdges.has(`${tile.id}-bottom`) || highlightedEdges.has(`${tile.id}-right`) ? 'highlighted' : ''}`}
-        onMouseDown={(e) => startTileResize(e, tile.id, 'bottom-right')}
-        onMouseEnter={() => setHoveredEdge({ tileId: tile.id, edge: 'bottom-right' })}
+      <div className={`tile-corner-resize tile-corner-bottom-right ${highlightedEdges.has(`${leafId}-bottom`) || highlightedEdges.has(`${leafId}-right`) ? 'highlighted' : ''}`}
+        onMouseDown={(e) => startTileResize(e, leafId, 'bottom-right')}
+        onMouseEnter={() => setHoveredEdge({ tileId: leafId, edge: 'bottom-right' })}
         onMouseLeave={() => setHoveredEdge(null)} title="Drag to resize" />
     </div>
   )

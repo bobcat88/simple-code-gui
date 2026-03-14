@@ -72,14 +72,14 @@ export interface WhisperStatus {
 
 export interface TTSStatus {
   installed: boolean
-  engine: 'piper' | 'xtts' | null
+  engine: 'piper' | 'xtts' | 'tada' | null
   voices: string[]
   currentVoice: string | null
 }
 
 export interface VoiceSettings {
   whisperModel: WhisperModelName
-  ttsEngine: 'piper' | 'xtts'
+  ttsEngine: 'piper' | 'xtts' | 'tada'
   ttsVoice: string
   ttsSpeed: number
   microphoneId: string | null
@@ -89,6 +89,7 @@ export interface VoiceSettings {
   xttsTopK: number
   xttsTopP: number
   xttsRepetitionPenalty: number
+  tadaVoiceSample?: string | null
 }
 
 export interface VoiceCatalogEntry {

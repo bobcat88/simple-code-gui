@@ -23,7 +23,7 @@ export type WhisperModelSize = 'tiny.en' | 'base.en' | 'small.en' | 'medium.en' 
 
 export interface ProjectVoiceSettings {
   ttsVoice?: string
-  ttsEngine?: 'piper' | 'xtts'
+  ttsEngine?: 'piper' | 'xtts' | 'tada'
 }
 
 export interface VoiceContextValue {
@@ -55,6 +55,10 @@ export interface VoiceContextValue {
   setSilenceThreshold: (threshold: number) => void
   startRecording: (onTranscription: (text: string) => void) => Promise<void>
   stopRecording: () => void
+
+  // Push-to-Talk
+  pushToTalkEnabled: boolean
+  setPushToTalkEnabled: (enabled: boolean) => void
 }
 
 // TTS refs interface for handler functions

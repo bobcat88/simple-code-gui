@@ -3,6 +3,7 @@
 import * as fs from 'fs'
 
 import { xttsManager } from './xtts-manager.js'
+import { tadaTTS } from './voice/tada-tts.js'
 import { voiceSettingsPath } from './voice/paths.js'
 import { logTTS } from './voice/debug.js'
 import {
@@ -56,8 +57,9 @@ export type {
 class VoiceManager {
   private currentWhisperModel: WhisperModelName = 'base.en'
   private currentTTSVoice: string = 'en_US-libritts_r-medium'
-  private currentTTSEngine: 'piper' | 'xtts' = 'piper'
+  private currentTTSEngine: 'piper' | 'xtts' | 'tada' = 'piper'
   private currentXTTSVoice: string | null = null
+  private currentTadaVoiceSample: string | null = null
   private currentTTSSpeed: number = 1.0
   // XTTS quality settings
   private xttsTemperature: number = 0.65
@@ -77,6 +79,7 @@ class VoiceManager {
         if (data.ttsVoice) this.currentTTSVoice = data.ttsVoice
         if (data.ttsEngine) this.currentTTSEngine = data.ttsEngine
         if (data.xttsVoice) this.currentXTTSVoice = data.xttsVoice
+        if (data.tadaVoiceSample) this.currentTadaVoiceSample = data.tadaVoiceSample
         if (data.ttsSpeed !== undefined) this.currentTTSSpeed = data.ttsSpeed
         if (data.xttsTemperature !== undefined) this.xttsTemperature = data.xttsTemperature
         if (data.xttsTopK !== undefined) this.xttsTopK = data.xttsTopK
@@ -95,6 +98,7 @@ class VoiceManager {
         ttsVoice: this.currentTTSVoice,
         ttsEngine: this.currentTTSEngine,
         xttsVoice: this.currentXTTSVoice,
+        tadaVoiceSample: this.currentTadaVoiceSample,
         ttsSpeed: this.currentTTSSpeed,
         xttsTemperature: this.xttsTemperature,
         xttsTopK: this.xttsTopK,
@@ -176,10 +180,14 @@ class VoiceManager {
     return result
   }
 
-  setTTSVoice(voice: string, engine?: 'piper' | 'xtts'): void {
+  setTTSVoice(voice: string, engine?: 'piper' | 'xtts' | 'tada'): void {
     if (engine === 'xtts') {
       this.currentXTTSVoice = voice
       this.currentTTSEngine = 'xtts'
+      this.savePersistedSettings()
+    } else if (engine === 'tada') {
+      this.currentTadaVoiceSample = voice
+      this.currentTTSEngine = 'tada'
       this.savePersistedSettings()
     } else if (getAnyVoicePath(voice)) {
       this.currentTTSVoice = voice
@@ -188,12 +196,21 @@ class VoiceManager {
     }
   }
 
-  setTTSEngine(engine: 'piper' | 'xtts'): void {
+  setTTSEngine(engine: 'piper' | 'xtts' | 'tada'): void {
     this.currentTTSEngine = engine
   }
 
-  getCurrentEngine(): 'piper' | 'xtts' {
+  getCurrentEngine(): 'piper' | 'xtts' | 'tada' {
     return this.currentTTSEngine
+  }
+
+  setTadaVoiceSample(samplePath: string): void {
+    this.currentTadaVoiceSample = samplePath
+    this.savePersistedSettings()
+  }
+
+  getTadaVoiceSample(): string | null {
+    return this.currentTadaVoiceSample
   }
 
   setTTSSpeed(speed: number): void {
@@ -221,6 +238,12 @@ class VoiceManager {
       })
     }
 
+    // Route to TADA if that's the current engine AND we have a voice sample
+    if (this.currentTTSEngine === 'tada' && this.currentTadaVoiceSample) {
+      logTTS('Routing to TADA')
+      return tadaTTS.speak(text, this.currentTadaVoiceSample)
+    }
+
     // Use Piper TTS
     return piperSpeak(text, this.currentTTSVoice, this.currentTTSSpeed)
   }
@@ -228,6 +251,7 @@ class VoiceManager {
   stopSpeaking(): void {
     piperStopSpeaking()
     xttsManager.stopSpeaking()
+    tadaTTS.stopSpeaking()
   }
 
   // ==================== VOICE CATALOG ====================
@@ -274,7 +298,9 @@ class VoiceManager {
   getSettings(): VoiceSettings {
     const activeVoice = this.currentTTSEngine === 'xtts' && this.currentXTTSVoice
       ? this.currentXTTSVoice
-      : this.currentTTSVoice
+      : this.currentTTSEngine === 'tada' && this.currentTadaVoiceSample
+        ? this.currentTadaVoiceSample
+        : this.currentTTSVoice
 
     return {
       whisperModel: this.currentWhisperModel,
@@ -287,7 +313,8 @@ class VoiceManager {
       xttsTemperature: this.xttsTemperature,
       xttsTopK: this.xttsTopK,
       xttsTopP: this.xttsTopP,
-      xttsRepetitionPenalty: this.xttsRepetitionPenalty
+      xttsRepetitionPenalty: this.xttsRepetitionPenalty,
+      tadaVoiceSample: this.currentTadaVoiceSample
     }
   }
 
@@ -315,6 +342,9 @@ class VoiceManager {
     }
     if (settings.xttsRepetitionPenalty !== undefined) {
       this.xttsRepetitionPenalty = Math.max(1.0, Math.min(10.0, settings.xttsRepetitionPenalty))
+    }
+    if (settings.tadaVoiceSample !== undefined) {
+      this.currentTadaVoiceSample = settings.tadaVoiceSample || null
     }
     this.savePersistedSettings()
   }

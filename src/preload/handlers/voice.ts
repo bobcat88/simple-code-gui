@@ -15,7 +15,7 @@ export const voiceHandlers = {
   voiceStopSpeaking: () => ipcRenderer.invoke('voice:stopSpeaking'),
   voiceGetVoices: () => ipcRenderer.invoke('voice:getVoices'),
   voiceGetWhisperModels: () => ipcRenderer.invoke('voice:getWhisperModels'),
-  voiceSetVoice: (voice: string | { voice: string; engine: 'piper' | 'xtts' }) => ipcRenderer.invoke('voice:setVoice', voice),
+  voiceSetVoice: (voice: string | { voice: string; engine: 'piper' | 'xtts' | 'tada' }) => ipcRenderer.invoke('voice:setVoice', voice),
   voiceGetSettings: (): Promise<VoiceSettings> => ipcRenderer.invoke('voice:getSettings'),
   voiceApplySettings: (settings: Partial<VoiceSettings>) => ipcRenderer.invoke('voice:applySettings', settings),
 
@@ -44,6 +44,16 @@ export const voiceHandlers = {
   xttsGetMediaDuration: (filePath: string) => ipcRenderer.invoke('xtts:getMediaDuration', filePath),
   xttsExtractAudioClip: (inputPath: string, startTime: number, endTime: number) =>
     ipcRenderer.invoke('xtts:extractAudioClip', { inputPath, startTime, endTime }),
+
+  // TADA (neural voice cloning)
+  tadaCheck: () => ipcRenderer.invoke('tada:check'),
+  tadaLoginHuggingFace: (token: string) => ipcRenderer.invoke('tada:loginHuggingFace', token),
+  tadaSelectVoiceSample: () => ipcRenderer.invoke('tada:selectVoiceSample'),
+  tadaSetVoiceSample: (samplePath: string) => ipcRenderer.invoke('tada:setVoiceSample', samplePath),
+  tadaGetVoiceSample: () => ipcRenderer.invoke('tada:getVoiceSample'),
+  tadaSpeak: (text: string) => ipcRenderer.invoke('tada:speak', text),
+  tadaGetSampleVoices: () => ipcRenderer.invoke('tada:getSampleVoices'),
+  tadaUseSampleVoice: (sampleId: string) => ipcRenderer.invoke('tada:useSampleVoice', sampleId),
 
   // TTS instructions (CLAUDE.md)
   ttsInstallInstructions: (projectPath: string) => ipcRenderer.invoke('tts:installInstructions', projectPath),

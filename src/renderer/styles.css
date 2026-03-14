@@ -3919,6 +3919,25 @@ html, body, #root {
   border-left-color: var(--text-muted);
 }
 
+.beads-task.status-in_progress {
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-surface));
+  border-left-color: var(--accent);
+}
+
+.beads-task.status-in_progress .beads-task-check {
+  color: var(--accent);
+  animation: pulse-spin 2s ease-in-out infinite;
+}
+
+.beads-task.status-closed {
+  opacity: 0.55;
+}
+
+@keyframes pulse-spin {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
 .beads-task-check {
   background: none;
   border: none;
@@ -4021,6 +4040,70 @@ html, body, #root {
   display: flex;
   gap: var(--space-sm);
   align-items: center;
+}
+
+.beads-task-priority-select,
+.beads-browser-priority-select {
+  font-size: 11px;
+  font-weight: 500;
+  background: none;
+  border: 1px solid transparent;
+  padding: 1px 2px;
+  border-radius: 3px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  appearance: none;
+  -webkit-appearance: none;
+  transition: all var(--transition-fast);
+}
+
+.beads-task-priority-select:hover,
+.beads-browser-priority-select:hover {
+  border-color: var(--border-primary);
+  background: var(--bg-tertiary);
+}
+
+.beads-task-priority-select:focus,
+.beads-browser-priority-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.beads-task-priority-select.priority-critical,
+.beads-browser-priority-select.priority-critical {
+  color: var(--error);
+}
+
+.beads-task-priority-select.priority-high,
+.beads-browser-priority-select.priority-high {
+  color: var(--warning);
+}
+
+.beads-task-priority-select.priority-medium,
+.beads-browser-priority-select.priority-medium {
+  color: var(--text-secondary);
+}
+
+.beads-task-priority-select.priority-low,
+.beads-browser-priority-select.priority-low {
+  color: var(--text-tertiary);
+}
+
+.beads-task-priority-select option,
+.beads-browser-priority-select option {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.beads-task-spec-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .beads-task-status {

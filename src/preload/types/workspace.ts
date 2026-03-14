@@ -17,7 +17,7 @@ export interface Project {
   permissionMode?: string
   color?: string
   ttsVoice?: string
-  ttsEngine?: 'piper' | 'xtts'
+  ttsEngine?: 'piper' | 'xtts' | 'tada'
   backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
   categoryId?: string
   order?: number
@@ -38,6 +38,7 @@ export interface Workspace {
   activeTabId: string | null
   viewMode?: 'tabs' | 'tiled'
   tileLayout?: TileLayout[]
+  tileTree?: any
   categories: ProjectCategory[]
 }
 

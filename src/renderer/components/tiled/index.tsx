@@ -1,23 +1,29 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
-import type { TileLayout, DropZone } from '../tiled-layout-utils.js'
 import type { TiledTerminalViewProps, TileResizeState } from './types.js'
-import { useEffectiveLayout } from './useEffectiveLayout.js'
-import { useStartTileResize, useTileResizeEffect } from './useTileResizing.js'
+import type { DropZone } from '../tiled-layout-utils.js'
+import type { TileNode, ComputedRect, TileLeaf } from '../tile-tree.js'
 import {
-  useHandleDragStart,
-  useHandleContainerDragOver,
-  useHandleContainerDragLeave,
-  useApplyDropZone,
-  useHandleContainerDrop,
-  useHandleDragEnd
-} from './useTileDragDrop.js'
-import { useGetHighlightedEdges, useHighlightedEdges } from './useHighlightedEdges.js'
+  computeRects,
+  getAllLeaves,
+  findLeafAtPoint,
+  findLeafById,
+  findBranchById,
+  findDividerForEdge,
+  resizeChildren,
+  setActiveTabInLeaf,
+  computeDividers,
+  moveLeaf,
+  swapLeaves,
+  addTabToLeaf,
+  removeLeaf
+} from '../tile-tree.js'
+import { computeDropZone } from '../tiled-layout-utils.js'
 import { usePanning } from './usePanning.js'
 import { TileTerminal } from './TileTerminal.js'
 import { DropZoneOverlay } from './DropZoneOverlay.js'
 
-export type { TileLayout, DropZone } from '../tiled-layout-utils.js'
-export { splitTile, addTileToLayout, addTabToExistingTile } from '../tiled-layout-utils.js'
+export type { TileNode } from '../tile-tree.js'
+export type { DropZone } from '../tiled-layout-utils.js'
 
 const GAP = 4
 
@@ -28,8 +34,8 @@ export function TiledTerminalView({
   focusedTabId,
   onCloseTab,
   onFocusTab,
-  layout,
-  onLayoutChange,
+  tileTree,
+  onTreeChange,
   onOpenSessionAtPosition,
   onAddTab,
   onUndoCloseTab,
@@ -38,8 +44,10 @@ export function TiledTerminalView({
   const containerRef = useRef<HTMLDivElement>(null)
   const containerSizeRef = useRef({ width: 1920, height: 1080 })
   const [viewportSize, setViewportSize] = useState({ width: 1920, height: 1080 })
-  const onLayoutChangeRef = useRef(onLayoutChange)
-  onLayoutChangeRef.current = onLayoutChange
+  const onTreeChangeRef = useRef(onTreeChange)
+  onTreeChangeRef.current = onTreeChange
+  const tileTreeRef = useRef(tileTree)
+  tileTreeRef.current = tileTree
 
   useEffect(() => {
     const container = containerRef.current
@@ -72,25 +80,53 @@ export function TiledTerminalView({
   const [tileResizing, setTileResizing] = useState<TileResizeState | null>(null)
   const [hoveredEdge, setHoveredEdge] = useState<{ tileId: string; edge: string } | null>(null)
 
-  const { effectiveLayout, effectiveLayoutRef } = useEffectiveLayout(
-    layout, tabs, containerSizeRef, onLayoutChange
-  )
+  // Compute rects from tree
+  const bounds: ComputedRect = useMemo(() => ({ x: 0, y: 0, width: 100, height: 100 }), [])
 
-  // Compute canvas width from tile positions, with padding so the rightmost edge is accessible
-  const CANVAS_PADDING = 180 // px of extra space past the rightmost tile for resize handles
+  const leafRects = useMemo(() => {
+    if (!tileTree) return new Map<string, ComputedRect>()
+    return computeRects(tileTree, bounds)
+  }, [tileTree, bounds])
+
+  const leaves = useMemo(() => {
+    if (!tileTree) return []
+    return getAllLeaves(tileTree)
+  }, [tileTree])
+
+  // Build a "flat layout" from the tree for computeDropZone compatibility
+  const flatLayoutForDropZone = useMemo(() => {
+    return leaves.map(leaf => {
+      const rect = leafRects.get(leaf.id)
+      return {
+        id: leaf.id,
+        tabIds: leaf.tabIds,
+        activeTabId: leaf.activeTabId,
+        x: rect?.x ?? 0,
+        y: rect?.y ?? 0,
+        width: rect?.width ?? 0,
+        height: rect?.height ?? 0
+      }
+    })
+  }, [leaves, leafRects])
+
+  // Canvas width for panning
+  const CANVAS_PADDING = 180
   const canvasWidth = useMemo(() => {
-    if (effectiveLayout.length === 0) return viewportSize.width
-    const rightmostEdge = Math.max(...effectiveLayout.map(t => t.x + t.width))
+    if (leaves.length === 0) return viewportSize.width
+    let rightmostEdge = 0
+    for (const leaf of leaves) {
+      const rect = leafRects.get(leaf.id)
+      if (rect) rightmostEdge = Math.max(rightmostEdge, rect.x + rect.width)
+    }
     const rightmostPx = rightmostEdge / 100 * viewportSize.width
     if (rightmostPx <= viewportSize.width) return viewportSize.width
     return rightmostPx + CANVAS_PADDING
-  }, [effectiveLayout, viewportSize.width])
+  }, [leaves, leafRects, viewportSize.width])
 
   const { panX, isPanning, handlePanStart, clientToCanvasPercent, clientToCanvasPercentRef } = usePanning(
     containerRef, canvasWidth, viewportSize.width, viewportSize.height
   )
 
-  // Whether tiles extend beyond the viewport
   const hasOffscreenLeft = panX > 0
   const hasOffscreenRight = canvasWidth > viewportSize.width && panX < canvasWidth - viewportSize.width
 
@@ -109,55 +145,328 @@ export function TiledTerminalView({
 
   // Force terminals to refit when tiled view mounts
   useEffect(() => {
-    const triggerRefit = () => {
-      window.dispatchEvent(new Event('resize'))
-    }
-    const timers = [
-      setTimeout(triggerRefit, 100),
-      setTimeout(triggerRefit, 300),
-    ]
+    const triggerRefit = () => window.dispatchEvent(new Event('resize'))
+    const timers = [setTimeout(triggerRefit, 100), setTimeout(triggerRefit, 300)]
     return () => timers.forEach(clearTimeout)
   }, [])
 
-  const handleSwitchSubTab = useCallback((tileId: string, tabId: string) => {
-    const newLayout = effectiveLayoutRef.current.map(tile => {
-      if (tile.id === tileId) {
-        return { ...tile, activeTabId: tabId }
+  // ── Sub-tab switching ──
+  const handleSwitchSubTab = useCallback((leafId: string, tabId: string) => {
+    const tree = tileTreeRef.current
+    if (!tree) return
+    const newTree = setActiveTabInLeaf(tree, leafId, tabId)
+    onTreeChange(newTree)
+  }, [onTreeChange])
+
+  // ── Drag start ──
+  const handleDragStart = useCallback((e: React.DragEvent, tileId: string) => {
+    e.dataTransfer.setData('text/plain', tileId)
+    e.dataTransfer.effectAllowed = 'move'
+    setDraggedTile(tileId)
+  }, [])
+
+  // ── Drag over ──
+  const handleContainerDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (!containerRef.current) return
+
+    const isSidebarProjectDrag = e.dataTransfer.types.includes('application/x-sidebar-project')
+
+    if (isSidebarProjectDrag && !draggedSidebarProject) {
+      setDraggedSidebarProject('pending')
+    }
+
+    const { x: mouseX, y: mouseY } = clientToCanvasPercentRef.current(e.clientX, e.clientY)
+    const sourceTileId = isSidebarProjectDrag ? null : draggedTile
+    const zone = computeDropZone(flatLayoutForDropZone, sourceTileId, mouseX, mouseY)
+    setCurrentDropZone(zone)
+    setDropTarget(zone?.targetTileId || null)
+  }, [draggedTile, draggedSidebarProject, flatLayoutForDropZone, clientToCanvasPercentRef])
+
+  // ── Drag leave ──
+  const handleContainerDragLeave = useCallback((e: React.DragEvent) => {
+    const rect = containerRef.current?.getBoundingClientRect()
+    if (rect) {
+      const { clientX, clientY } = e
+      if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) {
+        setCurrentDropZone(null)
+        setDropTarget(null)
+        setDraggedSidebarProject(null)
       }
-      return tile
+    }
+  }, [])
+
+  // ── Drop ──
+  const handleContainerDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+
+    const sidebarProjectPath = e.dataTransfer.getData('application/x-sidebar-project')
+    const isSidebarDrag = e.dataTransfer.types.includes('application/x-sidebar-project')
+    const textPlainData = e.dataTransfer.getData('text/plain')
+
+    const { x: mouseX, y: mouseY } = clientToCanvasPercentRef.current(e.clientX, e.clientY)
+    const dropZone = computeDropZone(flatLayoutForDropZone, null, mouseX, mouseY)
+
+    const projectPath = sidebarProjectPath || (isSidebarDrag ? textPlainData : null)
+
+    if (projectPath && onOpenSessionAtPosition) {
+      onOpenSessionAtPosition(projectPath, dropZone, containerSizeRef.current, tileTreeRef.current)
+      setDraggedSidebarProject(null)
+      setDropTarget(null)
+      setCurrentDropZone(null)
+      return
+    }
+
+    // Tile-to-tile drag
+    const sourceTileId = textPlainData
+    if (sourceTileId && dropZone && tileTreeRef.current) {
+      const tree = tileTreeRef.current
+      let newTree: TileNode
+      if (dropZone.type === 'swap') {
+        // Check if same project → merge tabs; different → swap positions
+        const sourceLeaf = findLeafById(tree, sourceTileId)
+        const targetLeaf = findLeafById(tree, dropZone.targetTileId)
+        if (sourceLeaf && targetLeaf) {
+          const sourceProject = sourceLeaf.tabIds
+            .map(id => tabs.find(t => t.id === id)?.projectPath)
+            .find(p => p != null)
+          const targetProject = targetLeaf.tabIds
+            .map(id => tabs.find(t => t.id === id)?.projectPath)
+            .find(p => p != null)
+
+          if (sourceProject && sourceProject === targetProject) {
+            // Merge: add all source tabs to target, then remove source
+            let merged = tree
+            for (const tabId of sourceLeaf.tabIds) {
+              merged = addTabToLeaf(merged, targetLeaf.id, tabId)
+            }
+            newTree = removeLeaf(merged, sourceTileId) || merged
+          } else {
+            newTree = swapLeaves(tree, sourceTileId, dropZone.targetTileId)
+          }
+        } else {
+          newTree = tree
+        }
+      } else {
+        const dirMap: Record<string, { dir: 'horizontal' | 'vertical'; pos: 'before' | 'after' }> = {
+          'split-left': { dir: 'horizontal', pos: 'before' },
+          'split-right': { dir: 'horizontal', pos: 'after' },
+          'split-top': { dir: 'vertical', pos: 'before' },
+          'split-bottom': { dir: 'vertical', pos: 'after' }
+        }
+        const { dir, pos } = dirMap[dropZone.type]
+        newTree = moveLeaf(tree, sourceTileId, dropZone.targetTileId, dir, pos)
+      }
+
+      onTreeChange(newTree)
+    }
+
+    setDraggedTile(null)
+    setDropTarget(null)
+    setCurrentDropZone(null)
+  }, [flatLayoutForDropZone, tabs, onOpenSessionAtPosition, onTreeChange, clientToCanvasPercentRef])
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedTile(null)
+    setDraggedSidebarProject(null)
+    setDropTarget(null)
+    setCurrentDropZone(null)
+  }, [])
+
+  // ── Resize ──
+  // For compound edges (top-left, etc.), we track two dividers
+  const secondResizeRef = useRef<TileResizeState | null>(null)
+
+  const handleStartResize = useCallback((e: React.MouseEvent, leafId: string, edge: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setHoveredEdge(null)
+
+    const tree = tileTreeRef.current
+    if (!tree) return
+
+    const simpleEdges = edge.includes('-') ? edge.split('-') : [edge]
+    const primaryEdge = simpleEdges[0] as 'left' | 'right' | 'top' | 'bottom'
+
+    const divider = findDividerForEdge(tree, bounds, leafId, primaryEdge)
+    if (!divider) return
+
+    const startMouse = divider.direction === 'horizontal' ? e.clientX : e.clientY
+
+    setTileResizing({
+      branchId: divider.branchId,
+      childIndex: divider.childIndex,
+      direction: divider.direction,
+      startMouse
     })
-    onLayoutChange(newLayout)
-  }, [effectiveLayoutRef, onLayoutChange])
 
-  const startTileResize = useStartTileResize(effectiveLayout, setTileResizing, setHoveredEdge)
-  useTileResizeEffect(tileResizing, containerRef, effectiveLayoutRef, onLayoutChangeRef, setTileResizing, clientToCanvasPercentRef)
+    // Handle second edge for compound resize
+    if (simpleEdges.length > 1) {
+      const secondEdge = simpleEdges[1] as 'left' | 'right' | 'top' | 'bottom'
+      const secondDivider = findDividerForEdge(tree, bounds, leafId, secondEdge)
+      if (secondDivider) {
+        secondResizeRef.current = {
+          branchId: secondDivider.branchId,
+          childIndex: secondDivider.childIndex,
+          direction: secondDivider.direction,
+          startMouse: secondDivider.direction === 'horizontal' ? e.clientX : e.clientY
+        }
+      } else {
+        secondResizeRef.current = null
+      }
+    } else {
+      secondResizeRef.current = null
+    }
+  }, [bounds])
 
-  const dragDropActions = {
-    setDraggedTile,
-    setDraggedSidebarProject,
-    setDropTarget,
-    setCurrentDropZone
-  }
+  // Resize mouse tracking
+  useEffect(() => {
+    if (!tileResizing || !containerRef.current) return
 
-  const handleDragStart = useHandleDragStart(setDraggedTile)
-  const handleContainerDragOver = useHandleContainerDragOver(
-    containerRef, effectiveLayout,
-    { draggedTile, draggedSidebarProject },
-    dragDropActions,
-    clientToCanvasPercentRef
-  )
-  const handleContainerDragLeave = useHandleContainerDragLeave(containerRef, dragDropActions)
-  const applyDropZone = useApplyDropZone(tabs, containerSizeRef)
-  const handleContainerDrop = useHandleContainerDrop(
-    containerRef, effectiveLayoutRef, containerSizeRef,
-    tabs, onLayoutChange, applyDropZone, onOpenSessionAtPosition,
-    dragDropActions,
-    clientToCanvasPercentRef
-  )
-  const handleDragEnd = useHandleDragEnd(dragDropActions)
+    let rafId: number | null = null
 
-  const getHighlightedEdges = useGetHighlightedEdges(effectiveLayout)
-  const highlightedEdges = useHighlightedEdges(hoveredEdge, tileResizing, getHighlightedEdges)
+    const computeDelta = (tree: TileNode, resize: TileResizeState, canvasCoords: { x: number; y: number }): number | null => {
+      const dividers = computeDividers(tree, bounds)
+      const div = dividers.find(d => d.branchId === resize.branchId && d.childIndex === resize.childIndex)
+      if (!div) return null
+
+      const isHoriz = resize.direction === 'horizontal'
+      const mousePct = isHoriz ? canvasCoords.x : canvasCoords.y
+      const deltaPct = mousePct - div.position
+
+      const branch = findBranchById(tree, resize.branchId)
+      if (!branch) return null
+
+      const rects = computeRects(tree, bounds)
+      let branchMin = Infinity, branchMax = -Infinity
+      for (const child of branch.children) {
+        const childLeaves = child.type === 'leaf' ? [child] : getAllLeaves(child)
+        for (const leaf of childLeaves) {
+          const r = rects.get(leaf.id)
+          if (r) {
+            const val = isHoriz ? r.x : r.y
+            const size = isHoriz ? r.width : r.height
+            branchMin = Math.min(branchMin, val)
+            branchMax = Math.max(branchMax, val + size)
+          }
+        }
+      }
+      const span = branchMax - branchMin
+      return span > 0 ? deltaPct / span : null
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (rafId !== null) return
+      rafId = requestAnimationFrame(() => {
+        rafId = null
+        if (!containerRef.current) return
+
+        let tree = tileTreeRef.current
+        if (!tree) return
+
+        const canvasCoords = clientToCanvasPercentRef.current(e.clientX, e.clientY)
+
+        // Apply primary resize
+        const delta1 = computeDelta(tree, tileResizing, canvasCoords)
+        if (delta1 !== null && Math.abs(delta1) >= 0.001) {
+          const newTree = resizeChildren(tree, tileResizing.branchId, tileResizing.childIndex, delta1)
+          if (newTree !== tree) tree = newTree
+        }
+
+        // Apply secondary resize (for compound edges like top-left)
+        const secondResize = secondResizeRef.current
+        if (secondResize) {
+          const delta2 = computeDelta(tree, secondResize, canvasCoords)
+          if (delta2 !== null && Math.abs(delta2) >= 0.001) {
+            const newTree = resizeChildren(tree, secondResize.branchId, secondResize.childIndex, delta2)
+            if (newTree !== tree) tree = newTree
+          }
+        }
+
+        if (tree !== tileTreeRef.current) {
+          onTreeChangeRef.current(tree)
+        }
+      })
+    }
+
+    const handleMouseUp = () => {
+      setTileResizing(null)
+      secondResizeRef.current = null
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    // Set cursor based on compound direction
+    const hasSecond = secondResizeRef.current
+    let cursor: string
+    if (hasSecond) {
+      const dirs = [tileResizing.direction, hasSecond.direction].sort()
+      cursor = dirs[0] === dirs[1] ? (dirs[0] === 'horizontal' ? 'ew-resize' : 'ns-resize') : 'nwse-resize'
+    } else {
+      cursor = tileResizing.direction === 'horizontal' ? 'ew-resize' : 'ns-resize'
+    }
+    document.body.style.cursor = cursor
+    document.body.style.userSelect = 'none'
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId)
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [tileResizing, bounds, clientToCanvasPercentRef])
+
+  // ── Edge highlighting ──
+  const highlightedEdges = useMemo(() => {
+    const edges = new Set<string>()
+    if (!tileTree || !hoveredEdge) return edges
+
+    const { tileId, edge } = hoveredEdge
+    edges.add(`${tileId}-${edge}`)
+
+    // Find adjacent leaves that share this edge
+    const leafRect = leafRects.get(tileId)
+    if (!leafRect) return edges
+
+    const EPSILON = 0.5
+    const simpleEdges = edge.includes('-') ? edge.split('-') : [edge]
+
+    for (const edgeDir of simpleEdges) {
+      for (const leaf of leaves) {
+        if (leaf.id === tileId) continue
+        const otherRect = leafRects.get(leaf.id)
+        if (!otherRect) continue
+
+        const hasVerticalOverlap = leafRect.y < otherRect.y + otherRect.height - EPSILON &&
+          leafRect.y + leafRect.height > otherRect.y + EPSILON
+        const hasHorizontalOverlap = leafRect.x < otherRect.x + otherRect.width - EPSILON &&
+          leafRect.x + leafRect.width > otherRect.x + EPSILON
+
+        switch (edgeDir) {
+          case 'right':
+            if (Math.abs(otherRect.x - (leafRect.x + leafRect.width)) < EPSILON && hasVerticalOverlap)
+              edges.add(`${leaf.id}-left`)
+            break
+          case 'left':
+            if (Math.abs(otherRect.x + otherRect.width - leafRect.x) < EPSILON && hasVerticalOverlap)
+              edges.add(`${leaf.id}-right`)
+            break
+          case 'bottom':
+            if (Math.abs(otherRect.y - (leafRect.y + leafRect.height)) < EPSILON && hasHorizontalOverlap)
+              edges.add(`${leaf.id}-top`)
+            break
+          case 'top':
+            if (Math.abs(otherRect.y + otherRect.height - leafRect.y) < EPSILON && hasHorizontalOverlap)
+              edges.add(`${leaf.id}-bottom`)
+            break
+        }
+      }
+    }
+
+    return edges
+  }, [tileTree, hoveredEdge, leaves, leafRects])
 
   if (tabs.length === 0) return null
 
@@ -186,24 +495,30 @@ export function TiledTerminalView({
           transform: `translate(${-panX}px, 0)`
         }}
       >
-        {effectiveLayout.map((tile) => {
-          const tileTabs = tile.tabIds
+        {leaves.map((leaf) => {
+          const rect = leafRects.get(leaf.id)
+          if (!rect) return null
+
+          const tileTabs = leaf.tabIds
             .map(id => tabs.find(t => t.id === id))
             .filter((t): t is typeof tabs[number] => t != null)
 
           if (tileTabs.length === 0) return null
 
-          const activeSubTabId = tile.activeTabId && tileTabs.some(t => t.id === tile.activeTabId)
-            ? tile.activeTabId
+          const activeSubTabId = leaf.activeTabId && tileTabs.some(t => t.id === leaf.activeTabId)
+            ? leaf.activeTabId
             : tileTabs[0].id
 
           const project = projects.find(p => p.path === tileTabs[0].projectPath)
-          const isFocused = focusedTabId != null && tile.tabIds.includes(focusedTabId)
+          const isFocused = focusedTabId != null && leaf.tabIds.includes(focusedTabId)
 
           return (
             <TileTerminal
-              key={tile.id}
-              tile={tile}
+              key={leaf.id}
+              leafId={leaf.id}
+              rect={rect}
+              tabIds={leaf.tabIds}
+              activeTabId={leaf.activeTabId}
               tabs={tileTabs}
               activeSubTabId={activeSubTabId}
               project={project}
@@ -211,12 +526,11 @@ export function TiledTerminalView({
               api={api}
               GAP={GAP}
               isFocused={isFocused}
-              isDragging={draggedTile === tile.id}
-              isDropTarget={dropTarget === tile.id}
+              isDragging={draggedTile === leaf.id}
+              isDropTarget={dropTarget === leaf.id}
               draggedTile={draggedTile}
               draggedSidebarProject={draggedSidebarProject}
-              effectiveLayout={effectiveLayout}
-              containerRef={containerRef}
+              flatLayout={flatLayoutForDropZone}
               highlightedEdges={highlightedEdges}
               viewportSize={viewportSize}
               clientToCanvasPercent={clientToCanvasPercent}
@@ -227,7 +541,7 @@ export function TiledTerminalView({
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               onContainerDrop={handleContainerDrop}
-              startTileResize={startTileResize}
+              startTileResize={handleStartResize}
               setHoveredEdge={setHoveredEdge}
               setDraggedSidebarProject={setDraggedSidebarProject}
               setCurrentDropZone={setCurrentDropZone}
@@ -237,19 +551,18 @@ export function TiledTerminalView({
         })}
 
         {(draggedTile || draggedSidebarProject) && currentDropZone && (() => {
-          // Compute contextual swap label based on whether this would merge or swap
           let swapLabel: string | undefined
           if (currentDropZone.type === 'swap') {
             if (draggedSidebarProject) {
               swapLabel = 'Add as Tab'
             } else if (draggedTile) {
-              const sourceTile = effectiveLayout.find(t => t.id === draggedTile)
-              const targetTile = effectiveLayout.find(t => t.id === currentDropZone.targetTileId)
-              if (sourceTile && targetTile) {
-                const sourceProject = sourceTile.tabIds
+              const sourceLeaf = tileTree ? findLeafById(tileTree, draggedTile) : null
+              const targetLeaf = tileTree ? findLeafById(tileTree, currentDropZone.targetTileId) : null
+              if (sourceLeaf && targetLeaf) {
+                const sourceProject = sourceLeaf.tabIds
                   .map(id => tabs.find(t => t.id === id)?.projectPath)
                   .find(p => p != null)
-                const targetProject = targetTile.tabIds
+                const targetProject = targetLeaf.tabIds
                   .map(id => tabs.find(t => t.id === id)?.projectPath)
                   .find(p => p != null)
                 swapLabel = sourceProject && sourceProject === targetProject ? 'Add as Tab' : 'Swap'

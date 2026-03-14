@@ -8,6 +8,7 @@
 import { Router } from 'express'
 import workspaceRouter from './workspace.js'
 import beadsRouter from './beads.js'
+import kspecRouter from './kspec.js'
 import gsdRouter from './gsd.js'
 
 const router = Router()
@@ -17,6 +18,9 @@ router.use('/', workspaceRouter)
 
 // Mount beads routes under /beads
 router.use('/beads', beadsRouter)
+
+// Mount kspec proxy routes under /kspec
+router.use('/kspec', kspecRouter)
 
 // Mount GSD routes under /gsd
 router.use('/gsd', gsdRouter)

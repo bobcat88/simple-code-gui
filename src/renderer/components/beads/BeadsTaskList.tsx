@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import type { UnifiedTask } from './adapters/types.js'
-import { getPriorityClass, formatStatusLabel } from './types.js'
+import { getPriorityClass, PRIORITY_LABELS, formatStatusLabel, getStatusOrder } from './types.js'
 import { TaskStatusButton } from './TaskStatusButton.js'
 
 interface BeadsTaskListProps {
@@ -12,6 +12,7 @@ interface BeadsTaskListProps {
   onComplete: (taskId: string) => void
   onStart: (e: React.MouseEvent, taskId: string) => void
   onCycleStatus: (taskId: string, currentStatus: string) => void
+  onChangePriority: (taskId: string, priority: number) => void
   onDelete: (taskId: string) => void
   onOpenDetail: (task: UnifiedTask) => void
   setEditingTitle: (title: string) => void
@@ -28,12 +29,24 @@ export function BeadsTaskList({
   onComplete,
   onStart,
   onCycleStatus,
+  onChangePriority,
   onDelete,
   onOpenDetail,
   setEditingTitle,
   onSaveEdit,
   onCancelEdit
 }: BeadsTaskListProps): React.ReactElement {
+  const sortedTasks = useMemo(() =>
+    [...tasks].sort((a, b) => {
+      // Completed tasks go last
+      const statusDiff = getStatusOrder(a.status) - getStatusOrder(b.status)
+      if (statusDiff !== 0) return statusDiff
+      // Then sort by priority (lower number = higher priority)
+      return (a.priority ?? 2) - (b.priority ?? 2)
+    }),
+    [tasks]
+  )
+
   if (tasks.length === 0) {
     return (
       <div className="beads-tasks" style={{ maxHeight: `${panelHeight}px` }}>
@@ -44,7 +57,7 @@ export function BeadsTaskList({
 
   return (
     <div className="beads-tasks" style={{ maxHeight: `${panelHeight}px` }}>
-      {tasks.map((task) => (
+      {sortedTasks.map((task) => (
         <div key={task.id} className={`beads-task ${getPriorityClass(task.priority)} status-${task.status}`}>
           <TaskStatusButton
             status={task.status}
@@ -78,7 +91,24 @@ export function BeadsTaskList({
               </div>
             )}
             <div className="beads-task-meta">
+              <select
+                className={`beads-task-priority-select ${getPriorityClass(task.priority)}`}
+                value={task.priority ?? 2}
+                onChange={(e) => {
+                  e.stopPropagation()
+                  onChangePriority(task.id, Number(e.target.value))
+                }}
+                onClick={(e) => e.stopPropagation()}
+                title="Change priority"
+              >
+                {PRIORITY_LABELS.map((label, i) => (
+                  <option key={i} value={i}>P{i}</option>
+                ))}
+              </select>
               <span className="beads-task-id" title={task.id}>{task.displayId ?? task.id}</span>
+              {task.hasSpec && (
+                <span className="beads-task-spec-badge" title="Has acceptance criteria">AC</span>
+              )}
               {task.automation && (
                 <span className={`beads-task-automation automation-${task.automation}`} title={`Automation: ${task.automation}`}>
                   {task.automation === 'eligible' ? 'auto' : task.automation === 'needs_review' ? 'review' : 'manual'}

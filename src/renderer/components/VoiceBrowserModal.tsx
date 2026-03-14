@@ -18,7 +18,7 @@ import type {
 interface VoiceBrowserModalProps {
   isOpen: boolean
   onClose: () => void
-  onVoiceSelect?: (voiceKey: string, engine: 'piper' | 'xtts') => void
+  onVoiceSelect?: (voiceKey: string, engine: 'piper' | 'xtts' | 'tada') => void
 }
 
 export function VoiceBrowserModal({ isOpen, onClose, onVoiceSelect }: VoiceBrowserModalProps): React.ReactElement | null {

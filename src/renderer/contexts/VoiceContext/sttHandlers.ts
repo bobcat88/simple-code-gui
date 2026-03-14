@@ -29,12 +29,14 @@ export interface UseSTTHandlersResult {
   whisperModel: WhisperModelSize
   audioLevel: number
   silenceThreshold: number
+  pushToTalkEnabled: boolean
 
   // Actions
   setWhisperModel: (model: WhisperModelSize) => void
   setSilenceThreshold: (threshold: number) => void
   startRecording: (onTranscription: (text: string) => void) => Promise<void>
   stopRecording: () => void
+  setPushToTalkEnabled: (enabled: boolean) => void
 
   // Refs for cleanup
   refs: STTRefs
@@ -42,6 +44,7 @@ export interface UseSTTHandlersResult {
   // State setters for settings loading
   setWhisperModelState: (model: WhisperModelSize) => void
   setSilenceThresholdState: (threshold: number) => void
+  setPushToTalkEnabledState: (enabled: boolean) => void
 }
 
 export function useSTTHandlers({ saveVoiceSetting }: UseSTTHandlersOptions): UseSTTHandlersResult {
@@ -55,6 +58,8 @@ export function useSTTHandlers({ saveVoiceSetting }: UseSTTHandlersOptions): Use
   const [currentTranscription, setCurrentTranscription] = useState('')
   const [audioLevel, setAudioLevel] = useState(0)
   const [silenceThreshold, setSilenceThresholdState] = useState(5)
+  const [pushToTalkEnabled, setPushToTalkEnabledState] = useState(false)
+  const pushToTalkRef = useRef(false)
 
   // Refs
   const whisperRef = useRef<WhisperInstance | null>(null)
@@ -108,10 +113,11 @@ export function useSTTHandlers({ saveVoiceSetting }: UseSTTHandlersOptions): Use
           // Audio is below threshold (silence)
           if (!silenceStartRef.current) {
             silenceStartRef.current = Date.now()
-          } else if (!processingUtteranceRef.current) {
+          } else if (!processingUtteranceRef.current && !pushToTalkRef.current) {
             const silenceDuration = Date.now() - silenceStartRef.current
             // After 2s of silence with speech detected: submit transcription,
             // then stop/restart Whisper to clear the audio buffer
+            // (skipped in push-to-talk mode — user controls when to submit)
             if (silenceDuration > 2000 && speechDetectedRef.current &&
                 finalTranscriptionRef.current.trim() &&
                 isRecordingRef.current && whisperRef.current) {
@@ -265,6 +271,13 @@ export function useSTTHandlers({ saveVoiceSetting }: UseSTTHandlersOptions): Use
     saveVoiceSetting('voiceSilenceThreshold', threshold)
   }, [saveVoiceSetting])
 
+  // Set push-to-talk mode (saves to settings)
+  const setPushToTalkEnabled = useCallback((enabled: boolean) => {
+    setPushToTalkEnabledState(enabled)
+    pushToTalkRef.current = enabled
+    saveVoiceSetting('voicePushToTalk', enabled)
+  }, [saveVoiceSetting])
+
   // Start recording and transcribing
   const startRecording = useCallback(async (onTranscription: (text: string) => void) => {
     if (isRecording) return
@@ -337,12 +350,15 @@ export function useSTTHandlers({ saveVoiceSetting }: UseSTTHandlersOptions): Use
     whisperModel,
     audioLevel,
     silenceThreshold,
+    pushToTalkEnabled,
     setWhisperModel,
     setSilenceThreshold,
+    setPushToTalkEnabled,
     startRecording,
     stopRecording,
     refs,
     setWhisperModelState,
-    setSilenceThresholdState
+    setSilenceThresholdState,
+    setPushToTalkEnabledState
   }
 }

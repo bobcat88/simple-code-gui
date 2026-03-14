@@ -32,6 +32,7 @@ function toUnified(raw: Record<string, unknown>): UnifiedTask {
     description: typeof raw.description === 'string' ? raw.description : undefined,
     created_at: typeof raw.created_at === 'string' ? raw.created_at : typeof raw.created === 'string' ? raw.created : undefined,
     updated_at: typeof raw.updated_at === 'string' ? raw.updated_at : undefined,
+    hasSpec: typeof raw.acceptance_criteria === 'string' && raw.acceptance_criteria.length > 0,
     _backend: 'beads'
   }
 }

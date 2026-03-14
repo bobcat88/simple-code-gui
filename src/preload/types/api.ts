@@ -116,7 +116,7 @@ export interface ElectronAPI {
   voiceStopSpeaking: () => Promise<{ success: boolean }>
   voiceGetVoices: () => Promise<{ installed: string[]; all: Array<{ id: string; description: string; license: string; installed: boolean }> }>
   voiceGetWhisperModels: () => Promise<{ installed: string[]; all: Array<{ id: string; size: number; installed: boolean }> }>
-  voiceSetVoice: (voice: string | { voice: string; engine: 'piper' | 'xtts' }) => Promise<{ success: boolean }>
+  voiceSetVoice: (voice: string | { voice: string; engine: 'piper' | 'xtts' | 'tada' }) => Promise<{ success: boolean }>
   voiceGetSettings: () => Promise<VoiceSettings>
   voiceApplySettings: (settings: Partial<VoiceSettings>) => Promise<{ success: boolean }>
 
@@ -155,6 +155,16 @@ export interface ElectronAPI {
   xttsSelectMediaFile: () => Promise<{ success: boolean; path?: string; duration?: number; error?: string }>
   xttsGetMediaDuration: (filePath: string) => Promise<{ success: boolean; duration?: number; error?: string }>
   xttsExtractAudioClip: (inputPath: string, startTime: number, endTime: number) => Promise<{ success: boolean; outputPath?: string; dataUrl?: string; error?: string }>
+
+  // TADA (neural voice cloning)
+  tadaCheck: () => Promise<{ installed: boolean; pythonPath: string | null; venvExists: boolean; hfAuthenticated?: boolean; error?: string }>
+  tadaLoginHuggingFace: (token: string) => Promise<{ success: boolean; error?: string }>
+  tadaSelectVoiceSample: () => Promise<{ success: boolean; path?: string; error?: string }>
+  tadaSetVoiceSample: (samplePath: string) => Promise<{ success: boolean; error?: string }>
+  tadaGetVoiceSample: () => Promise<{ path: string | null }>
+  tadaSpeak: (text: string) => Promise<{ success: boolean; audioData?: string; error?: string }>
+  tadaGetSampleVoices: () => Promise<Array<{ id: string; name: string; filename: string; description: string; license: string; available: boolean }>>
+  tadaUseSampleVoice: (sampleId: string) => Promise<{ success: boolean; path?: string; error?: string }>
 
   // PTY
   spawnPty: (cwd: string, sessionId?: string, model?: string, backend?: 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider') => Promise<string>

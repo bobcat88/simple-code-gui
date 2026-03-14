@@ -1,6 +1,6 @@
 export interface VoiceSettings {
   whisperModel?: string
-  ttsEngine?: 'piper' | 'xtts' | 'openvoice'
+  ttsEngine?: 'piper' | 'xtts' | 'openvoice' | 'tada'
   ttsVoice?: string
   ttsSpeed?: number
   microphoneId?: string | null
@@ -10,4 +10,5 @@ export interface VoiceSettings {
   xttsTopK?: number
   xttsTopP?: number
   xttsRepetitionPenalty?: number
+  tadaVoiceSample?: string | null
 }
