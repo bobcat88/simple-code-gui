@@ -204,8 +204,48 @@ export function handleCopy(term: XTerm): void {
   }
 }
 
-// Check if terminal is at bottom of scroll
+// Check if terminal is at the bottom of scroll
 export function isTerminalAtBottom(term: XTerm): boolean {
   const buffer = term.buffer.active
   return buffer.viewportY >= buffer.baseY
+}
+
+// ─── Scroll Debug Logger ───
+// Logs all non-user scroll events to help diagnose unwanted scroll-to-top.
+// Writes to ~/scroll-debug.log via IPC, and also to console with [SCROLL-DBG] prefix.
+
+const SCROLL_DEBUG = true // flip to false to disable
+const scrollLogBuffer: string[] = []
+let scrollLogFlushTimer: ReturnType<typeof setTimeout> | null = null
+
+export function scrollDebug(source: string, details: Record<string, unknown>): void {
+  if (!SCROLL_DEBUG) return
+  const ts = new Date().toISOString().slice(11, 23)
+  const line = `[${ts}] ${source}: ${JSON.stringify(details)}`
+  console.log('[SCROLL-DBG]', line)
+  scrollLogBuffer.push(line)
+  // Batch flush to file every 500ms
+  if (!scrollLogFlushTimer) {
+    scrollLogFlushTimer = setTimeout(flushScrollLog, 500)
+  }
+}
+
+function flushScrollLog(): void {
+  scrollLogFlushTimer = null
+  if (scrollLogBuffer.length === 0) return
+  const chunk = scrollLogBuffer.splice(0).join('\n') + '\n'
+  try {
+    window.electronAPI?.scrollDebugLog?.(chunk)
+  } catch { /* ignore */ }
+}
+
+// Helper: snapshot terminal scroll state
+export function scrollSnapshot(term: XTerm): { viewportY: number; baseY: number; atBottom: boolean; rows: number } {
+  const buffer = term.buffer.active
+  return {
+    viewportY: buffer.viewportY,
+    baseY: buffer.baseY,
+    atBottom: buffer.viewportY >= buffer.baseY,
+    rows: term.rows,
+  }
 }

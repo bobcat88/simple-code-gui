@@ -74,6 +74,26 @@ export function TerminalBar({
   const dropdownRef = useRef<HTMLDivElement>(null)
   const menuButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({})
 
+  // Auto-accept permission prompts state
+  const [autoAccept, setAutoAccept] = useState(false)
+
+  // Sync auto-accept state when PTY changes
+  useEffect(() => {
+    if (!ptyId) {
+      setAutoAccept(false)
+      return
+    }
+    window.electronAPI?.getAutoAcceptStatus?.(ptyId)?.then((enabled: boolean) => {
+      setAutoAccept(enabled)
+    })
+  }, [ptyId])
+
+  const handleToggleAutoAccept = useCallback(() => {
+    const newState = !autoAccept
+    setAutoAccept(newState)
+    window.electronAPI?.setAutoAccept?.(ptyId, newState)
+  }, [autoAccept, ptyId])
+
   // Auto work options state
   const [autoWorkOptions, setAutoWorkOptions] = useState<AutoWorkOptions>(() => {
     const stored = localStorage.getItem(AUTOWORK_OPTIONS_KEY)
@@ -372,6 +392,16 @@ export function TerminalBar({
         {(onClearWithRestore || onCompactWithRestore) && (
           <div className="terminal-bar-divider" />
         )}
+
+        {/* Auto-accept toggle */}
+        <button
+          className={`terminal-bar-btn terminal-bar-btn--menu ${autoAccept ? 'active' : ''}`}
+          onClick={handleToggleAutoAccept}
+          title={autoAccept ? 'Auto-accept ON — auto-approves tool permissions' : 'Auto-accept OFF — click to auto-approve tool permissions'}
+        >
+          <span className="terminal-bar-icon">{autoAccept ? '🛡️' : '🛡️'}</span>
+          <span className="terminal-bar-label">{autoAccept ? 'Accept ✓' : 'Accept'}</span>
+        </button>
 
         {/* Menu categories */}
         {menuCategories.map((category) => (

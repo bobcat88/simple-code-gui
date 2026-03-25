@@ -82,7 +82,7 @@ const TOOLS = [
   },
   {
     name: 'send_session_input',
-    description: 'Send text input to a specific CLI session (simulates typing + Enter). Use this to give instructions to other Claude/Gemini/etc sessions. The input will be written to the session\'s terminal as if a user typed it.',
+    description: 'Send text input to a specific CLI session (simulates pasting text then pressing Enter). Use this to give instructions to other Claude/Gemini/etc sessions. The input is written to the terminal first, then Enter is sent after a short delay to ensure multi-line prompts are submitted correctly. Set raw=true to send input without appending Enter (useful for answering permission prompts where pressing a key like "1" immediately selects an option).',
     inputSchema: {
       type: 'object',
       properties: {
@@ -92,10 +92,51 @@ const TOOLS = [
         },
         input: {
           type: 'string',
-          description: 'The text to send to the session (will be followed by Enter)',
+          description: 'The text to send to the session (will be followed by Enter unless raw=true)',
+        },
+        raw: {
+          type: 'boolean',
+          description: 'If true, send input without appending Enter. Use for permission prompts and single-key selections.',
         },
       },
       required: ['session_id', 'input'],
+    },
+  },
+  {
+    name: 'create_session',
+    description: 'Create a new CLI session (spawn a new PTY terminal). Returns the new session ID. The session will use project-level or global settings for permissions and auto-accept tools.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        cwd: {
+          type: 'string',
+          description: 'Working directory for the new session (required). Must be an absolute path to a project directory.',
+        },
+        backend: {
+          type: 'string',
+          description: 'CLI backend to use (default: "claude"). Options: claude, gemini, codex, opencode, aider.',
+          enum: ['claude', 'gemini', 'codex', 'opencode', 'aider'],
+        },
+        model: {
+          type: 'string',
+          description: 'Model to use (optional). Passed as --model flag to the CLI backend.',
+        },
+      },
+      required: ['cwd'],
+    },
+  },
+  {
+    name: 'close_session',
+    description: 'Close (kill) a CLI session by its session ID. The session\'s PTY process will be terminated.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        session_id: {
+          type: 'string',
+          description: 'The PTY session ID to close (from list_sessions or create_session)',
+        },
+      },
+      required: ['session_id'],
     },
   },
   {
@@ -148,8 +189,29 @@ async function handleToolCall(name, args) {
     }
 
     case 'send_session_input': {
-      const result = await apiRequest('POST', `/sessions/${args.session_id}/input`, { input: args.input })
+      const body = { input: args.input }
+      if (args.raw) body.raw = true
+      const result = await apiRequest('POST', `/sessions/${args.session_id}/input`, body)
       return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+    }
+
+    case 'create_session': {
+      const body = { cwd: args.cwd }
+      if (args.backend) body.backend = args.backend
+      if (args.model) body.model = args.model
+      const result = await apiRequest('POST', '/sessions', body)
+      if (result.session_id) {
+        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+      }
+      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }], isError: true }
+    }
+
+    case 'close_session': {
+      const result = await apiRequest('DELETE', `/sessions/${args.session_id}`)
+      if (result.success) {
+        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+      }
+      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }], isError: true }
     }
 
     case 'broadcast_input': {

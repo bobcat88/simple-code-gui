@@ -17,6 +17,7 @@ export interface TiledTerminalViewProps {
   theme: Theme
   focusedTabId?: string | null
   onCloseTab: (id: string) => void
+  onRenameTab: (id: string, title: string) => void
   onFocusTab: (id: string) => void
   tileTree: TileNode | null
   onTreeChange: (tree: TileNode | null) => void

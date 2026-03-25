@@ -324,9 +324,7 @@ function buildPermissionArgs(
         args.push('--permission-mode', permissionMode)
       }
       if (autoAcceptTools && autoAcceptTools.length > 0) {
-        for (const tool of autoAcceptTools) {
-          args.push('--allowedTools', tool)
-        }
+        args.push('--allowedTools', autoAcceptTools.join(','))
       }
       break
 

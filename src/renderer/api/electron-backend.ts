@@ -35,6 +35,8 @@ declare global {
       onPtyExit: (id: string, callback: (code: number) => void) => () => void
       onPtyRecreated: (callback: (data: { oldId: string; newId: string; backend: BackendId }) => void) => () => void
       setPtyBackend: (id: string, backend: BackendId) => Promise<void>
+      setAutoAccept?: (id: string, enabled: boolean) => void
+      getAutoAcceptStatus?: (id: string) => Promise<boolean>
 
 
       // Session Management
@@ -68,6 +70,7 @@ declare global {
       voiceStopSpeaking: () => Promise<{ success: boolean }>
 
       // TADA (neural voice cloning)
+      tadaInstall?: () => Promise<{ success: boolean; error?: string }>
       tadaCheck?: () => Promise<{ installed: boolean; pythonPath: string | null; venvExists: boolean; hfAuthenticated?: boolean; error?: string }>
       tadaLoginHuggingFace?: (token: string) => Promise<{ success: boolean; error?: string }>
       tadaSelectVoiceSample?: () => Promise<{ success: boolean; path?: string; error?: string }>
@@ -192,6 +195,14 @@ export class ElectronBackend implements ExtendedApi {
   setPtyBackend(id: string, backend: BackendId): Promise<void> {
     this.checkApi()
     return window.electronAPI!.setPtyBackend(id, backend)
+  }
+
+  setAutoAccept(id: string, enabled: boolean): void {
+    window.electronAPI?.setAutoAccept?.(id, enabled)
+  }
+
+  getAutoAcceptStatus(id: string): Promise<boolean> {
+    return window.electronAPI?.getAutoAcceptStatus?.(id) ?? Promise.resolve(false)
   }
 
   // ==========================================================================

@@ -46,6 +46,7 @@ export const voiceHandlers = {
     ipcRenderer.invoke('xtts:extractAudioClip', { inputPath, startTime, endTime }),
 
   // TADA (neural voice cloning)
+  tadaInstall: () => ipcRenderer.invoke('tada:install'),
   tadaCheck: () => ipcRenderer.invoke('tada:check'),
   tadaLoginHuggingFace: (token: string) => ipcRenderer.invoke('tada:loginHuggingFace', token),
   tadaSelectVoiceSample: () => ipcRenderer.invoke('tada:selectVoiceSample'),

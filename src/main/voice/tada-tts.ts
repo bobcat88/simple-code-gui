@@ -84,6 +84,63 @@ class TadaTTS {
   private currentVoiceSample: string | null = null
   private starting = false
 
+  async install(): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Find a suitable Python
+      let pythonCmd = 'python3'
+      try {
+        await execAsync('python3 --version', { timeout: 5000 })
+      } catch {
+        try {
+          await execAsync('python --version', { timeout: 5000 })
+          pythonCmd = 'python'
+        } catch {
+          return { success: false, error: 'Python 3 not found. Please install Python 3.10+ first.' }
+        }
+      }
+
+      // Verify Python version (need 3.10+)
+      try {
+        const { stdout } = await execAsync(`${pythonCmd} -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"`, { timeout: 5000 })
+        const [major, minor] = stdout.trim().split('.').map(Number)
+        if (major < 3 || (major === 3 && minor < 10)) {
+          return { success: false, error: `Python 3.10+ required, found ${stdout.trim()}` }
+        }
+      } catch {
+        return { success: false, error: 'Could not determine Python version' }
+      }
+
+      // Create venv
+      if (!existsSync(TADA_PYTHON)) {
+        logTTS('Creating TADA venv', { dir: TADA_VENV_DIR })
+        await execAsync(`${pythonCmd} -m venv "${TADA_VENV_DIR}"`, { timeout: 120000 })
+      }
+
+      if (!existsSync(TADA_PYTHON)) {
+        return { success: false, error: 'Failed to create virtual environment' }
+      }
+
+      // Upgrade pip
+      await execAsync(`"${TADA_PYTHON}" -m pip install --upgrade pip`, { timeout: 120000 })
+
+      // Install tada and dependencies
+      logTTS('Installing TADA dependencies')
+      await execAsync(`"${TADA_PYTHON}" -m pip install tada huggingface_hub`, { timeout: 900000 })
+
+      // Verify installation
+      const status = await this.checkInstallation()
+      if (!status.venvExists) {
+        return { success: false, error: 'Installation verification failed' }
+      }
+
+      logTTS('TADA installation complete')
+      return { success: true }
+    } catch (e) {
+      const error = e instanceof Error ? e.message : String(e)
+      return { success: false, error }
+    }
+  }
+
   async checkInstallation(): Promise<{
     installed: boolean
     pythonPath: string | null

@@ -177,8 +177,10 @@ export function ProjectSettingsModal({
                         checked={state.permissionMode === mode.value}
                         onChange={(e) => onChange({ permissionMode: e.target.value })}
                       />
-                      <span className="mode-label">{mode.label}</span>
-                      <span className="mode-desc">{mode.desc}</span>
+                      <span className="mode-info">
+                        <span className="mode-label">{mode.label}</span>
+                        <span className="mode-desc">{mode.desc}</span>
+                      </span>
                       {isGlobalMode && <span className="global-indicator">G</span>}
                     </label>
                   )

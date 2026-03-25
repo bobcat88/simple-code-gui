@@ -7,7 +7,7 @@ import {
   MAX_FONT_SIZE,
   FONT_SIZE_STORAGE_KEY,
 } from '../constants.js'
-import { handlePaste, isTerminalAtBottom } from '../utils.js'
+import { handlePaste, isTerminalAtBottom, scrollDebug, scrollSnapshot } from '../utils.js'
 
 type BackendType = 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
 
@@ -98,7 +98,12 @@ export function createMouseDownHandler(
     requestAnimationFrame(() => {
       if (disposedRef.current) return
       if (!userScrolledUpRef.current) {
+        const before = scrollSnapshot(terminal)
         terminal.scrollToBottom()
+        const after = scrollSnapshot(terminal)
+        if (before.viewportY !== after.viewportY) {
+          scrollDebug('mousedown:scrollToBottom', { before, after })
+        }
       }
     })
   }
@@ -132,7 +137,12 @@ export function createResizeHandler(
       if (wasAtBottom) {
         requestAnimationFrame(() => {
           if (disposedRef.current) return
+          const before = scrollSnapshot(terminal)
           terminal.scrollToBottom()
+          const after = scrollSnapshot(terminal)
+          if (before.viewportY !== after.viewportY) {
+            scrollDebug('resize:scrollToBottom', { before, after })
+          }
         })
       }
     }

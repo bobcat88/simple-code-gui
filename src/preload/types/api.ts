@@ -157,6 +157,7 @@ export interface ElectronAPI {
   xttsExtractAudioClip: (inputPath: string, startTime: number, endTime: number) => Promise<{ success: boolean; outputPath?: string; dataUrl?: string; error?: string }>
 
   // TADA (neural voice cloning)
+  tadaInstall: () => Promise<{ success: boolean; error?: string }>
   tadaCheck: () => Promise<{ installed: boolean; pythonPath: string | null; venvExists: boolean; hfAuthenticated?: boolean; error?: string }>
   tadaLoginHuggingFace: (token: string) => Promise<{ success: boolean; error?: string }>
   tadaSelectVoiceSample: () => Promise<{ success: boolean; path?: string; error?: string }>
@@ -175,6 +176,9 @@ export interface ElectronAPI {
   onPtyData: (id: string, callback: (data: string) => void) => () => void
   onPtyExit: (id: string, callback: (code: number) => void) => () => void
   onPtyRecreated: (callback: (data: { oldId: string; newId: string; backend: 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider' }) => void) => () => void
+  setAutoAccept: (id: string, enabled: boolean) => void
+  scrollDebugLog: (chunk: string) => void
+  getAutoAcceptStatus: (id: string) => Promise<boolean>
 
   // API Server
   apiStart: (projectPath: string, port: number) => Promise<{ success: boolean; error?: string }>

@@ -31,6 +31,7 @@ export interface OpenTab {
   projectPath: string
   sessionId?: string
   title: string
+  customTitle?: boolean
   ptyId: string
   backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
 }

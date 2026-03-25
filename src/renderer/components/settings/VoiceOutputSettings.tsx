@@ -30,6 +30,10 @@ interface VoiceOutputSettingsProps {
   onTadaUseSample?: (sampleId: string) => void
   tadaVoiceSample?: string | null
   tadaSampleVoices?: TadaSampleVoice[]
+  tadaInstalled?: boolean | null
+  tadaInstalling?: boolean
+  tadaInstallError?: string | null
+  onTadaInstall?: () => void
   tadaHfAuthenticated?: boolean | null
   onTadaHfLogin?: (token: string) => Promise<{ success: boolean; error?: string }>
 }
@@ -49,6 +53,10 @@ export function VoiceOutputSettings({
   onTadaUseSample,
   tadaVoiceSample,
   tadaSampleVoices,
+  tadaInstalled,
+  tadaInstalling,
+  tadaInstallError,
+  onTadaInstall,
   tadaHfAuthenticated,
   onTadaHfLogin,
 }: VoiceOutputSettingsProps): React.ReactElement {
@@ -229,7 +237,7 @@ export function VoiceOutputSettings({
     <div className="form-group">
       <label>Voice Output (Text-to-Speech)</label>
       <p className="form-hint">
-        Piper voices and XTTS clones for Claude to speak responses aloud.
+        Piper voices, XTTS clones, and TADA neural voices for Claude to speak responses aloud.
       </p>
       <div className="voice-options">
         {voice.installedVoices.length > 0 ? (
@@ -281,6 +289,26 @@ export function VoiceOutputSettings({
       >
         Browse Voices...
       </button>
+
+      {/* TADA Engine Install */}
+      {tadaInstalled === false && (
+        <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+          <label style={{ marginBottom: '4px', display: 'block', fontWeight: 600 }}>TADA Neural Voice Cloning</label>
+          <p className="form-hint" style={{ marginBottom: '8px' }}>
+            High-quality neural TTS using HumeAI/tada-1b. Clones any voice from a short audio sample. Requires Python 3.10+ and ~2GB disk space.
+          </p>
+          <button
+            className="btn-primary"
+            disabled={tadaInstalling}
+            onClick={onTadaInstall}
+          >
+            {tadaInstalling ? 'Installing TADA (this may take several minutes)...' : 'Install TADA'}
+          </button>
+          {tadaInstallError && (
+            <p style={{ color: 'var(--error, #f44)', fontSize: '12px', marginTop: '6px' }}>{tadaInstallError}</p>
+          )}
+        </div>
+      )}
 
       {/* Voice Speed */}
       <div className="slider-group" style={{ marginTop: '16px' }}>

@@ -82,8 +82,10 @@ export function PermissionsSettings({
                 checked={permissionMode === mode.value}
                 onChange={(e) => onPermissionModeChange(e.target.value)}
               />
-              <span className="mode-label">{mode.label}</span>
-              <span className="mode-desc">{mode.desc}</span>
+              <span className="mode-info">
+                <span className="mode-label">{mode.label}</span>
+                <span className="mode-desc">{mode.desc}</span>
+              </span>
             </label>
           ))}
         </div>

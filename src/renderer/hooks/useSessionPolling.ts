@@ -34,10 +34,14 @@ export function useSessionPolling({ api, openTabs, updateTab }: UseSessionPollin
               const alreadyOpen = openTabs.some((t) => t.id !== tab.id && t.sessionId === mostRecent.sessionId)
               if (!alreadyOpen) {
                 const projectName = tab.projectPath.split(/[/\\]/).pop() || tab.projectPath
-                updateTab(tab.id, {
-                  sessionId: mostRecent.sessionId,
-                  title: `${projectName} - ${mostRecent.slug}`
-                })
+                const updates: Partial<import('../stores/workspace').OpenTab> = {
+                  sessionId: mostRecent.sessionId
+                }
+                // Only update title if user hasn't customized it
+                if (!tab.customTitle) {
+                  updates.title = `${projectName} - ${mostRecent.slug}`
+                }
+                updateTab(tab.id, updates)
               }
             }
           } catch (e) {

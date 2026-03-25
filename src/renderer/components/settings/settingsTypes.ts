@@ -40,6 +40,8 @@ export const COMMON_TOOLS = [
 export const PERMISSION_MODES = [
   { label: 'Default', value: 'default', desc: 'Ask for all permissions' },
   { label: 'Accept Edits', value: 'acceptEdits', desc: 'Auto-accept file edits' },
+  { label: 'Plan', value: 'plan', desc: 'Require plan approval before actions' },
+  { label: 'Auto', value: 'auto', desc: 'Automatic permission decisions' },
   { label: "Don't Ask", value: 'dontAsk', desc: 'Skip permission prompts' },
   { label: 'Bypass All', value: 'bypassPermissions', desc: 'Skip all permission checks' },
 ]

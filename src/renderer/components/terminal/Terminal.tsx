@@ -144,8 +144,19 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     }
   }, [isActive, ptyId, containerRef, terminalRef, fitAddonRef, userScrolledUpRef])
 
-  // Handle file drop from file manager
+  // Check if a drag event is a tile/sidebar/sub-tab drag (not a file drop)
+  const isTileDrag = useCallback((e: React.DragEvent) => {
+    const types = e.dataTransfer.types
+    return types.includes('application/x-sidebar-project') ||
+           types.includes('application/x-subtab') ||
+           // text/plain without Files = tile drag; text/plain with Files = file manager drag
+           (types.includes('text/plain') && !types.includes('Files') && !types.includes('text/uri-list'))
+  }, [])
+
+  // Handle file drop from file manager (let tile/sidebar drags pass through to parent handlers)
   const handleDrop = useCallback((e: React.DragEvent) => {
+    if (isTileDrag(e)) return // Let tile/sidebar drags bubble to tiled view handlers
+
     e.preventDefault()
     e.stopPropagation()
 
@@ -182,13 +193,15 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     if (paths.length > 0) {
       window.electronAPI?.writePty(ptyId, formatPathsForBackend(paths, backend))
     }
-  }, [ptyId, backend])
+  }, [ptyId, backend, isTileDrag])
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
+    if (isTileDrag(e)) return // Let tile/sidebar drags bubble to tiled view handlers
+
     e.preventDefault()
     e.stopPropagation()
     e.dataTransfer.dropEffect = 'copy'
-  }, [])
+  }, [isTileDrag])
 
   // Track if a clear/compact operation is in progress to prevent double-triggering
   const clearInProgressRef = useRef(false)

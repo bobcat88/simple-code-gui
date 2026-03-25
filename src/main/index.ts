@@ -56,9 +56,9 @@ const mobileServer = new MobileServer()
 const ptyToProject = new Map<string, string>()
 const ptyToBackend = new Map<string, string>()
 
-const orchestratorApi = new OrchestratorApi(ptyManager, ptyToProject)
-
 const getMainWindow = (): BrowserWindow | null => mainWindow
+
+const orchestratorApi = new OrchestratorApi(ptyManager, ptyToProject, ptyToBackend, sessionStore, getMainWindow)
 const setMainWindow = (win: BrowserWindow | null): void => { mainWindow = win }
 
 // Register IPC handlers
@@ -124,6 +124,26 @@ app.whenReady().then(() => {
   mainWindow = createWindow(sessionStore, ptyManager, setMainWindow)
   createApplicationMenu(mainWindow)
   if (mainWindow) initUpdater(mainWindow)
+
+  // Refresh CLAUDE.md task instructions for all projects on startup.
+  // This ensures existing sessions pick up updated instructions after compaction.
+  try {
+    const projects = sessionStore.getData()?.workspace?.projects || []
+    // Import is resolved at bundle time — no dynamic require needed
+    import('./ipc/kspec-handlers.js').then(({ installTaskInstructions: installTaskInstr }) => {
+      for (const project of projects) {
+        if (!project?.path) continue
+        try {
+          const hasKspec = existsSync(join(project.path, '.kspec'))
+          const hasBeads = existsSync(join(project.path, '.beads'))
+          if (hasKspec) installTaskInstr(project.path, 'kspec')
+          else if (hasBeads) installTaskInstr(project.path, 'beads')
+        } catch { /* skip individual project errors */ }
+      }
+    }).catch(() => { /* kspec handlers not available */ })
+  } catch (e) {
+    console.error('[Startup] Failed to refresh task instructions:', e)
+  }
 
   // Start orchestrator API for MCP-based session control
   orchestratorApi.start()

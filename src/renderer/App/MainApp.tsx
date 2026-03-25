@@ -136,6 +136,10 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
     setTileTree
   })
 
+  const handleRenameTab = useCallback((id: string, title: string) => {
+    updateTab(id, { title, customTitle: true })
+  }, [updateTab])
+
   // App-specific state
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const [mobileConnectOpen, setMobileConnectOpen] = useState(false)
@@ -190,6 +194,7 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
           projectPath: t.projectPath,
           sessionId: t.sessionId,
           title: t.title,
+          customTitle: t.customTitle || undefined,
           ptyId: t.ptyId,
           backend: t.backend
         })),
@@ -305,6 +310,7 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
                       activeTabId={activeTabId}
                       onSelectTab={setActiveTab}
                       onCloseTab={handleCloseTab}
+                      onRenameTab={handleRenameTab}
                       onNewSession={(projectPath) => handleOpenSession(projectPath, undefined, undefined, undefined, true)}
                       swipeContainerRef={terminalContainerRef as RefObject<HTMLElement>}
                       onOpenSidebar={openMobileDrawer}
@@ -347,6 +353,7 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
                       theme={currentTheme}
                       focusedTabId={lastFocusedTabId}
                       onCloseTab={handleCloseTab}
+                      onRenameTab={handleRenameTab}
                       onFocusTab={setLastFocusedTabId}
                       tileTree={tileTree}
                       onTreeChange={setTileTree}

@@ -3,6 +3,79 @@ import { PtyManager } from '../../pty-manager.js'
 import { SessionStore } from '../../session-store.js'
 import { ApiServerManager } from '../../api-server.js'
 import { pendingApiPrompts, autoCloseSessions } from '../api-prompt-handler.js'
+import { appendFileSync } from 'fs'
+import { homedir } from 'os'
+import { join } from 'path'
+
+const DEBUG_LOG = '/tmp/auto-accept-debug.log'
+const SCROLL_DEBUG_LOG = join(homedir(), 'scroll-debug.log')
+function debugLog(msg: string): void {
+  try { appendFileSync(DEBUG_LOG, `${new Date().toISOString()} ${msg}\n`) } catch {}
+}
+
+// Auto-accept permission prompts state
+const autoAcceptEnabled = new Set<string>() // PTY IDs with auto-accept on
+const autoAcceptBuffers = new Map<string, string>() // recent stripped output per PTY
+const autoAcceptCooldown = new Map<string, number>() // prevent rapid-fire responses
+
+// ANSI escape code stripper
+function stripAnsi(str: string): string {
+  return str
+    .replace(/\x1b\[[\?]?[0-9;]*[a-zA-Z]/g, '')
+    .replace(/\x1b\][^\x07]*\x07/g, '')
+    .replace(/\x1b[>=][0-9]*[a-zA-Z]?/g, '')
+}
+
+// Permission prompt patterns — matches Claude Code's specific tool approval prompts
+// ANSI stripping can collapse spaces between words, so use \s* to match with or without spaces
+const PERMISSION_PATTERNS = [
+  /Do\s*you\s*want\s*to\s*proceed\s*\?/,
+  /Do\s*you\s*want\s*to\s*allow/,
+  /Do\s*you\s*want\s*to\s*make\s*this\s*edit/,
+]
+
+function detectPermissionPrompt(buffer: string): boolean {
+  // Check last ~500 chars of buffer for permission patterns
+  const tail = buffer.slice(-500)
+  return PERMISSION_PATTERNS.some(pattern => pattern.test(tail))
+}
+
+function maybeAutoAccept(
+  ptyManager: PtyManager,
+  id: string,
+  data: string
+): void {
+  if (!autoAcceptEnabled.has(id)) return
+
+  const stripped = stripAnsi(data)
+  const existing = autoAcceptBuffers.get(id) || ''
+  const buf = (existing + stripped).slice(-1000)
+  autoAcceptBuffers.set(id, buf)
+
+  // Cooldown: don't respond more than once per second
+  const now = Date.now()
+  const lastResponse = autoAcceptCooldown.get(id) || 0
+  if (now - lastResponse < 1000) return
+
+  const tail = buf.slice(-500)
+  // Only log when tail contains "want" or "proceed" or "allow" (near-miss debugging)
+  if (/want|proceed|allow/i.test(tail)) {
+    debugLog(`TAIL id=${id.slice(0, 8)}: "${tail.replace(/\n/g, '\\n').slice(-400)}"`)
+  }
+
+  const matched = PERMISSION_PATTERNS.find(pattern => pattern.test(tail))
+  if (matched) {
+    debugLog(`MATCHED id=${id.slice(0, 8)} pattern=${matched}`)
+    autoAcceptCooldown.set(id, now)
+    autoAcceptBuffers.set(id, '')
+    setTimeout(() => {
+      if (ptyManager.getProcess(id)) {
+        debugLog(`WRITING '1' to id=${id.slice(0, 8)}`)
+        ptyManager.write(id, '1')
+      }
+    }, 150)
+  }
+}
 
 function maybeRespondToCursorPositionRequest(
   ptyManager: PtyManager,
@@ -58,6 +131,7 @@ export function registerPtyHandlers(
 
       ptyManager.onData(id, (data) => {
         maybeRespondToCursorPositionRequest(ptyManager, ptyToBackend, id, data)
+        maybeAutoAccept(ptyManager, id, data)
         try {
           mainWindow?.webContents.send(`pty:data:${id}`, data)
         } catch (e) {
@@ -74,6 +148,9 @@ export function registerPtyHandlers(
         ptyToProject.delete(id)
         ptyToBackend.delete(id)
         autoCloseSessions.delete(id)
+        autoAcceptEnabled.delete(id)
+        autoAcceptBuffers.delete(id)
+        autoAcceptCooldown.delete(id)
       })
 
       if (pending) {
@@ -131,8 +208,17 @@ export function registerPtyHandlers(
 
     const mainWindow = getMainWindow()
 
+    // Carry over auto-accept state to new PTY
+    if (autoAcceptEnabled.has(oldId)) {
+      autoAcceptEnabled.delete(oldId)
+      autoAcceptEnabled.add(newId)
+    }
+    autoAcceptBuffers.delete(oldId)
+    autoAcceptCooldown.delete(oldId)
+
     ptyManager.onData(newId, (data) => {
       maybeRespondToCursorPositionRequest(ptyManager, ptyToBackend, newId, data)
+      maybeAutoAccept(ptyManager, newId, data)
       mainWindow?.webContents.send(`pty:data:${newId}`, data)
     })
 
@@ -140,8 +226,33 @@ export function registerPtyHandlers(
       mainWindow?.webContents.send(`pty:exit:${newId}`, code)
       ptyToProject.delete(newId)
       ptyToBackend.delete(newId)
+      autoAcceptEnabled.delete(newId)
+      autoAcceptBuffers.delete(newId)
+      autoAcceptCooldown.delete(newId)
     })
 
     mainWindow?.webContents.send('pty:recreated', { oldId, newId, backend: newBackend })
+  })
+
+  // Auto-accept toggle
+  ipcMain.on('pty:auto-accept', (_, { id, enabled }: { id: string; enabled: boolean }) => {
+    debugLog(`TOGGLE id=${id.slice(0, 8)} enabled=${enabled}`)
+    if (enabled) {
+      autoAcceptEnabled.add(id)
+    } else {
+      autoAcceptEnabled.delete(id)
+      autoAcceptBuffers.delete(id)
+      autoAcceptCooldown.delete(id)
+    }
+    debugLog(`activeIds: [${[...autoAcceptEnabled].map(s => s.slice(0, 8)).join(', ')}]`)
+  })
+
+  ipcMain.handle('pty:auto-accept-status', (_, id: string) => {
+    return autoAcceptEnabled.has(id)
+  })
+
+  // Scroll debug logger — appends to ~/scroll-debug.log
+  ipcMain.on('scroll-debug-log', (_, chunk: string) => {
+    try { appendFileSync(SCROLL_DEBUG_LOG, chunk) } catch { /* ignore */ }
   })
 }

@@ -1,4 +1,4 @@
-import React, { useCallback, memo, RefObject } from 'react'
+import React, { useCallback, useState, useRef, memo, RefObject } from 'react'
 import { OpenTab } from '../stores/workspace'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { useSwipeGesture } from '../hooks/useSwipeGesture'
@@ -9,13 +9,19 @@ interface TabItemProps {
   isActive: boolean
   onSelect: (id: string) => void
   onClose: (id: string) => void
+  onRename: (id: string, title: string) => void
   onNewSession: (projectPath: string) => void
 }
 
-const TabItem = memo(function TabItem({ tab, isActive, onSelect, onClose, onNewSession }: TabItemProps) {
+const TabItem = memo(function TabItem({ tab, isActive, onSelect, onClose, onRename, onNewSession }: TabItemProps) {
+  const [editing, setEditing] = useState(false)
+  const [editValue, setEditValue] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+  const cancelledRef = useRef(false)
+
   const handleClick = useCallback(() => {
-    onSelect(tab.id)
-  }, [onSelect, tab.id])
+    if (!editing) onSelect(tab.id)
+  }, [onSelect, tab.id, editing])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -34,6 +40,26 @@ const TabItem = memo(function TabItem({ tab, isActive, onSelect, onClose, onNewS
     onNewSession(tab.projectPath)
   }, [onNewSession, tab.projectPath])
 
+  const startRename = useCallback(() => {
+    setEditing(true)
+    setEditValue(tab.title)
+    cancelledRef.current = false
+    setTimeout(() => inputRef.current?.select(), 0)
+  }, [tab.title])
+
+  const commitRename = useCallback(() => {
+    if (cancelledRef.current) return
+    if (editValue.trim()) {
+      onRename(tab.id, editValue.trim())
+    }
+    setEditing(false)
+  }, [tab.id, editValue, onRename])
+
+  const cancelRename = useCallback(() => {
+    cancelledRef.current = true
+    setEditing(false)
+  }, [])
+
   return (
     <div
       className={`tab ${isActive ? 'active' : ''}`}
@@ -43,7 +69,25 @@ const TabItem = memo(function TabItem({ tab, isActive, onSelect, onClose, onNewS
       onClick={handleClick}
       onKeyDown={handleKeyDown}
     >
-      <span className="tab-title" title={tab.title}>{tab.title}</span>
+      {editing ? (
+        <input
+          ref={inputRef}
+          className="tab-title-input"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={commitRename}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { e.preventDefault(); commitRename() }
+            else if (e.key === 'Escape') { e.preventDefault(); cancelRename() }
+            e.stopPropagation()
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+          autoFocus
+        />
+      ) : (
+        <span className="tab-title" title={tab.title} onDoubleClick={(e) => { e.stopPropagation(); startRename() }}>{tab.title}</span>
+      )}
       <button
         className="tab-new-session"
         onClick={handleNewSession}
@@ -69,6 +113,7 @@ interface TerminalTabsProps {
   activeTabId: string | null
   onSelectTab: (id: string) => void
   onCloseTab: (id: string) => void
+  onRenameTab: (id: string, title: string) => void
   onNewSession: (projectPath: string) => void
   swipeContainerRef?: RefObject<HTMLElement>  // For mobile swipe gestures
   onOpenSidebar?: () => void  // For mobile right-edge swipe
@@ -79,6 +124,7 @@ export function TerminalTabs({
   activeTabId,
   onSelectTab,
   onCloseTab,
+  onRenameTab,
   onNewSession,
   swipeContainerRef,
   onOpenSidebar
@@ -147,6 +193,7 @@ export function TerminalTabs({
           isActive={tab.id === activeTabId}
           onSelect={onSelectTab}
           onClose={onCloseTab}
+          onRename={onRenameTab}
           onNewSession={onNewSession}
         />
       ))}

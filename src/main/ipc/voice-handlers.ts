@@ -4,6 +4,7 @@ import { join } from 'path'
 import { voiceManager, WHISPER_MODELS, PIPER_VOICES, WhisperModelName, PiperVoiceName } from '../voice-manager'
 import { xttsManager, XTTS_LANGUAGES, XTTS_SAMPLE_VOICES } from '../xtts-manager'
 import { tadaTTS, TADA_SAMPLE_VOICES, getTadaSamplePath } from '../voice/tada-tts'
+import { installTaskInstructions } from './kspec-handlers'
 
 const TTS_INSTRUCTIONS_START = '\n\n<!-- TTS_VOICE_OUTPUT_START -->'
 const TTS_INSTRUCTIONS_END = '<!-- TTS_VOICE_OUTPUT_END -->\n'
@@ -41,19 +42,40 @@ function installTTSInstructions(projectPath: string): boolean {
         const endIdx = content.indexOf(TTS_INSTRUCTIONS_END)
         if (startIdx !== -1 && endIdx !== -1) {
           content = content.substring(0, startIdx) + content.substring(endIdx + TTS_INSTRUCTIONS_END.length)
-          content += TTS_INSTRUCTIONS
-          writeFileSync(claudeMdPath, content)
-          return true
         }
       }
     }
 
     content += TTS_INSTRUCTIONS
     writeFileSync(claudeMdPath, content)
+
+    // Also refresh task instructions on every session open so outdated
+    // CLAUDE.md entries (e.g. wrong --type list) get corrected.
+    // Runs after TTS write so installTaskInstructions reads the updated file.
+    refreshTaskInstructions(projectPath)
+
     return true
   } catch (e) {
     console.error('Failed to install TTS instructions:', e)
     return false
+  }
+}
+
+/**
+ * Refresh task management instructions in CLAUDE.md if a task backend is initialized.
+ * Detects kspec (.kspec/) or beads (.beads/) and re-injects current instructions,
+ * ensuring outdated instructions from older app versions get replaced.
+ */
+function refreshTaskInstructions(projectPath: string): void {
+  try {
+    const hasKspec = existsSync(join(projectPath, '.kspec'))
+    const hasBeads = existsSync(join(projectPath, '.beads'))
+    if (!hasKspec && !hasBeads) return
+
+    const backend = hasKspec ? 'kspec' : 'beads'
+    installTaskInstructions(projectPath, backend)
+  } catch {
+    // Non-critical — task instructions will be injected at next init
   }
 }
 
@@ -458,6 +480,14 @@ export function registerVoiceHandlers(getMainWindow: () => BrowserWindow | null)
   })
 
   // TADA (neural voice cloning)
+  ipcMain.handle('tada:install', async () => {
+    try {
+      return await tadaTTS.install()
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+  })
+
   ipcMain.handle('tada:check', async () => {
     try {
       return await tadaTTS.checkInstallation()

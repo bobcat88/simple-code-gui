@@ -112,7 +112,7 @@ export function useWorkspaceLoader({
 
               let sessionIdToRestore: string | undefined = savedTab.sessionId
 
-              // Always discover sessions to find the most recent one
+              // Discover sessions for this project
               let sessionsForProject = sessionsCache.get(savedTab.projectPath)
               if (!sessionsForProject) {
                 const list = await api.discoverSessions(savedTab.projectPath, effectiveBackendForTab)
@@ -121,13 +121,42 @@ export function useWorkspaceLoader({
               }
 
               const list = sessionsForProject.list || []
-              for (let i = sessionsForProject.nextIndex; i < list.length; i++) {
-                const candidate = list[i]
-                if (!usedSessionIds.has(candidate.sessionId)) {
-                  sessionIdToRestore = candidate.sessionId
-                  titleToRestore = `${projectName} - ${candidate.slug}`
-                  sessionsForProject.nextIndex = i + 1
-                  break
+
+              // Try to match the saved sessionId first to preserve tab order
+              if (savedTab.sessionId) {
+                const savedMatch = list.find(s => s.sessionId === savedTab.sessionId)
+                if (savedMatch && !usedSessionIds.has(savedMatch.sessionId)) {
+                  sessionIdToRestore = savedMatch.sessionId
+                  // Only update title if user hasn't customized it
+                  if (!savedTab.customTitle) {
+                    titleToRestore = `${projectName} - ${savedMatch.slug}`
+                  }
+                } else {
+                  // Saved session not found or already used — fall back to next available
+                  for (let i = sessionsForProject.nextIndex; i < list.length; i++) {
+                    const candidate = list[i]
+                    if (!usedSessionIds.has(candidate.sessionId)) {
+                      sessionIdToRestore = candidate.sessionId
+                      if (!savedTab.customTitle) {
+                        titleToRestore = `${projectName} - ${candidate.slug}`
+                      }
+                      sessionsForProject.nextIndex = i + 1
+                      break
+                    }
+                  }
+                }
+              } else {
+                // No saved session — find first available
+                for (let i = sessionsForProject.nextIndex; i < list.length; i++) {
+                  const candidate = list[i]
+                  if (!usedSessionIds.has(candidate.sessionId)) {
+                    sessionIdToRestore = candidate.sessionId
+                    if (!savedTab.customTitle) {
+                      titleToRestore = `${projectName} - ${candidate.slug}`
+                    }
+                    sessionsForProject.nextIndex = i + 1
+                    break
+                  }
                 }
               }
 
@@ -146,6 +175,7 @@ export function useWorkspaceLoader({
                 projectPath: savedTab.projectPath,
                 sessionId: sessionIdToRestore,
                 title: titleToRestore,
+                customTitle: savedTab.customTitle || undefined,
                 ptyId,
                 backend: effectiveBackendForTab
               })

@@ -31,5 +31,14 @@ export const ptyHandlers = {
     const handler = (_: IpcRendererEvent, data: { oldId: string; newId: string; backend: Backend }) => callback(data)
     ipcRenderer.on('pty:recreated', handler)
     return () => ipcRenderer.removeListener('pty:recreated', handler)
-  }
+  },
+
+  setAutoAccept: (id: string, enabled: boolean): void =>
+    ipcRenderer.send('pty:auto-accept', { id, enabled }),
+
+  getAutoAcceptStatus: (id: string): Promise<boolean> =>
+    ipcRenderer.invoke('pty:auto-accept-status', id),
+
+  scrollDebugLog: (chunk: string): void =>
+    ipcRenderer.send('scroll-debug-log', chunk)
 }

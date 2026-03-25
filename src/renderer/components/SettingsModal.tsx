@@ -80,9 +80,12 @@ export function SettingsModal({
   // Grouped state: UI/loading states
   const [ui, setUI] = useState<UIState>(DEFAULT_UI)
 
-  // TADA sample voices and HF auth
+  // TADA sample voices, install status, and HF auth
   const [tadaSampleVoices, setTadaSampleVoices] = useState<Array<{ id: string; name: string; description: string; available: boolean }>>([])
   const [tadaHfAuthenticated, setTadaHfAuthenticated] = useState<boolean | null>(null)
+  const [tadaInstalled, setTadaInstalled] = useState<boolean | null>(null)
+  const [tadaInstalling, setTadaInstalling] = useState(false)
+  const [tadaInstallError, setTadaInstallError] = useState<string | null>(null)
 
   // Load installed voices (Piper, XTTS, and TADA)
   async function refreshInstalledVoices(): Promise<void> {
@@ -103,6 +106,7 @@ export function SettingsModal({
       }
       // Add TADA as a voice option if installed (show even if HF auth needed)
       if (tadaStatus?.installed) {
+        setTadaInstalled(true)
         setTadaHfAuthenticated(tadaStatus.hfAuthenticated ?? null)
         combined.push({
           key: 'tada',
@@ -111,6 +115,8 @@ export function SettingsModal({
             : 'TADA (Neural Voice Clone)',
           source: 'tada'
         })
+      } else {
+        setTadaInstalled(false)
       }
       setVoice(prev => ({ ...prev, installedVoices: combined }))
     } catch (e) {
@@ -379,6 +385,25 @@ export function SettingsModal({
             onTadaUseSample={handleTadaUseSample}
             tadaVoiceSample={voice.tadaVoiceSample}
             tadaSampleVoices={tadaSampleVoices}
+            tadaInstalled={tadaInstalled}
+            tadaInstalling={tadaInstalling}
+            tadaInstallError={tadaInstallError}
+            onTadaInstall={async () => {
+              setTadaInstalling(true)
+              setTadaInstallError(null)
+              try {
+                const result = await window.electronAPI?.tadaInstall?.()
+                if (result?.success) {
+                  setTadaInstalled(true)
+                  refreshInstalledVoices()
+                } else {
+                  setTadaInstallError(result?.error || 'Installation failed')
+                }
+              } catch (e) {
+                setTadaInstallError(e instanceof Error ? e.message : 'Installation failed')
+              }
+              setTadaInstalling(false)
+            }}
             tadaHfAuthenticated={tadaHfAuthenticated}
             onTadaHfLogin={async (token: string) => {
               const result = await window.electronAPI?.tadaLoginHuggingFace?.(token)

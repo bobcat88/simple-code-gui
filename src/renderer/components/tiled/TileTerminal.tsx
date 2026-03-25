@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useState, useRef } from 'react'
 import { Terminal } from '../Terminal.js'
 import { ErrorBoundary } from '../ErrorBoundary.js'
 import type { ComputedRect } from '../tile-tree.js'
@@ -23,16 +23,19 @@ interface TileTerminalProps {
   isDragging: boolean
   isDropTarget: boolean
   draggedTile: string | null
+  draggedSubTab: { tabId: string; tileId: string } | null
   draggedSidebarProject: string | null
   flatLayout: { id: string; x: number; y: number; width: number; height: number }[]
   highlightedEdges: Set<string>
   viewportSize: { width: number; height: number }
   clientToCanvasPercent: ClientToCanvasPercent
   onCloseTab: (id: string) => void
+  onRenameTab: (id: string, title: string) => void
   onFocusTab: (id: string) => void
   onSwitchSubTab: (leafId: string, tabId: string) => void
   onAddTab?: (projectPath: string, tileId: string) => void
   onDragStart: (e: React.DragEvent, tileId: string) => void
+  onSubTabDragStart: (e: React.DragEvent, tabId: string, tileId: string) => void
   onDragEnd: () => void
   onContainerDrop: (e: React.DragEvent) => void
   startTileResize: (e: React.MouseEvent, tileId: string, edge: ResizeEdge) => void
@@ -57,16 +60,19 @@ export function TileTerminal({
   isDragging,
   isDropTarget,
   draggedTile,
+  draggedSubTab,
   draggedSidebarProject,
   flatLayout,
   highlightedEdges,
   viewportSize,
   clientToCanvasPercent,
   onCloseTab,
+  onRenameTab,
   onFocusTab,
   onSwitchSubTab,
   onAddTab,
   onDragStart,
+  onSubTabDragStart,
   onDragEnd,
   onContainerDrop,
   startTileResize,
@@ -126,10 +132,50 @@ export function TileTerminal({
     e.preventDefault()
     e.stopPropagation()
     const { x: mouseX, y: mouseY } = clientToCanvasPercent(e.clientX, e.clientY)
-    const zone = computeDropZone(flatLayout, draggedTile, mouseX, mouseY)
+    // For sub-tab drags, pass null so the source tile is a valid target
+    const isSubTabDrag = e.dataTransfer.types.includes('application/x-subtab')
+    const excludeTileId = isSubTabDrag ? null : draggedTile
+    const zone = computeDropZone(flatLayout, excludeTileId, mouseX, mouseY)
     setCurrentDropZone(zone)
     setDropTarget(zone?.targetTileId || leafId)
   }
+
+  // ── Inline rename ──
+  const [editingTabId, setEditingTabId] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState('')
+  const editInputRef = useRef<HTMLInputElement>(null)
+  const renameCancelledRef = useRef(false)
+
+  const startRename = useCallback((tabId: string, currentTitle: string) => {
+    setEditingTabId(tabId)
+    setEditValue(currentTitle)
+    renameCancelledRef.current = false
+    setTimeout(() => editInputRef.current?.select(), 0)
+  }, [])
+
+  const commitRename = useCallback(() => {
+    if (renameCancelledRef.current) return
+    if (editingTabId && editValue.trim()) {
+      onRenameTab(editingTabId, editValue.trim())
+    }
+    setEditingTabId(null)
+  }, [editingTabId, editValue, onRenameTab])
+
+  const cancelRename = useCallback(() => {
+    renameCancelledRef.current = true
+    setEditingTabId(null)
+  }, [])
+
+  const handleRenameKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      commitRename()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      cancelRename()
+    }
+    e.stopPropagation()
+  }, [commitRename, cancelRename])
 
   const hasMultipleTabs = tabs.length > 1
   const activeTab = tabs.find(t => t.id === activeSubTabId) || tabs[0]
@@ -166,9 +212,33 @@ export function TileTerminal({
                 <div
                   key={tab.id}
                   className={`tile-subtab ${tab.id === activeSubTabId ? 'active' : ''}`}
+                  draggable
+                  onDragStart={(e) => {
+                    e.stopPropagation()
+                    onSubTabDragStart(e, tab.id, leafId)
+                  }}
+                  onDragEnd={onDragEnd}
                   onClick={() => handleSubTabClick(tab.id)}
                 >
-                  <span className="subtab-title" title={tab.title}>{tab.title}</span>
+                  {editingTabId === tab.id ? (
+                    <input
+                      ref={editInputRef}
+                      className="subtab-title-input"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={commitRename}
+                      onKeyDown={handleRenameKeyDown}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      className="subtab-title"
+                      title={tab.title}
+                      onDoubleClick={(e) => { e.stopPropagation(); startRename(tab.id, tab.title) }}
+                    >{tab.title}</span>
+                  )}
                   <button
                     className="subtab-close"
                     draggable={false}
@@ -179,19 +249,46 @@ export function TileTerminal({
                 </div>
               ))}
             </div>
-            {onAddTab && (
+            <div className="tile-header-actions">
+              {onAddTab && (
+                <button
+                  className="tile-add-tab"
+                  draggable={false}
+                  onClick={handleAddTab}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  title="New session"
+                >+</button>
+              )}
               <button
-                className="tile-add-tab"
+                className="tile-close"
                 draggable={false}
-                onClick={handleAddTab}
+                onClick={(e) => { e.stopPropagation(); e.preventDefault(); onCloseTab(activeSubTabId) }}
                 onMouseDown={(e) => e.stopPropagation()}
-                title="New session"
-              >+</button>
-            )}
+                title="Close current tab"
+              >x</button>
+            </div>
           </>
         ) : (
           <>
-            <span className="tile-title" title={activeTab?.title}>{activeTab?.title}</span>
+            {editingTabId === activeTab?.id ? (
+              <input
+                ref={editInputRef}
+                className="tile-title-input"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onBlur={commitRename}
+                onKeyDown={handleRenameKeyDown}
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+                autoFocus
+              />
+            ) : (
+              <span
+                className="tile-title"
+                title={activeTab?.title}
+                onDoubleClick={(e) => { e.stopPropagation(); if (activeTab) startRename(activeTab.id, activeTab.title) }}
+              >{activeTab?.title}</span>
+            )}
             <div className="tile-header-actions">
               {onAddTab && (
                 <button
@@ -234,7 +331,7 @@ export function TileTerminal({
           </div>
         ))}
       </div>
-      {((draggedTile && draggedTile !== leafId) || draggedSidebarProject) && (
+      {((draggedTile && draggedTile !== leafId) || (draggedSubTab && draggedSubTab.tileId === leafId && hasMultipleTabs) || draggedSidebarProject) && (
         <div
           className="tile-drop-overlay"
           style={{

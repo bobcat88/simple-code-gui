@@ -18,6 +18,8 @@ import {
   addToBuffer,
   stripAnsi,
   isTerminalAtBottom,
+  scrollDebug,
+  scrollSnapshot,
 } from '../utils.js'
 import {
   createWheelHandler,
@@ -45,6 +47,11 @@ interface InitState {
   resizeObserver: ResizeObserver | null
   resizeTimeout: ReturnType<typeof setTimeout> | null
   scrollDebounceTimeout: ReturnType<typeof setTimeout> | null
+  writeCooldownTimeout: ReturnType<typeof setTimeout> | null
+  writingData: boolean
+  scrollRestorePending: boolean
+  scrollRestoreTarget: number
+  scrollRestoreBaseY: number
   initPending: boolean
   pendingWrites: string[]
   firstData: boolean
@@ -98,8 +105,30 @@ function loadWebGLAddon(
         const webglAddon = new WebglAddon()
         state.webglAddonRef.current = webglAddon
         webglAddon.onContextLoss(() => {
+          console.warn('Terminal GPU: WebGL context lost, recovering...')
           state.webglAddonRef.current = null
-          webglAddon.dispose()
+          try { webglAddon.dispose() } catch { /* ignore */ }
+          // Force a full refresh so the canvas fallback renderer repaints
+          terminal.refresh(0, terminal.rows - 1)
+          // Try to reload WebGL after a delay
+          setTimeout(() => {
+            if (state.disposed || !terminal) return
+            try {
+              const newWebgl = new WebglAddon()
+              state.webglAddonRef.current = newWebgl
+              newWebgl.onContextLoss(() => {
+                console.warn('Terminal GPU: WebGL context lost again, staying on canvas')
+                state.webglAddonRef.current = null
+                try { newWebgl.dispose() } catch { /* ignore */ }
+                terminal.refresh(0, terminal.rows - 1)
+              })
+              terminal.loadAddon(newWebgl)
+              console.log('Terminal GPU: WebGL recovered')
+            } catch {
+              console.warn('Terminal GPU: WebGL recovery failed, using canvas')
+              terminal.refresh(0, terminal.rows - 1)
+            }
+          }, 1000)
         })
         terminal.loadAddon(webglAddon)
         console.log('Terminal GPU acceleration: WebGL enabled')
@@ -160,11 +189,21 @@ function setupEventHandlers(
   )
   container.addEventListener('wheel', wheelHandler, { passive: false })
 
-  // Scroll tracking
+  // Scroll tracking — DISABLED the onScroll handler for resetting userScrolledUpRef.
+  //
+  // Why: xterm's onScroll fires during write(), buffer rebuilds (screen clear + redraw),
+  // and other programmatic operations. During buffer rebuilds, viewportY == baseY
+  // (looks like "at bottom") which falsely resets the flag. The writingData guard
+  // can't catch all cases due to async timing between write callbacks and scroll events.
+  //
+  // Instead, userScrolledUpRef is ONLY reset by:
+  // 1. The wheel handler (user scrolls down to bottom)
+  // 2. The debounced scroll-to-bottom (when !userScrolledUp, confirms at bottom)
+  //
+  // The onScroll handler is kept only for debug logging.
   state.cleanupScroll = terminal.onScroll(() => {
-    if (isTerminalAtBottom(terminal)) {
-      userScrolledUpRef.current = false
-    }
+    const snap = scrollSnapshot(terminal)
+    scrollDebug('onScroll:info', { ...snap, userScrolledUp: userScrolledUpRef.current, writingData: state.writingData })
   })
 
   // Context menu handler
@@ -281,6 +320,7 @@ function postOpenSetup(
       for (const chunk of buffer) {
         terminal.write(chunk)
       }
+      scrollDebug('bufferReplay:scrollToBottom', scrollSnapshot(terminal))
       terminal.scrollToBottom()
     })
   }
@@ -292,6 +332,7 @@ function postOpenSetup(
       terminal.write(data)
     }
     state.pendingWrites.length = 0
+    scrollDebug('pendingFlush:scrollToBottom', scrollSnapshot(terminal))
     terminal.scrollToBottom()
   }
 
@@ -515,7 +556,52 @@ export function handlePtyData(
     return
   }
 
-  terminal.write(displayData)
+  const preWriteSnap = scrollSnapshot(terminal)
+
+  state.writingData = true
+  // Clear any pending cooldown — we're still writing
+  if (state.writeCooldownTimeout) {
+    clearTimeout(state.writeCooldownTimeout)
+    state.writeCooldownTimeout = null
+  }
+  terminal.write(displayData, () => {
+    // Don't immediately clear writingData — keep it true for a cooldown
+    // to block onScroll events that fire asynchronously after write completes
+    // (e.g., during screen clear + buffer rebuild cycles)
+    if (state.writeCooldownTimeout) clearTimeout(state.writeCooldownTimeout)
+    state.writeCooldownTimeout = setTimeout(() => {
+      state.writeCooldownTimeout = null
+      state.writingData = false
+    }, 50)
+    const postWriteSnap = scrollSnapshot(terminal)
+
+    // Detect screen clear: buffer shrank dramatically (clear + redraw cycle)
+    // When user is scrolled up, restore their relative scroll position
+    if (userScrolledUpRef.current && preWriteSnap.baseY > 50 && postWriteSnap.baseY < preWriteSnap.baseY * 0.5) {
+      // Buffer was cleared and is being rebuilt. Schedule a restore after redraw settles.
+      scrollDebug('write:SCREEN_CLEAR_DETECTED', { before: preWriteSnap, after: postWriteSnap })
+      if (!state.scrollRestorePending) {
+        state.scrollRestorePending = true
+        state.scrollRestoreTarget = preWriteSnap.viewportY
+        state.scrollRestoreBaseY = preWriteSnap.baseY
+        // Wait for the redraw to finish, then restore position
+        setTimeout(() => {
+          state.scrollRestorePending = false
+          if (!state.disposed && terminal && userScrolledUpRef.current) {
+            const currentSnap = scrollSnapshot(terminal)
+            // Restore to same absolute line, clamped to new buffer size
+            const newPos = Math.min(state.scrollRestoreTarget, Math.max(0, currentSnap.baseY - terminal.rows))
+            scrollDebug('write:RESTORING_SCROLL', { newPos, currentSnap, originalTarget: state.scrollRestoreTarget, originalBaseY: state.scrollRestoreBaseY })
+            terminal.scrollToLine(newPos)
+          }
+        }, 100)
+      }
+    }
+
+    if (preWriteSnap.viewportY !== postWriteSnap.viewportY) {
+      scrollDebug('write:scrollMoved', { before: preWriteSnap, after: postWriteSnap, userScrolledUp: userScrolledUpRef.current })
+    }
+  })
 
   // Debounced scroll to bottom
   if (!userScrolledUpRef.current) {
@@ -525,9 +611,16 @@ export function handlePtyData(
     state.scrollDebounceTimeout = setTimeout(() => {
       state.scrollDebounceTimeout = null
       if (!state.disposed && !userScrolledUpRef.current && terminal) {
+        const beforeSnap = scrollSnapshot(terminal)
         terminal.scrollToBottom()
+        const afterSnap = scrollSnapshot(terminal)
+        if (beforeSnap.viewportY !== afterSnap.viewportY) {
+          scrollDebug('debounce:scrollToBottom', { before: beforeSnap, after: afterSnap })
+        }
       }
     }, 32)
+  } else {
+    scrollDebug('ptyData:skippedScroll', { userScrolledUp: true, ...preWriteSnap, dataLen: displayData.length })
   }
 
   if (state.firstData) {
@@ -577,6 +670,11 @@ export function createInitState(): InitState {
     resizeObserver: null,
     resizeTimeout: null,
     scrollDebounceTimeout: null,
+    writeCooldownTimeout: null,
+    writingData: false,
+    scrollRestorePending: false,
+    scrollRestoreTarget: 0,
+    scrollRestoreBaseY: 0,
     initPending: false,
     pendingWrites: [],
     firstData: true,
@@ -603,6 +701,7 @@ export function cleanupTerminal(
   state.cleanupScroll?.dispose()
   if (state.resizeTimeout) clearTimeout(state.resizeTimeout)
   if (state.scrollDebounceTimeout) clearTimeout(state.scrollDebounceTimeout)
+  if (state.writeCooldownTimeout) clearTimeout(state.writeCooldownTimeout)
   state.resizeObserver?.disconnect()
 
   // Call stored cleanup function for event listeners
