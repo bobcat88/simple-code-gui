@@ -12,7 +12,7 @@ Start of every session:
 
 If no tasks are ready, create one with `bd create "..."` and link blockers with `bd dep add ...`.
 
-after you are done with any beads task or any task in general you can run "cd "/home/user/Programs/Pure Harmony Midi Editor/plugin/build" && cmake --build . --config Release 2>&1 | tail -30" to build the project.
+after you are done with any beads task or any task in general you can run "bun run build 2>&1 | tail -30" to build the project.
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
 ## Beads Issue Tracker
