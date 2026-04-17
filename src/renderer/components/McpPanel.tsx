@@ -1,7 +1,7 @@
 import React from 'react'
 import { Server, Activity, Settings2 } from 'lucide-react'
-import { useExtensions, InstalledExtension } from '../../hooks/useExtensions'
-import { cn } from '../../utils/cn'
+import { useExtensions, InstalledExtension } from '../hooks/useExtensions'
+import { cn } from '../lib/utils'
 
 interface McpPanelProps {
   projectPath: string | null

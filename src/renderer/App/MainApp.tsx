@@ -25,6 +25,9 @@ import type { Api } from '../api'
 import { InstallationPrompt } from './InstallationPrompt'
 import { MobileConnectModal } from './MobileConnectModal'
 import { IconBar } from '../components/IconBar'
+import { Header } from '../components/Header'
+import { LayoutGrid, Terminal } from 'lucide-react'
+import { cn } from '../lib/utils'
 
 export interface MainAppProps {
   api: Api
@@ -65,7 +68,17 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
     handleInstallNode,
     handleInstallGit,
     handleInstallClaude
-  } = useInstallation()
+  } = useInstallation(api)
+
+  const activeTab = openTabs.find(t => t.id === activeTabId) || null
+
+  const handleNewSessionFromHeader = () => {
+    if (activeTab) {
+      handleOpenSession(activeTab.projectPath, undefined, undefined, undefined, true)
+    } else if (projects.length > 0) {
+      handleOpenSession(projects[0].path, undefined, undefined, undefined, true)
+    }
+  }
 
   // Updater state from hook
   const { appVersion, updateStatus, downloadUpdate, installUpdate } = useUpdater()
@@ -318,27 +331,12 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
                 />
               ) : openTabs.length > 0 ? (
                 <>
-                  <div className="flex items-center px-4 py-2 border-b border-border bg-background/40 backdrop-blur-sm gap-2">
-                    {viewMode === 'tabs' && (
-                      <TerminalTabs
-                        tabs={openTabs}
-                        activeTabId={activeTabId}
-                        onSelectTab={setActiveTab}
-                        onCloseTab={handleCloseTab}
-                        onRenameTab={handleRenameTab}
-                        onNewSession={(projectPath) => handleOpenSession(projectPath, undefined, undefined, undefined, true)}
-                        swipeContainerRef={terminalContainerRef as RefObject<HTMLElement>}
-                        onOpenSidebar={openMobileDrawer}
-                      />
-                    )}
-                    <button
-                      className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors ml-auto"
-                      onClick={toggleViewMode}
-                      title={viewMode === 'tabs' ? 'Switch to tiled view' : 'Switch to tabs view'}
-                    >
-                      {viewMode === 'tabs' ? <LayoutGrid size={18} /> : <Terminal size={18} />}
-                    </button>
-                  </div>
+                  <Header
+                    activeTab={activeTab}
+                    viewMode={viewMode}
+                    onToggleViewMode={toggleViewMode}
+                    onNewSession={handleNewSessionFromHeader}
+                  />
                   {viewMode === 'tabs' ? (
                     <div className="flex-1 relative overflow-hidden" ref={terminalContainerRef}>
                       {openTabs.map((tab) => (
@@ -454,7 +452,6 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
             </div>
           )
         })()}
-      </div>
     </div>
   )
 }

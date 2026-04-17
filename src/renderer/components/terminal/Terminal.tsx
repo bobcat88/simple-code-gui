@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import '@xterm/xterm/css/xterm.css'
-import { TerminalBar } from '../TerminalBar.js'
+import { FloatingInput } from '../FloatingInput.js'
 import { AutoWorkOptions } from '../TerminalMenu.js'
 import { CustomCommandModal } from '../CustomCommandModal.js'
 import { resolveBackendCommand } from '../../utils/backendCommands.js'
@@ -21,6 +21,24 @@ export { clearTerminalBuffer, cleanupOrphanedBuffers }
 export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend, api, isMobile, onOpenFileBrowser }: TerminalProps): React.ReactElement {
   // Custom command modal state
   const [showCustomCommandModal, setShowCustomCommandModal] = useState(false)
+  const [autoAccept, setAutoAccept] = useState(false)
+
+  // Sync auto-accept state when PTY changes
+  useEffect(() => {
+    if (!ptyId) {
+      setAutoAccept(false)
+      return
+    }
+    window.electronAPI?.getAutoAcceptStatus?.(ptyId)?.then((enabled: boolean) => {
+      setAutoAccept(enabled)
+    })
+  }, [ptyId])
+
+  const handleToggleAutoAccept = useCallback(() => {
+    const newState = !autoAccept
+    setAutoAccept(newState)
+    window.electronAPI?.setAutoAccept?.(ptyId, newState)
+  }, [autoAccept, ptyId])
 
   // PTY write helper - uses api if provided, otherwise window.electronAPI
   const writePty = useCallback((id: string, data: string) => {
@@ -343,29 +361,32 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
   }, [sendBackendCommand, triggerSummarize, startAutoWork, continueAutoWork, stopAutoWork, cancelAutoWork, handleClearWithRestore, handleCompactWithRestore])
 
   return (
-    <div className="terminal-content-wrapper">
-      <div
-        ref={containerRef}
-        className="terminal-xterm"
-        onMouseDown={onFocus}
-        onClick={() => {
-          // Focus terminal on click (important for mobile touch)
-          terminalRef.current?.focus()
-        }}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-      />
-      <TerminalBar
-        ptyId={ptyId}
-        onCommand={handleMenuCommand}
-        onInput={(data) => writePty(ptyId, data)}
-        currentBackend={(backend || 'claude') as 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'}
-        onBackendChange={handleBackendChange}
-        isMobile={isMobile}
-        onOpenFileBrowser={onOpenFileBrowser}
-        onClearWithRestore={handleClearWithRestore}
-        onCompactWithRestore={handleCompactWithRestore}
-      />
+    <div className="terminal-content-wrapper flex flex-col h-full overflow-hidden bg-background">
+      <div className="flex-1 overflow-hidden relative">
+        <div className="max-w-5xl mx-auto h-full px-4 md:px-8 py-4 pb-32">
+          <div
+            ref={containerRef}
+            className="terminal-xterm h-full w-full rounded-xl overflow-hidden border border-border/30 bg-black/20 backdrop-blur-sm shadow-inner"
+            onMouseDown={onFocus}
+            onClick={() => {
+              // Focus terminal on click (important for mobile touch)
+              terminalRef.current?.focus()
+            }}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+          />
+        </div>
+        
+        <FloatingInput 
+          onInput={(data) => writePty(ptyId, data)}
+          currentBackend={backend || 'claude'}
+          onBackendChange={handleBackendChange}
+          autoAccept={autoAccept}
+          onToggleAutoAccept={handleToggleAutoAccept}
+          isMobile={isMobile}
+        />
+      </div>
+
       <CustomCommandModal
         isOpen={showCustomCommandModal}
         onClose={() => setShowCustomCommandModal(false)}

@@ -1,5 +1,7 @@
 import React from 'react'
 import { Project, useWorkspaceStore } from '../../stores/workspace.js'
+import { Settings, LayoutGrid, Terminal, Plus, FolderPlus, FolderSearch, Zap } from 'lucide-react'
+import { cn } from '../../lib/utils'
 import { BeadsPanel } from '../BeadsPanel.js'
 import { GSDStatus } from '../GSDStatus.js'
 import { ExtensionBrowser } from '../ExtensionBrowser.js'
@@ -198,22 +200,22 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background animate-in slide-in-from-left duration-200">
-      <div className="sidebar-header">
-        Projects
+    <div className="flex flex-col h-full bg-background/80 backdrop-blur-sm animate-in slide-in-from-left duration-200">
+      <div className="p-4 flex items-center justify-between border-b border-border/50">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/70">Projects</h2>
         <button
-          className="add-category-btn"
+          className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-all"
           onClick={handleAddCategory}
           title="Add category"
-          aria-label="Add category"
         >
-          +
+          <Plus size={16} />
         </button>
       </div>
-      <div className="projects-list">
+      
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
         {/* All Projects meta-entry at top */}
         <div
-          className="meta-project-header"
+          className="group flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-primary/10 transition-all border border-transparent hover:border-primary/20"
           role="button"
           tabIndex={0}
           onClick={handleOpenAllProjects}
@@ -224,8 +226,10 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
             }
           }}
         >
-          <span className="meta-project-icon">⚡</span>
-          <span className="meta-project-name">All Projects</span>
+          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+            <Zap size={18} fill="currentColor" />
+          </div>
+          <span className="font-semibold text-sm text-foreground/80 group-hover:text-primary transition-colors">All Projects</span>
         </div>
 
         {sortedCategories.map((category) => {
@@ -313,73 +317,55 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
         )}
 
         {projects.length === 0 && (
-          <div className="empty-projects">
-            No projects yet.
-            <br />
-            Click + to add one.
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-4 text-muted-foreground/30">
+              <FolderPlus size={24} />
+            </div>
+            <p className="text-sm text-muted-foreground">No projects yet.</p>
+            <p className="text-xs text-muted-foreground/50 mt-1">Add one to get started.</p>
           </div>
         )}
-        <div className="project-add-buttons">
-          <button
-            className="add-project-btn"
-            onClick={onOpenMakeProject}
-            title="Create new project from scratch"
-          >
-            + make
-          </button>
-          <button
-            className="add-project-btn"
-            onClick={onAddProject}
-            title="Add existing project folder"
-          >
-            + add
-          </button>
-          <button
-            className="add-project-btn"
-            onClick={onAddProjectsFromParent}
-            title="Add all projects from a parent folder"
-          >
-            + folder
-          </button>
-        </div>
       </div>
 
-      <BeadsPanel
-        projectPath={beadsProjectPath}
-        isExpanded={beadsExpanded}
-        onToggle={() => setBeadsExpanded(!beadsExpanded)}
-        onStartTaskInNewTab={(prompt) => {
-          if (beadsProjectPath) onOpenSession(beadsProjectPath, undefined, undefined, prompt, true)
-        }}
-        onSendToCurrentTab={(prompt) => {
-          if (focusedTabPtyId) {
-            window.electronAPI?.writePty(focusedTabPtyId, prompt)
-            setTimeout(() => window.electronAPI?.writePty(focusedTabPtyId, '\r'), 100)
-          }
-        }}
-        currentTabPtyId={focusedTabPtyId}
-      />
+      <div className="p-3 grid grid-cols-3 gap-2 border-t border-border/50">
+        <button
+          className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20 group"
+          onClick={onOpenMakeProject}
+          title="Create new project from scratch"
+        >
+          <Plus size={16} className="group-hover:scale-125 transition-transform" />
+          <span className="text-[10px] font-bold uppercase tracking-tighter">Make</span>
+        </button>
+        <button
+          className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20 group"
+          onClick={onAddProject}
+          title="Add existing project folder"
+        >
+          <FolderPlus size={16} className="group-hover:scale-125 transition-transform" />
+          <span className="text-[10px] font-bold uppercase tracking-tighter">Add</span>
+        </button>
+        <button
+          className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20 group"
+          onClick={onAddProjectsFromParent}
+          title="Add all projects from a parent folder"
+        >
+          <FolderSearch size={16} className="group-hover:scale-125 transition-transform" />
+          <span className="text-[10px] font-bold uppercase tracking-tighter">Scan</span>
+        </button>
+      </div>
 
-      <GSDStatus
-        projectPath={beadsProjectPath}
-        onCommand={(cmd) => {
-          if (focusedTabPtyId) {
-            window.electronAPI?.writePty(focusedTabPtyId, cmd)
-            setTimeout(() => window.electronAPI?.writePty(focusedTabPtyId, '\r'), 100)
-          }
-        }}
-      />
-
-      {voiceOutputEnabled && (
-        <VoiceOptionsPanel
-          volume={volume}
-          speed={speed}
-          skipOnNew={skipOnNew}
-          onVolumeChange={setVolume}
-          onSpeedChange={setSpeed}
-          onSkipOnNewChange={setSkipOnNew}
-        />
-      )}
+      <div className="px-3 pb-3">
+        {voiceOutputEnabled && (
+          <VoiceOptionsPanel
+            volume={volume}
+            speed={speed}
+            skipOnNew={skipOnNew}
+            onVolumeChange={setVolume}
+            onSpeedChange={setSpeed}
+            onSkipOnNewChange={setSkipOnNew}
+          />
+        )}
+      </div>
 
       <SidebarActions
         activeTabId={activeTabId}
