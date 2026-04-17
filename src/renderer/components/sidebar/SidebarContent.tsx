@@ -4,6 +4,7 @@ import { BeadsPanel } from '../BeadsPanel.js'
 import { GSDStatus } from '../GSDStatus.js'
 import { ExtensionBrowser } from '../ExtensionBrowser.js'
 import { ClaudeMdEditor } from '../ClaudeMdEditor.js'
+import { McpPanel } from '../McpPanel.js'
 import {
   getCategoryGradient,
   ProjectItem,
@@ -143,7 +144,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
         </div>
         <div className="flex-1 overflow-y-auto p-2 space-y-4">
           <div className="space-y-1">
-            <h3 className="px-2 py-1 text-xs font-bold uppercase text-muted-foreground tracking-wider">Project Controls</h3>
+            <h3 className="px-2 py-1 text-xs font-bold uppercase text-muted-foreground tracking-wider">Agents & Tracking</h3>
             <BeadsPanel
               projectPath={beadsProjectPath}
               isExpanded={true}
@@ -168,6 +169,10 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
                 }
               }}
             />
+          </div>
+
+          <div className="pt-2 border-t border-border/50">
+            <McpPanel projectPath={beadsProjectPath} />
           </div>
           
           <div className="space-y-1 pt-4">
