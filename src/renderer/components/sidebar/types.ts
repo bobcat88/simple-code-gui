@@ -41,6 +41,7 @@ export interface SidebarProps {
   onOpenMobileConnect?: () => void  // Opens the QR code modal for mobile connection
   // Mobile disconnect
   onDisconnect?: () => void     // Disconnects from desktop host (mobile only)
+  activeSection?: string
 }
 
 export interface ProjectSettingsModalState {

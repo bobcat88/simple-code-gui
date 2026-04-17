@@ -24,6 +24,7 @@ import {
 import type { Api } from '../api'
 import { InstallationPrompt } from './InstallationPrompt'
 import { MobileConnectModal } from './MobileConnectModal'
+import { IconBar } from '../components/IconBar'
 
 export interface MainAppProps {
   api: Api
@@ -145,6 +146,7 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
   const [mobileConnectOpen, setMobileConnectOpen] = useState(false)
   const [showFileBrowser, setShowFileBrowser] = useState(false)
   const [fileBrowserPath, setFileBrowserPath] = useState<string | null>(null)
+  const [activeSection, setActiveSection] = useState('terminal')
   const hadProjectsRef = useRef(false)
   const terminalContainerRef = useRef<HTMLDivElement>(null)
 
@@ -234,156 +236,179 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
   const isMobile = !isElectron
 
   return (
-    <div className="app">
-      <TitleBar />
-      <div className="app-content">
-        <Sidebar
-          projects={projects}
-          openTabs={openTabs}
-          activeTabId={activeTabId}
-          lastFocusedTabId={lastFocusedTabId}
-          onAddProject={handleAddProject}
-          onAddProjectsFromParent={handleAddProjectsFromParent}
-          onRemoveProject={removeProject}
-          onOpenSession={handleOpenSession}
-          onSwitchToTab={setActiveTab}
-          onOpenSettings={openSettings}
-          onOpenMakeProject={openMakeProject}
-          onUpdateProject={updateProject}
-          onCloseProjectTabs={handleCloseProjectTabs}
-          width={sidebarWidth}
-          collapsed={sidebarCollapsed}
-          onWidthChange={setSidebarWidth}
-          onCollapsedChange={setSidebarCollapsed}
-          isMobileOpen={mobileDrawerOpen}
-          onMobileClose={closeMobileDrawer}
-          onOpenMobileConnect={() => setMobileConnectOpen(true)}
-          onDisconnect={onDisconnect}
+    <div className="flex flex-row h-screen w-screen bg-background text-foreground overflow-hidden">
+      {!isMobile && (
+        <IconBar 
+          activeSection={activeSection} 
+          onSectionChange={(section) => {
+            setActiveSection(section)
+            if (section === 'config') openSettings()
+          }} 
         />
+      )}
+      
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <TitleBar />
+        
+        <div className="flex-1 flex flex-row overflow-hidden relative">
+          <Sidebar
+            projects={projects}
+            openTabs={openTabs}
+            activeTabId={activeTabId}
+            lastFocusedTabId={lastFocusedTabId}
+            onAddProject={handleAddProject}
+            onAddProjectsFromParent={handleAddProjectsFromParent}
+            onRemoveProject={removeProject}
+            onOpenSession={handleOpenSession}
+            onSwitchToTab={setActiveTab}
+            onOpenSettings={openSettings}
+            onOpenMakeProject={openMakeProject}
+            onUpdateProject={updateProject}
+            onCloseProjectTabs={handleCloseProjectTabs}
+            width={sidebarWidth}
+            collapsed={sidebarCollapsed}
+            onWidthChange={setSidebarWidth}
+            onCollapsedChange={setSidebarCollapsed}
+            isMobileOpen={mobileDrawerOpen}
+            onMobileClose={closeMobileDrawer}
+            onOpenMobileConnect={() => setMobileConnectOpen(true)}
+            onDisconnect={onDisconnect}
+            activeSection={activeSection}
+          />
 
-        {/* Mobile: render each terminal as its own slide */}
-        {isMobile && openTabs.map((tab) => (
-          <div key={tab.id} className="mobile-terminal-slide">
-            <div className="mobile-slide-header">
-              <span className="mobile-slide-title">{tab.title}</span>
-              <button className="mobile-slide-close" onClick={() => handleCloseTab(tab.id)}>×</button>
-            </div>
-            <div className="mobile-slide-content">
-              <ErrorBoundary componentName={`Terminal (${tab.title || tab.id})`}>
-                <Terminal
-                  ptyId={tab.id}
-                  isActive={true}
-                  theme={currentTheme}
-                  onFocus={() => setLastFocusedTabId(tab.id)}
-                  projectPath={tab.projectPath}
-                  backend={tab.backend}
-                  api={api}
-                  isMobile={true}
-                  onOpenFileBrowser={() => handleOpenFileBrowser(tab.projectPath || undefined)}
-                />
-              </ErrorBoundary>
-            </div>
-          </div>
-        ))}
-
-        {/* Desktop: wrap terminals in main-content */}
-        {!isMobile && (
-          <div className="main-content">
-            {claudeInstalled === false || gitBashInstalled === false ? (
-              <InstallationPrompt
-                claudeInstalled={claudeInstalled}
-                npmInstalled={npmInstalled}
-                gitBashInstalled={gitBashInstalled}
-                installing={installing}
-                installError={installError}
-                installMessage={installMessage}
-                onInstallNode={handleInstallNode}
-                onInstallGit={handleInstallGit}
-                onInstallClaude={handleInstallClaude}
-              />
-            ) : openTabs.length > 0 ? (
-              <>
-                <div className="terminal-header">
-                  {viewMode === 'tabs' && (
-                    <TerminalTabs
-                      tabs={openTabs}
-                      activeTabId={activeTabId}
-                      onSelectTab={setActiveTab}
-                      onCloseTab={handleCloseTab}
-                      onRenameTab={handleRenameTab}
-                      onNewSession={(projectPath) => handleOpenSession(projectPath, undefined, undefined, undefined, true)}
-                      swipeContainerRef={terminalContainerRef as RefObject<HTMLElement>}
-                      onOpenSidebar={openMobileDrawer}
-                    />
-                  )}
-                  <button
-                    className="view-toggle-btn"
-                    onClick={toggleViewMode}
-                    title={viewMode === 'tabs' ? 'Switch to tiled view' : 'Switch to tabs view'}
-                  >
-                    {viewMode === 'tabs' ? '\u229E' : '\u25AD'}
-                  </button>
-                </div>
-                {viewMode === 'tabs' ? (
-                  <div className="terminal-container" ref={terminalContainerRef}>
-                    {openTabs.map((tab) => (
-                      <div
-                        key={tab.id}
-                        className={`terminal-wrapper ${tab.id === activeTabId ? 'active' : ''}`}
-                      >
-                        <ErrorBoundary componentName={`Terminal (${tab.title || tab.id})`}>
-                          <Terminal
-                            ptyId={tab.id}
-                            isActive={tab.id === activeTabId}
-                            theme={currentTheme}
-                            onFocus={() => setLastFocusedTabId(tab.id)}
-                            projectPath={tab.projectPath}
-                            backend={tab.backend}
-                            api={api}
-                          />
-                        </ErrorBoundary>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <ErrorBoundary componentName="TiledTerminalView">
-                    <TiledTerminalView
-                      tabs={openTabs}
-                      projects={projects}
-                      theme={currentTheme}
-                      focusedTabId={lastFocusedTabId}
-                      onCloseTab={handleCloseTab}
-                      onRenameTab={handleRenameTab}
-                      onFocusTab={setLastFocusedTabId}
-                      tileTree={tileTree}
-                      onTreeChange={setTileTree}
-                      onOpenSessionAtPosition={handleOpenSessionAtPosition}
-                      onAddTab={handleAddTabToTile}
-                      onUndoCloseTab={canUndoCloseTab ? handleUndoCloseTab : undefined}
-                      api={api}
-                    />
-                  </ErrorBoundary>
-                )}
-              </>
-            ) : (
-              <div className="empty-state">
-                <h2>Simple Code GUI</h2>
-                <p>Add a project from the sidebar, then click a session to open it</p>
+          {/* Mobile: render each terminal as its own slide */}
+          {isMobile && openTabs.map((tab) => (
+            <div key={tab.id} className="mobile-terminal-slide">
+              <div className="mobile-slide-header">
+                <span className="mobile-slide-title">{tab.title}</span>
+                <button className="mobile-slide-close" onClick={() => handleCloseTab(tab.id)}>×</button>
               </div>
-            )}
-          </div>
-        )}
+              <div className="mobile-slide-content">
+                <ErrorBoundary componentName={`Terminal (${tab.title || tab.id})`}>
+                  <Terminal
+                    ptyId={tab.id}
+                    isActive={true}
+                    theme={currentTheme}
+                    onFocus={() => setLastFocusedTabId(tab.id)}
+                    projectPath={tab.projectPath}
+                    backend={tab.backend}
+                    api={api}
+                    isMobile={true}
+                    onOpenFileBrowser={() => handleOpenFileBrowser(tab.projectPath || undefined)}
+                  />
+                </ErrorBoundary>
+              </div>
+            </div>
+          ))}
 
-        <SettingsModal
-          isOpen={settingsOpen}
-          onClose={closeSettings}
-          onThemeChange={setCurrentTheme}
-          onSaved={(newSettings) => setSettings(newSettings)}
-          appVersion={appVersion}
-          updateStatus={updateStatus}
-          onDownloadUpdate={downloadUpdate}
-          onInstallUpdate={installUpdate}
-        />
+          {/* Desktop: wrap terminals in main-content */}
+          {!isMobile && (
+            <div className="flex-1 flex flex-col min-w-0 bg-background/50 overflow-hidden">
+              {claudeInstalled === false || gitBashInstalled === false ? (
+                <InstallationPrompt
+                  claudeInstalled={claudeInstalled}
+                  npmInstalled={npmInstalled}
+                  gitBashInstalled={gitBashInstalled}
+                  installing={installing}
+                  installError={installError}
+                  installMessage={installMessage}
+                  onInstallNode={handleInstallNode}
+                  onInstallGit={handleInstallGit}
+                  onInstallClaude={handleInstallClaude}
+                />
+              ) : openTabs.length > 0 ? (
+                <>
+                  <div className="flex items-center px-4 py-2 border-b border-border bg-background/40 backdrop-blur-sm gap-2">
+                    {viewMode === 'tabs' && (
+                      <TerminalTabs
+                        tabs={openTabs}
+                        activeTabId={activeTabId}
+                        onSelectTab={setActiveTab}
+                        onCloseTab={handleCloseTab}
+                        onRenameTab={handleRenameTab}
+                        onNewSession={(projectPath) => handleOpenSession(projectPath, undefined, undefined, undefined, true)}
+                        swipeContainerRef={terminalContainerRef as RefObject<HTMLElement>}
+                        onOpenSidebar={openMobileDrawer}
+                      />
+                    )}
+                    <button
+                      className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors ml-auto"
+                      onClick={toggleViewMode}
+                      title={viewMode === 'tabs' ? 'Switch to tiled view' : 'Switch to tabs view'}
+                    >
+                      {viewMode === 'tabs' ? <LayoutGrid size={18} /> : <Terminal size={18} />}
+                    </button>
+                  </div>
+                  {viewMode === 'tabs' ? (
+                    <div className="flex-1 relative overflow-hidden" ref={terminalContainerRef}>
+                      {openTabs.map((tab) => (
+                        <div
+                          key={tab.id}
+                          className={cn(
+                            "absolute inset-0 transition-opacity duration-200 pointer-events-none opacity-0",
+                            tab.id === activeTabId && "opacity-100 pointer-events-auto"
+                          )}
+                        >
+                          <ErrorBoundary componentName={`Terminal (${tab.title || tab.id})`}>
+                            <Terminal
+                              ptyId={tab.id}
+                              isActive={tab.id === activeTabId}
+                              theme={currentTheme}
+                              onFocus={() => setLastFocusedTabId(tab.id)}
+                              projectPath={tab.projectPath}
+                              backend={tab.backend}
+                              api={api}
+                            />
+                          </ErrorBoundary>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <ErrorBoundary componentName="TiledTerminalView">
+                      <TiledTerminalView
+                        tabs={openTabs}
+                        projects={projects}
+                        theme={currentTheme}
+                        focusedTabId={lastFocusedTabId}
+                        onCloseTab={handleCloseTab}
+                        onRenameTab={handleRenameTab}
+                        onFocusTab={setLastFocusedTabId}
+                        tileTree={tileTree}
+                        onTreeChange={setTileTree}
+                        onOpenSessionAtPosition={handleOpenSessionAtPosition}
+                        onAddTab={handleAddTabToTile}
+                        onUndoCloseTab={canUndoCloseTab ? handleUndoCloseTab : undefined}
+                        api={api}
+                      />
+                    </ErrorBoundary>
+                  )}
+                </>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500">
+                  <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-6 text-muted-foreground">
+                    <Terminal size={32} />
+                  </div>
+                  <h2 className="text-2xl font-semibold mb-2">Simple Code GUI</h2>
+                  <p className="text-muted-foreground max-w-sm">
+                    Add a project from the sidebar, then click a session to open it.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={closeSettings}
+        onThemeChange={setCurrentTheme}
+        onSaved={(newSettings) => setSettings(newSettings)}
+        appVersion={appVersion}
+        updateStatus={updateStatus}
+        onDownloadUpdate={downloadUpdate}
+        onInstallUpdate={installUpdate}
+      />
 
         <MakeProjectModal
           isOpen={makeProjectOpen}

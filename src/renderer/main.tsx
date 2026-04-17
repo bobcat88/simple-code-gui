@@ -4,7 +4,18 @@ import App from './App'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { VoiceProvider } from './contexts/VoiceContext'
 import { ModalProvider } from './contexts/ModalContext'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './styles.css'
+import './index.css'
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
 
 // Suppress Vite dev server reconnection errors (expected when dev server stops)
 if (import.meta.env.DEV) {
@@ -24,11 +35,13 @@ if (import.meta.env.DEV) {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary componentName="Application">
-      <VoiceProvider>
-        <ModalProvider>
-          <App />
-        </ModalProvider>
-      </VoiceProvider>
+      <QueryClientProvider client={queryClient}>
+        <VoiceProvider>
+          <ModalProvider>
+            <App />
+          </ModalProvider>
+        </VoiceProvider>
+      </QueryClientProvider>
     </ErrorBoundary>
   </React.StrictMode>
 )

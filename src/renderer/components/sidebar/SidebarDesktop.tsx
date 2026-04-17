@@ -27,7 +27,7 @@ export function SidebarDesktop(props: SidebarDesktopProps): React.ReactElement {
         ◀
       </button>
 
-      <SidebarContent state={state} handlers={handlers} {...contentProps} />
+      <SidebarContent state={state} handlers={handlers} activeSection={props.activeSection} {...contentProps} />
 
       <div className="sidebar-resize-handle" onMouseDown={handleMouseDown} />
     </div>

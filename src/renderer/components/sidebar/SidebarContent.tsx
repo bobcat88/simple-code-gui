@@ -27,6 +27,7 @@ export interface SidebarContentProps {
   openTabs: OpenTab[]
   activeTabId: string | null
   focusedTabId: string | null
+  activeSection?: string
   onOpenSession: SidebarProps['onOpenSession']
   onRemoveProject: SidebarProps['onRemoveProject']
   onUpdateProject: SidebarProps['onUpdateProject']
@@ -45,6 +46,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     projects,
     activeTabId,
     focusedTabId,
+    activeSection = 'terminal',
     onOpenSession,
     onRemoveProject,
     onUpdateProject,
@@ -132,8 +134,66 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     handleClearExecutable,
   } = handlers
 
+  if (activeSection === 'config') {
+    return (
+      <div className="flex flex-col h-full bg-background animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-border font-semibold flex items-center gap-2">
+          <Settings size={18} />
+          Configuration
+        </div>
+        <div className="flex-1 overflow-y-auto p-2 space-y-4">
+          <div className="space-y-1">
+            <h3 className="px-2 py-1 text-xs font-bold uppercase text-muted-foreground tracking-wider">Project Controls</h3>
+            <BeadsPanel
+              projectPath={beadsProjectPath}
+              isExpanded={true}
+              onToggle={() => {}}
+              onStartTaskInNewTab={(prompt) => {
+                if (beadsProjectPath) onOpenSession(beadsProjectPath, undefined, undefined, prompt, true)
+              }}
+              onSendToCurrentTab={(prompt) => {
+                if (focusedTabPtyId) {
+                  window.electronAPI?.writePty(focusedTabPtyId, prompt)
+                  setTimeout(() => window.electronAPI?.writePty(focusedTabPtyId, '\r'), 100)
+                }
+              }}
+              currentTabPtyId={focusedTabPtyId}
+            />
+            <GSDStatus
+              projectPath={beadsProjectPath}
+              onCommand={(cmd) => {
+                if (focusedTabPtyId) {
+                  window.electronAPI?.writePty(focusedTabPtyId, cmd)
+                  setTimeout(() => window.electronAPI?.writePty(focusedTabPtyId, '\r'), 100)
+                }
+              }}
+            />
+          </div>
+          
+          <div className="space-y-1 pt-4">
+            <h3 className="px-2 py-1 text-xs font-bold uppercase text-muted-foreground tracking-wider">Global Settings</h3>
+            <button 
+              onClick={onOpenSettings}
+              className="w-full text-left px-3 py-2 rounded-md hover:bg-muted transition-colors flex items-center gap-2 text-sm"
+            >
+              <LayoutGrid size={16} />
+              Appearance & Backend
+            </button>
+            <button 
+              onClick={onOpenMobileConnect}
+              className="w-full text-left px-3 py-2 rounded-md hover:bg-muted transition-colors flex items-center gap-2 text-sm"
+            >
+              <Terminal size={16} />
+              Mobile Connection (QR)
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <>
+    <div className="flex flex-col h-full bg-background animate-in slide-in-from-left duration-200">
       <div className="sidebar-header">
         Projects
         <button
@@ -438,6 +498,6 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
           }}
         />
       )}
-    </>
+    </div>
   )
 }
