@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { ConnectionScreen } from '../components/ConnectionScreen'
 import { MainApp } from './MainApp'
 import type { Api, HttpBackend } from '../api'
-import { isElectronEnvironment, initializeApi } from '../api'
+import { isElectronEnvironment, isTauriEnvironment, initializeApi } from '../api'
 
 // Check if running in Capacitor native app
 export function isCapacitorApp(): boolean {
@@ -17,23 +17,25 @@ function isValidPort(port: number): boolean {
 }
 
 export function AppConnection(): React.ReactElement | null {
-  // Check if we're running in Electron or browser/Capacitor
+  // Check if we're running in Electron, Tauri or browser/Capacitor
   const isElectron = isElectronEnvironment()
+  const isTauri = isTauriEnvironment()
+  const isDesktop = isElectron || isTauri
   const isCapacitor = isCapacitorApp()
 
   // Add mobile class to body for CSS targeting
   useEffect(() => {
-    if (isCapacitor || !isElectron) {
+    if (isCapacitor || !isDesktop) {
       document.body.classList.add('is-mobile-app')
     }
     return () => {
       document.body.classList.remove('is-mobile-app')
     }
-  }, [isCapacitor, isElectron])
+  }, [isCapacitor, isDesktop])
 
   // Connection state for browser/Capacitor mode
-  const [isConnected, setIsConnected] = useState(isElectron)
-  const [api, setApiState] = useState<Api | null>(isElectron ? initializeApi() : null)
+  const [isConnected, setIsConnected] = useState(isDesktop)
+  const [api, setApiState] = useState<Api | null>(isDesktop ? initializeApi() : null)
 
   // Handle successful connection from ConnectionScreen
   const handleConnected = useCallback((connectedApi: HttpBackend) => {
@@ -123,5 +125,5 @@ export function AppConnection(): React.ReactElement | null {
   }
 
   // Render the main app with the connected API
-  return <MainApp api={api} isElectron={isElectron} onDisconnect={handleDisconnect} />
+  return <MainApp api={api} isElectron={isElectron} isTauri={isTauri} onDisconnect={handleDisconnect} />
 }

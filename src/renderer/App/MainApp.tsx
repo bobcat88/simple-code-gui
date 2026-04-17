@@ -32,10 +32,11 @@ import { cn } from '../lib/utils'
 export interface MainAppProps {
   api: Api
   isElectron: boolean
+  isTauri?: boolean
   onDisconnect?: () => void
 }
 
-export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.ReactElement {
+export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps): React.ReactElement {
   const {
     projects,
     openTabs,
@@ -333,9 +334,12 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
                 <>
                   <Header
                     activeTab={activeTab}
+                    openTabs={openTabs}
                     viewMode={viewMode}
                     onToggleViewMode={toggleViewMode}
                     onNewSession={handleNewSessionFromHeader}
+                    onSwitchToTab={setActiveTab}
+                    onCloseTab={handleCloseTab}
                   />
                   {viewMode === 'tabs' ? (
                     <div className="flex-1 relative overflow-hidden" ref={terminalContainerRef}>

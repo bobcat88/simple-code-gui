@@ -8,6 +8,14 @@
 import { Api } from './types'
 import { ElectronBackend, isElectronAvailable } from './electron-backend'
 import { HttpBackend } from './http-backend'
+import { TauriBackend } from './tauri-backend'
+
+/**
+ * Check if running in Tauri environment
+ */
+export function isTauriEnvironment(): boolean {
+  return typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined
+}
 
 // =============================================================================
 // API Instance Management
@@ -35,7 +43,9 @@ export function getApi(): Api | null {
  * - In browser/Capacitor: Requires config parameter for HttpBackend
  */
 export function initializeApi(config?: { host: string; port: number; token: string }): Api {
-  if (isElectronEnvironment()) {
+  if (isTauriEnvironment()) {
+    apiInstance = new TauriBackend()
+  } else if (isElectronEnvironment()) {
     apiInstance = new ElectronBackend()
   } else if (config) {
     apiInstance = new HttpBackend(config)

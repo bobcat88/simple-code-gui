@@ -9,7 +9,7 @@ import {
   ChevronUp,
   Globe
 } from 'lucide-react'
-import { cn } from '../utils/cn'
+import { cn } from '../lib/utils'
 
 interface FloatingInputProps {
   onInput: (data: string) => void
