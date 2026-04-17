@@ -19,6 +19,7 @@ export function IconBar({ activeSection, onSectionChange }: IconBarProps) {
   const items = [
     { id: 'projects', icon: FolderOpen, label: 'Projects' },
     { id: 'terminal', icon: Terminal, label: 'Sessions' },
+    { id: 'plugins', icon: Cpu, label: 'Plugins' },
     { id: 'config', icon: Settings, label: 'Settings' },
     { id: 'help', icon: HelpCircle, label: 'Help' },
   ]

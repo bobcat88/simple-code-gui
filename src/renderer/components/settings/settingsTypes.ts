@@ -176,4 +176,8 @@ export interface SettingsModalProps {
   updateStatus?: UpdateStatus
   onDownloadUpdate?: () => void
   onInstallUpdate?: () => void
+  projectPath: string | null
+  focusedTabPtyId: string | null
+  onOpenSession: (path: string, sessionId?: string, ptyId?: string, prompt?: string, forceNew?: boolean) => void
+  initialCategory?: string
 }

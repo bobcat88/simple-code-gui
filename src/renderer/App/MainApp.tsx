@@ -249,14 +249,20 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
 
   const isMobile = !isElectron
 
+  const [settingsCategory, setSettingsCategory] = useState('general')
+
   return (
     <div className="flex flex-row h-screen w-screen bg-background text-foreground overflow-hidden">
       {!isMobile && (
         <IconBar 
           activeSection={activeSection} 
           onSectionChange={(section) => {
-            setActiveSection(section)
-            if (section === 'config') openSettings()
+            if (section === 'config' || section === 'plugins') {
+              setSettingsCategory(section === 'plugins' ? 'mcp' : 'general')
+              setSettingsOpen(true)
+            } else {
+              setActiveSection(section)
+            }
           }} 
         />
       )}
@@ -410,6 +416,10 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
         updateStatus={updateStatus}
         onDownloadUpdate={downloadUpdate}
         onInstallUpdate={installUpdate}
+        projectPath={activeTab?.projectPath || null}
+        focusedTabPtyId={activeTabId}
+        onOpenSession={handleOpenSession}
+        initialCategory={settingsCategory}
       />
 
         <MakeProjectModal
