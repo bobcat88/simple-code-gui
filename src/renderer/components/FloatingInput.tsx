@@ -65,9 +65,14 @@ export function FloatingInput({
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-3xl px-4 z-20">
       <div className={cn(
-        "bg-background/80 backdrop-blur-xl border rounded-2xl shadow-2xl transition-all duration-300",
-        isFocused ? "border-primary/50 ring-4 ring-primary/5 shadow-primary/10" : "border-border shadow-black/20"
+        "bg-background/40 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl transition-all duration-500",
+        "borg-glass relative overflow-hidden",
+        isFocused ? "border-primary/40 ring-1 ring-primary/20 shadow-[0_0_30px_rgba(var(--primary-rgb),0.15)]" : "border-white/5 shadow-black/40"
       )}>
+        {/* Animated glow effect on focus */}
+        {isFocused && (
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 animate-pulse pointer-events-none" />
+        )}
         <form onSubmit={handleSubmit} className="p-2 flex flex-col gap-2">
           <div className="flex items-end gap-2">
             <div className="flex-1 relative flex items-center">
@@ -88,13 +93,13 @@ export function FloatingInput({
                   type="submit"
                   disabled={!value.trim()}
                   className={cn(
-                    "p-1.5 rounded-lg transition-all",
+                    "p-2 rounded-xl transition-all duration-300",
                     value.trim() 
-                      ? "bg-primary text-primary-foreground hover:scale-105 active:scale-95" 
-                      : "text-muted-foreground opacity-50 cursor-not-allowed"
+                      ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)] hover:scale-110 active:scale-95" 
+                      : "text-muted-foreground opacity-30 cursor-not-allowed"
                   )}
                 >
-                  <Send size={16} />
+                  <Send size={18} className={cn(value.trim() && "animate-in fade-in zoom-in duration-300")} />
                 </button>
               </div>
             </div>
