@@ -41,6 +41,8 @@ export interface SidebarContentProps {
   renderProjectItem: (project: Project) => React.ReactElement
 }
 
+import { useUpdater } from '../../hooks/useUpdater.js'
+
 export function SidebarContent(props: SidebarContentProps): React.ReactElement {
   const {
     state,
@@ -57,6 +59,8 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     api,
     renderProjectItem,
   } = props
+
+  const { appVersion, updateStatus, checkForUpdate, downloadUpdate, installUpdate } = useUpdater()
 
   const {
     // Voice options
@@ -142,7 +146,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
             <Settings size={18} className="text-primary" />
             <span className="tracking-tight">Configuration</span>
           </div>
-          <div className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold uppercase tracking-wider">v2.0.1</div>
+          <div className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold uppercase tracking-wider">{appVersion || 'v0.1.0'}</div>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <div className="space-y-3">
@@ -212,7 +216,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
             openTabs.map((tab) => (
               <div 
                 key={tab.id}
-                onClick={() => handlers.handleOpenAllProjects ? {} : {}} // TODO: add switch to tab handler if needed
+                onClick={() => handlers.handleSwitchToTab(tab.id)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all border border-transparent group",
                   "hover:bg-white/5 hover:border-white/10"
@@ -332,6 +336,18 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           <div className="space-y-3">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Resources</h4>
+            <button 
+              onClick={() => checkForUpdate()}
+              disabled={updateStatus.status === 'checking'}
+              className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/10 group disabled:opacity-50"
+            >
+              <span className="text-sm">Check for Updates</span>
+              {updateStatus.status === 'checking' ? (
+                <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-1 transition-transform" />
+              )}
+            </button>
             <a 
               href="https://github.com/bobcat88/simple-code-gui/wiki" 
               target="_blank"
@@ -352,16 +368,40 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
             </a>
           </div>
 
-          <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 shadow-lg shadow-primary/5">
-            <div className="text-sm font-bold text-primary mb-1">Update Available</div>
-            <div className="text-xs text-muted-foreground mb-3 leading-relaxed">Version 2.0.1 brings significant performance improvements and UI refinements.</div>
-            <button 
-              onClick={() => alert("Update functionality is being integrated. Please check GitHub for the latest release.")}
-              className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-md shadow-primary/20"
-            >
-              Download Now
-            </button>
-          </div>
+          {updateStatus.status !== 'idle' && updateStatus.status !== 'checking' && (
+            <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 shadow-lg shadow-primary/5 animate-in fade-in zoom-in duration-300">
+              <div className="text-sm font-bold text-primary mb-1">
+                {updateStatus.status === 'available' ? 'Update Available' : 
+                 updateStatus.status === 'downloading' ? 'Downloading...' :
+                 updateStatus.status === 'downloaded' ? 'Ready to Install' :
+                 'Update Error'}
+              </div>
+              <div className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                {updateStatus.status === 'available' ? `Version ${updateStatus.version} is now available.` : 
+                 updateStatus.status === 'downloading' ? `Fetching update files...` :
+                 updateStatus.status === 'downloaded' ? `Restart the application to apply the update.` :
+                 updateStatus.error || 'An unexpected error occurred.'}
+              </div>
+              
+              {updateStatus.status === 'available' && (
+                <button 
+                  onClick={() => downloadUpdate()}
+                  className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-md shadow-primary/20"
+                >
+                  Download Now
+                </button>
+              )}
+              
+              {updateStatus.status === 'downloaded' && (
+                <button 
+                  onClick={() => installUpdate()}
+                  className="w-full py-2.5 rounded-lg bg-green-500 text-white text-[10px] font-bold uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-md shadow-green-500/20"
+                >
+                  Restart & Install
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     )

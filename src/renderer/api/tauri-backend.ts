@@ -15,6 +15,8 @@ import {
   BackendId
 } from './types'
 import { tauriIpc } from '../lib/tauri-ipc'
+import { check } from '@tauri-apps/plugin-updater'
+import { relaunch } from '@tauri-apps/plugin-process'
 
 export class TauriBackend implements ExtendedApi {
   // PTY Management
@@ -147,4 +149,41 @@ export class TauriBackend implements ExtendedApi {
   async refresh(): Promise<void> { window.location.reload(); }
   async openExternal(url: string): Promise<void> { window.open(url, '_blank'); }
   debugLog(message: string): void { console.log('[Tauri]', message); }
+
+  // Updater Implementation
+  async checkForUpdate(): Promise<{ available: boolean; version?: string; body?: string }> {
+    try {
+      const update = await check();
+      return {
+        available: !!update,
+        version: update?.version,
+        body: update?.body
+      };
+    } catch (e) {
+      console.error('Failed to check for updates', e);
+      return { available: false };
+    }
+  }
+
+  async downloadUpdate(): Promise<{ success: boolean; error?: string }> {
+    try {
+      const update = await check();
+      if (update) {
+        await update.downloadAndInstall();
+        return { success: true };
+      }
+      return { success: false, error: 'No update available' };
+    } catch (e) {
+      console.error('Failed to download update', e);
+      return { success: false, error: String(e) };
+    }
+  }
+
+  async installUpdate(): Promise<void> {
+    try {
+      await relaunch();
+    } catch (e) {
+      console.error('Failed to relaunch after update', e);
+    }
+  }
 }

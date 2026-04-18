@@ -385,6 +385,11 @@ export interface ExtendedApi extends Api {
   refresh: () => Promise<void>
   openExternal: (url: string) => Promise<void>
 
+  // Updater (Tauri/Electron)
+  checkForUpdate: () => Promise<{ available: boolean; version?: string; body?: string }>
+  downloadUpdate: () => Promise<{ success: boolean; error?: string }>
+  installUpdate: () => Promise<void>
+
   // Debug
   debugLog: (message: string) => void
 }

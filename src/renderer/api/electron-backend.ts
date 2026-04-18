@@ -246,6 +246,25 @@ export class ElectronBackend implements ExtendedApi {
     this.checkApi()
     window.electronAPI!.debugLog(message)
   }
+
+  // Updater
+  async checkForUpdate(): Promise<{ available: boolean; version?: string; body?: string }> {
+    if (window.electronAPI?.checkForUpdate) {
+      return window.electronAPI.checkForUpdate()
+    }
+    return { available: false }
+  }
+
+  async downloadUpdate(): Promise<{ success: boolean; error?: string }> {
+    if (window.electronAPI?.downloadUpdate) {
+      return window.electronAPI.downloadUpdate()
+    }
+    return { success: false, error: 'Updater not implemented in Electron' }
+  }
+
+  async installUpdate(): Promise<void> {
+    window.electronAPI?.installUpdate?.()
+  }
 }
 
 /**

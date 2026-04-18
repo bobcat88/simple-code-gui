@@ -33,6 +33,9 @@ export interface SidebarHandlers {
   handleCategoryRenameKeyDown: (e: React.KeyboardEvent) => void
   toggleCategoryCollapse: (categoryId: string) => void
 
+  // Session handlers
+  handleSwitchToTab: (tabId: string) => void
+
   // Resize handler
   handleMouseDown: (e: React.MouseEvent) => void
 
@@ -192,6 +195,14 @@ export function useSidebarHandlers(params: UseSidebarHandlersParams): SidebarHan
     [categories, updateCategory]
   )
 
+  // Session handlers
+  const handleSwitchToTab = useCallback(
+    (tabId: string) => {
+      useWorkspaceStore.getState().setActiveTab(tabId)
+    },
+    []
+  )
+
   // Resize handler
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -222,6 +233,7 @@ export function useSidebarHandlers(params: UseSidebarHandlersParams): SidebarHan
     handleCategoryRenameSubmit,
     handleCategoryRenameKeyDown,
     toggleCategoryCollapse,
+    handleSwitchToTab,
     handleMouseDown,
     handleBackdropClick,
   }

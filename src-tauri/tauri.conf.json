@@ -25,6 +25,16 @@
       "csp": null
     }
   },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/bobcat88/simple-code-gui/releases/latest/download/latest.json"
+      ],
+      "dialog": false,
+      "pubkey": "dW51c2VkX3B1YmtleV9mb3JfZGV2ZWxvcG1lbnRfcmVwbGFjZV9tZQ=="
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",

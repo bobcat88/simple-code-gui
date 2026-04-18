@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { getApi } from '../api'
 
 export type UpdateStatusType = 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error'
 
@@ -12,6 +13,7 @@ export interface UpdateStatus {
 interface UseUpdaterReturn {
   appVersion: string
   updateStatus: UpdateStatus
+  checkForUpdate: () => void
   downloadUpdate: () => void
   installUpdate: () => void
 }
@@ -22,46 +24,65 @@ export function useUpdater(): UseUpdaterReturn {
 
   // Load app version on mount
   useEffect(() => {
-    window.electronAPI?.getVersion?.()?.then(setAppVersion)?.catch(console.error)
+    const api = getApi()
+    if (api && 'getVersion' in api) {
+      api.getVersion().then(setAppVersion).catch(console.error)
+    }
   }, [])
 
-  // Subscribe to updater events
-  useEffect(() => {
-    if (!window.electronAPI?.onUpdaterStatus) return
-    const unsubscribe = window.electronAPI?.onUpdaterStatus((data: any) => {
-      setUpdateStatus({
-        status: data.status as UpdateStatusType,
-        version: data.version,
-        progress: data.progress,
-        error: data.error
-      })
-    })
-    return () => unsubscribe?.()
+  const checkForUpdate = useCallback(async () => {
+    const api = getApi()
+    if (!api || !('checkForUpdate' in api)) return
+
+    setUpdateStatus({ status: 'checking' })
+    try {
+      const result = await api.checkForUpdate()
+      if (result.available) {
+        setUpdateStatus({
+          status: 'available',
+          version: result.version
+        })
+      } else {
+        setUpdateStatus({ status: 'idle' })
+      }
+    } catch (e) {
+      setUpdateStatus({ status: 'error', error: String(e) })
+    }
   }, [])
 
-  const downloadUpdate = useCallback(() => {
-    if (!window.electronAPI?.downloadUpdate) return
+  const downloadUpdate = useCallback(async () => {
+    const api = getApi()
+    if (!api || !('downloadUpdate' in api)) return
+
     setUpdateStatus(prev => ({
       status: 'downloading',
       version: prev.version,
       progress: 0
     }))
-    window.electronAPI?.downloadUpdate().then((result: any) => {
-      if (!result.success) {
+
+    try {
+      const result = await api.downloadUpdate()
+      if (result.success) {
+        setUpdateStatus({ status: 'downloaded' })
+      } else {
         setUpdateStatus({ status: 'error', error: result.error })
       }
-    }).catch((e: any) => {
+    } catch (e) {
       setUpdateStatus({ status: 'error', error: String(e) })
-    })
+    }
   }, [])
 
   const installUpdate = useCallback(() => {
-    window.electronAPI?.installUpdate?.()
+    const api = getApi()
+    if (api && 'installUpdate' in api) {
+      api.installUpdate()
+    }
   }, [])
 
   return {
     appVersion,
     updateStatus,
+    checkForUpdate,
     downloadUpdate,
     installUpdate
   }
