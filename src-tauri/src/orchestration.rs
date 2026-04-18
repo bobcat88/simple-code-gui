@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::process::Command;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BeadTask {
@@ -36,10 +36,10 @@ pub async fn get_beads_tasks() -> Result<Vec<BeadTask>, String> {
 #[tauri::command]
 pub async fn sync_workflow(app: AppHandle) -> Result<(), String> {
     // This could run a background check for task changes and emit events
-    app.emit("workflow-sync-start", ()).map_err(|e| e.to_string())?;
+    app.emit("workflow-sync-start", ()).map_err(|e: tauri::Error| e.to_string())?;
     
     // Simulate some work or call bd commands
     
-    app.emit("workflow-sync-complete", ()).map_err(|e| e.to_string())?;
+    app.emit("workflow-sync-complete", ()).map_err(|e: tauri::Error| e.to_string())?;
     Ok(())
 }

@@ -44,8 +44,8 @@ export function SessionSwitcher({
               className={cn(
                 "group relative flex items-center gap-2 px-3 py-1 rounded-md cursor-pointer transition-all duration-200 min-w-[120px] max-w-[200px] h-full",
                 isActive 
-                  ? "bg-primary/15 text-primary border border-primary/20 shadow-sm shadow-primary/5" 
-                  : "bg-muted/30 text-muted-foreground border border-transparent hover:bg-muted/50 hover:text-foreground"
+                  ? "bg-white/10 text-white border border-white/10" 
+                  : "bg-white/5 text-white/40 border border-transparent hover:bg-white/10 hover:text-white/80"
               )}
             >
               <TerminalIcon size={12} className={cn(isActive ? "text-primary" : "text-muted-foreground/60")} />
@@ -68,7 +68,7 @@ export function SessionSwitcher({
               </button>
 
               {isActive && (
-                <div className="absolute bottom-0 left-1 right-1 h-0.5 bg-primary rounded-t-full shadow-[0_-2px_10px_rgba(var(--primary),0.5)]" />
+                <div className="absolute bottom-0 left-1 right-1 h-0.5 bg-primary rounded-t-full shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]" />
               )}
             </div>
           )

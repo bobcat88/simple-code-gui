@@ -32,7 +32,7 @@ export function Header({
   onCloseTab
 }: HeaderProps) {
   return (
-    <header className="h-14 border-b border-border bg-background/60 backdrop-blur-md flex items-center px-4 gap-4 sticky top-0 z-10" data-tauri-drag-region>
+    <header className="h-14 glass-header flex items-center px-4 gap-4 sticky top-0 z-10" data-tauri-drag-region>
       <div className="flex items-center gap-2 text-muted-foreground shrink-0 border-r border-border pr-4 h-8" data-tauri-drag-region>
         <TerminalIcon size={16} data-tauri-drag-region />
         <span className="text-xs font-bold uppercase tracking-wider select-none" data-tauri-drag-region>Codex One</span>
@@ -52,7 +52,7 @@ export function Header({
           <input 
             type="text" 
             placeholder="Search commands..." 
-            className="h-8 w-40 bg-muted/30 border border-transparent hover:border-border focus:border-primary/50 focus:bg-background/50 rounded-md pl-8 pr-3 text-[11px] outline-none transition-all placeholder:text-muted-foreground/40"
+            className="h-8 w-40 bg-white/5 border border-white/5 hover:border-white/10 focus:border-primary/40 focus:bg-white/10 rounded-md pl-8 pr-3 text-[11px] outline-none transition-all placeholder:text-white/20"
           />
         </div>
 
@@ -61,16 +61,16 @@ export function Header({
         <button
           className={cn(
             "p-2 rounded-md transition-all",
-            "hover:bg-muted text-muted-foreground hover:text-foreground active:scale-95"
+            "hover:bg-white/5 text-white/40 hover:text-white/80 active:scale-95"
           )}
           onClick={onToggleViewMode}
           title={viewMode === 'tabs' ? 'Switch to tiled view' : 'Switch to tabs view'}
         >
-          {viewMode === 'tabs' ? <LayoutGrid size={18} /> : <TerminalIcon size={18} />}
+          {viewMode === 'tabs' ? <LayoutGrid size={16} /> : <TerminalIcon size={16} />}
         </button>
 
-        <button className="p-2 rounded-md hover:bg-muted text-muted-foreground transition-all active:scale-95">
-          <MoreVertical size={18} />
+        <button className="p-2 rounded-md hover:bg-white/5 text-white/40 hover:text-white/80 transition-all active:scale-95">
+          <MoreVertical size={16} />
         </button>
       </div>
     </header>

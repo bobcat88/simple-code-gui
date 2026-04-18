@@ -8,12 +8,13 @@ mod workspace_manager;
 
 use pty_manager::PtyManager;
 use std::sync::Arc;
+use std::thread;
 use settings_manager::{SettingsManager, AppSettings};
 use workspace_manager::{WorkspaceManager, Workspace};
 use voice_manager::{VoiceManager, voice_speak, voice_stop};
 use orchestration::{get_beads_tasks, sync_workflow, OrchestrationState};
 use mcp_bridge::{register_mcp_server, get_registered_mcp_servers, McpManager};
-use tauri::{AppHandle, State, Manager};
+use tauri::{AppHandle, State, Manager, Emitter};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent, TrayIcon};
 use tauri::menu::{Menu, MenuItem};

@@ -209,7 +209,7 @@ export function SettingsModal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
       <div 
         ref={focusTrapRef}
-        className="bg-[#111111] border border-white/10 w-full max-w-4xl h-[650px] rounded-2xl shadow-2xl flex overflow-hidden animate-in zoom-in-95 duration-200"
+        className="codex-modal-content w-full max-w-4xl h-[650px] rounded-[var(--radius-modal)] flex overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
       >
         {/* Sidebar */}
@@ -225,10 +225,10 @@ export function SettingsModal({
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group",
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
                   activeCategory === cat.id 
                     ? "bg-white/10 text-white shadow-sm" 
-                    : "text-white/50 hover:text-white/80 hover:bg-white/5"
+                    : "text-white/40 hover:text-white/80 hover:bg-white/5"
                 )}
               >
                 <cat.icon className={cn(
@@ -248,7 +248,7 @@ export function SettingsModal({
           <div className="p-4 mt-auto border-t border-white/5 space-y-2">
              <button 
               onClick={handleSave}
-              className="w-full flex items-center justify-center gap-2 bg-white text-black hover:bg-white/90 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 shadow-lg shadow-white/5"
+              className="w-full flex items-center justify-center gap-2 bg-white text-black hover:bg-white/90 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-95 shadow-lg shadow-white/5"
             >
               <Save className="w-4 h-4" />
               Save Changes
@@ -312,7 +312,7 @@ export function SettingsModal({
                 <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-300">
                   <section>
                     <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Global Styling</h3>
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-6">
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-6">
                       <div className="flex items-center justify-between">
                         <div>
                           <label className="text-sm font-medium text-white/80">Glow Effect</label>
@@ -321,7 +321,7 @@ export function SettingsModal({
                         <button
                           onClick={() => setGeneral(prev => ({ ...prev, glowEnabled: !prev.glowEnabled }))}
                           className={cn(
-                            "w-10 h-5 rounded-full transition-colors relative",
+                            "w-9 h-5 rounded-full transition-colors relative",
                             general.glowEnabled ? "bg-white" : "bg-white/10"
                           )}
                         >

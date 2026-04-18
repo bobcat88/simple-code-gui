@@ -30,7 +30,7 @@ impl VoiceManager {
     pub fn stop(&self) -> Result<(), String> {
         let mut tts_lock = self.tts.lock().unwrap();
         if let Some(tts) = tts_lock.as_mut() {
-            tts.stop().map_err(|e| e.to_string())
+            tts.stop().map(|_| ()).map_err(|e| e.to_string())
         } else {
             Ok(())
         }
