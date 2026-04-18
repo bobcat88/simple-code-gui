@@ -153,6 +153,19 @@ export class TauriBackend implements ExtendedApi {
   async refresh(): Promise<void> { window.location.reload(); }
   async openExternal(url: string): Promise<void> { window.open(url, '_blank'); }
   debugLog(message: string): void { console.log('[Tauri]', message); }
+  
+  // Extension Management
+  async extensionsGetInstalled(): Promise<any[]> { return await tauriIpc.extensionsGetInstalled(); }
+  async extensionsFetchRegistry(forceRefresh: boolean): Promise<any> { return await tauriIpc.extensionsFetchRegistry(forceRefresh); }
+  async extensionsGetCustomUrls(): Promise<string[]> { return await tauriIpc.extensionsGetCustomUrls(); }
+  async extensionsInstallSkill(extension: any, scope: string): Promise<{ success: boolean; error?: string }> { return await tauriIpc.extensionsInstallSkill(extension, scope); }
+  async extensionsInstallMcp(extension: any): Promise<{ success: boolean; error?: string }> { return await tauriIpc.extensionsInstallMcp(extension); }
+  async extensionsRemove(id: string): Promise<{ success: boolean; error?: string }> { return await tauriIpc.extensionsRemove(id); }
+  async extensionsEnableForProject(id: string, projectPath: string): Promise<void> { await tauriIpc.extensionsEnableForProject(id, projectPath); }
+  async extensionsDisableForProject(id: string, projectPath: string): Promise<void> { await tauriIpc.extensionsDisableForProject(id, projectPath); }
+  async extensionsFetchFromUrl(url: string): Promise<any | null> { return await tauriIpc.extensionsFetchFromUrl(url); }
+  async extensionsAddCustomUrl(url: string): Promise<void> { await tauriIpc.extensionsAddCustomUrl(url); }
+  async extensionsSetConfig(id: string, config: any): Promise<void> { await tauriIpc.extensionsSetConfig(id, config); }
 
   // Updater Implementation
   async checkForUpdate(): Promise<{ available: boolean; version?: string; body?: string }> {

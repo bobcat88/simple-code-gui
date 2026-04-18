@@ -189,6 +189,16 @@ export interface Api {
   voiceSetVoice?: (voice: string | { voice: string; engine: 'piper' | 'xtts' }) => Promise<{ success: boolean }>
   ttsRemoveInstructions?: (projectPath: string) => Promise<{ success: boolean }>
   extensionsGetInstalled?: () => Promise<Array<{ id: string; name: string; type: string }>>
+  extensionsFetchRegistry?: (forceRefresh: boolean) => Promise<any>
+  extensionsGetCustomUrls?: () => Promise<string[]>
+  extensionsInstallSkill?: (extension: any, scope: string) => Promise<{ success: boolean; error?: string }>
+  extensionsInstallMcp?: (extension: any) => Promise<{ success: boolean; error?: string }>
+  extensionsRemove?: (id: string) => Promise<{ success: boolean; error?: string }>
+  extensionsEnableForProject?: (id: string, projectPath: string) => Promise<void>
+  extensionsDisableForProject?: (id: string, projectPath: string) => Promise<void>
+  extensionsFetchFromUrl?: (url: string) => Promise<any | null>
+  extensionsAddCustomUrl?: (url: string) => Promise<void>
+  extensionsSetConfig?: (id: string, config: any) => Promise<void>
 
   // Optional: API server control (desktop only)
   apiStart?: (projectPath: string, port: number) => Promise<{ success: boolean; error?: string }>

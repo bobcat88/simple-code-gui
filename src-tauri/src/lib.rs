@@ -6,6 +6,7 @@ mod orchestration;
 mod mcp_bridge;
 mod workspace_manager;
 mod session_manager;
+mod extension_manager;
 
 use pty_manager::PtyManager;
 use std::sync::Arc;
@@ -269,7 +270,18 @@ pub fn run() {
             register_mcp_server,
             get_registered_mcp_servers,
             discover_sessions,
-            select_directory
+            select_directory,
+            extension_manager::extensions_fetch_registry,
+            extension_manager::extensions_get_installed,
+            extension_manager::extensions_get_custom_urls,
+            extension_manager::extensions_install_skill,
+            extension_manager::extensions_install_mcp,
+            extension_manager::extensions_remove,
+            extension_manager::extensions_enable_for_project,
+            extension_manager::extensions_disable_for_project,
+            extension_manager::extensions_fetch_from_url,
+            extension_manager::extensions_add_custom_url,
+            extension_manager::extensions_set_config
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

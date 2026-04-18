@@ -48,4 +48,28 @@ export const tauriIpc = {
 
   selectDirectory: () =>
     invoke<string | null>('select_directory'),
+
+  // Extensions
+  extensionsFetchRegistry: (forceRefresh: boolean) =>
+    invoke<any>('extensions_fetch_registry', { forceRefresh }),
+  extensionsGetInstalled: () =>
+    invoke<any[]>('extensions_get_installed'),
+  extensionsGetCustomUrls: () =>
+    invoke<string[]>('extensions_get_custom_urls'),
+  extensionsInstallSkill: (extension: any, scope: string) =>
+    invoke<any>('extensions_install_skill', { extension, scope }),
+  extensionsInstallMcp: (extension: any) =>
+    invoke<any>('extensions_install_mcp', { extension }),
+  extensionsRemove: (id: string) =>
+    invoke<any>('extensions_remove', { id }),
+  extensionsEnableForProject: (id: string, projectPath: string) =>
+    invoke<void>('extensions_enable_for_project', { id, projectPath }),
+  extensionsDisableForProject: (id: string, projectPath: string) =>
+    invoke<void>('extensions_disable_for_project', { id, projectPath }),
+  extensionsFetchFromUrl: (url: string) =>
+    invoke<any | null>('extensions_fetch_from_url', { url }),
+  extensionsAddCustomUrl: (url: string) =>
+    invoke<void>('extensions_add_custom_url', { url }),
+  extensionsSetConfig: (id: string, config: any) =>
+    invoke<void>('extensions_set_config', { id, config }),
 };
