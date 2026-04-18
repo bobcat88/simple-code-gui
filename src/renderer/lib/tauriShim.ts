@@ -114,9 +114,27 @@ export const setupTauriShim = () => {
     beadsGetTasks: () => invoke('get_beads_tasks'),
     beadsSyncWorkflow: () => invoke('sync_workflow'),
 
-    // Kspec (Stubs/Shims)
+    // Kspec (Native Orchestration)
     kspecCheck: (cwd: string) => invoke('kspec_check', { cwd }),
     kspecInit: (cwd: string) => invoke('kspec_init', { cwd }),
+    kspecList: (cwd: string) => invoke('kspec_list', { cwd }),
+    kspecShow: (cwd: string, taskId: string) => invoke('kspec_show', { cwd, taskId }),
+    kspecCreate: (cwd: string, title: string, description?: string, priority?: number, type?: string, tags?: string) => 
+      invoke('kspec_create', { cwd, title, description, priority, task_type: type, tags }),
+    kspecStart: (cwd: string, taskId: string) => invoke('kspec_start', { cwd, taskId }),
+    kspecComplete: (cwd: string, taskId: string) => invoke('kspec_complete', { cwd, taskId }),
+    kspecDelete: (cwd: string, taskId: string) => invoke('kspec_delete', { cwd, taskId }),
+    kspecUpdate: (cwd: string, taskId: string, status?: string, title?: string, description?: string, priority?: number) => 
+      invoke('kspec_update', { cwd, taskId, status, title, description, priority }),
+    kspecWatch: (cwd: string) => invoke('kspec_watch', { cwd }),
+    kspecUnwatch: (cwd: string) => invoke('kspec_unwatch', { cwd }),
+    onKspecTasksChanged: (callback: (data: { cwd: string }) => void) => {
+      let unlisten: (() => void) | undefined;
+      listen('kspec-tasks-changed', (event: any) => {
+        callback(event.payload);
+      }).then(u => unlisten = u);
+      return () => unlisten?.();
+    },
     kspecEnsureDaemon: (cwd: string) => invoke('kspec_ensure_daemon', { cwd }),
 
     // MCP Bridge

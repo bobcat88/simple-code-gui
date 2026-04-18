@@ -8,6 +8,7 @@ import { GSDStatus } from '../GSDStatus.js'
 import { ExtensionBrowser } from '../ExtensionBrowser.js'
 import { ClaudeMdEditor } from '../ClaudeMdEditor.js'
 import { McpPanel } from '../McpPanel.js'
+import { McpBrowser } from '../mcp/McpBrowser.js'
 import {
   getCategoryGradient,
   ProjectItem,
@@ -124,6 +125,8 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     handleCategoryHeaderDrop,
     handleCategoryDrop,
     setEditingCategory,
+    mcpBrowserOpen,
+    setMcpBrowserOpen,
   } = state
 
   const {
@@ -314,15 +317,33 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
           
           <div className="space-y-2">
             <h4 className="px-2 text-xs font-bold uppercase text-muted-foreground tracking-widest">Active Plugins</h4>
-            <div className="p-3 rounded-xl bg-muted/20 border border-white/5 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center text-green-500">
-                <Zap size={16} />
-              </div>
-              <div>
-                <div className="text-sm font-semibold">Tauri Backend</div>
-                <div className="text-[10px] text-muted-foreground uppercase">Core System</div>
+            <div className="p-3 rounded-xl bg-muted/20 border border-white/5 flex items-center justify-between group">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center text-green-500">
+                  <Zap size={16} />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold">Tauri Backend</div>
+                  <div className="text-[10px] text-muted-foreground uppercase">Core System</div>
+                </div>
               </div>
             </div>
+
+            <button 
+              onClick={() => setMcpBrowserOpen(true)}
+              className="w-full p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 flex items-center justify-between group transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
+                  <Cpu size={16} />
+                </div>
+                <div className="text-left">
+                  <div className="text-sm font-semibold">MCP Browser</div>
+                  <div className="text-[10px] text-muted-foreground uppercase">Tools & Resources</div>
+                </div>
+              </div>
+              <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         </div>
       </div>
@@ -681,6 +702,10 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
             setCategoryContextMenu(null)
           }}
         />
+      )}
+      {/* MCP Browser Modal */}
+      {mcpBrowserOpen && (
+        <McpBrowser onClose={() => setMcpBrowserOpen(false)} />
       )}
     </div>
   )

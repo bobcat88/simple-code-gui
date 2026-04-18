@@ -98,6 +98,8 @@ export interface SidebarState {
   setDeleteConfirmModal: (v: { project: Project } | null) => void
   taskCounts: Record<string, { open: number; inProgress: number }>
   setTaskCounts: (v: Record<string, { open: number; inProgress: number }>) => void
+  mcpBrowserOpen: boolean
+  setMcpBrowserOpen: (v: boolean) => void
 
   // Refs
   sidebarRef: React.RefObject<HTMLDivElement>
@@ -210,6 +212,7 @@ export function useSidebarState(params: UseSidebarStateParams): SidebarState {
   const [taskCounts, setTaskCounts] = useState<Record<string, { open: number; inProgress: number }>>(
     {}
   )
+  const [mcpBrowserOpen, setMcpBrowserOpen] = useState(false)
 
   // Refs
   const sidebarRef = useRef<HTMLDivElement>(null)
@@ -338,6 +341,8 @@ export function useSidebarState(params: UseSidebarStateParams): SidebarState {
     setDeleteConfirmModal,
     taskCounts,
     setTaskCounts,
+    mcpBrowserOpen,
+    setMcpBrowserOpen,
 
     // Refs
     sidebarRef,

@@ -16,6 +16,7 @@ pub struct BeadTask {
 #[derive(Default)]
 pub struct OrchestrationState {
     pub watched_projects: Mutex<HashMap<String, tauri::async_runtime::JoinHandle<()>>>,
+    pub watched_kspec_projects: Mutex<HashMap<String, tauri::async_runtime::JoinHandle<()>>>,
 }
 
 #[tauri::command]
@@ -314,15 +315,272 @@ pub async fn beads_unwatch(
 #[tauri::command]
 pub async fn kspec_check(cwd: String) -> Result<serde_json::Value, String> {
     let kspec_dir = std::path::Path::new(&cwd).join(".kspec");
-    Ok(serde_json::json!({ "exists": kspec_dir.exists() }))
+    let installed = Command::new("kspec").arg("--version").output().is_ok();
+    let initialized = kspec_dir.exists();
+    Ok(serde_json::json!({
+        "installed": installed,
+        "initialized": initialized,
+        "exists": initialized // for backward compatibility
+    }))
 }
 
 #[tauri::command]
-pub async fn kspec_init(_cwd: String) -> Result<serde_json::Value, String> {
+pub async fn kspec_init(cwd: String) -> Result<serde_json::Value, String> {
+    let output = Command::new("kspec")
+        .current_dir(&cwd)
+        .arg("init")
+        .output()
+        .map_err(|e| format!("Failed to execute kspec init: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
     Ok(serde_json::json!({ "success": true }))
 }
 
 #[tauri::command]
+pub async fn kspec_list(cwd: String) -> Result<serde_json::Value, String> {
+    let output = Command::new("kspec")
+        .current_dir(&cwd)
+        .arg("tasks")
+        .arg("list")
+        .arg("--json")
+        .output()
+        .map_err(|e| format!("Failed to execute kspec tasks list: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    let items: serde_json::Value = serde_json::from_slice(&output.stdout)
+        .map_err(|e| format!("Failed to parse kspec output: {}", e))?;
+
+    Ok(serde_json::json!({
+        "success": true,
+        "items": items
+    }))
+}
+
+#[tauri::command]
+pub async fn kspec_show(cwd: String, task_id: String) -> Result<serde_json::Value, String> {
+    let output = Command::new("kspec")
+        .current_dir(&cwd)
+        .arg("task")
+        .arg("get")
+        .arg(&task_id)
+        .arg("--json")
+        .output()
+        .map_err(|e| format!("Failed to execute kspec task get: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    let task: serde_json::Value = serde_json::from_slice(&output.stdout)
+        .map_err(|e| format!("Failed to parse kspec output: {}", e))?;
+
+    Ok(serde_json::json!({
+        "success": true,
+        "task": task
+    }))
+}
+
+#[tauri::command]
+pub async fn kspec_create(
+    cwd: String,
+    title: String,
+    description: Option<String>,
+    priority: Option<i32>,
+    task_type: Option<String>,
+    tags: Option<String>
+) -> Result<serde_json::Value, String> {
+    let mut cmd = Command::new("kspec");
+    cmd.current_dir(&cwd).arg("task").arg("add").arg("--title").arg(&title);
+    
+    if let Some(d) = description {
+        cmd.arg("--description").arg(d);
+    }
+    if let Some(p) = priority {
+        cmd.arg("--priority").arg(p.to_string());
+    }
+    if let Some(t) = task_type {
+        cmd.arg("--type").arg(t);
+    }
+    if let Some(tg) = tags {
+        cmd.arg("--tags").arg(tg);
+    }
+
+    let output = cmd.output().map_err(|e| format!("Failed to execute kspec task add: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn kspec_start(cwd: String, task_id: String) -> Result<serde_json::Value, String> {
+    let output = Command::new("kspec")
+        .current_dir(&cwd)
+        .arg("task")
+        .arg("start")
+        .arg(&task_id)
+        .output()
+        .map_err(|e| format!("Failed to execute kspec task start: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn kspec_complete(cwd: String, task_id: String) -> Result<serde_json::Value, String> {
+    let output = Command::new("kspec")
+        .current_dir(&cwd)
+        .arg("task")
+        .arg("complete")
+        .arg(&task_id)
+        .output()
+        .map_err(|e| format!("Failed to execute kspec task complete: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn kspec_delete(cwd: String, task_id: String) -> Result<serde_json::Value, String> {
+    let output = Command::new("kspec")
+        .current_dir(&cwd)
+        .arg("task")
+        .arg("delete")
+        .arg(&task_id)
+        .arg("--force")
+        .output()
+        .map_err(|e| format!("Failed to execute kspec task delete: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn kspec_update(
+    cwd: String,
+    task_id: String,
+    status: Option<String>,
+    title: Option<String>,
+    description: Option<String>,
+    priority: Option<i32>
+) -> Result<serde_json::Value, String> {
+    let mut cmd = Command::new("kspec");
+    cmd.current_dir(&cwd).arg("task").arg("set").arg(&task_id);
+    
+    if let Some(s) = status {
+        cmd.arg("--status").arg(s);
+    }
+    if let Some(t) = title {
+        cmd.arg("--title").arg(t);
+    }
+    if let Some(d) = description {
+        cmd.arg("--description").arg(d);
+    }
+    if let Some(p) = priority {
+        cmd.arg("--priority").arg(p.to_string());
+    }
+
+    let output = cmd.output().map_err(|e| format!("Failed to execute kspec task set: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn kspec_watch(
+    app: AppHandle,
+    state: State<'_, OrchestrationState>,
+    cwd: String
+) -> Result<(), String> {
+    let mut watched = state.watched_kspec_projects.lock();
+    if watched.contains_key(&cwd) {
+        return Ok(());
+    }
+
+    let cwd_clone = cwd.clone();
+    let handle = tauri::async_runtime::spawn(async move {
+        let mut last_output = String::new();
+        loop {
+            let output = Command::new("kspec")
+                .current_dir(&cwd_clone)
+                .arg("tasks")
+                .arg("list")
+                .arg("--json")
+                .output();
+
+            if let Ok(out) = output {
+                let current_output = String::from_utf8_lossy(&out.stdout).to_string();
+                if current_output != last_output {
+                    last_output = current_output;
+                    let _ = app.emit("kspec-tasks-changed", serde_json::json!({ "cwd": cwd_clone }));
+                }
+            }
+            sleep(Duration::from_secs(2)).await;
+        }
+    });
+
+    watched.insert(cwd, handle);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn kspec_unwatch(
+    state: State<'_, OrchestrationState>,
+    cwd: String
+) -> Result<(), String> {
+    let mut watched = state.watched_kspec_projects.lock();
+    if let Some(handle) = watched.remove(&cwd) {
+        handle.abort();
+    }
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn kspec_ensure_daemon(_cwd: String) -> Result<serde_json::Value, String> {
+    // Keep it for now to avoid breaking existing code, but make it a no-op that says success
     Ok(serde_json::json!({ "success": true }))
 }
