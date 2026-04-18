@@ -48,6 +48,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     state,
     handlers,
     projects,
+    openTabs,
     activeSection = 'terminal',
     onOpenSession,
     onRemoveProject,
