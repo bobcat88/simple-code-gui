@@ -48,7 +48,7 @@ export function VoiceControls({
   useEffect(() => {
     checkInstallation()
 
-    const cleanup = window.electronAPI?.onInstallProgress?.((data) => {
+    const cleanup = window.electronAPI?.onInstallProgress?.((data: any) => {
       if ((data.type === 'piper' || data.type === 'piper-voice') && data.percent === 100) {
         setInstallingTTS(false)
         checkInstallation()
@@ -162,17 +162,17 @@ export function VoiceControls({
       // Test TTS when enabling
       if (newState) {
         window.electronAPI?.voiceSpeak?.('Voice output enabled. Hello!')
-          .then(result => {
+          .then((result: any) => {
             if (result?.success && result.audioData) {
               const audioData = Uint8Array.from(atob(result.audioData), c => c.charCodeAt(0))
               const blob = new Blob([audioData], { type: 'audio/wav' })
               const url = URL.createObjectURL(blob)
               const audio = new Audio(url)
               audio.volume = volume
-              audio.play().catch(e => console.error('Play failed:', e))
+              audio.play().catch((e: any) => console.error('Play failed:', e))
             }
           })
-          .catch(e => console.error('TTS failed:', e))
+          .catch((e: any) => console.error('TTS failed:', e))
       }
     }
   }

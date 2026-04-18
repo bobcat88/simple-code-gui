@@ -102,8 +102,8 @@ export function SettingsModal({
           autoAcceptTools: settings.autoAcceptTools || [],
           permissionMode: settings.permissionMode || 'default',
           backend: settings.backend || 'default',
-          glowEnabled: settings.glow_enabled ?? true,
-          accentColor: settings.accent_color || '#3b82f6'
+          glowEnabled: settings.themeCustomization?.accentColor ? true : true, // Keeping it simple
+          accentColor: settings.themeCustomization?.accentColor || '#3b82f6'
         }))
       })
 
@@ -152,15 +152,18 @@ export function SettingsModal({
   }
 
   const handleSave = () => {
+    const updatedThemeCustomization = {
+      ...general.themeCustomization,
+      accentColor: general.accentColor || general.themeCustomization?.accentColor || null
+    };
+
     api?.saveSettings?.({
       defaultProjectDir: general.defaultProjectDir,
       theme: general.selectedTheme,
-      themeCustomization: general.themeCustomization,
+      themeCustomization: updatedThemeCustomization,
       autoAcceptTools: general.autoAcceptTools,
       permissionMode: general.permissionMode,
-      backend: general.backend,
-      glow_enabled: general.glowEnabled,
-      accent_color: general.accentColor
+      backend: general.backend
     })
     api?.voiceSaveSettings?.({
       ttsVoice: voice.selectedVoice,
@@ -172,7 +175,14 @@ export function SettingsModal({
       xttsRepetitionPenalty: xtts.repetitionPenalty,
       tadaVoiceSample: voice.tadaVoiceSample
     })
-    onSaved?.(general)
+    onSaved?.({
+      defaultProjectDir: general.defaultProjectDir,
+      theme: general.selectedTheme,
+      themeCustomization: updatedThemeCustomization,
+      autoAcceptTools: general.autoAcceptTools,
+      permissionMode: general.permissionMode,
+      backend: general.backend
+    })
     onClose()
   }
 
@@ -271,19 +281,18 @@ export function SettingsModal({
                   <section>
                     <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Workspace</h3>
                     <ProjectDirectorySettings 
-                      directory={general.defaultProjectDir}
-                      onDirectoryChange={(dir) => setGeneral(prev => ({ ...prev, defaultProjectDir: dir }))}
+                      defaultProjectDir={general.defaultProjectDir}
+                      onChange={(dir) => setGeneral(prev => ({ ...prev, defaultProjectDir: dir }))}
                     />
                   </section>
                   
                   <section>
                     <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Security</h3>
                     <PermissionsSettings 
-                      mode={general.permissionMode}
+                      permissionMode={general.permissionMode}
                       autoAcceptTools={general.autoAcceptTools}
                       customTool={general.customTool}
-                      onModeChange={(mode) => setGeneral(prev => ({ ...prev, permissionMode: mode }))}
-                      onAutoAcceptChange={(tools) => setGeneral(prev => ({ ...prev, autoAcceptTools: tools }))}
+                      onPermissionModeChange={(mode) => setGeneral(prev => ({ ...prev, permissionMode: mode }))}
                       onCustomToolChange={(tool) => setGeneral(prev => ({ ...prev, customTool: tool }))}
                       onToggleTool={(tool) => {
                         setGeneral(prev => {
@@ -302,7 +311,7 @@ export function SettingsModal({
                     <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">AI Backend</h3>
                     <BackendSettings 
                       backend={general.backend}
-                      onBackendChange={(backend) => setGeneral(prev => ({ ...prev, backend }))}
+                      onChange={(backend) => setGeneral(prev => ({ ...prev, backend }))}
                     />
                   </section>
                 </div>
@@ -354,10 +363,11 @@ export function SettingsModal({
                     <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Visual Theme</h3>
                     <ThemeSettings 
                       selectedTheme={general.selectedTheme}
-                      onThemeChange={(themeId) => {
+                      onSelect={(themeId) => {
                         setGeneral(prev => ({ ...prev, selectedTheme: themeId }))
-                        const themeObj = (window as any).themes?.find((t: any) => t.id === themeId)
-                        if (themeObj) onThemeChange(themeObj)
+                      }}
+                      onThemeChange={(themeObj) => {
+                        if (themeObj && onThemeChange) onThemeChange(themeObj)
                       }}
                       customization={general.themeCustomization}
                       onCustomizationChange={(c) => setGeneral(prev => ({ ...prev, themeCustomization: c }))}
@@ -400,7 +410,7 @@ export function SettingsModal({
                       playingPreview={ui.playingPreview}
                       previewLoading={ui.previewLoading}
                       voiceVolume={voiceVolume}
-                      onVoiceSelect={(v) => setVoice(prev => ({ ...prev, selectedVoice: v }))}
+                      onVoiceSelect={(voiceKey, source) => setVoice(prev => ({ ...prev, selectedVoice: voiceKey, selectedEngine: source as any }))}
                       onSpeedChange={(s) => setVoice(prev => ({ ...prev, ttsSpeed: s }))}
                       onXttsChange={(newXtts) => setXtts(prev => ({ ...prev, ...newXtts }))}
                       onShowVoiceBrowser={() => setUI(prev => ({ ...prev, showVoiceBrowser: true }))}
@@ -421,9 +431,11 @@ export function SettingsModal({
                   
                   <section className="pt-8 border-t border-white/5">
                     <UninstallTTSSection 
-                      onUninstall={() => setUI(prev => ({ ...prev, removingTTS: true }))}
-                      isRemoving={ui.removingTTS}
-                      result={ui.ttsRemovalResult}
+                      onRemove={async () => {
+                        setUI(prev => ({ ...prev, removingTTS: true }))
+                      }}
+                      removingTTS={ui.removingTTS}
+                      ttsRemovalResult={ui.ttsRemovalResult}
                     />
                   </section>
                 </div>
@@ -434,7 +446,7 @@ export function SettingsModal({
                   <section>
                     <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">System Information</h3>
                     <VersionSettings 
-                      version={appVersion}
+                      appVersion={appVersion}
                       updateStatus={updateStatus}
                       onDownloadUpdate={onDownloadUpdate}
                       onInstallUpdate={onInstallUpdate}
@@ -450,11 +462,10 @@ export function SettingsModal({
       <VoiceBrowserModal 
         isOpen={ui.showVoiceBrowser}
         onClose={() => setUI(prev => ({ ...prev, showVoiceBrowser: false }))}
-        onInstallVoice={(voiceKey) => {
+        onVoiceSelect={(voiceKey, engine) => {
           setUI(prev => ({ ...prev, installingVoice: voiceKey }))
           api?.voiceInstallVoice?.(voiceKey)
         }}
-        installingVoice={ui.installingVoice}
       />
     </div>
   )

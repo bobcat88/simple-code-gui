@@ -26,7 +26,7 @@ export function useExtensions() {
     queryKey: ['extensions'],
     queryFn: async () => {
       const exts = await window.electronAPI?.extensionsGetInstalled?.()
-      return exts || []
+      return (exts || []) as unknown as InstalledExtension[]
     },
     refetchInterval: 30000, // Refresh every 30 seconds
   })

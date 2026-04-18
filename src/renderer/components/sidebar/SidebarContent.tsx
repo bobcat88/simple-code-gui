@@ -1,7 +1,7 @@
 import React from 'react'
 import { Project, useWorkspaceStore } from '../../stores/workspace.js'
 import { Api } from '../../api/types.js'
-import { Settings, LayoutGrid, Terminal, Plus, FolderPlus, FolderSearch, Zap } from 'lucide-react'
+import { Settings, LayoutGrid, Terminal, Plus, FolderPlus, FolderSearch, Zap, ChevronRight, Cpu } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { BeadsPanel } from '../BeadsPanel.js'
 import { GSDStatus } from '../GSDStatus.js'
@@ -36,6 +36,7 @@ export interface SidebarContentProps {
   onAddProject: SidebarProps['onAddProject']
   onAddProjectsFromParent: SidebarProps['onAddProjectsFromParent']
   onOpenMakeProject: SidebarProps['onOpenMakeProject']
+  onOpenSettings: SidebarProps['onOpenSettings']
   api: Api
   renderProjectItem: (project: Project) => React.ReactElement
 }
@@ -52,6 +53,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     onAddProject,
     onAddProjectsFromParent,
     onOpenMakeProject,
+    onOpenSettings,
     api,
     renderProjectItem,
   } = props
@@ -135,24 +137,30 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
   if (activeSection === 'config') {
     return (
       <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
-        <div className="p-4 border-b border-border/50 font-semibold flex items-center gap-2">
-          <Settings size={18} />
-          Configuration
+        <div className="p-4 border-b border-border/50 font-bold flex items-center justify-between bg-white/5">
+          <div className="flex items-center gap-2">
+            <Settings size={18} className="text-primary" />
+            <span className="tracking-tight">Configuration</span>
+          </div>
+          <div className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold uppercase tracking-wider">v2.0.1</div>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <div className="space-y-3">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Global Settings</h4>
             <button 
               onClick={onOpenSettings}
-              className="w-full flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all border border-transparent hover:border-white/5 group"
+              className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/10 group active:scale-[0.98]"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                  <LayoutGrid size={16} />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shadow-lg shadow-primary/5">
+                  <LayoutGrid size={18} />
                 </div>
-                <span className="text-sm">Appearance & Backend</span>
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-semibold">Appearance & Backend</span>
+                  <span className="text-[10px] text-muted-foreground">Themes, Layouts, Backend APIs</span>
+                </div>
               </div>
-              <ChevronRight size={14} className="text-muted-foreground" />
+              <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
 
@@ -188,6 +196,91 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
 
           <div className="pt-4 border-t border-white/5">
             <McpPanel projectPath={beadsProjectPath} />
+          </div>
+        </div>
+      </div>
+    )
+  } else if (activeSection === 'terminal') {
+    return (
+      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-border/50 font-bold flex items-center gap-2 bg-white/5">
+          <Terminal size={18} className="text-primary" />
+          <span className="tracking-tight">Active Sessions</span>
+        </div>
+        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          {openTabs.length > 0 ? (
+            openTabs.map((tab) => (
+              <div 
+                key={tab.id}
+                onClick={() => handlers.handleOpenAllProjects ? {} : {}} // TODO: add switch to tab handler if needed
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all border border-transparent group",
+                  "hover:bg-white/5 hover:border-white/10"
+                )}
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <Terminal size={14} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold truncate">{tab.title}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{tab.backend || 'Claude'}</div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-4 text-muted-foreground/30">
+                <Terminal size={24} />
+              </div>
+              <p className="text-sm text-muted-foreground font-medium">No active sessions</p>
+              <p className="text-xs text-muted-foreground/50 mt-1">Open a project to start an agent session.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  } else if (activeSection === 'orchestration') {
+    return (
+      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-border/50 font-bold flex items-center gap-2 bg-white/5">
+          <LayoutGrid size={18} className="text-primary" />
+          <span className="tracking-tight">Orchestration</span>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="space-y-3">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">GSD Task Status</h4>
+            <div className="p-1 rounded-2xl bg-white/5 border border-white/5">
+              <GSDStatus
+                projectPath={beadsProjectPath}
+                onCommand={(cmd) => {
+                  if (focusedTabPtyId) {
+                    api.writePty(focusedTabPtyId, cmd)
+                    setTimeout(() => api.writePty(focusedTabPtyId, '\r'), 100)
+                  }
+                }}
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-3 pt-4 border-t border-white/5">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Active Beads</h4>
+            <div className="p-1 rounded-2xl bg-white/5 border border-white/5">
+              <BeadsPanel
+                projectPath={beadsProjectPath}
+                isExpanded={true}
+                onToggle={() => {}}
+                onStartTaskInNewTab={(prompt) => {
+                  if (beadsProjectPath) onOpenSession(beadsProjectPath, undefined, undefined, prompt, true)
+                }}
+                onSendToCurrentTab={(prompt) => {
+                  if (focusedTabPtyId) {
+                    api.writePty(focusedTabPtyId, prompt)
+                    setTimeout(() => api.writePty(focusedTabPtyId, '\r'), 100)
+                  }
+                }}
+                currentTabPtyId={focusedTabPtyId}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -239,20 +332,33 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           <div className="space-y-3">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Resources</h4>
-            <a href="#" className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all border border-transparent hover:border-white/5">
+            <a 
+              href="https://github.com/bobcat88/simple-code-gui/wiki" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/10 group"
+            >
               <span className="text-sm">Documentation</span>
-              <ChevronRight size={14} className="text-muted-foreground" />
+              <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-1 transition-transform" />
             </a>
-            <a href="#" className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all border border-transparent hover:border-white/5">
+            <a 
+              href="https://github.com/bobcat88/simple-code-gui" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/10 group"
+            >
               <span className="text-sm">GitHub Repository</span>
-              <ChevronRight size={14} className="text-muted-foreground" />
+              <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-1 transition-transform" />
             </a>
           </div>
 
-          <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+          <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 shadow-lg shadow-primary/5">
             <div className="text-sm font-bold text-primary mb-1">Update Available</div>
-            <div className="text-xs text-muted-foreground mb-3">Version 2.0.1 is ready for installation.</div>
-            <button className="w-full py-2 rounded-lg bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider">
+            <div className="text-xs text-muted-foreground mb-3 leading-relaxed">Version 2.0.1 brings significant performance improvements and UI refinements.</div>
+            <button 
+              onClick={() => alert("Update functionality is being integrated. Please check GitHub for the latest release.")}
+              className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-md shadow-primary/20"
+            >
               Download Now
             </button>
           </div>

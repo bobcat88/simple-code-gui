@@ -2,7 +2,7 @@ import React, { useCallback, useState, useRef } from 'react'
 import { Terminal } from '../Terminal.js'
 import { ErrorBoundary } from '../ErrorBoundary.js'
 import type { ComputedRect } from '../tile-tree.js'
-import type { DropZone } from '../tiled-layout-utils.js'
+import type { DropZone, TileLayout } from '../tiled-layout-utils.js'
 import { computeDropZone } from '../tiled-layout-utils.js'
 import type { Theme } from '../../themes.js'
 import type { Api } from '../../api/types.js'
@@ -25,7 +25,7 @@ interface TileTerminalProps {
   draggedTile: string | null
   draggedSubTab: { tabId: string; tileId: string } | null
   draggedSidebarProject: string | null
-  flatLayout: { id: string; x: number; y: number; width: number; height: number }[]
+  flatLayout: TileLayout[]
   highlightedEdges: Set<string>
   viewportSize: { width: number; height: number }
   clientToCanvasPercent: ClientToCanvasPercent

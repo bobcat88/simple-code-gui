@@ -104,6 +104,7 @@ export interface OpenTab {
   projectPath: string
   sessionId?: string
   title: string
+  customTitle?: boolean
   ptyId: string
   backend?: BackendSelection
 }
@@ -176,6 +177,7 @@ export type ApiOpenSessionCallback = (event: ApiOpenSessionEvent) => void
  * Core API interface for the renderer
  */
 export interface Api {
+  [key: string]: any;
   // Optional: Desktop-only voice catalog and XTTS management
   voiceGetInstalled?: () => Promise<Array<{ key: string; displayName: string; source: 'builtin' | 'downloaded' | 'custom'; quality?: string; language?: string }>>
   xttsGetVoices?: () => Promise<Array<{ id: string; name: string; language: string; createdAt: number }>>

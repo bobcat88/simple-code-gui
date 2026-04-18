@@ -28,7 +28,7 @@ export function useUpdater(): UseUpdaterReturn {
   // Subscribe to updater events
   useEffect(() => {
     if (!window.electronAPI?.onUpdaterStatus) return
-    const unsubscribe = window.electronAPI?.onUpdaterStatus((data) => {
+    const unsubscribe = window.electronAPI?.onUpdaterStatus((data: any) => {
       setUpdateStatus({
         status: data.status as UpdateStatusType,
         version: data.version,
@@ -46,11 +46,11 @@ export function useUpdater(): UseUpdaterReturn {
       version: prev.version,
       progress: 0
     }))
-    window.electronAPI?.downloadUpdate().then(result => {
+    window.electronAPI?.downloadUpdate().then((result: any) => {
       if (!result.success) {
         setUpdateStatus({ status: 'error', error: result.error })
       }
-    }).catch(e => {
+    }).catch((e: any) => {
       setUpdateStatus({ status: 'error', error: String(e) })
     })
   }, [])

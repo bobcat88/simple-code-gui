@@ -70,7 +70,7 @@ export class TauriBackend implements ExtendedApi {
       return await tauriIpc.getWorkspace();
     } catch (e) {
       console.error('Failed to get workspace from Tauri', e);
-      return { projects: [], categories: [] };
+      return { projects: [], categories: [], openTabs: [], activeTabId: null };
     }
   }
 

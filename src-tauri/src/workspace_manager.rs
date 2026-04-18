@@ -20,19 +20,10 @@ pub struct ProjectCategory {
     pub color: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct Workspace {
     pub projects: Vec<Project>,
     pub categories: Vec<ProjectCategory>,
-}
-
-impl Default for Workspace {
-    fn default() -> Self {
-        Self {
-            projects: Vec::new(),
-            categories: Vec::new(),
-        }
-    }
 }
 
 pub struct WorkspaceManager {

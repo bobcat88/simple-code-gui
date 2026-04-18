@@ -72,7 +72,7 @@ export const setupTauriShim = () => {
       ttsSpeed: s.tts_speed
     })),
     voiceApplySettings: async (settings: any) => invoke('save_settings', { 
-      settings: { ...await invoke('get_settings'), ...settings } 
+      settings: { ...(await invoke('get_settings') as any), ...settings } 
     }),
     voiceGetInstalled: async () => [],
     voiceSpeak: async (text: string) => invoke('voice_speak', { text }),

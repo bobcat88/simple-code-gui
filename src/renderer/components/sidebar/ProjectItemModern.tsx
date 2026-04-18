@@ -17,7 +17,7 @@ interface ProjectItemModernProps {
   sessions: ClaudeSession[]
   taskCounts?: { open: number; inProgress: number }
   dropTarget: DropTarget | null
-  editInputRef: React.RefObject<HTMLInputElement | null>
+  editInputRef: React.RefObject<HTMLInputElement>
   onToggleExpand: (e: React.MouseEvent) => void
   onOpenSession: (sessionId?: string, slug?: string, isNewSession?: boolean) => void
   onRunExecutable: () => void

@@ -62,8 +62,8 @@ export function useWorkspaceLoader({
         
         // Apply global Codex styling
         applyGlobalStyling(
-          loadedSettings.general?.accentColor || '#3b82f6',
-          loadedSettings.general?.glowEnabled !== false
+          loadedSettings.themeCustomization?.accentColor || '#3b82f6',
+          true
         )
         
         setCurrentTheme(theme)
@@ -276,8 +276,8 @@ export function useWorkspaceLoader({
           
           // Re-apply styling if needed
           applyGlobalStyling(
-            newSettings.general?.accentColor || '#3b82f6',
-            newSettings.general?.glowEnabled !== false
+            newSettings.themeCustomization?.accentColor || '#3b82f6',
+            true
           )
           
           const theme = getThemeById(newSettings.theme || 'default')

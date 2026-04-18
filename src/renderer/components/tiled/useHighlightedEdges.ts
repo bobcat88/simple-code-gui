@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import type { TileLayout } from '../tiled-layout-utils.js'
-import type { TileResizeState } from './types.js'
+import type { FlatTileResizeState } from './useTileResizing.js'
 
 const EPSILON = 0.5
 
@@ -61,7 +61,7 @@ export function useGetHighlightedEdges(
 
 export function useHighlightedEdges(
   hoveredEdge: { tileId: string; edge: string } | null,
-  tileResizing: TileResizeState | null,
+  tileResizing: FlatTileResizeState | null,
   getHighlightedEdges: (hovered: { tileId: string; edge: string } | null) => Set<string>
 ): Set<string> {
   return useMemo(() => {

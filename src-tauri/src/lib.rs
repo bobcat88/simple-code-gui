@@ -29,6 +29,21 @@ async fn spawn_session(
     session_id: Option<String>,
     slug: Option<String>,
 ) -> Result<String, String> {
+    println!("[spawn_session] project: {}, backend: {}", cwd, backend);
+    
+    // Validate CWD
+    let path = std::path::Path::new(&cwd);
+    if !path.exists() {
+        let err = format!("Project path does not exist: {}", cwd);
+        println!("[spawn_session] Error: {}", err);
+        return Err(err);
+    }
+    if !path.is_dir() {
+        let err = format!("Project path is not a directory: {}", cwd);
+        println!("[spawn_session] Error: {}", err);
+        return Err(err);
+    }
+
     let mut args = Vec::new();
     let mut cmd_name = backend.clone();
 

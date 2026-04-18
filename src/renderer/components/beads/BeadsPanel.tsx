@@ -81,7 +81,7 @@ export function BeadsPanel({
   // Check dispatch status on mount and when backend changes
   useEffect(() => {
     if (backendKind !== 'kspec' || !projectPath) return
-    window.electronAPI?.kspecDispatchStatus?.(projectPath).then(result => {
+    window.electronAPI?.kspecDispatchStatus?.(projectPath).then((result: any) => {
       setDispatchRunning(!!result?.running)
     }).catch(() => {})
   }, [backendKind, projectPath])

@@ -19,10 +19,10 @@ export interface UseTerminalSetupOptions {
 
 export interface UseTerminalSetupReturn {
   containerRef: RefObject<HTMLDivElement>
-  terminalRef: RefObject<XTerm | null>
-  fitAddonRef: RefObject<FitAddon | null>
-  userScrolledUpRef: RefObject<boolean>
-  currentLineInputRef: RefObject<string>
+  terminalRef: MutableRefObject<XTerm | null>
+  fitAddonRef: MutableRefObject<FitAddon | null>
+  userScrolledUpRef: MutableRefObject<boolean>
+  currentLineInputRef: MutableRefObject<string>
   inputSuppressedRef: MutableRefObject<boolean>
 }
 

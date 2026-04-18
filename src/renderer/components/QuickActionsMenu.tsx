@@ -30,7 +30,7 @@ export function QuickActionsMenu({ projectPath, ptyId, onOpenExtensions }: Quick
     if (isOpen && projectPath) {
       setLoading(true)
       window.electronAPI?.extensionsGetCommands(projectPath)
-        .then(cmds => {
+        .then((cmds: Command[]) => {
           setCommands(cmds || [])
         })
         .catch(() => {

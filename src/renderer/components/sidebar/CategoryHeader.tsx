@@ -10,7 +10,7 @@ interface CategoryHeaderProps {
   isDragging: boolean
   isEditing: boolean
   editingName: string
-  editInputRef: React.RefObject<HTMLInputElement | null>
+  editInputRef: React.RefObject<HTMLInputElement>
   draggedCategory: string | null
   draggedProject: string | null
   onToggleCollapse: () => void

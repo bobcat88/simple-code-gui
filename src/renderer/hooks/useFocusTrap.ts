@@ -5,7 +5,7 @@ import { useEffect, useRef, RefObject } from 'react'
  * Implements focus cycling: Tab at last element goes to first, Shift+Tab at first goes to last.
  * On mount, focuses the first focusable element.
  */
-export function useFocusTrap<T extends HTMLElement>(isActive: boolean = true): RefObject<T | null> {
+export function useFocusTrap<T extends HTMLElement>(isActive: boolean = true): RefObject<T> {
   const containerRef = useRef<T>(null)
 
   useEffect(() => {

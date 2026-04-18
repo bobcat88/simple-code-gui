@@ -1,7 +1,27 @@
 import { useEffect, useCallback, MutableRefObject } from 'react'
 import type { TileLayout } from '../tiled-layout-utils.js'
 import { findContiguousTilesOnDivider, findOverlappingTilesOnDivider, MIN_SIZE } from '../tiled-layout-utils.js'
-import type { TileResizeState, ResizeEdge, ClientToCanvasPercent } from './types.js'
+import type { ResizeEdge, ClientToCanvasPercent } from './types.js'
+
+export interface FlatTileResizeState {
+  tileId: string
+  edge: ResizeEdge
+  startX: number
+  startY: number
+  startLayout: TileLayout
+  tilesLeftOfRightDivider: TileLayout[]
+  tilesRightOfRightDivider: TileLayout[]
+  tilesLeftOfLeftDivider: TileLayout[]
+  tilesRightOfLeftDivider: TileLayout[]
+  tilesAboveBottomDivider: TileLayout[]
+  tilesBelowBottomDivider: TileLayout[]
+  tilesAboveTopDivider: TileLayout[]
+  tilesBelowTopDivider: TileLayout[]
+  rightDividerPos: number
+  leftDividerPos: number
+  bottomDividerPos: number
+  topDividerPos: number
+}
 
 function getCursorForEdge(edge: string): string {
   switch (edge) {
@@ -24,7 +44,7 @@ function getCursorForEdge(edge: string): string {
 
 export function useStartTileResize(
   effectiveLayout: TileLayout[],
-  setTileResizing: (state: TileResizeState | null) => void,
+  setTileResizing: (state: FlatTileResizeState | null) => void,
   setHoveredEdge: (state: { tileId: string; edge: string } | null) => void
 ): (e: React.MouseEvent, tileId: string, edge: ResizeEdge) => void {
   return useCallback((e: React.MouseEvent, tileId: string, edge: ResizeEdge) => {
@@ -73,11 +93,11 @@ export function useStartTileResize(
 }
 
 export function useTileResizeEffect(
-  tileResizing: TileResizeState | null,
+  tileResizing: FlatTileResizeState | null,
   containerRef: MutableRefObject<HTMLDivElement | null>,
   effectiveLayoutRef: MutableRefObject<TileLayout[]>,
   onLayoutChangeRef: MutableRefObject<(layout: TileLayout[]) => void>,
-  setTileResizing: (state: TileResizeState | null) => void,
+  setTileResizing: (state: FlatTileResizeState | null) => void,
   clientToCanvasPercentRef?: MutableRefObject<ClientToCanvasPercent>
 ): void {
   useEffect(() => {

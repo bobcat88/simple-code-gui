@@ -7,10 +7,11 @@ use portable_pty::{native_pty_system, Child, CommandBuilder, PtyPair, PtySize};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use tauri::{AppHandle, Emitter};
-use crate::platform::{get_enhanced_path, is_windows};
+use crate::platform::is_windows;
 use std::path::PathBuf;
 use regex::Regex;
 
+#[allow(dead_code)]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct SessionInfo {
     pub id: String,
@@ -70,17 +71,58 @@ pub struct PtyManager {
 }
 
 fn find_executable(backend: &str, portable_dirs: &[PathBuf]) -> String {
+    let enhanced_path = crate::platform::get_enhanced_path(portable_dirs);
+    let sep = crate::platform::get_path_sep();
+    
     if is_windows() {
         let ext = if backend == "aider" { ".exe" } else { ".cmd" };
         let exe_name = format!("{}{}", backend, ext);
         
+        // First check portable dirs
         for dir in portable_dirs {
             let path = dir.join(&exe_name);
             if path.exists() {
                 return path.to_string_lossy().into_owned();
             }
         }
+        
+        // Then check enhanced path
+        for part in enhanced_path.split(sep) {
+            let path = PathBuf::from(part).join(&exe_name);
+            if path.exists() {
+                return path.to_string_lossy().into_owned();
+            }
+        }
+    } else {
+        // On Unix, check portable dirs first
+        for dir in portable_dirs {
+            let path = dir.join(backend);
+            if path.exists() {
+                return path.to_string_lossy().into_owned();
+            }
+        }
+        
+        // Then check enhanced path
+        for part in enhanced_path.split(sep) {
+            if part.is_empty() { continue; }
+            let path = PathBuf::from(part).join(backend);
+            if path.exists() {
+                // Check if it's executable
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::MetadataExt;
+                    if let Ok(metadata) = std::fs::metadata(&path) {
+                        if metadata.mode() & 0o111 != 0 {
+                            return path.to_string_lossy().into_owned();
+                        }
+                    }
+                }
+                #[cfg(not(unix))]
+                return path.to_string_lossy().into_owned();
+            }
+        }
     }
+    
     backend.to_string()
 }
 
@@ -92,6 +134,7 @@ impl PtyManager {
         }
     }
 
+    #[allow(dead_code)]
     pub fn set_portable_dirs(&self, dirs: Vec<PathBuf>) {
         *self.portable_bin_dirs.lock() = dirs;
     }
@@ -115,21 +158,29 @@ impl PtyManager {
 
         let portable_dirs = self.portable_bin_dirs.lock().clone();
         let exe = find_executable(&backend, &portable_dirs);
+        println!("[PTY] Found executable: {}", exe);
         
         let mut cmd = CommandBuilder::new(exe);
         cmd.cwd(cwd.clone());
-        cmd.args(args);
+        cmd.args(args.clone());
         
         // Environment
         let enhanced_path = crate::platform::get_enhanced_path(&portable_dirs);
+        println!("[PTY] Enhanced PATH: {}", enhanced_path);
         cmd.env("PATH", &enhanced_path);
         if crate::platform::is_windows() {
             cmd.env("Path", &enhanced_path);
         }
         cmd.env("SIMPLE_CODE_GUI", "1");
 
-        let child = pair.slave.spawn_command(cmd).map_err(|e: anyhow::Error| e.to_string())?;
+        println!("[PTY] Spawning command in {}", cwd);
+        let child = pair.slave.spawn_command(cmd).map_err(|e: anyhow::Error| {
+            let err_msg = format!("Failed to spawn command: {}", e);
+            println!("[PTY] Error: {}", err_msg);
+            err_msg
+        })?;
         
+        println!("[PTY] Command spawned successfully with ID: {}", id);
         let output_buffer = Arc::new(Mutex::new(OutputBuffer::new()));
         let output_buffer_clone = Arc::clone(&output_buffer);
         let id_clone = id.clone();
@@ -197,6 +248,7 @@ impl PtyManager {
         }
     }
 
+    #[allow(dead_code)]
     pub fn list_sessions(&self) -> Vec<SessionInfo> {
         let sessions = self.sessions.lock();
         sessions.values().map(|s| SessionInfo {
@@ -235,6 +287,7 @@ impl PtyManager {
         dead_ids
     }
 
+    #[allow(dead_code)]
     pub fn read_output(&self, id: &str, max_lines: usize) -> Option<Vec<String>> {
         let sessions = self.sessions.lock();
         if let Some(session) = sessions.get(id) {

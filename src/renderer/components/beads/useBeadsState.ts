@@ -37,7 +37,7 @@ export function useBeadsState(projectPath: string | null): BeadsStateResult {
 
   // Handle install progress events
   useEffect(() => {
-    const cleanup = window.electronAPI?.onInstallProgress((data) => {
+    const cleanup = window.electronAPI?.onInstallProgress((data: any) => {
       if (data.type === 'python') {
         const percent = data.percent !== undefined ? ` (${data.percent}%)` : ''
         setBeadsState((prev) => {
