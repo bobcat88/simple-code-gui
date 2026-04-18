@@ -28,6 +28,7 @@ import { IconBar } from '../components/IconBar'
 import { Header } from '../components/Header'
 import { LayoutGrid, Terminal as TerminalIcon } from 'lucide-react'
 import { cn } from '../lib/utils'
+import { Spotlight } from '../components/Spotlight'
 
 export interface MainAppProps {
   api: Api
@@ -453,32 +454,16 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
           onProjectCreated={handleProjectCreated}
         />
 
-        {/* Spotlight Search Overlay */}
-        {spotlightOpen && (
-          <div className="spotlight-overlay" onClick={() => setSpotlightOpen(false)}>
-            <div className="spotlight-container glass-panel" onClick={e => e.stopPropagation()}>
-              <input 
-                autoFocus
-                type="text" 
-                placeholder="Search projects, commands, or settings... (Cmd+K)"
-                className="w-full bg-transparent border-none text-xl outline-none px-4 py-3 text-white placeholder:text-white/20"
-              />
-              <div className="mt-4 border-t border-white/5 pt-4 px-2">
-                <div className="text-[10px] uppercase text-white/30 font-bold mb-2 px-2">Suggestions</div>
-                <div className="flex flex-col gap-1">
-                  <div className="px-3 py-2 hover:bg-white/5 rounded-lg cursor-pointer flex items-center justify-between text-sm group">
-                    <span>New Project</span>
-                    <span className="text-[10px] text-white/20 group-hover:text-white/40 border border-white/10 px-1.5 rounded">Cmd+N</span>
-                  </div>
-                  <div className="px-3 py-2 hover:bg-white/5 rounded-lg cursor-pointer flex items-center justify-between text-sm group">
-                    <span>Settings</span>
-                    <span className="text-[10px] text-white/20 group-hover:text-white/40 border border-white/10 px-1.5 rounded">Cmd+,</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <Spotlight 
+          isOpen={spotlightOpen}
+          onClose={() => setSpotlightOpen(false)}
+          projects={projects}
+          openTabs={openTabs}
+          onOpenSession={handleOpenSession}
+          onOpenSettings={openSettings}
+          onAddProject={openMakeProject}
+          onSwitchToTab={setActiveTab}
+        />
       </div>
     </div>
   )

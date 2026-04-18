@@ -14,7 +14,12 @@ use std::thread;
 use settings_manager::{SettingsManager, AppSettings};
 use workspace_manager::{WorkspaceManager, Workspace};
 use voice_manager::{VoiceManager, voice_speak, voice_stop};
-use orchestration::{get_beads_tasks, sync_workflow, OrchestrationState};
+use orchestration::{
+    get_beads_tasks, sync_workflow, beads_check, beads_init, beads_list, 
+    beads_show, beads_create, beads_start, beads_complete, beads_delete, 
+    beads_update, beads_watch, beads_unwatch, kspec_check, kspec_init, 
+    kspec_ensure_daemon, OrchestrationState
+};
 use mcp_bridge::{register_mcp_server, get_registered_mcp_servers, McpManager, mcp_list_tools, mcp_call_tool, mcp_list_resources, mcp_read_resource, mcp_load_config};
 use tauri::{AppHandle, State, Manager, Emitter};
 use tauri_plugin_dialog::DialogExt;
@@ -267,6 +272,20 @@ pub fn run() {
             voice_stop,
             get_beads_tasks,
             sync_workflow,
+            beads_check,
+            beads_init,
+            beads_list,
+            beads_show,
+            beads_create,
+            beads_start,
+            beads_complete,
+            beads_delete,
+            beads_update,
+            beads_watch,
+            beads_unwatch,
+            kspec_check,
+            kspec_init,
+            kspec_ensure_daemon,
             register_mcp_server,
             get_registered_mcp_servers,
             discover_sessions,

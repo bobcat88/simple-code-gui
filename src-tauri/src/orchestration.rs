@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::process::Command;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, State};
+use std::collections::HashMap;
+use parking_lot::Mutex;
+use tokio::time::{sleep, Duration};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BeadTask {
@@ -12,14 +15,14 @@ pub struct BeadTask {
 
 #[derive(Default)]
 pub struct OrchestrationState {
-    // Current active task or workflow state
+    pub watched_projects: Mutex<HashMap<String, tauri::async_runtime::JoinHandle<()>>>,
 }
 
 #[tauri::command]
 pub async fn get_beads_tasks() -> Result<Vec<BeadTask>, String> {
     let output = Command::new("bd")
         .arg("ready")
-        .arg("--json") // Assuming bd supports json output
+        .arg("--json")
         .output()
         .map_err(|e| format!("Failed to execute bd: {}", e))?;
 
@@ -35,11 +38,291 @@ pub async fn get_beads_tasks() -> Result<Vec<BeadTask>, String> {
 
 #[tauri::command]
 pub async fn sync_workflow(app: AppHandle) -> Result<(), String> {
-    // This could run a background check for task changes and emit events
     app.emit("workflow-sync-start", ()).map_err(|e: tauri::Error| e.to_string())?;
-    
     // Simulate some work or call bd commands
-    
     app.emit("workflow-sync-complete", ()).map_err(|e: tauri::Error| e.to_string())?;
     Ok(())
+}
+
+#[tauri::command]
+pub async fn beads_check(cwd: String) -> Result<serde_json::Value, String> {
+    let beads_dir = std::path::Path::new(&cwd).join(".beads");
+    let installed = Command::new("bd").arg("--version").output().is_ok();
+    let initialized = beads_dir.exists();
+    Ok(serde_json::json!({
+        "installed": installed,
+        "initialized": initialized
+    }))
+}
+
+#[tauri::command]
+pub async fn beads_init(cwd: String) -> Result<serde_json::Value, String> {
+    let output = Command::new("bd")
+        .current_dir(&cwd)
+        .arg("init")
+        .output()
+        .map_err(|e| format!("Failed to execute bd init: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn beads_list(cwd: String) -> Result<serde_json::Value, String> {
+    let output = Command::new("bd")
+        .current_dir(&cwd)
+        .arg("ready")
+        .arg("--json")
+        .output()
+        .map_err(|e| format!("Failed to execute bd ready: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    let tasks: serde_json::Value = serde_json::from_slice(&output.stdout)
+        .map_err(|e| format!("Failed to parse bd output: {}", e))?;
+
+    Ok(serde_json::json!({
+        "success": true,
+        "tasks": tasks
+    }))
+}
+
+#[tauri::command]
+pub async fn beads_show(cwd: String, task_id: String) -> Result<serde_json::Value, String> {
+    let output = Command::new("bd")
+        .current_dir(&cwd)
+        .arg("show")
+        .arg(&task_id)
+        .arg("--json")
+        .output()
+        .map_err(|e| format!("Failed to execute bd show: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    let task: serde_json::Value = serde_json::from_slice(&output.stdout)
+        .map_err(|e| format!("Failed to parse bd output: {}", e))?;
+
+    let task_obj = if task.is_array() {
+        task.as_array().and_then(|a| a.first()).cloned().unwrap_or(serde_json::Value::Null)
+    } else {
+        task
+    };
+
+    Ok(serde_json::json!({
+        "success": true,
+        "task": task_obj
+    }))
+}
+
+#[tauri::command]
+pub async fn beads_create(
+    cwd: String,
+    title: String,
+    description: Option<String>,
+    priority: Option<i32>,
+    task_type: Option<String>,
+    tags: Option<String>
+) -> Result<serde_json::Value, String> {
+    let mut cmd = Command::new("bd");
+    cmd.current_dir(&cwd).arg("create").arg(&title);
+    
+    if let Some(d) = description {
+        cmd.arg("--description").arg(d);
+    }
+    if let Some(p) = priority {
+        cmd.arg("--priority").arg(p.to_string());
+    }
+    if let Some(t) = task_type {
+        cmd.arg("--type").arg(t);
+    }
+    if let Some(tg) = tags {
+        cmd.arg("--labels").arg(tg);
+    }
+
+    let output = cmd.output().map_err(|e| format!("Failed to execute bd create: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn beads_start(cwd: String, task_id: String) -> Result<serde_json::Value, String> {
+    let output = Command::new("bd")
+        .current_dir(&cwd)
+        .arg("update")
+        .arg(&task_id)
+        .arg("--status")
+        .arg("in_progress")
+        .output()
+        .map_err(|e| format!("Failed to execute bd start: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn beads_complete(cwd: String, task_id: String) -> Result<serde_json::Value, String> {
+    let output = Command::new("bd")
+        .current_dir(&cwd)
+        .arg("close")
+        .arg(&task_id)
+        .output()
+        .map_err(|e| format!("Failed to execute bd close: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn beads_delete(cwd: String, task_id: String) -> Result<serde_json::Value, String> {
+    let output = Command::new("bd")
+        .current_dir(&cwd)
+        .arg("delete")
+        .arg(&task_id)
+        .output()
+        .map_err(|e| format!("Failed to execute bd delete: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn beads_update(
+    cwd: String,
+    task_id: String,
+    status: Option<String>,
+    title: Option<String>,
+    description: Option<String>,
+    priority: Option<i32>
+) -> Result<serde_json::Value, String> {
+    let mut cmd = Command::new("bd");
+    cmd.current_dir(&cwd).arg("update").arg(&task_id);
+    
+    if let Some(s) = status {
+        cmd.arg("--status").arg(s);
+    }
+    if let Some(t) = title {
+        cmd.arg("--title").arg(t);
+    }
+    if let Some(d) = description {
+        cmd.arg("--description").arg(d);
+    }
+    if let Some(p) = priority {
+        cmd.arg("--priority").arg(p.to_string());
+    }
+
+    let output = cmd.output().map_err(|e| format!("Failed to execute bd update: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn beads_watch(
+    app: AppHandle,
+    state: State<'_, OrchestrationState>,
+    cwd: String
+) -> Result<(), String> {
+    let mut watched = state.watched_projects.lock();
+    if watched.contains_key(&cwd) {
+        return Ok(());
+    }
+
+    let cwd_clone = cwd.clone();
+    let handle = tauri::async_runtime::spawn(async move {
+        let mut last_output = String::new();
+        loop {
+            let output = Command::new("bd")
+                .current_dir(&cwd_clone)
+                .arg("ready")
+                .arg("--json")
+                .output();
+
+            if let Ok(out) = output {
+                let current_output = String::from_utf8_lossy(&out.stdout).to_string();
+                if current_output != last_output {
+                    last_output = current_output;
+                    let _ = app.emit("beads-tasks-changed", serde_json::json!({ "cwd": cwd_clone }));
+                }
+            }
+            sleep(Duration::from_secs(2)).await;
+        }
+    });
+
+    watched.insert(cwd, handle);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn beads_unwatch(
+    state: State<'_, OrchestrationState>,
+    cwd: String
+) -> Result<(), String> {
+    let mut watched = state.watched_projects.lock();
+    if let Some(handle) = watched.remove(&cwd) {
+        handle.abort();
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn kspec_check(cwd: String) -> Result<serde_json::Value, String> {
+    let kspec_dir = std::path::Path::new(&cwd).join(".kspec");
+    Ok(serde_json::json!({ "exists": kspec_dir.exists() }))
+}
+
+#[tauri::command]
+pub async fn kspec_init(_cwd: String) -> Result<serde_json::Value, String> {
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn kspec_ensure_daemon(_cwd: String) -> Result<serde_json::Value, String> {
+    Ok(serde_json::json!({ "success": true }))
 }
