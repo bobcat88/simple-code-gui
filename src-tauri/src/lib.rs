@@ -15,7 +15,7 @@ use settings_manager::{SettingsManager, AppSettings};
 use workspace_manager::{WorkspaceManager, Workspace};
 use voice_manager::{VoiceManager, voice_speak, voice_stop};
 use orchestration::{get_beads_tasks, sync_workflow, OrchestrationState};
-use mcp_bridge::{register_mcp_server, get_registered_mcp_servers, McpManager};
+use mcp_bridge::{register_mcp_server, get_registered_mcp_servers, McpManager, mcp_list_tools, mcp_call_tool, mcp_list_resources, mcp_read_resource, mcp_load_config};
 use tauri::{AppHandle, State, Manager, Emitter};
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
@@ -281,7 +281,12 @@ pub fn run() {
             extension_manager::extensions_disable_for_project,
             extension_manager::extensions_fetch_from_url,
             extension_manager::extensions_add_custom_url,
-            extension_manager::extensions_set_config
+            extension_manager::extensions_set_config,
+            mcp_list_tools,
+            mcp_call_tool,
+            mcp_list_resources,
+            mcp_read_resource,
+            mcp_load_config
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -182,6 +182,15 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [spotlightOpen])
 
+  // Load MCP config on mount
+  useEffect(() => {
+    if (isTauri && api.mcpLoadConfig) {
+      api.mcpLoadConfig().catch(err => {
+        console.error('Failed to load MCP config:', err);
+      });
+    }
+  }, [api, isTauri]);
+
   // Keep ref in sync for callbacks
   useEffect(() => {
     voiceOutputEnabledRef.current = voiceOutputEnabled

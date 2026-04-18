@@ -199,6 +199,11 @@ export interface Api {
   extensionsFetchFromUrl?: (url: string) => Promise<any | null>
   extensionsAddCustomUrl?: (url: string) => Promise<void>
   extensionsSetConfig?: (id: string, config: any) => Promise<void>
+  mcpListTools?: (serverName: string) => Promise<any>
+  mcpCallTool?: (serverName: string, toolName: string, args: any) => Promise<any>
+  mcpListResources?: (serverName: string) => Promise<any>
+  mcpReadResource?: (serverName: string, uri: string) => Promise<any>
+  mcpLoadConfig?: () => Promise<void>
 
   // Optional: API server control (desktop only)
   apiStart?: (projectPath: string, port: number) => Promise<{ success: boolean; error?: string }>

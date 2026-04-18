@@ -72,4 +72,16 @@ export const tauriIpc = {
     invoke<void>('extensions_add_custom_url', { url }),
   extensionsSetConfig: (id: string, config: any) =>
     invoke<void>('extensions_set_config', { id, config }),
+
+  // MCP Bridge
+  mcpListTools: (serverName: string) =>
+    invoke<any>('mcp_list_tools', { serverName }),
+  mcpCallTool: (serverName: string, toolName: string, args: any) =>
+    invoke<any>('mcp_call_tool', { serverName, toolName, args }),
+  mcpListResources: (serverName: string) =>
+    invoke<any>('mcp_list_resources', { serverName }),
+  mcpReadResource: (serverName: string, uri: string) =>
+    invoke<any>('mcp_read_resource', { serverName, uri }),
+  mcpLoadConfig: () =>
+    invoke<void>('mcp_load_config'),
 };

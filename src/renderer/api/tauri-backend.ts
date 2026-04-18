@@ -166,6 +166,13 @@ export class TauriBackend implements ExtendedApi {
   async extensionsFetchFromUrl(url: string): Promise<any | null> { return await tauriIpc.extensionsFetchFromUrl(url); }
   async extensionsAddCustomUrl(url: string): Promise<void> { await tauriIpc.extensionsAddCustomUrl(url); }
   async extensionsSetConfig(id: string, config: any): Promise<void> { await tauriIpc.extensionsSetConfig(id, config); }
+  
+  // MCP Bridge
+  async mcpListTools(serverName: string): Promise<any> { return await tauriIpc.mcpListTools(serverName); }
+  async mcpCallTool(serverName: string, toolName: string, args: any): Promise<any> { return await tauriIpc.mcpCallTool(serverName, toolName, args); }
+  async mcpListResources(serverName: string): Promise<any> { return await tauriIpc.mcpListResources(serverName); }
+  async mcpReadResource(serverName: string, uri: string): Promise<any> { return await tauriIpc.mcpReadResource(serverName, uri); }
+  async mcpLoadConfig(): Promise<void> { await tauriIpc.mcpLoadConfig(); }
 
   // Updater Implementation
   async checkForUpdate(): Promise<{ available: boolean; version?: string; body?: string }> {

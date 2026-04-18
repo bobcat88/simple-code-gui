@@ -52,7 +52,17 @@ export const setupTauriShim = () => {
     gitInstall: async () => ({ success: true }),
     
     // Extensions
-    extensionsGetInstalled: async () => [],
+    extensionsFetchRegistry: (force: boolean) => invoke('extensions_fetch_registry', { force }),
+    extensionsGetInstalled: () => invoke('extensions_get_installed'),
+    extensionsInstallSkill: (ext: any, scope: string) => invoke('extensions_install_skill', { ext, scope }),
+    extensionsInstallMcp: (ext: any) => invoke('extensions_install_mcp', { ext }),
+    extensionsRemove: (id: string) => invoke('extensions_remove', { id }),
+    extensionsEnableForProject: (id: string, path: string) => invoke('extensions_enable_for_project', { id, path }),
+    extensionsDisableForProject: (id: string, path: string) => invoke('extensions_disable_for_project', { id, path }),
+    extensionsGetCustomUrls: () => invoke('extensions_get_custom_urls'),
+    extensionsAddCustomUrl: (url: string) => invoke('extensions_add_custom_url', { url }),
+    extensionsFetchFromUrl: (url: string) => invoke('extensions_fetch_from_url', { url }),
+    extensionsSetConfig: (id: string, config: any) => invoke('extensions_set_config', { id, config }),
     
     // Updater (Stubs)
     onUpdaterStatus: (callback: any) => () => {},
@@ -87,5 +97,10 @@ export const setupTauriShim = () => {
     // MCP Bridge
     mcpRegisterServer: (config: any) => invoke('register_mcp_server', { config }),
     mcpGetServers: () => invoke('get_registered_mcp_servers'),
+    mcpListTools: (serverName: string) => invoke('mcp_list_tools', { serverName }),
+    mcpCallTool: (serverName: string, toolName: string, args: any) => invoke('mcp_call_tool', { serverName, toolName, args }),
+    mcpListResources: (serverName: string) => invoke('mcp_list_resources', { serverName }),
+    mcpReadResource: (serverName: string, uri: string) => invoke('mcp_read_resource', { serverName, uri }),
+    mcpLoadConfig: () => invoke('mcp_load_config'),
   };
 };
