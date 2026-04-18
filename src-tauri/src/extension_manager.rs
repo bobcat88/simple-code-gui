@@ -256,14 +256,71 @@ pub async fn extensions_remove(id: String) -> Result<serde_json::Value, String> 
 }
 
 #[tauri::command]
-pub async fn extensions_enable_for_project(_id: String, _project_path: String) -> Result<(), String> {
-    // For now, just a stub
+pub async fn extensions_enable_for_project(id: String, project_path: String) -> Result<(), String> {
+    let mut installed = extensions_get_installed().await?;
+    let mut changed = false;
+
+    // Check if we already have a project-specific entry
+    let project_entry_exists = installed.iter().any(|e| e.extension.id == id && e.project_path.as_deref() == Some(&project_path));
+
+    if !project_entry_exists {
+        // Find the global entry to copy from
+        if let Some(global_ext) = installed.iter().find(|e| e.extension.id == id && e.scope == "global").cloned() {
+            let mut new_ext = global_ext;
+            new_ext.scope = "project".to_string();
+            new_ext.project_path = Some(project_path);
+            new_ext.enabled = true;
+            installed.push(new_ext);
+            changed = true;
+        }
+    } else {
+        // Just enable it
+        if let Some(ext) = installed.iter_mut().find(|e| e.extension.id == id && e.project_path.as_deref() == Some(&project_path)) {
+            if !ext.enabled {
+                ext.enabled = true;
+                changed = true;
+            }
+        }
+    }
+
+    if changed {
+        let path = get_installed_json_path();
+        let json = serde_json::to_string_pretty(&installed).map_err(|e| e.to_string())?;
+        fs::write(path, json).map_err(|e| e.to_string())?;
+    }
+    
     Ok(())
 }
 
 #[tauri::command]
-pub async fn extensions_disable_for_project(_id: String, _project_path: String) -> Result<(), String> {
-    // For now, just a stub
+pub async fn extensions_disable_for_project(id: String, project_path: String) -> Result<(), String> {
+    let mut installed = extensions_get_installed().await?;
+    let mut changed = false;
+
+    if let Some(ext) = installed.iter_mut().find(|e| e.extension.id == id && e.project_path.as_deref() == Some(&project_path)) {
+        if ext.enabled {
+            ext.enabled = false;
+            changed = true;
+        }
+    } else {
+        // If it's a global extension, we might need to create a project-specific "disabled" entry 
+        // or just handle it in the frontend. For now, let's assume project-specific entries exist if toggled.
+        if let Some(global_ext) = installed.iter().find(|e| e.extension.id == id && e.scope == "global").cloned() {
+            let mut new_ext = global_ext;
+            new_ext.scope = "project".to_string();
+            new_ext.project_path = Some(project_path);
+            new_ext.enabled = false;
+            installed.push(new_ext);
+            changed = true;
+        }
+    }
+
+    if changed {
+        let path = get_installed_json_path();
+        let json = serde_json::to_string_pretty(&installed).map_err(|e| e.to_string())?;
+        fs::write(path, json).map_err(|e| e.to_string())?;
+    }
+    
     Ok(())
 }
 

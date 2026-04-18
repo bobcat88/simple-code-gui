@@ -65,9 +65,9 @@ export function FloatingInput({
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-3xl px-4 z-20">
       <div className={cn(
-        "glass-panel rounded-lg shadow-2xl transition-all duration-300",
+        "glass-panel rounded-md shadow-2xl transition-all duration-300",
         "relative overflow-hidden",
-        isFocused ? "border-primary/40 ring-1 ring-primary/10" : "border-white/5"
+        isFocused ? "border-primary/40 ring-1 ring-primary/10 shadow-primary/5" : "border-white/5"
       )}>
         <form onSubmit={handleSubmit} className="p-2 flex flex-col gap-2">
           <div className="flex items-end gap-2">
@@ -89,7 +89,7 @@ export function FloatingInput({
                   type="submit"
                   disabled={!value.trim()}
                   className={cn(
-                    "p-2 rounded-md transition-all duration-300",
+                    "p-2 rounded-sm transition-all duration-300",
                     value.trim() 
                       ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-105 active:scale-95" 
                       : "text-muted-foreground opacity-20 cursor-not-allowed"
@@ -140,7 +140,7 @@ export function FloatingInput({
 
               <button
                 type="button"
-                className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50 hover:bg-muted text-[11px] font-medium text-foreground border border-border/50 transition-colors capitalize"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-sm bg-muted/50 hover:bg-muted text-[11px] font-medium text-foreground border border-border/50 transition-colors capitalize"
               >
                 <Globe size={12} className="text-primary" />
                 <span>{currentBackend}</span>

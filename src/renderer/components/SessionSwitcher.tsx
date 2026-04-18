@@ -42,13 +42,13 @@ export function SessionSwitcher({
               data-active={isActive}
               onClick={() => onSwitchToTab(tab.id)}
               className={cn(
-                "group relative flex items-center gap-2 px-3 py-1 rounded-md cursor-pointer transition-all duration-200 min-w-[120px] max-w-[200px] h-full",
+                "group relative flex items-center gap-2 px-3 py-1 rounded-sm cursor-pointer transition-all duration-200 min-w-[120px] max-w-[200px] h-full",
                 isActive 
-                  ? "bg-white/10 text-white border border-white/10" 
+                  ? "bg-primary/10 text-white border border-primary/20" 
                   : "bg-white/5 text-white/40 border border-transparent hover:bg-white/10 hover:text-white/80"
               )}
             >
-              <TerminalIcon size={12} className={cn(isActive ? "text-primary" : "text-muted-foreground/60")} />
+              <TerminalIcon size={12} className={cn(isActive ? "text-primary shadow-[0_0_8px_rgba(59,130,246,0.5)]" : "text-muted-foreground/60")} />
               
               <span className="text-xs font-medium truncate flex-1 select-none">
                 {tab.title || 'Untitled Session'}

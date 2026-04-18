@@ -174,42 +174,47 @@ impl McpServerHandle {
 pub async fn mcp_load_config(
     manager: State<'_, McpManager>,
 ) -> Result<(), String> {
-    let config_path = dirs::home_dir()
-        .ok_or("Could not find home directory")?
-        .join(".claude")
-        .join("mcp_config.json");
+    let home = dirs::home_dir().ok_or("Could not find home directory")?;
+    
+    // Paths to check in order of priority
+    let paths = vec![
+        home.join(".claude").join("mcp_config.json"),
+        home.join(".config").join("Claude").join("claude_desktop_config.json"),
+    ];
 
-    if !config_path.exists() {
-        return Ok(());
-    }
+    for config_path in paths {
+        if !config_path.exists() {
+            continue;
+        }
 
-    let content = std::fs::read_to_string(config_path).map_err(|e| e.to_string())?;
-    let config: Value = serde_json::from_str(&content).map_err(|e| e.to_string())?;
+        let content = std::fs::read_to_string(&config_path).map_err(|e| e.to_string())?;
+        let config: Value = serde_json::from_str(&content).map_err(|e| e.to_string())?;
 
-    if let Some(mcp_servers) = config.get("mcpServers").and_then(|v| v.as_object()) {
-        for (name, server_val) in mcp_servers {
-            if let Some(command) = server_val.get("command").and_then(|v| v.as_str()) {
-                let args: Vec<String> = server_val
-                    .get("args")
-                    .and_then(|v| v.as_array())
-                    .map(|a| a.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
-                    .unwrap_or_default();
+        if let Some(mcp_servers) = config.get("mcpServers").and_then(|v| v.as_object()) {
+            for (name, server_val) in mcp_servers {
+                if let Some(command) = server_val.get("command").and_then(|v| v.as_str()) {
+                    let args: Vec<String> = server_val
+                        .get("args")
+                        .and_then(|v| v.as_array())
+                        .map(|a| a.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+                        .unwrap_or_default();
 
-                let env: HashMap<String, String> = server_val
-                    .get("env")
-                    .and_then(|v| v.as_object())
-                    .map(|o| o.iter().filter_map(|(k, v)| v.as_str().map(|s| (k.clone(), s.to_string()))).collect())
-                    .unwrap_or_default();
+                    let env: HashMap<String, String> = server_val
+                        .get("env")
+                        .and_then(|v| v.as_object())
+                        .map(|o| o.iter().filter_map(|(k, v)| v.as_str().map(|s| (k.clone(), s.to_string()))).collect())
+                        .unwrap_or_default();
 
-                let config = McpServerConfig {
-                    name: name.clone(),
-                    command: command.to_string(),
-                    args,
-                    env,
-                };
+                    let config = McpServerConfig {
+                        name: name.clone(),
+                        command: command.to_string(),
+                        args,
+                        env,
+                    };
 
-                // Register (and spawn) the server
-                let _ = register_mcp_server(config, manager.clone()).await;
+                    // Register (and spawn) the server
+                    let _ = register_mcp_server(config, manager.clone()).await;
+                }
             }
         }
     }
