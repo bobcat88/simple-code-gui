@@ -1,5 +1,6 @@
 import React from 'react'
 import { Project, useWorkspaceStore } from '../../stores/workspace.js'
+import { Api } from '../../api/types.js'
 import { Settings, LayoutGrid, Terminal, Plus, FolderPlus, FolderSearch, Zap } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { BeadsPanel } from '../BeadsPanel.js'
@@ -28,17 +29,14 @@ export interface SidebarContentProps {
   handlers: SidebarHandlers
   projects: Project[]
   openTabs: OpenTab[]
-  activeTabId: string | null
-  focusedTabId: string | null
   activeSection?: string
   onOpenSession: SidebarProps['onOpenSession']
   onRemoveProject: SidebarProps['onRemoveProject']
   onUpdateProject: SidebarProps['onUpdateProject']
   onAddProject: SidebarProps['onAddProject']
   onAddProjectsFromParent: SidebarProps['onAddProjectsFromParent']
-  onOpenSettings: SidebarProps['onOpenSettings']
   onOpenMakeProject: SidebarProps['onOpenMakeProject']
-  onOpenMobileConnect: SidebarProps['onOpenMobileConnect']
+  api: Api
   renderProjectItem: (project: Project) => React.ReactElement
 }
 
@@ -47,17 +45,14 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     state,
     handlers,
     projects,
-    activeTabId,
-    focusedTabId,
     activeSection = 'terminal',
     onOpenSession,
     onRemoveProject,
     onUpdateProject,
     onAddProject,
     onAddProjectsFromParent,
-    onOpenSettings,
     onOpenMakeProject,
-    onOpenMobileConnect,
+    api,
     renderProjectItem,
   } = props
 
@@ -139,59 +134,126 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
 
   if (activeSection === 'config') {
     return (
-      <div className="flex flex-col h-full bg-background animate-in slide-in-from-left duration-200">
-        <div className="p-4 border-b border-border font-semibold flex items-center gap-2">
+      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-border/50 font-semibold flex items-center gap-2">
           <Settings size={18} />
           Configuration
         </div>
-        <div className="flex-1 overflow-y-auto p-2 space-y-4">
-          <div className="space-y-1">
-            <h3 className="px-2 py-1 text-xs font-bold uppercase text-muted-foreground tracking-wider">Agents & Tracking</h3>
-            <BeadsPanel
-              projectPath={beadsProjectPath}
-              isExpanded={true}
-              onToggle={() => {}}
-              onStartTaskInNewTab={(prompt) => {
-                if (beadsProjectPath) onOpenSession(beadsProjectPath, undefined, undefined, prompt, true)
-              }}
-              onSendToCurrentTab={(prompt) => {
-                if (focusedTabPtyId) {
-                  window.electronAPI?.writePty(focusedTabPtyId, prompt)
-                  setTimeout(() => window.electronAPI?.writePty(focusedTabPtyId, '\r'), 100)
-                }
-              }}
-              currentTabPtyId={focusedTabPtyId}
-            />
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="space-y-3">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Global Settings</h4>
+            <button 
+              onClick={onOpenSettings}
+              className="w-full flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all border border-transparent hover:border-white/5 group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <LayoutGrid size={16} />
+                </div>
+                <span className="text-sm">Appearance & Backend</span>
+              </div>
+              <ChevronRight size={14} className="text-muted-foreground" />
+            </button>
+          </div>
+
+          <div className="space-y-3 pt-4 border-t border-white/5">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Agents & Tracking</h4>
+            <div className="p-1 rounded-xl bg-muted/10 border border-white/5">
+              <BeadsPanel
+                projectPath={beadsProjectPath}
+                isExpanded={true}
+                onToggle={() => {}}
+                onStartTaskInNewTab={(prompt) => {
+                  if (beadsProjectPath) onOpenSession(beadsProjectPath, undefined, undefined, prompt, true)
+                }}
+                onSendToCurrentTab={(prompt) => {
+                  if (focusedTabPtyId) {
+                    api.writePty(focusedTabPtyId, prompt)
+                    setTimeout(() => api.writePty(focusedTabPtyId, '\r'), 100)
+                  }
+                }}
+                currentTabPtyId={focusedTabPtyId}
+              />
+            </div>
             <GSDStatus
               projectPath={beadsProjectPath}
               onCommand={(cmd) => {
                 if (focusedTabPtyId) {
-                  window.electronAPI?.writePty(focusedTabPtyId, cmd)
-                  setTimeout(() => window.electronAPI?.writePty(focusedTabPtyId, '\r'), 100)
+                  api.writePty(focusedTabPtyId, cmd)
+                  setTimeout(() => api.writePty(focusedTabPtyId, '\r'), 100)
                 }
               }}
             />
           </div>
 
-          <div className="pt-2 border-t border-border/50">
+          <div className="pt-4 border-t border-white/5">
             <McpPanel projectPath={beadsProjectPath} />
           </div>
-          
-          <div className="space-y-1 pt-4">
-            <h3 className="px-2 py-1 text-xs font-bold uppercase text-muted-foreground tracking-wider">Global Settings</h3>
+        </div>
+      </div>
+    )
+  } else if (activeSection === 'plugins') {
+    return (
+      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-border/50 font-semibold flex items-center gap-2">
+          <Cpu size={18} />
+          Plugins & Extensions
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="p-6 rounded-2xl bg-muted/30 border border-white/5 text-center">
+            <Cpu size={40} className="mx-auto mb-4 text-primary opacity-50" />
+            <h3 className="text-lg font-semibold mb-2">Extension Engine</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Expand your capabilities with specialized tools and agents.
+            </p>
             <button 
-              onClick={onOpenSettings}
-              className="w-full text-left px-3 py-2 rounded-md hover:bg-muted transition-colors flex items-center gap-2 text-sm"
+              onClick={() => setExtensionBrowserModal({ project: projects[0] || { path: '', name: 'Global' } })}
+              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all"
             >
-              <LayoutGrid size={16} />
-              Appearance & Backend
+              Browse Extensions
             </button>
-            <button 
-              onClick={onOpenMobileConnect}
-              className="w-full text-left px-3 py-2 rounded-md hover:bg-muted transition-colors flex items-center gap-2 text-sm"
-            >
-              <Terminal size={16} />
-              Mobile Connection (QR)
+          </div>
+          
+          <div className="space-y-2">
+            <h4 className="px-2 text-xs font-bold uppercase text-muted-foreground tracking-widest">Active Plugins</h4>
+            <div className="p-3 rounded-xl bg-muted/20 border border-white/5 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center text-green-500">
+                <Zap size={16} />
+              </div>
+              <div>
+                <div className="text-sm font-semibold">Tauri Backend</div>
+                <div className="text-[10px] text-muted-foreground uppercase">Core System</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  } else if (activeSection === 'help') {
+    return (
+      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-border/50 font-semibold flex items-center gap-2">
+          <Settings size={18} />
+          Help & Support
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          <div className="space-y-3">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Resources</h4>
+            <a href="#" className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all border border-transparent hover:border-white/5">
+              <span className="text-sm">Documentation</span>
+              <ChevronRight size={14} className="text-muted-foreground" />
+            </a>
+            <a href="#" className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all border border-transparent hover:border-white/5">
+              <span className="text-sm">GitHub Repository</span>
+              <ChevronRight size={14} className="text-muted-foreground" />
+            </a>
+          </div>
+
+          <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+            <div className="text-sm font-bold text-primary mb-1">Update Available</div>
+            <div className="text-xs text-muted-foreground mb-3">Version 2.0.1 is ready for installation.</div>
+            <button className="w-full py-2 rounded-lg bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider">
+              Download Now
             </button>
           </div>
         </div>
@@ -354,26 +416,11 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
         </button>
       </div>
 
-      <div className="px-3 pb-3">
-        {voiceOutputEnabled && (
-          <VoiceOptionsPanel
-            volume={volume}
-            speed={speed}
-            skipOnNew={skipOnNew}
-            onVolumeChange={setVolume}
-            onSpeedChange={setSpeed}
-            onSkipOnNewChange={setSkipOnNew}
-          />
-        )}
-      </div>
-
       <SidebarActions
-        activeTabId={activeTabId}
-        focusedTabId={focusedTabId}
         focusedProject={focusedProject}
         apiStatus={focusedProjectPath ? apiStatus[focusedProjectPath] : undefined}
         isDebugMode={isDebugMode}
-        onOpenSettings={onOpenSettings}
+        api={api as any}
         onOpenProjectSettings={async (project) => {
           await handleOpenProjectSettings(project)
           setContextMenu(null)
@@ -382,7 +429,6 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
           await handleToggleApi(project)
           setContextMenu(null)
         }}
-        onOpenMobileConnect={onOpenMobileConnect}
       />
 
       {/* Context Menu */}

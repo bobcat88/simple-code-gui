@@ -333,6 +333,16 @@ export interface Api {
    * @returns Unsubscribe function
    */
   onApiOpenSession: (callback: ApiOpenSessionCallback) => Unsubscribe
+  
+  /**
+   * Subscribe to settings change events
+   */
+  onSettingsChanged?: (callback: (settings: Settings) => void) => Unsubscribe
+  
+  /**
+   * Subscribe to workspace change events
+   */
+  onWorkspaceChanged?: (callback: (workspace: Workspace) => void) => Unsubscribe
 
   /**
    * Get connection info for external components (HTTP backend only)

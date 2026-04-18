@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 
+import type { Api } from '../api'
+
 interface TitleBarProps {
+  api: Api
   title?: string
 }
 
-export function TitleBar({ title = 'Simple Code GUI' }: TitleBarProps) {
+export function TitleBar({ api, title = 'Simple Code GUI' }: TitleBarProps) {
   const [isMaximized, setIsMaximized] = useState(false)
   const throttleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastCallRef = useRef<number>(0)
 
   const checkMaximized = useCallback(() => {
-    window.electronAPI?.windowIsMaximized?.()?.then(setIsMaximized)
-  }, [])
+    api.windowIsMaximized?.().then(setIsMaximized)
+  }, [api])
 
   useEffect(() => {
     // Check initial state
@@ -46,25 +49,25 @@ export function TitleBar({ title = 'Simple Code GUI' }: TitleBarProps) {
   }, [checkMaximized])
 
   const handleMinimize = () => {
-    window.electronAPI?.windowMinimize()
+    api.windowMinimize()
   }
 
   const handleMaximize = () => {
-    window.electronAPI?.windowMaximize()
+    api.windowMaximize()
     // Update state after a short delay to allow window to change
     setTimeout(() => {
-      window.electronAPI?.windowIsMaximized?.()?.then(setIsMaximized)
+      api.windowIsMaximized?.().then(setIsMaximized)
     }, 100)
   }
 
   const handleClose = () => {
-    window.electronAPI?.windowClose()
+    api.windowClose()
   }
 
   return (
-    <div className="title-bar">
-      <div className="title-bar-drag">
-        <span className="title-bar-title">{title}</span>
+    <div className="title-bar" data-tauri-drag-region>
+      <div className="title-bar-drag" data-tauri-drag-region>
+        <span className="title-bar-title" data-tauri-drag-region>{title}</span>
       </div>
       <div className="title-bar-controls">
         <button

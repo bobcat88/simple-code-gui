@@ -191,6 +191,14 @@ export class HttpBackend implements Api {
     return this.workspaceApi.onApiOpenSession(callback)
   }
 
+  onSettingsChanged(callback: (settings: Settings) => void): Unsubscribe {
+    return () => {}
+  }
+
+  onWorkspaceChanged(callback: (workspace: Workspace) => void): Unsubscribe {
+    return () => {}
+  }
+
   // Connection Management
 
   getConnectionInfo(): { host: string; port: number; token: string } {

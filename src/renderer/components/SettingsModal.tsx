@@ -64,7 +64,8 @@ export function SettingsModal({
   projectPath,
   focusedTabPtyId,
   onOpenSession,
-  initialCategory = 'general'
+  initialCategory = 'general',
+  api
 }: SettingsModalProps): React.ReactElement | null {
   const [activeCategory, setActiveCategory] = useState(initialCategory)
   const [general, setGeneral] = useState<GeneralSettings>(DEFAULT_GENERAL)
@@ -92,7 +93,7 @@ export function SettingsModal({
   // Load initial settings
   useEffect(() => {
     if (isOpen) {
-      window.electronAPI?.getSettings?.()?.then((settings) => {
+      api?.getSettings?.()?.then((settings) => {
         setGeneral(prev => ({
           ...prev,
           defaultProjectDir: settings.defaultProjectDir || '',
@@ -100,12 +101,14 @@ export function SettingsModal({
           themeCustomization: migrateThemeCustomization(settings.themeCustomization),
           autoAcceptTools: settings.autoAcceptTools || [],
           permissionMode: settings.permissionMode || 'default',
-          backend: settings.backend || 'default'
+          backend: settings.backend || 'default',
+          glowEnabled: settings.glow_enabled ?? true,
+          accentColor: settings.accent_color || '#3b82f6'
         }))
       })
 
       // Load voice settings
-      window.electronAPI?.voiceGetSettings?.()?.then((voiceSettings: any) => {
+      api?.voiceGetSettings?.()?.then((voiceSettings: any) => {
         if (voiceSettings) {
           setVoice(prev => ({
             ...prev,
@@ -130,9 +133,9 @@ export function SettingsModal({
   async function refreshInstalledVoices() {
     try {
       const [piperVoices, xttsVoices, tadaStatus] = await Promise.all([
-        window.electronAPI?.voiceGetInstalled?.(),
-        window.electronAPI?.xttsGetVoices?.(),
-        window.electronAPI?.tadaCheck?.()
+        api?.voiceGetInstalled?.(),
+        api?.xttsGetVoices?.(),
+        api?.tadaCheck?.()
       ])
       const combined: any[] = []
       if (piperVoices) combined.push(...piperVoices)
@@ -149,15 +152,17 @@ export function SettingsModal({
   }
 
   const handleSave = () => {
-    window.electronAPI?.saveSettings?.({
+    api?.saveSettings?.({
       defaultProjectDir: general.defaultProjectDir,
       theme: general.selectedTheme,
       themeCustomization: general.themeCustomization,
       autoAcceptTools: general.autoAcceptTools,
       permissionMode: general.permissionMode,
-      backend: general.backend
+      backend: general.backend,
+      glow_enabled: general.glowEnabled,
+      accent_color: general.accentColor
     })
-    window.electronAPI?.voiceSaveSettings?.({
+    api?.voiceSaveSettings?.({
       ttsVoice: voice.selectedVoice,
       ttsEngine: voice.selectedEngine,
       ttsSpeed: voice.ttsSpeed,
@@ -174,7 +179,7 @@ export function SettingsModal({
   const handlePlayVoicePreview = async (voiceKey: string, engine: string) => {
     setUI(prev => ({ ...prev, playingPreview: voiceKey, previewLoading: voiceKey }))
     try {
-      await window.electronAPI?.voicePreview?.({ voice: voiceKey, engine })
+      await api?.voicePreview?.({ voice: voiceKey, engine })
     } finally {
       setUI(prev => ({ ...prev, playingPreview: null, previewLoading: null }))
     }
@@ -184,7 +189,7 @@ export function SettingsModal({
     setTadaInstalling(true)
     setTadaInstallError(null)
     try {
-      const res = await window.electronAPI?.tadaInstall?.()
+      const res = await api?.tadaInstall?.()
       if (res?.success) {
         setTadaInstalled(true)
         refreshInstalledVoices()
@@ -196,6 +201,7 @@ export function SettingsModal({
     }
     setTadaInstalling(false)
   }
+
 
   if (!isOpen) return null
 
@@ -305,6 +311,46 @@ export function SettingsModal({
               {activeCategory === 'appearance' && (
                 <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-300">
                   <section>
+                    <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Global Styling</h3>
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <label className="text-sm font-medium text-white/80">Glow Effect</label>
+                          <p className="text-xs text-white/40 mt-0.5">Enable soft accent glow behind panels</p>
+                        </div>
+                        <button
+                          onClick={() => setGeneral(prev => ({ ...prev, glowEnabled: !prev.glowEnabled }))}
+                          className={cn(
+                            "w-10 h-5 rounded-full transition-colors relative",
+                            general.glowEnabled ? "bg-white" : "bg-white/10"
+                          )}
+                        >
+                          <div className={cn(
+                            "absolute top-1 w-3 h-3 rounded-full transition-all",
+                            general.glowEnabled ? "right-1 bg-black" : "left-1 bg-white/40"
+                          )} />
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <label className="text-sm font-medium text-white/80">Accent Color</label>
+                          <p className="text-xs text-white/40 mt-0.5">Primary brand color for the interface</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={general.accentColor}
+                            onChange={(e) => setGeneral(prev => ({ ...prev, accentColor: e.target.value }))}
+                            className="w-8 h-8 bg-transparent border-0 cursor-pointer rounded-lg overflow-hidden"
+                          />
+                          <span className="text-xs font-mono text-white/40 uppercase">{general.accentColor}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section>
                     <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Visual Theme</h3>
                     <ThemeSettings 
                       selectedTheme={general.selectedTheme}
@@ -335,42 +381,41 @@ export function SettingsModal({
                   <section>
                     <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Voice Input</h3>
                     <VoiceInputSettings 
-                      status={voice.whisperStatus}
+                      whisperStatus={voice.whisperStatus}
+                      activeWhisperModel={activeWhisperModel}
+                      installingModel={ui.installingModel}
+                      onSetActiveModel={setActiveWhisperModel}
                       onInstallModel={(model) => {
                         setUI(prev => ({ ...prev, installingModel: model }))
-                        window.electronAPI?.voiceInstallWhisper?.(model)
+                        api?.voiceInstallWhisper?.(model)
                       }}
-                      onRemoveWhisper={() => window.electronAPI?.voiceRemoveWhisper?.()}
-                      installingModel={ui.installingModel}
                     />
                   </section>
 
                   <section>
                     <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Voice Output</h3>
                     <VoiceOutputSettings 
-                      status={voice.ttsStatus}
-                      selectedVoice={voice.selectedVoice}
-                      selectedEngine={voice.selectedEngine}
-                      ttsSpeed={voice.ttsSpeed}
-                      installedVoices={voice.installedVoices}
-                      onVoiceChange={(v) => setVoice(prev => ({ ...prev, selectedVoice: v }))}
-                      onEngineChange={(e) => setVoice(prev => ({ ...prev, selectedEngine: e }))}
-                      onSpeedChange={(s) => setVoice(prev => ({ ...prev, ttsSpeed: s }))}
-                      onOpenVoiceBrowser={() => setUI(prev => ({ ...prev, showVoiceBrowser: true }))}
-                      onPlayPreview={handlePlayVoicePreview}
+                      voice={voice}
+                      xtts={xtts}
                       playingPreview={ui.playingPreview}
                       previewLoading={ui.previewLoading}
-                      xttsSettings={xtts}
+                      voiceVolume={voiceVolume}
+                      onVoiceSelect={(v) => setVoice(prev => ({ ...prev, selectedVoice: v }))}
+                      onSpeedChange={(s) => setVoice(prev => ({ ...prev, ttsSpeed: s }))}
                       onXttsChange={(newXtts) => setXtts(prev => ({ ...prev, ...newXtts }))}
+                      onShowVoiceBrowser={() => setUI(prev => ({ ...prev, showVoiceBrowser: true }))}
+                      onPreviewStateChange={(state) => setUI(prev => ({ ...prev, ...state }))}
                       tadaVoiceSample={voice.tadaVoiceSample}
-                      onTadaVoiceSampleChange={(s) => setVoice(prev => ({ ...prev, tadaVoiceSample: s }))}
+                      tadaSampleVoices={tadaSampleVoices}
                       tadaInstalled={tadaInstalled}
                       tadaHfAuthenticated={tadaHfAuthenticated}
-                      tadaSampleVoices={tadaSampleVoices}
                       tadaInstalling={tadaInstalling}
                       tadaInstallError={tadaInstallError}
                       onTadaInstall={handleTadaInstall}
-                      onTadaLogin={() => window.electronAPI?.tadaLogin?.()}
+                      onTadaHfLogin={async (token) => {
+                        const res = await api?.tadaLogin?.(token)
+                        return res || { success: false, error: 'Login failed' }
+                      }}
                     />
                   </section>
                   
@@ -407,7 +452,7 @@ export function SettingsModal({
         onClose={() => setUI(prev => ({ ...prev, showVoiceBrowser: false }))}
         onInstallVoice={(voiceKey) => {
           setUI(prev => ({ ...prev, installingVoice: voiceKey }))
-          window.electronAPI?.voiceInstallVoice?.(voiceKey)
+          api?.voiceInstallVoice?.(voiceKey)
         }}
         installingVoice={ui.installingVoice}
       />

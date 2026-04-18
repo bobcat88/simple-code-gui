@@ -32,6 +32,7 @@ pub fn get_additional_paths() -> Vec<PathBuf> {
         paths.push(home.join(".nvm/versions/node/v22.11.0/bin"));
         paths.push(home.join(".local/bin"));
         paths.push(home.join(".npm-global/bin"));
+        paths.push(home.join(".bun/bin"));
         paths.push(home.join(".cargo/bin"));
         paths.push(PathBuf::from("/usr/local/bin"));
     }

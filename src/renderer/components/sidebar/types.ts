@@ -1,4 +1,5 @@
 import { Project } from '../../stores/workspace.js'
+import { Api } from '../../api/types.js'
 
 export interface ClaudeSession {
   sessionId: string
@@ -42,6 +43,7 @@ export interface SidebarProps {
   // Mobile disconnect
   onDisconnect?: () => void     // Disconnects from desktop host (mobile only)
   activeSection?: string
+  api: Api
 }
 
 export interface ProjectSettingsModalState {

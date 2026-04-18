@@ -32,6 +32,7 @@ export function Sidebar({
   onMobileClose,
   onOpenMobileConnect,
   onDisconnect,
+  activeSection,
 }: SidebarProps): React.ReactElement | null {
   // Mobile detection
   const { isMobile } = useIsMobile()
@@ -118,16 +119,13 @@ export function Sidebar({
   const contentProps = {
     projects,
     openTabs,
-    activeTabId,
-    focusedTabId: lastFocusedTabId ?? null,
     onOpenSession,
     onRemoveProject,
     onUpdateProject,
     onAddProject,
     onAddProjectsFromParent,
-    onOpenSettings,
     onOpenMakeProject,
-    onOpenMobileConnect,
+    api,
     renderProjectItem,
   }
 
@@ -145,6 +143,7 @@ export function Sidebar({
         isMobileOpen={isMobileOpen}
         onMobileClose={onMobileClose}
         onDisconnect={onDisconnect}
+        activeSection={activeSection}
         {...contentProps}
       />
     )
@@ -158,6 +157,7 @@ export function Sidebar({
       width={width}
       collapsed={collapsed}
       onCollapsedChange={onCollapsedChange}
+      activeSection={activeSection}
       {...contentProps}
     />
   )

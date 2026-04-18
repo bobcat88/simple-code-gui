@@ -284,6 +284,14 @@ export class ElectronBackend implements ExtendedApi {
     return window.electronAPI!.onApiOpenSession(callback)
   }
 
+  onSettingsChanged(callback: (settings: Settings) => void): Unsubscribe {
+    return () => {}
+  }
+
+  onWorkspaceChanged(callback: (workspace: Workspace) => void): Unsubscribe {
+    return () => {}
+  }
+
   // ==========================================================================
   // Extended API (Desktop-only features)
   // ==========================================================================

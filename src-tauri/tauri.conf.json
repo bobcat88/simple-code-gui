@@ -2,21 +2,23 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "simple-code-gui",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.simplecode.gui",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://localhost:5173",
+    "devUrl": "http://localhost:1420",
     "beforeDevCommand": "bun run dev",
-    "beforeBuildCommand": "bun run build"
+    "beforeBuildCommand": "bun run build:frontend"
   },
   "app": {
     "windows": [
       {
         "title": "Codex One",
-        "width": 800,
-        "height": 600,
+        "width": 1000,
+        "height": 700,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "decorations": false,
+        "transparent": true
       }
     ],
     "security": {

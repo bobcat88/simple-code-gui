@@ -1,51 +1,29 @@
-import React, { useRef } from 'react'
+import React from 'react'
 import { Project } from '../../stores/workspace.js'
-import { VoiceControls } from '../VoiceControls.js'
+import { ExtendedApi } from '../../api/types.js'
 
 interface SidebarActionsProps {
-  activeTabId: string | null
-  focusedTabId: string | null
   focusedProject: Project | undefined
   apiStatus: { running: boolean; port?: number } | undefined
   isDebugMode: boolean
-  onOpenSettings: () => void
   onOpenProjectSettings: (project: Project) => void
   onToggleApi: (project: Project) => void
-  onOpenMobileConnect?: () => void
+  api: ExtendedApi
 }
 
 export const SidebarActions = React.memo(function SidebarActions({
-  activeTabId,
-  focusedTabId,
   focusedProject,
   apiStatus,
   isDebugMode,
-  onOpenSettings,
   onOpenProjectSettings,
   onToggleApi,
-  onOpenMobileConnect,
+  api,
 }: SidebarActionsProps) {
-  const activeTabIdRef = useRef(activeTabId)
-  activeTabIdRef.current = activeTabId
-  const focusedTabIdRef = useRef(focusedTabId)
-  focusedTabIdRef.current = focusedTabId
-
   return (
-    <div className="sidebar-actions">
-      <VoiceControls
-        activeTabId={activeTabId}
-        onTranscription={(text) => {
-          // Use focusedTabId (last clicked tile) over activeTabId (last opened tab)
-          const currentTabId = focusedTabIdRef.current || activeTabIdRef.current
-          if (currentTabId && window.electronAPI?.writePty) {
-            window.electronAPI?.writePty(currentTabId, text)
-            setTimeout(() => window.electronAPI?.writePty?.(currentTabId, '\r'), 100)
-          }
-        }}
-      />
+    <div className="sidebar-actions flex items-center justify-end gap-2 p-3 border-t border-border/50">
       {focusedProject && (
         <button
-          className={`action-icon-btn ${apiStatus?.running ? 'enabled' : ''}`}
+          className={`p-2 rounded-xl transition-all duration-300 ${apiStatus?.running ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent'}`}
           onClick={() => {
             if (!focusedProject.apiPort) {
               onOpenProjectSettings(focusedProject)
@@ -61,48 +39,20 @@ export const SidebarActions = React.memo(function SidebarActions({
                 ? `Start API (port ${focusedProject.apiPort})`
                 : 'Configure API'
           }
-          aria-label={
-            apiStatus?.running
-              ? `Stop API (port ${focusedProject.apiPort})`
-              : focusedProject.apiPort
-                ? `Start API (port ${focusedProject.apiPort})`
-                : 'Configure API'
-          }
         >
           {apiStatus?.running ? '🟢' : '🔌'}
         </button>
       )}
       {isDebugMode && (
         <button
-          className="action-icon-btn"
-          onClick={() => window.electronAPI?.refresh?.()}
+          className="p-2 rounded-xl bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent transition-all"
+          onClick={() => api?.refresh?.() || window.electronAPI?.refresh?.()}
           tabIndex={0}
           title="Refresh (Debug Mode)"
-          aria-label="Refresh (Debug Mode)"
         >
           🔄
         </button>
       )}
-      {onOpenMobileConnect && (
-        <button
-          className="action-icon-btn"
-          onClick={onOpenMobileConnect}
-          tabIndex={0}
-          title="Connect Mobile Device"
-          aria-label="Connect Mobile Device"
-        >
-          📱
-        </button>
-      )}
-      <button
-        className="action-icon-btn"
-        onClick={onOpenSettings}
-        tabIndex={0}
-        title="Settings"
-        aria-label="Settings"
-      >
-        ⚙️
-      </button>
     </div>
   )
 })

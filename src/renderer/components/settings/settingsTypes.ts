@@ -1,3 +1,4 @@
+import type { Api } from '../../api/types'
 import type { Theme } from '../../themes'
 type WhisperModelSize = 'tiny.en' | 'base.en' | 'small.en' | 'medium.en' | 'large-v3'
 
@@ -91,6 +92,8 @@ export interface GeneralSettings {
   permissionMode: string
   customTool: string
   backend: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
+  glowEnabled: boolean
+  accentColor: string
 }
 
 export interface VoiceSettings {
@@ -128,7 +131,9 @@ export const DEFAULT_GENERAL: GeneralSettings = {
   autoAcceptTools: [],
   permissionMode: 'default',
   customTool: '',
-  backend: 'default'
+  backend: 'default',
+  glowEnabled: true,
+  accentColor: '#3b82f6'
 }
 
 export const DEFAULT_VOICE: VoiceSettings = {
@@ -158,7 +163,8 @@ export const DEFAULT_UI: UIState = {
   ttsRemovalResult: null
 }
 
-export type UpdateStatusType = 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error'
+export const UPDATE_STATUS_TYPES = ['idle', 'checking', 'available', 'downloading', 'downloaded', 'error'] as const
+export type UpdateStatusType = typeof UPDATE_STATUS_TYPES[number]
 
 export interface UpdateStatus {
   status: UpdateStatusType
@@ -180,4 +186,6 @@ export interface SettingsModalProps {
   focusedTabPtyId: string | null
   onOpenSession: (path: string, sessionId?: string, ptyId?: string, prompt?: string, forceNew?: boolean) => void
   initialCategory?: string
+  api: Api
 }
+

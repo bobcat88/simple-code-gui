@@ -201,11 +201,38 @@ impl PtyManager {
         let sessions = self.sessions.lock();
         sessions.values().map(|s| SessionInfo {
             id: s.id.clone(),
-            cwd: "".to_string(), // We don't track cwd yet in Session struct but could
+            cwd: "".to_string(),
             backend: s.backend.clone(),
             session_id: None,
             spawned_at: 0,
         }).collect()
+    }
+
+    pub fn check_health(&self) -> Vec<String> {
+        let mut sessions = self.sessions.lock();
+        let mut dead_ids = Vec::new();
+        
+        for (id, session) in sessions.iter_mut() {
+            match session.child.try_wait() {
+                Ok(Some(_)) => {
+                    // Process exited
+                    dead_ids.push(id.clone());
+                }
+                Err(_) => {
+                    // Error checking status, assume dead
+                    dead_ids.push(id.clone());
+                }
+                Ok(None) => {
+                    // Still running
+                }
+            }
+        }
+
+        for id in &dead_ids {
+            sessions.remove(id);
+        }
+
+        dead_ids
     }
 
     pub fn read_output(&self, id: &str, max_lines: usize) -> Option<Vec<String>> {

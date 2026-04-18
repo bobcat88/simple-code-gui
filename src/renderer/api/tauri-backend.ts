@@ -19,12 +19,7 @@ import { tauriIpc } from '../lib/tauri-ipc'
 export class TauriBackend implements ExtendedApi {
   // PTY Management
   async spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId): Promise<string> {
-    // Note: Rust backend expects backend as a string, sessionId and model are ignored for now or can be passed as args
-    const args: string[] = [];
-    if (sessionId) args.push('--session', sessionId);
-    if (model) args.push('--model', model);
-    
-    return tauriIpc.spawnSession(cwd, backend || 'aider', args);
+    return tauriIpc.spawnSession(cwd, backend || 'claude', sessionId, model);
   }
 
   killPty(id: string): void {
@@ -71,35 +66,49 @@ export class TauriBackend implements ExtendedApi {
 
   // Workspace Management
   async getWorkspace(): Promise<Workspace> {
-    // For now, return a default workspace or fetch from localStorage
-    const saved = localStorage.getItem('tauri-workspace');
-    if (saved) return JSON.parse(saved);
-    return { projects: [], categories: [] };
+    try {
+      return await tauriIpc.getWorkspace();
+    } catch (e) {
+      console.error('Failed to get workspace from Tauri', e);
+      return { projects: [], categories: [] };
+    }
   }
 
   async saveWorkspace(workspace: Workspace): Promise<void> {
-    localStorage.setItem('tauri-workspace', JSON.stringify(workspace));
+    try {
+      await tauriIpc.saveWorkspace(workspace);
+    } catch (e) {
+      console.error('Failed to save workspace to Tauri', e);
+    }
   }
 
   // Settings Management
   async getSettings(): Promise<Settings> {
-    const saved = localStorage.getItem('tauri-settings');
-    if (saved) return JSON.parse(saved);
-    return {} as Settings;
+    try {
+      return await tauriIpc.getSettings();
+    } catch (e) {
+      console.error('Failed to get settings from Tauri', e);
+      return {} as Settings;
+    }
   }
 
   async saveSettings(settings: Settings): Promise<void> {
-    localStorage.setItem('tauri-settings', JSON.stringify(settings));
+    try {
+      await tauriIpc.saveSettings(settings);
+    } catch (e) {
+      console.error('Failed to save settings to Tauri', e);
+    }
   }
 
   // Project Management
   async addProject(): Promise<string | null> {
-    // TODO: Use Tauri dialog
-    return null;
+    return await tauriIpc.selectDirectory();
   }
 
   async addProjectsFromParent(): Promise<Array<{ path: string; name: string }> | null> {
-    return null;
+    const parentPath = await tauriIpc.selectDirectory();
+    if (!parentPath) return null;
+    return [{ path: parentPath, name: parentPath.split('/').pop() || parentPath }];
   }
 
   // TTS
@@ -112,8 +121,20 @@ export class TauriBackend implements ExtendedApi {
     return () => {};
   }
 
+  onSettingsChanged(callback: (settings: Settings) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onSettingsChanged(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  onWorkspaceChanged(callback: (workspace: Workspace) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onWorkspaceChanged(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
   // Extended API
-  async selectDirectory(): Promise<string | null> { return null; }
+  async selectDirectory(): Promise<string | null> { return await tauriIpc.selectDirectory(); }
   async selectExecutable(): Promise<string | null> { return null; }
   windowMinimize(): void {}
   windowMaximize(): void {}

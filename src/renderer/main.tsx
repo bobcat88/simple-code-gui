@@ -2,11 +2,16 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { setupTauriShim } from './lib/tauriShim'
 import { VoiceProvider } from './contexts/VoiceContext'
+
+// Initialize Tauri Shim
+setupTauriShim();
 import { ModalProvider } from './contexts/ModalContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './styles.css'
 import './index.css'
+import './modernize.css'
 
 const queryClient = new QueryClient({
   defaultOptions: {

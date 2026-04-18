@@ -26,7 +26,7 @@ import { InstallationPrompt } from './InstallationPrompt'
 import { MobileConnectModal } from './MobileConnectModal'
 import { IconBar } from '../components/IconBar'
 import { Header } from '../components/Header'
-import { LayoutGrid, Terminal } from 'lucide-react'
+import { LayoutGrid, Terminal as TerminalIcon } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 export interface MainAppProps {
@@ -161,8 +161,26 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
   const [showFileBrowser, setShowFileBrowser] = useState(false)
   const [fileBrowserPath, setFileBrowserPath] = useState<string | null>(null)
   const [activeSection, setActiveSection] = useState('terminal')
+  const [settingsCategory, setSettingsCategory] = useState('general')
+  const isMobile = !isElectron
   const hadProjectsRef = useRef(false)
   const terminalContainerRef = useRef<HTMLDivElement>(null)
+  const [spotlightOpen, setSpotlightOpen] = useState(false)
+
+  // Spotlight Hotkey (Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSpotlightOpen(prev => !prev)
+      }
+      if (e.key === 'Escape' && spotlightOpen) {
+        setSpotlightOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [spotlightOpen])
 
   // Keep ref in sync for callbacks
   useEffect(() => {
@@ -247,54 +265,51 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
     )
   }
 
-  const isMobile = !isElectron
-
-  const [settingsCategory, setSettingsCategory] = useState('general')
-
   return (
-    <div className="flex flex-row h-screen w-screen bg-background text-foreground overflow-hidden">
-      {!isMobile && (
-        <IconBar 
-          activeSection={activeSection} 
-          onSectionChange={(section) => {
-            if (section === 'config' || section === 'plugins') {
-              setSettingsCategory(section === 'plugins' ? 'mcp' : 'general')
-              setSettingsOpen(true)
-            } else {
-              setActiveSection(section)
-            }
-          }} 
-        />
-      )}
+    <div className="flex flex-row h-screen w-screen bg-transparent">
+      <div className="flex-1 flex flex-row bg-background/60 backdrop-blur-2xl text-foreground overflow-hidden shadow-2xl relative app-container">
+        {!isMobile && (
+          <div className="animate-entry delay-100 h-full flex flex-row">
+            <IconBar 
+              activeSection={activeSection} 
+              onSectionChange={setActiveSection}
+              activeTabId={activeTabId}
+              focusedTabId={lastFocusedTabId}
+              onOpenSettings={openSettings}
+            />
+          </div>
+        )}
       
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <TitleBar />
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden animate-entry delay-200">
+        <TitleBar api={api} />
         
         <div className="flex-1 flex flex-row overflow-hidden relative">
-          <Sidebar
-            projects={projects}
-            openTabs={openTabs}
-            activeTabId={activeTabId}
-            lastFocusedTabId={lastFocusedTabId}
-            onAddProject={handleAddProject}
-            onAddProjectsFromParent={handleAddProjectsFromParent}
-            onRemoveProject={removeProject}
-            onOpenSession={handleOpenSession}
-            onSwitchToTab={setActiveTab}
-            onOpenSettings={openSettings}
-            onOpenMakeProject={openMakeProject}
-            onUpdateProject={updateProject}
-            onCloseProjectTabs={handleCloseProjectTabs}
-            width={sidebarWidth}
-            collapsed={sidebarCollapsed}
-            onWidthChange={setSidebarWidth}
-            onCollapsedChange={setSidebarCollapsed}
-            isMobileOpen={mobileDrawerOpen}
-            onMobileClose={closeMobileDrawer}
-            onOpenMobileConnect={() => setMobileConnectOpen(true)}
-            onDisconnect={onDisconnect}
-            activeSection={activeSection}
-          />
+          <div className="animate-entry delay-300 h-full flex">
+            <Sidebar
+              projects={projects}
+              openTabs={openTabs}
+              activeTabId={activeTabId}
+              lastFocusedTabId={lastFocusedTabId}
+              onAddProject={handleAddProject}
+              onAddProjectsFromParent={handleAddProjectsFromParent}
+              onRemoveProject={removeProject}
+              onOpenSession={handleOpenSession}
+              onSwitchToTab={setActiveTab}
+              onOpenSettings={openSettings}
+              onOpenMakeProject={openMakeProject}
+              onUpdateProject={updateProject}
+              onCloseProjectTabs={handleCloseProjectTabs}
+              width={sidebarWidth}
+              collapsed={sidebarCollapsed}
+              onWidthChange={setSidebarWidth}
+              onCollapsedChange={setSidebarCollapsed}
+              isMobileOpen={mobileDrawerOpen}
+              onMobileClose={closeMobileDrawer}
+              onDisconnect={onDisconnect}
+              activeSection={activeSection}
+              api={api}
+            />
+          </div>
 
           {/* Mobile: render each terminal as its own slide */}
           {isMobile && openTabs.map((tab) => (
@@ -323,7 +338,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
 
           {/* Desktop: wrap terminals in main-content */}
           {!isMobile && (
-            <div className="flex-1 flex flex-col min-w-0 bg-background/50 overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0 bg-background/50 overflow-hidden animate-entry delay-400">
               {claudeInstalled === false || gitBashInstalled === false ? (
                 <InstallationPrompt
                   claudeInstalled={claudeInstalled}
@@ -394,7 +409,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500">
                   <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-6 text-muted-foreground">
-                    <Terminal size={32} />
+                    <TerminalIcon size={32} />
                   </div>
                   <h2 className="text-2xl font-semibold mb-2">Simple Code GUI</h2>
                   <p className="text-muted-foreground max-w-sm">
@@ -420,6 +435,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
         focusedTabPtyId={activeTabId}
         onOpenSession={handleOpenSession}
         initialCategory={settingsCategory}
+        api={api}
       />
 
         <MakeProjectModal
@@ -428,44 +444,33 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
           onProjectCreated={handleProjectCreated}
         />
 
-        {/* Mobile Connect Modal (QR Code) - only show in Electron */}
-        {isElectron && (
-          <MobileConnectModal
-            isOpen={mobileConnectOpen}
-            onClose={() => setMobileConnectOpen(false)}
-            port={38470}
-          />
-        )}
-
-        {/* File Browser Modal (mobile only) */}
-        {isMobile && showFileBrowser && fileBrowserPath && (() => {
-          const connInfo = api.getConnectionInfo?.()
-          if (!connInfo) return null
-
-          const hostConfig: HostConfig = {
-            id: 'current',
-            name: 'Desktop',
-            host: connInfo.host,
-            port: connInfo.port,
-            token: connInfo.token
-          }
-          return (
-            <div style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 100
-            }}>
-              <FileBrowser
-                host={hostConfig}
-                basePath={fileBrowserPath}
-                onClose={() => setShowFileBrowser(false)}
+        {/* Spotlight Search Overlay */}
+        {spotlightOpen && (
+          <div className="spotlight-overlay" onClick={() => setSpotlightOpen(false)}>
+            <div className="spotlight-container glass-panel" onClick={e => e.stopPropagation()}>
+              <input 
+                autoFocus
+                type="text" 
+                placeholder="Search projects, commands, or settings... (Cmd+K)"
+                className="w-full bg-transparent border-none text-xl outline-none px-4 py-3 text-white placeholder:text-white/20"
               />
+              <div className="mt-4 border-t border-white/5 pt-4 px-2">
+                <div className="text-[10px] uppercase text-white/30 font-bold mb-2 px-2">Suggestions</div>
+                <div className="flex flex-col gap-1">
+                  <div className="px-3 py-2 hover:bg-white/5 rounded-lg cursor-pointer flex items-center justify-between text-sm group">
+                    <span>New Project</span>
+                    <span className="text-[10px] text-white/20 group-hover:text-white/40 border border-white/10 px-1.5 rounded">Cmd+N</span>
+                  </div>
+                  <div className="px-3 py-2 hover:bg-white/5 rounded-lg cursor-pointer flex items-center justify-between text-sm group">
+                    <span>Settings</span>
+                    <span className="text-[10px] text-white/20 group-hover:text-white/40 border border-white/10 px-1.5 rounded">Cmd+,</span>
+                  </div>
+                </div>
+              </div>
             </div>
-          )
-        })()}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

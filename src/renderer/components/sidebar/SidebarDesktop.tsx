@@ -2,6 +2,7 @@ import React from 'react'
 import { SidebarContent, SidebarContentProps } from './SidebarContent.js'
 import { SidebarState } from './useSidebarState.js'
 import { SidebarHandlers } from './useSidebarHandlers.js'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export interface SidebarDesktopProps extends Omit<SidebarContentProps, 'state' | 'handlers'> {
   state: SidebarState
@@ -17,17 +18,18 @@ export function SidebarDesktop(props: SidebarDesktopProps): React.ReactElement {
   const { handleMouseDown } = handlers
 
   return (
-    <div className="sidebar" ref={sidebarRef} style={{ width }}>
+    <div className="sidebar-container relative group" style={{ width }}>
+      <div className="sidebar h-full overflow-hidden" ref={sidebarRef}>
+        <SidebarContent state={state} handlers={handlers} activeSection={props.activeSection} {...contentProps} />
+      </div>
+
       <button
-        className="sidebar-collapse-btn"
+        className="collapse-bubble"
         onClick={() => onCollapsedChange(true)}
         title="Collapse sidebar"
-        aria-label="Collapse sidebar"
       >
-        ◀
+        <ChevronLeft size={14} />
       </button>
-
-      <SidebarContent state={state} handlers={handlers} activeSection={props.activeSection} {...contentProps} />
 
       <div className="sidebar-resize-handle" onMouseDown={handleMouseDown} />
     </div>
@@ -43,14 +45,14 @@ export function SidebarCollapsed(props: SidebarCollapsedProps): React.ReactEleme
   const { sidebarRef, onCollapsedChange } = props
 
   return (
-    <div className="sidebar collapsed" ref={sidebarRef}>
+    <div className="sidebar collapsed relative group" ref={sidebarRef}>
       <button
-        className="sidebar-collapse-btn"
+        className="collapse-bubble"
+        style={{ right: '-12px' }}
         onClick={() => onCollapsedChange(false)}
         title="Expand sidebar"
-        aria-label="Expand sidebar"
       >
-        ▶
+        <ChevronRight size={14} />
       </button>
     </div>
   )

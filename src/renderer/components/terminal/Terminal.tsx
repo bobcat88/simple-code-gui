@@ -5,6 +5,7 @@ import { AutoWorkOptions } from '../TerminalMenu.js'
 import { CustomCommandModal } from '../CustomCommandModal.js'
 import { resolveBackendCommand } from '../../utils/backendCommands.js'
 import type { TerminalProps } from './types.js'
+import { ExtendedApi } from '../../api/types.js'
 import { useTerminalSetup } from './useTerminalSetup.js'
 import { useTTS } from './useTTS.js'
 import { useAutoWork } from './useAutoWork.js'
@@ -25,19 +26,25 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
 
   // Sync auto-accept state when PTY changes
   useEffect(() => {
-    if (!ptyId) {
-      setAutoAccept(false)
-      return
+    if (api && (api as any).getAutoAcceptStatus) {
+      (api as any).getAutoAcceptStatus(ptyId).then((enabled: boolean) => {
+        setAutoAccept(enabled)
+      })
+    } else {
+      window.electronAPI?.getAutoAcceptStatus?.(ptyId)?.then((enabled: boolean) => {
+        setAutoAccept(enabled)
+      })
     }
-    window.electronAPI?.getAutoAcceptStatus?.(ptyId)?.then((enabled: boolean) => {
-      setAutoAccept(enabled)
-    })
   }, [ptyId])
 
   const handleToggleAutoAccept = useCallback(() => {
     const newState = !autoAccept
     setAutoAccept(newState)
-    window.electronAPI?.setAutoAccept?.(ptyId, newState)
+    if (api && (api as any).setAutoAccept) {
+      (api as any).setAutoAccept(ptyId, newState)
+    } else {
+      window.electronAPI?.setAutoAccept?.(ptyId, newState)
+    }
   }, [autoAccept, ptyId])
 
   // PTY write helper - uses api if provided, otherwise window.electronAPI
@@ -145,6 +152,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
           fitAddonRef.current.fit()
           const dims = fitAddonRef.current.proposeDimensions()
           if (dims && dims.cols > 0 && dims.rows > 0) {
+            api?.resizePty(ptyId, dims.cols, dims.rows)
             window.electronAPI?.resizePty(ptyId, dims.cols, dims.rows)
           }
           if (wasAtBottom) {
@@ -185,7 +193,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     if (files && files.length > 0) {
       for (let i = 0; i < files.length; i++) {
         try {
-          const filePath = window.electronAPI?.getPathForFile(files[i])
+          const filePath = (api as ExtendedApi)?.getPathForFile?.(files[i]) || window.electronAPI?.getPathForFile(files[i])
           if (filePath) {
             paths.push(filePath)
           }
@@ -209,7 +217,8 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     }
 
     if (paths.length > 0) {
-      window.electronAPI?.writePty(ptyId, formatPathsForBackend(paths, backend))
+      if (api) api.writePty(ptyId, formatPathsForBackend(paths, backend))
+      else window.electronAPI?.writePty(ptyId, formatPathsForBackend(paths, backend))
     }
   }, [ptyId, backend, isTileDrag])
 

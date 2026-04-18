@@ -32,10 +32,10 @@ export function Header({
   onCloseTab
 }: HeaderProps) {
   return (
-    <header className="h-14 border-b border-border bg-background/60 backdrop-blur-md flex items-center px-4 gap-4 sticky top-0 z-10">
-      <div className="flex items-center gap-2 text-muted-foreground shrink-0 border-r border-border pr-4 h-8">
-        <TerminalIcon size={16} />
-        <span className="text-xs font-bold uppercase tracking-wider select-none">Codex One</span>
+    <header className="h-14 border-b border-border bg-background/60 backdrop-blur-md flex items-center px-4 gap-4 sticky top-0 z-10" data-tauri-drag-region>
+      <div className="flex items-center gap-2 text-muted-foreground shrink-0 border-r border-border pr-4 h-8" data-tauri-drag-region>
+        <TerminalIcon size={16} data-tauri-drag-region />
+        <span className="text-xs font-bold uppercase tracking-wider select-none" data-tauri-drag-region>Codex One</span>
       </div>
       
       <SessionSwitcher 
