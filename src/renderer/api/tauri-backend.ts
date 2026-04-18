@@ -62,8 +62,12 @@ export class TauriBackend implements ExtendedApi {
 
   // Session Management
   async discoverSessions(projectPath: string, backend?: BackendId): Promise<Session[]> {
-    // TODO: Implement in Rust
-    return [];
+    try {
+      return await tauriIpc.discoverSessions(projectPath, backend);
+    } catch (e) {
+      console.error('Failed to discover sessions', e);
+      return [];
+    }
   }
 
   // Workspace Management

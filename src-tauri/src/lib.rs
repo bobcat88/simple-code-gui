@@ -5,6 +5,7 @@ mod voice_manager;
 mod orchestration;
 mod mcp_bridge;
 mod workspace_manager;
+mod session_manager;
 
 use pty_manager::PtyManager;
 use std::sync::Arc;
@@ -15,6 +16,7 @@ use voice_manager::{VoiceManager, voice_speak, voice_stop};
 use orchestration::{get_beads_tasks, sync_workflow, OrchestrationState};
 use mcp_bridge::{register_mcp_server, get_registered_mcp_servers, McpManager};
 use tauri::{AppHandle, State, Manager, Emitter};
+use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent, TrayIcon};
 use tauri::menu::{Menu, MenuItem};
@@ -107,6 +109,23 @@ async fn get_workspace(state: State<'_, WorkspaceManager>) -> Result<Workspace, 
 #[tauri::command]
 async fn save_workspace(state: State<'_, WorkspaceManager>, workspace: Workspace) -> Result<(), String> {
     state.save(workspace)
+}
+
+#[tauri::command]
+async fn discover_sessions(project_path: String, backend: Option<String>) -> Result<Vec<session_manager::Session>, String> {
+    session_manager::discover_sessions(&project_path, backend.as_deref())
+}
+
+#[tauri::command]
+async fn select_directory(app: AppHandle) -> Result<Option<String>, String> {
+    let (tx, rx) = std::sync::mpsc::channel();
+    
+    app.dialog().file().pick_folder(move |path| {
+        let path_str = path.map(|p| p.to_string());
+        tx.send(path_str).unwrap();
+    });
+
+    rx.recv().map_err(|e| e.to_string())
 }
 
 // Window Controls
@@ -248,7 +267,9 @@ pub fn run() {
             get_beads_tasks,
             sync_workflow,
             register_mcp_server,
-            get_registered_mcp_servers
+            get_registered_mcp_servers,
+            discover_sessions,
+            select_directory
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

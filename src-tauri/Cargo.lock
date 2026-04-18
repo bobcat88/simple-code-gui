@@ -102,6 +102,7 @@ dependencies = [
  "tokio",
  "tts",
  "uuid",
+ "walkdir",
 ]
 
 [[package]]
