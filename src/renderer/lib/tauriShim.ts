@@ -1,81 +1,76 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import { tauriIpc } from './tauri-ipc';
 
 // Shim to provide window.electronAPI functionality using Tauri
 export const setupTauriShim = () => {
   (window as any).electronAPI = {
     // PTY Operations
     spawnPty: (cwd: string, sessionId?: string, model?: string, backend: string = 'claude') => 
-      invoke('spawn_session', { 
-        cwd, 
-        backend, 
-        session_id: sessionId, 
-        slug: model 
-      }),
+      tauriIpc.spawnSession(cwd, backend, sessionId, model),
     writePty: (id: string, data: string) => 
-      invoke('write_to_pty', { id, data }),
+      tauriIpc.writeToPty(id, data),
     resizePty: (id: string, cols: number, rows: number) => 
-      invoke('resize_pty', { id, cols, rows }),
+      tauriIpc.resizePty(id, cols, rows),
     killPty: (id: string) => 
-      invoke('kill_session', { id }),
+      tauriIpc.killSession(id),
     
     // PTY Events
     onPtyData: (id: string, callback: (data: string) => void) => {
       let unlisten: (() => void) | undefined;
-      listen(`pty-data-${id}`, (event: any) => {
-        callback(event.payload);
-      }).then(u => unlisten = u);
+      tauriIpc.onPtyData(id, callback).then(u => unlisten = u);
       return () => unlisten?.();
     },
     onPtyExit: (id: string, callback: (code: number) => void) => {
       let unlisten: (() => void) | undefined;
-      listen(`pty-exit-${id}`, (event: any) => {
-        callback(event.payload);
-      }).then(u => unlisten = u);
+      tauriIpc.onPtyExit(id, callback).then(u => unlisten = u);
       return () => unlisten?.();
     },
     onPtyRecreated: (callback: any) => () => {},
     onApiOpenSession: (callback: any) => () => {},
 
     // Settings
-    getSettings: () => invoke('get_settings'),
-    saveSettings: (settings: any) => invoke('save_settings', { settings }),
+    getSettings: () => tauriIpc.getSettings(),
+    saveSettings: (settings: any) => tauriIpc.saveSettings(settings),
     onSettingsChanged: (callback: (settings: any) => void) => {
       let unlisten: (() => void) | undefined;
-      listen('settings-changed', (event: any) => {
-        callback(event.payload);
-      }).then(u => unlisten = u);
+      tauriIpc.onSettingsChanged(callback).then(u => unlisten = u);
       return () => unlisten?.();
     },
 
     // Workspace
-    getWorkspace: () => invoke('get_workspace'),
-    saveWorkspace: (workspace: any) => invoke('save_workspace', { workspace }),
+    getWorkspace: () => tauriIpc.getWorkspace(),
+    saveWorkspace: (workspace: any) => tauriIpc.saveWorkspace(workspace),
     onWorkspaceChanged: (callback: (workspace: any) => void) => {
       let unlisten: (() => void) | undefined;
-      listen('workspace-changed', (event: any) => {
-        callback(event.payload);
-      }).then(u => unlisten = u);
+      tauriIpc.onWorkspaceChanged(callback).then(u => unlisten = u);
       return () => unlisten?.();
     },
 
     // Window Controls
-    windowMinimize: () => invoke('window_minimize'),
-    windowMaximize: () => invoke('window_maximize'),
-    windowClose: () => invoke('window_close'),
-    windowIsMaximized: () => invoke('window_is_maximized'),
+    windowMinimize: () => tauriIpc.windowMinimize(),
+    windowMaximize: () => tauriIpc.windowMaximize(),
+    windowClose: () => tauriIpc.windowClose(),
+    windowIsMaximized: () => tauriIpc.windowIsMaximized(),
     
     // Dialogs
-    selectDirectory: () => invoke('select_directory'),
-    selectExecutable: () => invoke('select_directory'), // Fallback to directory for now
+    selectDirectory: () => tauriIpc.selectDirectory(),
+    selectExecutable: () => tauriIpc.selectFile(),
     getPathForFile: (file: File) => (file as any).path || file.name,
-    addProject: () => invoke('select_directory'),
+    addProject: () => tauriIpc.selectDirectory(),
     addProjectsFromParent: async () => {
-      const parentPath = await invoke<string | null>('select_directory');
+      const parentPath = await tauriIpc.selectDirectory();
       if (!parentPath) return null;
-      // This would need a backend command to list dirs, for now just return null
-      // or implement list_dirs in Rust
-      return null;
+      try {
+        const dirs = await tauriIpc.listDirs(parentPath);
+        return dirs.map(dir => ({
+          path: `${parentPath}/${dir}`,
+          name: dir
+        }));
+      } catch (e) {
+        console.error('Failed to list directories', e);
+        return [{ path: parentPath, name: parentPath.split('/').pop() || parentPath }];
+      }
     },
     
     // Installation Status (Stubs)
@@ -85,17 +80,17 @@ export const setupTauriShim = () => {
     gitInstall: async () => ({ success: true }),
     
     // Extensions
-    extensionsFetchRegistry: (force: boolean) => invoke('extensions_fetch_registry', { force }),
-    extensionsGetInstalled: () => invoke('extensions_get_installed'),
-    extensionsInstallSkill: (ext: any, scope: string) => invoke('extensions_install_skill', { ext, scope }),
-    extensionsInstallMcp: (ext: any) => invoke('extensions_install_mcp', { ext }),
-    extensionsRemove: (id: string) => invoke('extensions_remove', { id }),
-    extensionsEnableForProject: (id: string, path: string) => invoke('extensions_enable_for_project', { id, path }),
-    extensionsDisableForProject: (id: string, path: string) => invoke('extensions_disable_for_project', { id, path }),
-    extensionsGetCustomUrls: () => invoke('extensions_get_custom_urls'),
-    extensionsAddCustomUrl: (url: string) => invoke('extensions_add_custom_url', { url }),
-    extensionsFetchFromUrl: (url: string) => invoke('extensions_fetch_from_url', { url }),
-    extensionsSetConfig: (id: string, config: any) => invoke('extensions_set_config', { id, config }),
+    extensionsFetchRegistry: (force: boolean) => tauriIpc.extensionsFetchRegistry(force),
+    extensionsGetInstalled: () => tauriIpc.extensionsGetInstalled(),
+    extensionsInstallSkill: (ext: any, scope: string) => tauriIpc.extensionsInstallSkill(ext, scope),
+    extensionsInstallMcp: (ext: any) => tauriIpc.extensionsInstallMcp(ext),
+    extensionsRemove: (id: string) => tauriIpc.extensionsRemove(id),
+    extensionsEnableForProject: (id: string, path: string) => tauriIpc.extensionsEnableForProject(id, path),
+    extensionsDisableForProject: (id: string, path: string) => tauriIpc.extensionsDisableForProject(id, path),
+    extensionsGetCustomUrls: () => tauriIpc.extensionsGetCustomUrls(),
+    extensionsAddCustomUrl: (url: string) => tauriIpc.extensionsAddCustomUrl(url),
+    extensionsFetchFromUrl: (url: string) => tauriIpc.extensionsFetchFromUrl(url),
+    extensionsSetConfig: (id: string, config: any) => tauriIpc.extensionsSetConfig(id, config),
     
     // Updater (Stubs)
     onUpdaterStatus: (callback: any) => () => {},

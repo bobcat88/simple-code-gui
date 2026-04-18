@@ -136,6 +136,35 @@ async fn select_directory(app: AppHandle) -> Result<Option<String>, String> {
     rx.recv().map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+async fn select_file(app: AppHandle) -> Result<Option<String>, String> {
+    let (tx, rx) = std::sync::mpsc::channel();
+    
+    app.dialog().file().pick_file(move |path| {
+        let path_str = path.map(|p| p.to_string());
+        tx.send(path_str).unwrap();
+    });
+
+    rx.recv().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn list_dirs(path: String) -> Result<Vec<String>, String> {
+    let mut dirs = Vec::new();
+    let read_dir = std::fs::read_dir(path).map_err(|e| e.to_string())?;
+    
+    for entry in read_dir {
+        let entry = entry.map_err(|e| e.to_string())?;
+        if entry.path().is_dir() {
+            if let Some(name) = entry.file_name().to_str() {
+                dirs.push(name.to_string());
+            }
+        }
+    }
+    
+    Ok(dirs)
+}
+
 // Window Controls
 #[tauri::command]
 async fn window_minimize(window: tauri::Window) -> Result<(), String> {
@@ -301,6 +330,8 @@ pub fn run() {
             get_registered_mcp_servers,
             discover_sessions,
             select_directory,
+            select_file,
+            list_dirs,
             extension_manager::extensions_fetch_registry,
             extension_manager::extensions_get_installed,
             extension_manager::extensions_get_custom_urls,

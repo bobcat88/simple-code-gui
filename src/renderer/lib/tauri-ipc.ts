@@ -84,4 +84,28 @@ export const tauriIpc = {
     invoke<any>('mcp_read_resource', { serverName, uri }),
   mcpLoadConfig: () =>
     invoke<void>('mcp_load_config'),
+
+  discoverSessions: (projectPath: string, backend?: string) =>
+    invoke<any[]>('discover_sessions', { projectPath, backend }),
+
+  selectDirectory: () =>
+    invoke<string | null>('select_directory'),
+
+  selectFile: () =>
+    invoke<string | null>('select_file'),
+
+  listDirs: (path: string) =>
+    invoke<string[]>('list_dirs', { path }),
+
+  windowMinimize: () =>
+    invoke<void>('window_minimize'),
+
+  windowMaximize: () =>
+    invoke<void>('window_maximize'),
+
+  windowClose: () =>
+    invoke<void>('window_close'),
+
+  windowIsMaximized: () =>
+    invoke<boolean>('window_is_maximized'),
 };

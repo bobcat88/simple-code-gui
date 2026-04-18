@@ -39,8 +39,8 @@ export function getApi(): Api | null {
 
 /**
  * Initialize the API with the appropriate backend
- * - In Electron: Automatically uses ElectronBackend
- * - In browser/Capacitor: Requires config parameter for HttpBackend
+ * - In Desktop: Automatically uses appropriate native backend
+ * - In browser: Requires config parameter for HttpBackend
  */
 export function initializeApi(config?: { host: string; port: number; token: string }): Api {
   if (isTauriEnvironment()) {

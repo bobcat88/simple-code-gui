@@ -114,7 +114,16 @@ export class TauriBackend implements ExtendedApi {
   async addProjectsFromParent(): Promise<Array<{ path: string; name: string }> | null> {
     const parentPath = await tauriIpc.selectDirectory();
     if (!parentPath) return null;
-    return [{ path: parentPath, name: parentPath.split('/').pop() || parentPath }];
+    try {
+      const dirs = await tauriIpc.listDirs(parentPath);
+      return dirs.map(dir => ({
+        path: `${parentPath}/${dir}`,
+        name: dir
+      }));
+    } catch (e) {
+      console.error('Failed to list directories', e);
+      return [{ path: parentPath, name: parentPath.split('/').pop() || parentPath }];
+    }
   }
 
   // TTS
@@ -141,17 +150,20 @@ export class TauriBackend implements ExtendedApi {
 
   // Extended API
   async selectDirectory(): Promise<string | null> { return await tauriIpc.selectDirectory(); }
-  async selectExecutable(): Promise<string | null> { return null; }
-  windowMinimize(): void {}
-  windowMaximize(): void {}
-  windowClose(): void {}
-  async windowIsMaximized(): Promise<boolean> { return false; }
+  async selectExecutable(): Promise<string | null> { return await tauriIpc.selectFile(); }
+  windowMinimize(): void { tauriIpc.windowMinimize(); }
+  windowMaximize(): void { tauriIpc.windowMaximize(); }
+  windowClose(): void { tauriIpc.windowClose(); }
+  async windowIsMaximized(): Promise<boolean> { return await tauriIpc.windowIsMaximized(); }
   getPathForFile(file: File): string { return (file as any).path || ''; }
   async readClipboardImage(): Promise<{ success: boolean; hasImage?: boolean; path?: string; error?: string }> { return { success: false }; }
   async getVersion(): Promise<string> { return '2.0.0-tauri'; }
   async isDebugMode(): Promise<boolean> { return true; }
   async refresh(): Promise<void> { window.location.reload(); }
-  async openExternal(url: string): Promise<void> { window.open(url, '_blank'); }
+  async openExternal(url: string): Promise<void> { 
+    // In Tauri, use the shell plugin or just window.open if it works
+    window.open(url, '_blank'); 
+  }
   debugLog(message: string): void { console.log('[Tauri]', message); }
   
   // Extension Management

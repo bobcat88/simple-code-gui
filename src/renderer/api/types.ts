@@ -382,7 +382,7 @@ export interface ExtendedApi extends Api {
   selectDirectory: () => Promise<string | null>
   selectExecutable: () => Promise<string | null>
 
-  // Window controls (Electron-only)
+  // Window controls (Desktop-only)
   windowMinimize: () => void
   windowMaximize: () => void
   windowClose: () => void
