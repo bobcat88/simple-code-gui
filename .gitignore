@@ -11,3 +11,4 @@ dist-build/
 .dolt/
 *.db
 .beads-credential-key
+.gitnexus
