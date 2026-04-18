@@ -326,6 +326,7 @@ export function TileTerminal({
                 projectPath={tab.projectPath}
                 backend={tab.backend}
                 api={api}
+                isTiled={true}
               />
             </ErrorBoundary>
           </div>

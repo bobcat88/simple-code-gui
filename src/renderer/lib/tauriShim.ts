@@ -34,16 +34,49 @@ export const setupTauriShim = () => {
       }).then(u => unlisten = u);
       return () => unlisten?.();
     },
+    onPtyRecreated: (callback: any) => () => {},
+    onApiOpenSession: (callback: any) => () => {},
 
     // Settings
     getSettings: () => invoke('get_settings'),
     saveSettings: (settings: any) => invoke('save_settings', { settings }),
+    onSettingsChanged: (callback: (settings: any) => void) => {
+      let unlisten: (() => void) | undefined;
+      listen('settings-changed', (event: any) => {
+        callback(event.payload);
+      }).then(u => unlisten = u);
+      return () => unlisten?.();
+    },
+
+    // Workspace
+    getWorkspace: () => invoke('get_workspace'),
+    saveWorkspace: (workspace: any) => invoke('save_workspace', { workspace }),
+    onWorkspaceChanged: (callback: (workspace: any) => void) => {
+      let unlisten: (() => void) | undefined;
+      listen('workspace-changed', (event: any) => {
+        callback(event.payload);
+      }).then(u => unlisten = u);
+      return () => unlisten?.();
+    },
 
     // Window Controls
     windowMinimize: () => invoke('window_minimize'),
     windowMaximize: () => invoke('window_maximize'),
     windowClose: () => invoke('window_close'),
     windowIsMaximized: () => invoke('window_is_maximized'),
+    
+    // Dialogs
+    selectDirectory: () => invoke('select_directory'),
+    selectExecutable: () => invoke('select_directory'), // Fallback to directory for now
+    getPathForFile: (file: File) => (file as any).path || file.name,
+    addProject: () => invoke('select_directory'),
+    addProjectsFromParent: async () => {
+      const parentPath = await invoke<string | null>('select_directory');
+      if (!parentPath) return null;
+      // This would need a backend command to list dirs, for now just return null
+      // or implement list_dirs in Rust
+      return null;
+    },
     
     // Installation Status (Stubs)
     claudeCheck: async () => ({ installed: true, version: '0.29.0' }),
@@ -71,6 +104,8 @@ export const setupTauriShim = () => {
     
     // Info
     getVersion: async () => '1.3.58-tauri',
+    isDebugMode: async () => false,
+    refresh: async () => window.location.reload(),
     
     // Shell
     openExternal: (url: string) => invoke('plugin:shell|open', { path: url }),
@@ -146,5 +181,12 @@ export const setupTauriShim = () => {
     mcpReadResource: (serverName: string, uri: string) => invoke('mcp_read_resource', { serverName, uri }),
     mcpLoadConfig: () => invoke('mcp_load_config'),
     discoverSessions: (projectPath: string, backend?: string) => invoke('discover_sessions', { projectPath, backend }),
+    onInstallProgress: (callback: (data: any) => void) => {
+      let unlisten: (() => void) | undefined;
+      listen('install-progress', (event: any) => {
+        callback(event.payload);
+      }).then(u => unlisten = u);
+      return () => unlisten?.();
+    },
   };
 };

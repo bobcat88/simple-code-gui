@@ -19,7 +19,7 @@ export { clearTerminalBuffer, cleanupOrphanedBuffers }
  * Terminal component that wraps xterm.js with PTY integration.
  * Supports TTS, auto work loop, summary capture, and backend-specific commands.
  */
-export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend, api, isMobile, onOpenFileBrowser }: TerminalProps): React.ReactElement {
+export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend, api, isMobile, onOpenFileBrowser, isTiled }: TerminalProps): React.ReactElement {
   // Custom command modal state
   const [showCustomCommandModal, setShowCustomCommandModal] = useState(false)
   const [autoAccept, setAutoAccept] = useState(false)
@@ -372,7 +372,10 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
   return (
     <div className="terminal-content-wrapper flex flex-col h-full overflow-hidden bg-background">
       <div className="flex-1 overflow-hidden relative">
-        <div className="max-w-5xl mx-auto h-full px-4 md:px-8 py-4 pb-32">
+        <div className={cn(
+          "h-full",
+          isTiled ? "p-2" : "max-w-5xl mx-auto px-4 md:px-8 py-4 pb-32"
+        )}>
           <div
             ref={containerRef}
             className="terminal-xterm h-full w-full rounded-xl overflow-hidden border border-border/30 bg-black/20 backdrop-blur-sm shadow-inner"
