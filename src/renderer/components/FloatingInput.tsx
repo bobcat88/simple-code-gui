@@ -7,9 +7,11 @@ import {
   Command, 
   Sparkles,
   ChevronUp,
-  Globe
+  Globe,
+  Mic
 } from 'lucide-react'
 import { cn } from '../lib/utils'
+import { VoiceControls } from './VoiceControls.js'
 
 interface FloatingInputProps {
   onInput: (data: string) => void
@@ -18,6 +20,7 @@ interface FloatingInputProps {
   autoAccept: boolean
   onToggleAutoAccept: () => void
   isMobile?: boolean
+  activeTabId?: string | null
 }
 
 export function FloatingInput({ 
@@ -26,10 +29,11 @@ export function FloatingInput({
   onBackendChange, 
   autoAccept, 
   onToggleAutoAccept,
-  isMobile 
+  activeTabId = null
 }: FloatingInputProps) {
   const [value, setValue] = useState('')
   const [isFocused, setIsFocused] = useState(false)
+  const [showVoice, setShowVoice] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleSubmit = (e?: React.FormEvent) => {
@@ -58,6 +62,26 @@ export function FloatingInput({
     }
   }
 
+  const handleTranscription = useCallback((text: string) => {
+    const cleaned = text.trim()
+    if (!cleaned) return
+
+    // Special case: short confirmations for plan approval
+    const lower = cleaned.toLowerCase()
+    if (lower === 'yes' || lower === 'approve' || lower === 'y' || lower === 'do it') {
+      onInput('y\r')
+      return
+    }
+
+    setValue(prev => {
+      const space = prev && !prev.endsWith(' ') ? ' ' : ''
+      return prev + space + cleaned
+    })
+    
+    // Auto-focus after transcription
+    textareaRef.current?.focus()
+  }, [onInput])
+
   useEffect(() => {
     adjustHeight()
   }, [value])
@@ -65,7 +89,7 @@ export function FloatingInput({
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-3xl px-4 z-20">
       <div className={cn(
-        "glass-panel rounded-md shadow-2xl transition-all duration-300",
+        "glass-panel rounded-xl shadow-2xl transition-all duration-300",
         "relative overflow-hidden",
         isFocused ? "border-primary/40 ring-1 ring-primary/10 shadow-primary/5" : "border-white/5"
       )}>
@@ -81,15 +105,26 @@ export function FloatingInput({
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 placeholder="Ask anything or run a command..."
-                className="w-full bg-transparent border-none focus:ring-0 text-sm py-2.5 pl-3 pr-10 resize-none min-h-[40px] max-h-[200px] overflow-y-auto"
+                className="w-full bg-transparent border-none focus:ring-0 text-sm py-2.5 pl-3 pr-20 resize-none min-h-[40px] max-h-[200px] overflow-y-auto"
                 style={{ height: 'auto' }}
               />
               <div className="absolute right-2 bottom-1.5 flex items-center gap-1">
                 <button
+                  type="button"
+                  onClick={() => setShowVoice(!showVoice)}
+                  className={cn(
+                    "p-2 rounded-lg transition-all duration-300",
+                    showVoice ? "bg-primary/20 text-primary" : "text-muted-foreground hover:bg-white/5"
+                  )}
+                  title="Voice Controls"
+                >
+                  <Mic size={16} />
+                </button>
+                <button
                   type="submit"
                   disabled={!value.trim()}
                   className={cn(
-                    "p-2 rounded-sm transition-all duration-300",
+                    "p-2 rounded-lg transition-all duration-300",
                     value.trim() 
                       ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-105 active:scale-95" 
                       : "text-muted-foreground opacity-20 cursor-not-allowed"
@@ -100,6 +135,15 @@ export function FloatingInput({
               </div>
             </div>
           </div>
+
+          {showVoice && (
+            <div className="px-1 pt-1 pb-2 border-t border-white/5 flex items-center justify-center" style={{ animation: 'slide-down 0.3s ease-out' }}>
+              <VoiceControls 
+                activeTabId={activeTabId}
+                onTranscription={handleTranscription}
+              />
+            </div>
+          )}
 
           <div className="flex items-center justify-between px-1 py-0.5 border-t border-border/50 mt-1">
             <div className="flex items-center gap-1">
@@ -155,6 +199,8 @@ export function FloatingInput({
         <span className="flex items-center gap-1"><Zap size={10} /> Shift+Enter for newline</span>
         <span>•</span>
         <span className="flex items-center gap-1"><Command size={10} /> K for shortcuts</span>
+        <span>•</span>
+        <span className="flex items-center gap-1"><Command size={10} /> Space for Voice</span>
       </div>
     </div>
   )

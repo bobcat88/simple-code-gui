@@ -1,6 +1,9 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import type { BackendKind, AutomationEligibility } from './adapters/types.js'
+import { VoiceControls } from '../VoiceControls.js'
+import { Mic } from 'lucide-react'
+import { useState, useCallback } from 'react'
 
 const BEADS_TYPES = [
   { value: 'task', label: 'Task' },
@@ -69,6 +72,17 @@ export function CreateTaskModal({
   labels, setLabels,
   automation, setAutomation
 }: CreateTaskModalProps) {
+  const [activeVoiceField, setActiveVoiceField] = useState<'title' | 'description' | null>(null)
+
+  const handleTranscription = useCallback((text: string) => {
+    if (!text.trim()) return
+    if (activeVoiceField === 'title') {
+      setTitle(title + (title ? ' ' : '') + text.trim())
+    } else if (activeVoiceField === 'description') {
+      setDescription(description + (description ? ' ' : '') + text.trim())
+    }
+  }, [activeVoiceField, title, description, setTitle, setDescription])
+
   if (!show) return null
 
   const isKspec = backendKind === 'kspec'
@@ -84,7 +98,16 @@ export function CreateTaskModal({
         </div>
         <div className="beads-modal-body">
           <div className="beads-form-group">
-            <label htmlFor="task-title">Title *</label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="task-title">Title *</label>
+              <button 
+                className={`beads-voice-btn ${activeVoiceField === 'title' ? 'active' : ''}`}
+                onClick={() => setActiveVoiceField(activeVoiceField === 'title' ? null : 'title')}
+                title="Voice Input"
+              >
+                <Mic size={14} />
+              </button>
+            </div>
             <input
               id="task-title"
               type="text"
@@ -134,7 +157,16 @@ export function CreateTaskModal({
             </div>
           )}
           <div className="beads-form-group">
-            <label htmlFor="task-description">Description</label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="task-description">Description</label>
+              <button 
+                className={`beads-voice-btn ${activeVoiceField === 'description' ? 'active' : ''}`}
+                onClick={() => setActiveVoiceField(activeVoiceField === 'description' ? null : 'description')}
+                title="Voice Input"
+              >
+                <Mic size={14} />
+              </button>
+            </div>
             <textarea
               id="task-description"
               value={description}
@@ -143,6 +175,18 @@ export function CreateTaskModal({
               rows={3}
             />
           </div>
+
+          {activeVoiceField && (
+            <div className="beads-modal-voice-panel">
+              <VoiceControls 
+                activeTabId="beads-create" 
+                onTranscription={handleTranscription}
+              />
+              <div className="text-[10px] text-muted-foreground mt-1 text-center font-medium opacity-70">
+                Dictating into {activeVoiceField === 'title' ? 'Title' : 'Description'}...
+              </div>
+            </div>
+          )}
           <div className="beads-form-group">
             <label htmlFor="task-labels">Labels</label>
             <input
