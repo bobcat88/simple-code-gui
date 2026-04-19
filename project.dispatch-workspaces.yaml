@@ -1,6 +1,6 @@
 kynetic_dispatch_workspaces: "1.0"
 workspaces:
-  - active_role: worker
+  - active_role: null
     base_branch_point: d270debc807a39e17556d3d1db6669aaf29664f8
     bootstrap:
       status: succeeded
@@ -42,12 +42,12 @@ workspaces:
       detail: null
       eligible: false
       reason: null
-      updated_at: 2026-04-19T07:43:05.019Z
+      updated_at: 2026-04-19T07:43:11.543Z
     health:
       status: healthy
       issues: []
       summary: Workspace record matches current git branch and worktree state.
-      updated_at: 2026-04-19T07:43:07.042Z
+      updated_at: 2026-04-19T07:43:11.543Z
     integration:
       status: pending
       detail: null
@@ -55,17 +55,17 @@ workspaces:
       publication_mode: pull_request
       target_branch: main
       target_commit: d270debc807a39e17556d3d1db6669aaf29664f8
-      updated_at: 2026-04-19T07:43:05.019Z
-    lifecycle_state: active
+      updated_at: 2026-04-19T07:43:11.543Z
+    lifecycle_state: ready
     resolved_base_branch: main
     task_ref: "@01KPJA31YGP5J1JY1FPD18VX1V"
     task_slug: build-project-intelligence-sidebar
     timestamps:
       closed_at: null
       last_active_at: 2026-04-19T07:43:07.042Z
-      last_reconciled_at: 2026-04-19T07:43:07.042Z
+      last_reconciled_at: 2026-04-19T07:43:11.543Z
       created_at: 2026-04-19T07:26:12.132Z
-      updated_at: 2026-04-19T07:43:07.042Z
+      updated_at: 2026-04-19T07:43:11.543Z
     workspace_id: dispatch-workspace-01KPJA31YGP5J1JY1FPD18VX1V
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
