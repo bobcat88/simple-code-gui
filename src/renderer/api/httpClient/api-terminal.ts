@@ -18,7 +18,9 @@ export async function spawnPty(
   cwd: string,
   sessionId?: string,
   model?: string,
-  backend?: BackendId
+  backend?: BackendId,
+  rows?: number,
+  cols?: number
 ): Promise<string> {
   // Ensure WebSocket is connected
   if (!wsManager.isConnected()) {
@@ -29,7 +31,9 @@ export async function spawnPty(
     projectPath: cwd,
     sessionId,
     model,
-    backend
+    backend,
+    rows,
+    cols
   })
 
   return response.ptyId

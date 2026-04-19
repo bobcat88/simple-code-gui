@@ -23,8 +23,24 @@ function normalizeStatus(status: string): TaskStatus {
 }
 
 function toUnified(raw: Record<string, unknown>): UnifiedTask {
+  const id = String(raw.id ?? '')
+  const acceptanceCriteriaText = typeof raw.acceptance_criteria === 'string' ? raw.acceptance_criteria : ''
+  const hasSpec = acceptanceCriteriaText.length > 0
+
+  // Conservative AC detection for Beads: split by newlines if it looks like a list
+  const acceptanceCriteria = acceptanceCriteriaText
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.startsWith('-') || line.startsWith('*') || /^\d+\./.test(line))
+    .map((line, index) => ({
+      id: `ac-${index}`,
+      text: line.replace(/^[-*\d.]+\s*/, ''),
+      status: 'not_started' as const,
+      sourceSystem: 'beads' as const
+    }))
+
   return {
-    id: String(raw.id ?? ''),
+    id,
     title: String(raw.title ?? ''),
     status: normalizeStatus(String(raw.status ?? 'open')),
     priority: typeof raw.priority === 'number' ? raw.priority : undefined,
@@ -32,7 +48,18 @@ function toUnified(raw: Record<string, unknown>): UnifiedTask {
     description: typeof raw.description === 'string' ? raw.description : undefined,
     created_at: typeof raw.created_at === 'string' ? raw.created_at : typeof raw.created === 'string' ? raw.created : undefined,
     updated_at: typeof raw.updated_at === 'string' ? raw.updated_at : undefined,
-    hasSpec: typeof raw.acceptance_criteria === 'string' && raw.acceptance_criteria.length > 0,
+    hasSpec,
+    acceptanceCriteria: acceptanceCriteria.length > 0 ? acceptanceCriteria : undefined,
+    source: {
+      backend: 'beads',
+      sourceSystem: 'beads',
+      externalId: id,
+      supportsSpecItems: false,
+      supportsAcceptanceCriteria: acceptanceCriteria.length > 0,
+      supportsTraits: false, // Beads doesn't map traits directly yet
+      supportsValidation: false,
+      supportsDerivedTasks: false
+    },
     _backend: 'beads'
   }
 }

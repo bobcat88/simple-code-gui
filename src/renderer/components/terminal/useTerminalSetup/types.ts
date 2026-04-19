@@ -13,17 +13,19 @@ export interface UseTerminalSetupOptions {
   onUserInput: (data: string) => void
   onSummaryChunk: (cleanChunk: string) => void
   onAutoWorkMarker: (cleanChunk: string) => void
+  onTokenChunk: (cleanChunk: string) => void
   prePopulateSpokenContent: (chunks: string[]) => void
   resetTTSState: () => void
 }
 
 export interface UseTerminalSetupReturn {
   containerRef: RefObject<HTMLDivElement>
-  terminalRef: RefObject<XTerm | null>
-  fitAddonRef: RefObject<FitAddon | null>
-  userScrolledUpRef: RefObject<boolean>
-  currentLineInputRef: RefObject<string>
+  terminalRef: MutableRefObject<XTerm | null>
+  fitAddonRef: MutableRefObject<FitAddon | null>
+  userScrolledUpRef: MutableRefObject<boolean>
+  currentLineInputRef: MutableRefObject<string>
   inputSuppressedRef: MutableRefObject<boolean>
+  isReady: boolean
 }
 
 export interface PtyOperations {

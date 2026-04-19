@@ -88,7 +88,7 @@ export function GSDStatus({ projectPath, onCommand }: GSDStatusProps) {
       // Load from cache for instant display
       const cachedProgress = gsdStatusCache.get(projectPath)
       if (cachedProgress) {
-        setProgress(cachedProgress)
+        setProgress(cachedProgress as GSDProgress)
         setGsdInstalled(true)
       }
 

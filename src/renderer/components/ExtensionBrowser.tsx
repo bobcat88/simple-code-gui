@@ -48,6 +48,11 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
   const [installing, setInstalling] = useState<string | null>(null)
   const [removing, setRemoving] = useState<string | null>(null)
   const [configuring, setConfiguring] = useState<InstalledExtension | null>(null)
+  const [browsingTools, setBrowsingTools] = useState<InstalledExtension | null>(null)
+  const [tools, setTools] = useState<any[]>([])
+  const [executingTool, setExecutingTool] = useState<any | null>(null)
+  const [toolArgs, setToolArgs] = useState<Record<string, any>>({})
+  const [toolResult, setToolResult] = useState<any | null>(null)
 
   // Load data
   const loadData = useCallback(async (forceRefresh = false) => {
@@ -57,9 +62,9 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
       setError(null)
 
       const [registryData, installedData, urlsData] = await Promise.all([
-        window.electronAPI?.extensionsFetchRegistry(forceRefresh),
-        window.electronAPI?.extensionsGetInstalled(),
-        window.electronAPI?.extensionsGetCustomUrls()
+        window.electronAPI?.extensionsFetchRegistry?.(forceRefresh),
+        window.electronAPI?.extensionsGetInstalled?.(),
+        window.electronAPI?.extensionsGetCustomUrls?.()
       ])
 
       setRegistry({
@@ -67,7 +72,13 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
         mcps: registryData.mcps || [],
         agents: registryData.agents || []
       })
-      setInstalled(installedData || [])
+      setInstalled((installedData || []).map((e: any) => ({
+        ...e,
+        installedAt: e.installedAt || Date.now(),
+        enabled: e.enabled !== false,
+        scope: e.scope || 'global',
+        description: e.description || ''
+      })))
       setCustomUrls(urlsData || [])
     } catch (e: any) {
       setError(e.message || 'Failed to load extensions')
@@ -109,9 +120,9 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
     try {
       let result
       if (ext.type === 'skill' || ext.type === 'agent') {
-        result = await window.electronAPI?.extensionsInstallSkill(ext, 'global')
+        result = await window.electronAPI?.extensionsInstallSkill?.(ext, 'global')
       } else {
-        result = await window.electronAPI?.extensionsInstallMcp(ext)
+        result = await window.electronAPI?.extensionsInstallMcp?.(ext)
       }
 
       if (!result.success) {
@@ -130,8 +141,8 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
   const handleRemove = async (extId: string) => {
     setRemoving(extId)
     try {
-      const result = await window.electronAPI?.extensionsRemove(extId)
-      if (!result.success) {
+      const result = await window.electronAPI?.extensionsRemove?.(extId)
+      if (!result?.success) {
         setError(result.error || 'Removal failed')
       } else {
         await loadData()
@@ -147,9 +158,9 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
   const handleToggle = async (extId: string, enabled: boolean) => {
     try {
       if (enabled) {
-        await window.electronAPI?.extensionsEnableForProject(extId, projectPath)
+        await window.electronAPI?.extensionsEnableForProject?.(extId, projectPath)
       } else {
-        await window.electronAPI?.extensionsDisableForProject(extId, projectPath)
+        await window.electronAPI?.extensionsDisableForProject?.(extId, projectPath)
       }
       await loadData()
     } catch (e: any) {
@@ -165,27 +176,56 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
       setInstalling('custom-url')
 
       // First fetch info from the URL
-      const extInfo = await window.electronAPI?.extensionsFetchFromUrl(customUrl.trim())
+      const extInfo = await window.electronAPI?.extensionsFetchFromUrl?.(customUrl.trim())
       if (!extInfo) {
         setError('Could not fetch extension info from URL')
         return
       }
 
       // Install it
-      const result = await window.electronAPI?.extensionsInstallSkill(extInfo, 'global')
-      if (!result.success) {
-        setError(result.error || 'Installation failed')
+      const result = await window.electronAPI?.extensionsInstallSkill?.(extInfo, 'global')
+      if (!result?.success) {
+        setError(result?.error || 'Installation failed')
         return
       }
 
       // Save the custom URL
-      await window.electronAPI?.extensionsAddCustomUrl(customUrl.trim())
+      await window.electronAPI?.extensionsAddCustomUrl?.(customUrl.trim())
       setCustomUrl('')
       await loadData()
     } catch (e: any) {
       setError(e.message || 'Failed to add custom URL')
     } finally {
       setInstalling(null)
+    }
+  }
+
+  // Fetch tools for an MCP
+  const handleBrowseTools = async (ext: InstalledExtension) => {
+    setBrowsingTools(ext)
+    setLoading(true)
+    try {
+      const result = await window.electronAPI?.mcpListTools?.(ext.name)
+      setTools(result?.tools || [])
+    } catch (e: any) {
+      setError(e.message || 'Failed to list tools')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Call a tool
+  const handleCallTool = async () => {
+    if (!browsingTools || !executingTool) return
+    setLoading(true)
+    setToolResult(null)
+    try {
+      const result = await window.electronAPI?.mcpCallTool?.(browsingTools.name, executingTool.name, toolArgs)
+      setToolResult(result)
+    } catch (e: any) {
+      setError(e.message || 'Tool execution failed')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -233,6 +273,15 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
                     title="Configure"
                   >
                     <span>⚙</span>
+                  </button>
+                )}
+                {installedExt?.type === 'mcp' && (
+                  <button
+                    className="icon-btn"
+                    onClick={() => handleBrowseTools(installedExt)}
+                    title="Browse Tools"
+                  >
+                    <span>🛠</span>
                   </button>
                 )}
                 <button
@@ -385,7 +434,7 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
                     const textarea = document.getElementById('mcp-config-textarea') as HTMLTextAreaElement
                     try {
                       const config = JSON.parse(textarea.value || '{}')
-                      await window.electronAPI?.extensionsSetConfig(configuring.id, config)
+                      await window.electronAPI?.extensionsSetConfig?.(configuring.id, config)
                       setConfiguring(null)
                       await loadData()
                     } catch (e) {
@@ -395,6 +444,85 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
                 >
                   Save
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* MCP Tools Modal */}
+        {browsingTools && (
+          <div className="config-overlay" onClick={() => {
+            if (executingTool) setExecutingTool(null)
+            else setBrowsingTools(null)
+          }}>
+            <div className="config-modal tools-modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>{executingTool ? `Run: ${executingTool.name}` : `Tools: ${browsingTools.name}`}</h3>
+                <button className="modal-close" onClick={() => {
+                  if (executingTool) setExecutingTool(null)
+                  else setBrowsingTools(null)
+                }}>×</button>
+              </div>
+              
+              <div className="config-content overflow-y-auto max-h-[60vh] p-4">
+                {executingTool ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">{executingTool.description}</p>
+                    
+                    <div className="space-y-3">
+                      {Object.entries(executingTool.inputSchema?.properties || {}).map(([name, schema]: [string, any]) => (
+                        <div key={name} className="flex flex-col gap-1">
+                          <label className="text-xs font-bold">{name}{executingTool.inputSchema?.required?.includes(name) && '*'}</label>
+                          <input
+                            type="text"
+                            className="bg-muted/50 border border-border rounded px-2 py-1.5 text-sm"
+                            placeholder={schema.description || name}
+                            value={toolArgs[name] || ''}
+                            onChange={(e) => setToolArgs(prev => ({ ...prev, [name]: e.target.value }))}
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {toolResult && (
+                      <div className="mt-4 p-3 bg-black/20 rounded-lg border border-white/5 font-mono text-xs overflow-x-auto">
+                        <pre>{JSON.stringify(toolResult, null, 2)}</pre>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {tools.map(tool => (
+                      <div 
+                        key={tool.name} 
+                        className="p-3 bg-white/5 hover:bg-white/10 rounded-lg border border-white/5 cursor-pointer transition-colors"
+                        onClick={() => {
+                          setExecutingTool(tool)
+                          setToolArgs({})
+                          setToolResult(null)
+                        }}
+                      >
+                        <div className="font-bold text-sm">{tool.name}</div>
+                        <div className="text-xs text-muted-foreground line-clamp-2">{tool.description}</div>
+                      </div>
+                    ))}
+                    {tools.length === 0 && !loading && (
+                      <div className="text-center py-8 text-muted-foreground italic">No tools found for this server.</div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="config-actions p-4 border-t border-white/5">
+                {executingTool ? (
+                  <>
+                    <button onClick={() => setExecutingTool(null)}>Back</button>
+                    <button className="primary" onClick={handleCallTool} disabled={loading}>
+                      {loading ? 'Running...' : 'Run Tool'}
+                    </button>
+                  </>
+                ) : (
+                  <button onClick={() => setBrowsingTools(null)}>Close</button>
+                )}
               </div>
             </div>
           </div>

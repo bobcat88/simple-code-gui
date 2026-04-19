@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react'
 import { Project } from '../../stores/workspace.js'
 import { useIsMobile } from '../../hooks/useIsMobile.js'
 import { SidebarProps } from './types.js'
-import { ProjectItem } from './ProjectItem.js'
+import { ProjectItem } from './index.js'
 import { useSidebarState } from './useSidebarState.js'
 import { useSidebarEffects } from './useSidebarEffects.js'
 import { useSidebarHandlers } from './useSidebarHandlers.js'
@@ -32,6 +32,8 @@ export function Sidebar({
   onMobileClose,
   onOpenMobileConnect,
   onDisconnect,
+  activeSection,
+  api,
 }: SidebarProps): React.ReactElement | null {
   // Mobile detection
   const { isMobile } = useIsMobile()
@@ -118,16 +120,15 @@ export function Sidebar({
   const contentProps = {
     projects,
     openTabs,
-    activeTabId,
-    focusedTabId: lastFocusedTabId ?? null,
     onOpenSession,
     onRemoveProject,
     onUpdateProject,
     onAddProject,
     onAddProjectsFromParent,
+    onOpenProjectWizard,
     onOpenSettings,
-    onOpenMakeProject,
-    onOpenMobileConnect,
+    activeSection,
+    api,
     renderProjectItem,
   }
 

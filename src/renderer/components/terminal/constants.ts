@@ -23,12 +23,20 @@ export const TTS_TAG_REGEX = /(?:«tts»|<tts>)([\s\S]*?)(?:«\/tts»|<\/tts>)/g
 export const CODE_PATTERN_REGEX = /[{}()\[\];=`$]|^\s*\/\/|^\s*#|function\s|const\s|let\s|var\s/
 export const SUMMARY_EXTRACT_REGEX = /===SUMMARY_START===([\s\S]*)===SUMMARY_END===/
 export const AUTOWORK_MARKER_REGEX = /===AUTOWORK_CONTINUE===/g
+export const TOKEN_METRIC_REGEX = /(?:tokens|Tokens):\s*([\d,]+)\s*input,\s*([\d,]+)\s*output/i
+export const TOKEN_SAVED_REGEX = /(?:saved|Saved):\s*([\d,]+)/i
+export const TOKEN_COST_REGEX = /(?:cost|Cost):\s*\$?([\d.]+)/i
 
 // Terminal font size configuration
 export const DEFAULT_FONT_SIZE = 14
 export const MIN_FONT_SIZE = 8
 export const MAX_FONT_SIZE = 32
 export const FONT_SIZE_STORAGE_KEY = 'terminal-font-size'
+
+// Estimated character dimensions for initial spawning (before fitAddon is available)
+// Based on JetBrains Mono at 14px
+export const ESTIMATED_CHAR_WIDTH = 9
+export const ESTIMATED_CHAR_HEIGHT = 18
 
 // Terminal configuration
 export const TERMINAL_CONFIG = {

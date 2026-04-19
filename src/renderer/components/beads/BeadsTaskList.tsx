@@ -106,14 +106,46 @@ export function BeadsTaskList({
                 ))}
               </select>
               <span className="beads-task-id" title={task.id}>{task.displayId ?? task.id}</span>
+              
+              {/* Source Backend */}
+              <span className={`beads-task-backend backend-${task._backend}`} title={`Backend: ${task._backend}`}>
+                {task._backend}
+              </span>
+
+              {/* Spec & AC Indicator */}
               {task.hasSpec && (
-                <span className="beads-task-spec-badge" title="Has acceptance criteria">AC</span>
+                <span className="beads-task-spec-badge" title={task.specItems?.[0]?.title || 'Has linked spec'}>
+                  {task.acceptanceCriteria ? (
+                    `${task.acceptanceCriteria.filter(ac => ac.status === 'satisfied').length}/${task.acceptanceCriteria.length} AC`
+                  ) : 'SPEC'}
+                </span>
               )}
+
+              {/* Validation Indicator */}
+              {task.validation && (
+                <span className={`beads-task-validation val-${task.validation.status}`} title={`Validation: ${task.validation.status}`}>
+                  {task.validation.status === 'passed' ? '✓' : task.validation.status === 'failed' ? '✗' : '!'}
+                </span>
+              )}
+
+              {/* Traits (capped to 2) */}
+              {task.traits && task.traits.length > 0 && (
+                <div className="beads-task-traits">
+                  {task.traits.slice(0, 2).map(trait => (
+                    <span key={trait.id} className="beads-task-trait-chip">{trait.label}</span>
+                  ))}
+                  {task.traits.length > 2 && (
+                    <span className="beads-task-trait-overflow">+{task.traits.length - 2}</span>
+                  )}
+                </div>
+              )}
+
               {task.automation && (
                 <span className={`beads-task-automation automation-${task.automation}`} title={`Automation: ${task.automation}`}>
                   {task.automation === 'eligible' ? 'auto' : task.automation === 'needs_review' ? 'review' : 'manual'}
                 </span>
               )}
+
               <button
                 className={`beads-task-status status-${task.status}`}
                 onClick={(e) => {

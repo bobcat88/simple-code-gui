@@ -1,14 +1,16 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import '@xterm/xterm/css/xterm.css'
-import { TerminalBar } from '../TerminalBar.js'
+import { FloatingInput } from '../FloatingInput.js'
 import { AutoWorkOptions } from '../TerminalMenu.js'
 import { CustomCommandModal } from '../CustomCommandModal.js'
 import { resolveBackendCommand } from '../../utils/backendCommands.js'
 import type { TerminalProps } from './types.js'
+import { ExtendedApi } from '../../api/types.js'
 import { useTerminalSetup } from './useTerminalSetup.js'
 import { useTTS } from './useTTS.js'
 import { useAutoWork } from './useAutoWork.js'
 import { useSummaryCapture } from './useSummaryCapture.js'
+import { useTokenMeter } from './useTokenMeter.js'
 import { clearTerminalBuffer, cleanupOrphanedBuffers, formatPathsForBackend } from './utils.js'
 
 // Re-export buffer utilities for external use
@@ -18,9 +20,33 @@ export { clearTerminalBuffer, cleanupOrphanedBuffers }
  * Terminal component that wraps xterm.js with PTY integration.
  * Supports TTS, auto work loop, summary capture, and backend-specific commands.
  */
-export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend, api, isMobile, onOpenFileBrowser }: TerminalProps): React.ReactElement {
+export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend, api, isMobile, onOpenFileBrowser, isTiled }: TerminalProps): React.ReactElement {
   // Custom command modal state
   const [showCustomCommandModal, setShowCustomCommandModal] = useState(false)
+  const [autoAccept, setAutoAccept] = useState(false)
+
+  // Sync auto-accept state when PTY changes
+  useEffect(() => {
+    if (api && (api as any).getAutoAcceptStatus) {
+      (api as any).getAutoAcceptStatus(ptyId).then((enabled: boolean) => {
+        setAutoAccept(enabled)
+      })
+    } else {
+      window.electronAPI?.getAutoAcceptStatus?.(ptyId)?.then((enabled: boolean) => {
+        setAutoAccept(enabled)
+      })
+    }
+  }, [ptyId])
+
+  const handleToggleAutoAccept = useCallback(() => {
+    const newState = !autoAccept
+    setAutoAccept(newState)
+    if (api && (api as any).setAutoAccept) {
+      (api as any).setAutoAccept(ptyId, newState)
+    } else {
+      window.electronAPI?.setAutoAccept?.(ptyId, newState)
+    }
+  }, [autoAccept, ptyId])
 
   // PTY write helper - uses api if provided, otherwise window.electronAPI
   const writePty = useCallback((id: string, data: string) => {
@@ -93,6 +119,13 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     triggerSummarize,
   })
 
+  // Token meter hook
+  const { processTokenChunk } = useTokenMeter({
+    ptyId,
+    api,
+    projectPath: projectPath || undefined
+  })
+
   // Terminal setup hook
   const {
     containerRef,
@@ -101,6 +134,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     userScrolledUpRef,
     currentLineInputRef,
     inputSuppressedRef,
+    isReady,
   } = useTerminalSetup({
     ptyId,
     theme,
@@ -110,6 +144,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     onUserInput: handleUserInput,
     onSummaryChunk: processSummaryChunk,
     onAutoWorkMarker: handleAutoWorkMarker,
+    onTokenChunk: processTokenChunk,
     prePopulateSpokenContent,
     resetTTSState,
   })
@@ -127,6 +162,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
           fitAddonRef.current.fit()
           const dims = fitAddonRef.current.proposeDimensions()
           if (dims && dims.cols > 0 && dims.rows > 0) {
+            api?.resizePty(ptyId, dims.cols, dims.rows)
             window.electronAPI?.resizePty(ptyId, dims.cols, dims.rows)
           }
           if (wasAtBottom) {
@@ -142,7 +178,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
       setTimeout(doFit, 50)
       setTimeout(doFit, 150)
     }
-  }, [isActive, ptyId, containerRef, terminalRef, fitAddonRef, userScrolledUpRef])
+  }, [isActive, isReady, ptyId, containerRef, terminalRef, fitAddonRef, userScrolledUpRef])
 
   // Check if a drag event is a tile/sidebar/sub-tab drag (not a file drop)
   const isTileDrag = useCallback((e: React.DragEvent) => {
@@ -167,7 +203,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     if (files && files.length > 0) {
       for (let i = 0; i < files.length; i++) {
         try {
-          const filePath = window.electronAPI?.getPathForFile(files[i])
+          const filePath = (api as ExtendedApi)?.getPathForFile?.(files[i]) || window.electronAPI?.getPathForFile(files[i])
           if (filePath) {
             paths.push(filePath)
           }
@@ -191,7 +227,8 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     }
 
     if (paths.length > 0) {
-      window.electronAPI?.writePty(ptyId, formatPathsForBackend(paths, backend))
+      if (api) api.writePty(ptyId, formatPathsForBackend(paths, backend))
+      else window.electronAPI?.writePty(ptyId, formatPathsForBackend(paths, backend))
     }
   }, [ptyId, backend, isTileDrag])
 
@@ -343,29 +380,35 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
   }, [sendBackendCommand, triggerSummarize, startAutoWork, continueAutoWork, stopAutoWork, cancelAutoWork, handleClearWithRestore, handleCompactWithRestore])
 
   return (
-    <div className="terminal-content-wrapper">
-      <div
-        ref={containerRef}
-        className="terminal-xterm"
-        onMouseDown={onFocus}
-        onClick={() => {
-          // Focus terminal on click (important for mobile touch)
-          terminalRef.current?.focus()
-        }}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-      />
-      <TerminalBar
-        ptyId={ptyId}
-        onCommand={handleMenuCommand}
-        onInput={(data) => writePty(ptyId, data)}
-        currentBackend={(backend || 'claude') as 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'}
-        onBackendChange={handleBackendChange}
-        isMobile={isMobile}
-        onOpenFileBrowser={onOpenFileBrowser}
-        onClearWithRestore={handleClearWithRestore}
-        onCompactWithRestore={handleCompactWithRestore}
-      />
+    <div className="terminal-content-wrapper flex flex-col h-full overflow-hidden bg-background">
+      <div className="flex-1 overflow-hidden relative">
+        <div className={cn(
+          "h-full",
+          isTiled ? "p-2" : "max-w-5xl mx-auto px-4 md:px-8 py-4 pb-32"
+        )}>
+          <div
+            ref={containerRef}
+            className="terminal-xterm h-full w-full rounded-xl overflow-hidden border border-border/30 bg-black/20 backdrop-blur-sm shadow-inner"
+            onMouseDown={onFocus}
+            onClick={() => {
+              // Focus terminal on click (important for mobile touch)
+              terminalRef.current?.focus()
+            }}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+          />
+        </div>
+        
+        <FloatingInput 
+          onInput={(data) => writePty(ptyId, data)}
+          currentBackend={backend || 'claude'}
+          onBackendChange={handleBackendChange}
+          autoAccept={autoAccept}
+          onToggleAutoAccept={handleToggleAutoAccept}
+          isMobile={isMobile}
+        />
+      </div>
+
       <CustomCommandModal
         isOpen={showCustomCommandModal}
         onClose={() => setShowCustomCommandModal(false)}

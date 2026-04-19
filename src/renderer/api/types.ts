@@ -104,6 +104,7 @@ export interface OpenTab {
   projectPath: string
   sessionId?: string
   title: string
+  customTitle?: boolean
   ptyId: string
   backend?: BackendSelection
 }
@@ -176,6 +177,7 @@ export type ApiOpenSessionCallback = (event: ApiOpenSessionEvent) => void
  * Core API interface for the renderer
  */
 export interface Api {
+  [key: string]: any;
   // Optional: Desktop-only voice catalog and XTTS management
   voiceGetInstalled?: () => Promise<Array<{ key: string; displayName: string; source: 'builtin' | 'downloaded' | 'custom'; quality?: string; language?: string }>>
   xttsGetVoices?: () => Promise<Array<{ id: string; name: string; language: string; createdAt: number }>>
@@ -187,6 +189,21 @@ export interface Api {
   voiceSetVoice?: (voice: string | { voice: string; engine: 'piper' | 'xtts' }) => Promise<{ success: boolean }>
   ttsRemoveInstructions?: (projectPath: string) => Promise<{ success: boolean }>
   extensionsGetInstalled?: () => Promise<Array<{ id: string; name: string; type: string }>>
+  extensionsFetchRegistry?: (forceRefresh: boolean) => Promise<any>
+  extensionsGetCustomUrls?: () => Promise<string[]>
+  extensionsInstallSkill?: (extension: any, scope: string) => Promise<{ success: boolean; error?: string }>
+  extensionsInstallMcp?: (extension: any) => Promise<{ success: boolean; error?: string }>
+  extensionsRemove?: (id: string) => Promise<{ success: boolean; error?: string }>
+  extensionsEnableForProject?: (id: string, projectPath: string) => Promise<void>
+  extensionsDisableForProject?: (id: string, projectPath: string) => Promise<void>
+  extensionsFetchFromUrl?: (url: string) => Promise<any | null>
+  extensionsAddCustomUrl?: (url: string) => Promise<void>
+  extensionsSetConfig?: (id: string, config: any) => Promise<void>
+  mcpListTools?: (serverName: string) => Promise<any>
+  mcpCallTool?: (serverName: string, toolName: string, args: any) => Promise<any>
+  mcpListResources?: (serverName: string) => Promise<any>
+  mcpReadResource?: (serverName: string, uri: string) => Promise<any>
+  mcpLoadConfig?: () => Promise<void>
 
   // Optional: API server control (desktop only)
   apiStart?: (projectPath: string, port: number) => Promise<{ success: boolean; error?: string }>
@@ -262,7 +279,7 @@ export interface Api {
    * @param model Optional model override
    * @param backend Optional backend override ('claude', 'gemini', etc.)
    */
-  spawnPty: (cwd: string, sessionId?: string, model?: string, backend?: BackendId) => Promise<string>
+  spawnPty: (cwd: string, sessionId?: string, model?: string, backend?: BackendId, rows?: number, cols?: number) => Promise<string>
 
   /**
    * Write data to a PTY
@@ -333,6 +350,16 @@ export interface Api {
    * @returns Unsubscribe function
    */
   onApiOpenSession: (callback: ApiOpenSessionCallback) => Unsubscribe
+  
+  /**
+   * Subscribe to settings change events
+   */
+  onSettingsChanged?: (callback: (settings: Settings) => void) => Unsubscribe
+  
+  /**
+   * Subscribe to workspace change events
+   */
+  onWorkspaceChanged?: (callback: (workspace: Workspace) => void) => Unsubscribe
 
   /**
    * Get connection info for external components (HTTP backend only)
@@ -355,7 +382,7 @@ export interface ExtendedApi extends Api {
   selectDirectory: () => Promise<string | null>
   selectExecutable: () => Promise<string | null>
 
-  // Window controls (Electron-only)
+  // Window controls (Desktop-only)
   windowMinimize: () => void
   windowMaximize: () => void
   windowClose: () => void
@@ -373,8 +400,156 @@ export interface ExtendedApi extends Api {
   refresh: () => Promise<void>
   openExternal: (url: string) => Promise<void>
 
+  // Updater (Tauri/Electron)
+  checkForUpdate: () => Promise<{ available: boolean; version?: string; body?: string }>
+  downloadUpdate: () => Promise<{ success: boolean; error?: string }>
+  installUpdate: () => Promise<void>
+
   // Debug
   debugLog: (message: string) => void
+
+  // Token Metering
+  logTokenEvent: (projectId: string | null, input: number, output: number, saved: number, model: string) => Promise<void>
+  getTokenStats: (projectId?: string) => Promise<{ totalInput: number; totalOutput: number; totalSaved: number; totalCost: number }>
+
+  // Project Initialization Wizard
+  projectScan: (path: string, options?: ScanOptions) => Promise<ProjectCapabilityScan>
+  projectGenerateProposal: (scan: ProjectCapabilityScan, preset: string, projectName: string, taskBackend: string) => Promise<InitializationProposal>
+  projectApplyProposal: (proposal: InitializationProposal) => Promise<string[]>
+  scanProjectIntelligence: (path: string) => Promise<ProjectIntelligence>
+}
+
+// ============================================================================
+// Project Wizard Types
+// ============================================================================
+
+export interface ScanOptions {
+  includeCliHealth?: boolean
+  includeGitHealth?: boolean
+  maxDepth?: number
+}
+
+export type SourceSystem = 'simple_code_gui' | 'beads' | 'kspec' | 'gsd' | 'rtk' | 'gitnexus' | 'mcp' | 'provider' | 'git' | 'terminal' | 'user'
+export type CapabilityKind = 'task_backend' | 'spec_backend' | 'execution_workflow' | 'repo_intelligence' | 'token_optimizer' | 'mcp_server' | 'provider' | 'voice' | 'updater' | 'project_contract'
+export type CapabilityMode = 'full' | 'partial' | 'instruction_only' | 'degraded' | 'disabled' | 'unknown'
+export type HealthStatus = 'healthy' | 'warning' | 'error' | 'unknown'
+export type MarkerKind = 'file' | 'directory' | 'env_var' | 'process' | 'mcp_tool' | 'mcp_resource' | 'generated' | 'logic'
+export type MarkerStatus = 'present' | 'missing' | 'partially_present' | 'broken' | 'mismatched'
+export type Confidence = 'certain' | 'high' | 'medium' | 'low' | 'guessed'
+export type OperationKind = 'create_file' | 'modify_file' | 'create_directory' | 'run_command' | 'preserve' | 'skip'
+export type OperationRisk = 'low' | 'medium' | 'high'
+
+export interface DetectedMarker {
+  id: string
+  kind: MarkerKind
+  path?: string
+  sourceSystem: SourceSystem
+  confidence: Confidence
+  status: MarkerStatus
+}
+
+export interface CapabilityScanResult {
+  id: string
+  kind: CapabilityKind
+  sourceSystem: SourceSystem
+  installed: boolean
+  initialized: boolean
+  enabled: boolean
+  mode: CapabilityMode
+  health: HealthStatus
+  version?: string
+  markerIds: string[]
+}
+
+export interface ScanWarning {
+  id: string
+  severity: 'info' | 'warning'
+  title: string
+  detail: string
+  markerIds: string[]
+  capabilityIds: string[]
+}
+
+export interface ScanBlocker {
+  id: string
+  title: string
+  detail: string
+  markerIds: string[]
+  recommendedAction: string
+}
+
+export interface UpgradeProposalInput {
+  canProposeMinimal: boolean
+  canProposeStandard: boolean
+  canProposeFull: boolean
+  recommendedPreset: string
+  createCandidates: string[]
+  modifyCandidates: string[]
+  preserveCandidates: string[]
+  migrationSources: SourceSystem[]
+  rollbackNotes: string[]
+}
+
+export interface ProjectCapabilityScan {
+  rootPath: string
+  scannedAt: string
+  initializationState: string
+  markers: DetectedMarker[]
+  capabilities: CapabilityScanResult[]
+  warnings: ScanWarning[]
+  blockers: ScanBlocker[]
+  upgradeInputs: UpgradeProposalInput
+}
+
+export interface ProposalOperation {
+  id: string
+  kind: OperationKind
+  path?: string
+  command?: string
+  sourceSystem: SourceSystem
+  reason: string
+  preview?: string
+  risk: OperationRisk
+  requiresApproval: boolean
+}
+
+export interface InitializationProposal {
+  id: string
+  rootPath: string
+  createdAt: string
+  preset: string
+  summary: string
+  operations: ProposalOperation[]
+  warnings: ScanWarning[]
+  blockers: ScanBlocker[]
+}
+
+export interface ProjectIntelligence {
+  git?: {
+    branch: string
+    isDirty: boolean
+    uncommittedCount: number
+    recentCommits: Array<{ hash: string; message: string; author: string; date: string }>
+    remote?: string
+    ahead: number
+    behind: number
+  }
+  stacks: Array<{ name: string; icon: string; version?: string; configFile: string }>
+  health: {
+    score: number
+    hasGit: boolean
+    hasReadme: boolean
+    hasCi: boolean
+    hasTests: boolean
+    hasLinter: boolean
+    hasLockfile: boolean
+  }
+  gitnexus?: {
+    symbols: number
+    relationships: number
+    processes: number
+    stale: boolean
+  }
 }
 
 // ============================================================================

@@ -6,6 +6,12 @@
     "main"
   ],
   "permissions": [
-    "core:default"
+    "core:default",
+    "shell:default",
+    "dialog:default",
+    "notification:default",
+    "fs:default",
+    "os:default",
+    "global-shortcut:default"
   ]
 }

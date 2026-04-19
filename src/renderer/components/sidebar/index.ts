@@ -11,7 +11,7 @@ export * from './useSidebarHandlers.js'
 export * from './useProjectItemCallbacks.js'
 
 // Components
-export * from './ProjectItem.js'
+export { ProjectItemModern as ProjectItem } from './ProjectItemModern.js'
 export * from './ProjectContextMenu.js'
 export * from './ProjectSettingsModal.js'
 export * from './CategoryContextMenu.js'

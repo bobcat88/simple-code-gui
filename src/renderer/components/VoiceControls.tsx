@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useVoice } from '../contexts/VoiceContext'
+import { Mic, MicOff, Volume2, Search, Activity, Loader2 } from 'lucide-react'
+import { cn } from '../lib/utils'
 
 interface VoiceControlsProps {
   activeTabId: string | null
   onTranscription: (text: string) => void
+  isVertical?: boolean
 }
 
 export function VoiceControls({
   activeTabId,
-  onTranscription
+  onTranscription,
+  isVertical = false
 }: VoiceControlsProps) {
   const {
     // Voice Output
@@ -44,7 +48,7 @@ export function VoiceControls({
   useEffect(() => {
     checkInstallation()
 
-    const cleanup = window.electronAPI?.onInstallProgress?.((data) => {
+    const cleanup = window.electronAPI?.onInstallProgress?.((data: any) => {
       if ((data.type === 'piper' || data.type === 'piper-voice') && data.percent === 100) {
         setInstallingTTS(false)
         checkInstallation()
@@ -157,97 +161,66 @@ export function VoiceControls({
 
       // Test TTS when enabling
       if (newState) {
-        console.log('Testing TTS...')
         window.electronAPI?.voiceSpeak?.('Voice output enabled. Hello!')
-          .then(result => {
-            console.log('TTS result:', result)
+          .then((result: any) => {
             if (result?.success && result.audioData) {
               const audioData = Uint8Array.from(atob(result.audioData), c => c.charCodeAt(0))
               const blob = new Blob([audioData], { type: 'audio/wav' })
               const url = URL.createObjectURL(blob)
               const audio = new Audio(url)
               audio.volume = volume
-              audio.play().catch(e => console.error('Play failed:', e))
+              audio.play().catch((e: any) => console.error('Play failed:', e))
             }
           })
-          .catch(e => console.error('TTS failed:', e))
+          .catch((e: any) => console.error('TTS failed:', e))
       }
     }
   }
 
-  // Determine voice input button state and title
   const getVoiceInputTitle = () => {
-    if (isModelLoading) return `Loading Whisper model... ${modelLoadProgress}%`
-    if (isRecording) {
-      if (currentTranscription) {
-        return `Recording: "${currentTranscription}" ${pushToTalkEnabled ? '(release Ctrl+Space to send)' : '(auto-submits after silence)'}`
-      }
-      return pushToTalkEnabled ? 'Listening... (release Ctrl+Space to send)' : 'Listening... (speak now)'
-    }
-    return pushToTalkEnabled ? 'Push-to-Talk: Hold Ctrl+Space to record' : 'Click to start voice input'
+    if (isModelLoading) return `Loading Whisper... ${modelLoadProgress}%`
+    if (isRecording) return pushToTalkEnabled ? 'Release Ctrl+Space to send' : 'Recording...'
+    return pushToTalkEnabled ? 'Push-to-Talk (Ctrl+Space)' : 'Click to start voice'
   }
+
+  const buttonClass = "p-3 rounded-2xl transition-all duration-300 group relative flex items-center justify-center w-full text-muted-foreground hover:bg-muted/80 hover:text-foreground scale-95 hover:scale-100"
 
   return (
-    <>
-      <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-        <button
-          className={`action-icon-btn ${isRecording ? 'enabled recording' : ''} ${isModelLoading ? 'installing' : ''}`}
-          onClick={handleVoiceInput}
-          disabled={isModelLoading}
-          tabIndex={-1}
-          title={getVoiceInputTitle()}
-        >
-          {isModelLoading ? '\u23F3' : isRecording ? '\u23F9\uFE0F' : '\uD83C\uDFA4'}
-        </button>
-
-        {showLevelMeter && (
-          <div className="voice-level-meter" title={`Level: ${audioLevel}% | Threshold: ${silenceThreshold}%`}>
-            <div className="voice-level-bar-bg">
-              <div
-                className="voice-level-bar-fill"
-                style={{
-                  height: `${audioLevel}%`,
-                  backgroundColor: audioLevel > silenceThreshold ? 'var(--accent, #58a6ff)' : 'var(--text-muted, #666)'
-                }}
-              />
-              <div
-                className="voice-level-threshold"
-                style={{ bottom: `${silenceThreshold}%` }}
-              />
-            </div>
-            {!pushToTalkEnabled && (
-              <input
-                type="range"
-                className="voice-threshold-slider"
-                min="0"
-                max="50"
-                value={silenceThreshold}
-                onChange={(e) => setSilenceThreshold(Number(e.target.value))}
-                title={`Silence threshold: ${silenceThreshold}%`}
-              />
-            )}
+    <div className={cn("flex gap-2", isVertical ? "flex-col w-full" : "flex-row")}>
+      <button
+        className={cn(buttonClass, isRecording && "bg-red-500/20 text-red-500 animate-pulse scale-100")}
+        onClick={handleVoiceInput}
+        disabled={isModelLoading}
+        title={getVoiceInputTitle()}
+      >
+        {isModelLoading ? <Loader2 size={20} className="animate-spin" /> : isRecording ? <MicOff size={20} /> : <Mic size={20} />}
+        
+        {showLevelMeter && isVertical && (
+          <div className="absolute left-full ml-3 h-10 w-1 bg-muted rounded-full overflow-hidden">
+            <div 
+              className={cn("w-full transition-all duration-75", audioLevel > silenceThreshold ? "bg-primary" : "bg-muted-foreground/30")}
+              style={{ height: `${audioLevel}%`, marginTop: `${100 - audioLevel}%` }}
+            />
           </div>
         )}
-      </div>
-
-      <button
-        className={`action-icon-btn ${pushToTalkEnabled ? 'enabled' : ''}`}
-        onClick={() => setPushToTalkEnabled(!pushToTalkEnabled)}
-        tabIndex={-1}
-        title={pushToTalkEnabled ? 'Push-to-Talk ON (Ctrl+Space) — click to switch to auto-detect' : 'Auto-detect mode — click to enable Push-to-Talk (Ctrl+Space)'}
-      >
-        {pushToTalkEnabled ? '\u{1F3A7}' : '\u{1F50D}'}
       </button>
 
       <button
-        className={`action-icon-btn ${voiceOutputEnabled ? 'enabled' : ''} ${installingTTS ? 'installing' : ''}`}
+        className={cn(buttonClass, pushToTalkEnabled && "bg-primary/20 text-primary scale-100")}
+        onClick={() => setPushToTalkEnabled(!pushToTalkEnabled)}
+        title={pushToTalkEnabled ? 'PTT Active (Ctrl+Space)' : 'Auto-detect Mode'}
+      >
+        {pushToTalkEnabled ? <Activity size={20} /> : <Search size={20} />}
+      </button>
+
+      <button
+        className={cn(buttonClass, voiceOutputEnabled && "bg-primary/20 text-primary scale-100", installingTTS && "animate-spin")}
         onClick={handleVoiceOutput}
         disabled={installingTTS}
-        tabIndex={-1}
-        title={installingTTS ? 'Installing Piper...' : ttsInstalled ? (voiceOutputEnabled ? 'Disable voice output' : 'Enable voice output') : 'Click to install Piper'}
+        title={installingTTS ? 'Installing Piper...' : 'Toggle Voice Output'}
       >
-        {installingTTS ? '\u23F3' : '\uD83D\uDD0A'}
+        {installingTTS ? <Loader2 size={20} /> : <Volume2 size={20} />}
       </button>
-    </>
+    </div>
   )
 }

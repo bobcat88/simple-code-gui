@@ -107,8 +107,8 @@ export class HttpBackend implements Api {
 
   // PTY Management
 
-  spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId): Promise<string> {
-    return this.ptyApi.spawnPty(cwd, sessionId, model, backend)
+  spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId, rows?: number, cols?: number): Promise<string> {
+    return this.ptyApi.spawnPty(cwd, sessionId, model, backend, rows, cols)
   }
 
   killPty(id: string): void {
@@ -189,6 +189,14 @@ export class HttpBackend implements Api {
 
   onApiOpenSession(callback: ApiOpenSessionCallback): Unsubscribe {
     return this.workspaceApi.onApiOpenSession(callback)
+  }
+
+  onSettingsChanged(callback: (settings: Settings) => void): Unsubscribe {
+    return () => {}
+  }
+
+  onWorkspaceChanged(callback: (workspace: Workspace) => void): Unsubscribe {
+    return () => {}
   }
 
   // Connection Management

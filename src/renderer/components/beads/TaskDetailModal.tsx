@@ -102,17 +102,98 @@ export function TaskDetailModal({
                     <p>{task.description}</p>
                   </div>
                 )}
+
+                {/* Spec Section */}
+                {(task.specItems || (task.source?.supportsSpecItems && !task.specItems)) && (
+                  <div className="beads-detail-section">
+                    <label>Linked Spec</label>
+                    {task.specItems?.map(spec => (
+                      <div key={spec.id} className="beads-spec-item">
+                        <span className="beads-spec-icon">📄</span>
+                        <span className="beads-spec-title">{spec.title}</span>
+                        {spec.status && <span className="beads-spec-status">{spec.status}</span>}
+                      </div>
+                    )) || <div className="beads-detail-empty">No linked spec</div>}
+                  </div>
+                )}
+
+                {/* Acceptance Criteria */}
+                {(task.acceptanceCriteria || (task.source?.supportsAcceptanceCriteria && !task.acceptanceCriteria)) && (
+                  <div className="beads-detail-section">
+                    <label>Acceptance Criteria</label>
+                    {task.acceptanceCriteria?.map(ac => (
+                      <div key={ac.id} className={`beads-ac-item status-${ac.status}`}>
+                        <span className="beads-ac-bullet">{ac.status === 'satisfied' ? '✓' : '○'}</span>
+                        <span className="beads-ac-text">{ac.text}</span>
+                      </div>
+                    )) || <div className="beads-detail-empty">No criteria defined</div>}
+                  </div>
+                )}
+
+                {/* Traits */}
+                {task.traits && task.traits.length > 0 && (
+                  <div className="beads-detail-section">
+                    <label>Traits</label>
+                    <div className="beads-detail-traits">
+                      {task.traits.map(trait => (
+                        <span key={trait.id} className={`beads-trait-chip kind-${trait.kind || 'default'}`}>
+                          {trait.label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Derived Tasks */}
+                {task.derivedTasks && task.derivedTasks.length > 0 && (
+                  <div className="beads-detail-section">
+                    <label>Derived Tasks</label>
+                    {task.derivedTasks.map(dt => (
+                      <div key={dt.id} className="beads-derived-task">
+                        <span className="beads-dt-status">●</span>
+                        <span className="beads-dt-title">{dt.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Automation & Validation */}
+                <div className="beads-detail-row">
+                  {task.automation && (
+                    <div className="beads-detail-section">
+                      <label>Automation</label>
+                      <span className={`beads-status-badge auto-${task.automation}`}>
+                        {task.automation.replace('_', ' ')}
+                      </span>
+                    </div>
+                  )}
+                  {task.validation && (
+                    <div className="beads-detail-section">
+                      <label>Validation</label>
+                      <span className={`beads-status-badge val-${task.validation.status}`}>
+                        {task.validation.satisfiedCriteria}/{task.validation.totalCriteria} Passed
+                      </span>
+                    </div>
+                  )}
+                </div>
+
                 <div className="beads-detail-timestamps">
                   {task.created_at && <span>Created: {new Date(task.created_at).toLocaleString()}</span>}
                   {task.updated_at && <span>Updated: {new Date(task.updated_at).toLocaleString()}</span>}
+                  {task.source && (
+                    <span className="beads-detail-source">
+                      Source: {task.source.sourceSystem} ({task.source.externalId})
+                    </span>
+                  )}
                 </div>
-                {task.tags && task.tags.length > 0 && (
+                {task.tags && task.tags.length > 0 && !task.traits && (
                   <div className="beads-detail-tags">
                     {task.tags.map(tag => (
                       <span key={tag} className="beads-detail-tag">{tag}</span>
                     ))}
                   </div>
                 )}
+
               </>
             )
           ) : (

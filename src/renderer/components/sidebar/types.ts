@@ -1,4 +1,5 @@
 import { Project } from '../../stores/workspace.js'
+import { Api } from '../../api/types.js'
 
 export interface ClaudeSession {
   sessionId: string
@@ -27,7 +28,7 @@ export interface SidebarProps {
   onOpenSession: (projectPath: string, sessionId?: string, slug?: string, initialPrompt?: string, forceNewSession?: boolean) => void
   onSwitchToTab: (tabId: string) => void
   onOpenSettings: () => void
-  onOpenMakeProject: () => void
+  onOpenProjectWizard: () => void
   onUpdateProject: (path: string, updates: Partial<Project>) => void
   onCloseProjectTabs: (projectPath: string) => void
   width: number
@@ -41,6 +42,8 @@ export interface SidebarProps {
   onOpenMobileConnect?: () => void  // Opens the QR code modal for mobile connection
   // Mobile disconnect
   onDisconnect?: () => void     // Disconnects from desktop host (mobile only)
+  activeSection?: string
+  api: Api
 }
 
 export interface ProjectSettingsModalState {

@@ -13,6 +13,7 @@ import {
   VoiceOutputSettings,
   UninstallTTSSection,
   VersionSettings,
+  McpSettings,
   DEFAULT_GENERAL,
   DEFAULT_VOICE,
   DEFAULT_XTTS,
@@ -26,7 +27,9 @@ import type {
   UIState,
   SettingsModalProps,
   ThemeCustomization,
-} from './settings'
+} from './settings/settingsTypes'
+import { Settings, Palette, Cpu, Volume2, Info, ChevronRight, Save } from 'lucide-react'
+import { cn } from '../lib/utils'
 
 // Migrate old slider-based customization to new color-based format
 function migrateThemeCustomization(saved: unknown): ThemeCustomization {
@@ -57,77 +60,40 @@ export function SettingsModal({
   appVersion,
   updateStatus,
   onDownloadUpdate,
-  onInstallUpdate
+  onInstallUpdate,
+  projectPath,
+  focusedTabPtyId,
+  onOpenSession,
+  initialCategory = 'general',
+  api
 }: SettingsModalProps): React.ReactElement | null {
-  // Grouped state: general settings (theme, directory, permissions, backend)
+  const [activeCategory, setActiveCategory] = useState(initialCategory)
   const [general, setGeneral] = useState<GeneralSettings>(DEFAULT_GENERAL)
-
-  // Focus trap for modal accessibility
   const focusTrapRef = useFocusTrap<HTMLDivElement>(isOpen)
-
-  // Voice context for active whisper model and volume
   const { whisperModel: activeWhisperModel, setWhisperModel: setActiveWhisperModel, volume: voiceVolume } = useVoice()
-
-  // Extensions state
   const [installedExtensions, setInstalledExtensions] = useState<Array<{ id: string; name: string; type: string }>>([])
-
-  // Grouped state: voice settings (TTS, whisper status, selected voice/engine)
   const [voice, setVoice] = useState<VoiceSettings>(DEFAULT_VOICE)
-
-  // Grouped state: XTTS quality settings
   const [xtts, setXtts] = useState<XttsSettings>(DEFAULT_XTTS)
-
-  // Grouped state: UI/loading states
   const [ui, setUI] = useState<UIState>(DEFAULT_UI)
 
-  // TADA sample voices, install status, and HF auth
   const [tadaSampleVoices, setTadaSampleVoices] = useState<Array<{ id: string; name: string; description: string; available: boolean }>>([])
   const [tadaHfAuthenticated, setTadaHfAuthenticated] = useState<boolean | null>(null)
   const [tadaInstalled, setTadaInstalled] = useState<boolean | null>(null)
   const [tadaInstalling, setTadaInstalling] = useState(false)
   const [tadaInstallError, setTadaInstallError] = useState<string | null>(null)
 
-  // Load installed voices (Piper, XTTS, and TADA)
-  async function refreshInstalledVoices(): Promise<void> {
-    try {
-      const [piperVoices, xttsVoices, tadaStatus] = await Promise.all([
-        window.electronAPI?.voiceGetInstalled?.(),
-        window.electronAPI?.xttsGetVoices?.(),
-        window.electronAPI?.tadaCheck?.()
-      ])
-      const combined: Array<{ key: string; displayName: string; source: string }> = []
-      if (piperVoices) combined.push(...piperVoices)
-      if (xttsVoices) {
-        combined.push(...xttsVoices.map((v: { id: string; name: string }) => ({
-          key: v.id,
-          displayName: v.name,
-          source: 'xtts'
-        })))
-      }
-      // Add TADA as a voice option if installed (show even if HF auth needed)
-      if (tadaStatus?.installed) {
-        setTadaInstalled(true)
-        setTadaHfAuthenticated(tadaStatus.hfAuthenticated ?? null)
-        combined.push({
-          key: 'tada',
-          displayName: tadaStatus.hfAuthenticated === false
-            ? 'TADA (Neural Voice Clone) — HF Login Required'
-            : 'TADA (Neural Voice Clone)',
-          source: 'tada'
-        })
-      } else {
-        setTadaInstalled(false)
-      }
-      setVoice(prev => ({ ...prev, installedVoices: combined }))
-    } catch (e) {
-      console.error('Failed to refresh installed voices:', e)
-      setVoice(prev => ({ ...prev, installedVoices: [] }))
-    }
-  }
+  const categories = [
+    { id: 'general', label: 'General', icon: Settings, desc: 'Core settings & backend' },
+    { id: 'appearance', label: 'Appearance', icon: Palette, desc: 'Themes & styling' },
+    { id: 'mcp', label: 'MCP & Agents', icon: Cpu, desc: 'Beads, GSD & tools' },
+    { id: 'voice', label: 'Voice', icon: Volume2, desc: 'Speech & AI audio' },
+    { id: 'about', label: 'About', icon: Info, desc: 'Version & info' },
+  ]
 
+  // Load initial settings
   useEffect(() => {
     if (isOpen) {
-      window.electronAPI?.getSettings?.()?.then((settings) => {
+      api?.getSettings?.()?.then((settings) => {
         setGeneral(prev => ({
           ...prev,
           defaultProjectDir: settings.defaultProjectDir || '',
@@ -135,17 +101,19 @@ export function SettingsModal({
           themeCustomization: migrateThemeCustomization(settings.themeCustomization),
           autoAcceptTools: settings.autoAcceptTools || [],
           permissionMode: settings.permissionMode || 'default',
-          backend: settings.backend || 'default'
+          backend: settings.backend || 'default',
+          glowEnabled: settings.themeCustomization?.accentColor ? true : true, // Keeping it simple
+          accentColor: settings.themeCustomization?.accentColor || '#3b82f6'
         }))
       })
 
-      // Load voice settings (active voice)
-      window.electronAPI?.voiceGetSettings?.()?.then((voiceSettings: { ttsVoice?: string; ttsEngine?: string; ttsSpeed?: number; xttsTemperature?: number; xttsTopK?: number; xttsTopP?: number; xttsRepetitionPenalty?: number; tadaVoiceSample?: string | null }) => {
+      // Load voice settings
+      api?.voiceGetSettings?.()?.then((voiceSettings: any) => {
         if (voiceSettings) {
           setVoice(prev => ({
             ...prev,
             selectedVoice: voiceSettings.ttsVoice || 'en_US-libritts_r-medium',
-            selectedEngine: (voiceSettings.ttsEngine as 'piper' | 'xtts' | 'tada') || 'piper',
+            selectedEngine: voiceSettings.ttsEngine || 'piper',
             ttsSpeed: voiceSettings.ttsSpeed || 1.0,
             tadaVoiceSample: voiceSettings.tadaVoiceSample || null
           }))
@@ -156,45 +124,48 @@ export function SettingsModal({
             repetitionPenalty: voiceSettings.xttsRepetitionPenalty ?? 2.0
           })
         }
-      })?.catch(e => console.error('Failed to load voice settings:', e))
-
-      // Load voice status
-      window.electronAPI?.voiceCheckWhisper?.()?.then((status) => {
-        setVoice((prev) => ({ ...prev, whisperStatus: status }))
-      })?.catch((e) => console.error('Failed to check Whisper status:', e))
-
-      window.electronAPI?.voiceCheckTTS?.()?.then((status) => {
-        setVoice((prev) => ({ ...prev, ttsStatus: status }))
-      })?.catch((e) => console.error('Failed to check TTS status:', e))
+      })
 
       refreshInstalledVoices()
-
-      // Load TADA sample voices
-      window.electronAPI?.tadaGetSampleVoices?.()?.then((samples) => {
-        if (samples) setTadaSampleVoices(samples)
-      })?.catch(() => {})
-
-      // Load installed extensions
-      window.electronAPI?.extensionsGetInstalled?.()?.then((exts) => {
-        setInstalledExtensions(exts || [])
-      })?.catch((e) => console.error('Failed to load installed extensions:', e))
-    } else {
-      setUI(prev => ({ ...prev, playingPreview: null, previewLoading: null }))
     }
   }, [isOpen])
 
-  async function handleSave(): Promise<void> {
-    const newSettings = {
+  async function refreshInstalledVoices() {
+    try {
+      const [piperVoices, xttsVoices, tadaStatus] = await Promise.all([
+        api?.voiceGetInstalled?.(),
+        api?.xttsGetVoices?.(),
+        api?.tadaCheck?.()
+      ])
+      const combined: any[] = []
+      if (piperVoices) combined.push(...piperVoices)
+      if (xttsVoices) combined.push(...xttsVoices.map((v: any) => ({ key: v.id, displayName: v.name, source: 'xtts' })))
+      if (tadaStatus?.installed) {
+        setTadaInstalled(true)
+        setTadaHfAuthenticated(tadaStatus.hfAuthenticated ?? null)
+        combined.push({ key: 'tada', displayName: 'TADA (Neural Voice Clone)', source: 'tada' })
+      }
+      setVoice(prev => ({ ...prev, installedVoices: combined }))
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const handleSave = () => {
+    const updatedThemeCustomization = {
+      ...general.themeCustomization,
+      accentColor: general.accentColor || general.themeCustomization?.accentColor || null
+    };
+
+    api?.saveSettings?.({
       defaultProjectDir: general.defaultProjectDir,
       theme: general.selectedTheme,
-      themeCustomization: general.themeCustomization,
+      themeCustomization: updatedThemeCustomization,
       autoAcceptTools: general.autoAcceptTools,
       permissionMode: general.permissionMode,
       backend: general.backend
-    }
-    await window.electronAPI?.saveSettings(newSettings)
-    // Save voice settings including XTTS quality settings and TADA sample
-    await window.electronAPI?.voiceApplySettings?.({
+    })
+    api?.voiceSaveSettings?.({
       ttsVoice: voice.selectedVoice,
       ttsEngine: voice.selectedEngine,
       ttsSpeed: voice.ttsSpeed,
@@ -204,256 +175,296 @@ export function SettingsModal({
       xttsRepetitionPenalty: xtts.repetitionPenalty,
       tadaVoiceSample: voice.tadaVoiceSample
     })
-    onSaved?.(newSettings)
+    onSaved?.({
+      defaultProjectDir: general.defaultProjectDir,
+      theme: general.selectedTheme,
+      themeCustomization: updatedThemeCustomization,
+      autoAcceptTools: general.autoAcceptTools,
+      permissionMode: general.permissionMode,
+      backend: general.backend
+    })
     onClose()
   }
 
-  function handleVoiceSelect(voiceKey: string, source: string): void {
-    setVoice(prev => ({
-      ...prev,
-      selectedVoice: voiceKey,
-      selectedEngine: source === 'xtts' ? 'xtts' : source === 'tada' ? 'tada' : 'piper'
-    }))
+  const handlePlayVoicePreview = async (voiceKey: string, engine: string) => {
+    setUI(prev => ({ ...prev, playingPreview: voiceKey, previewLoading: voiceKey }))
+    try {
+      await api?.voicePreview?.({ voice: voiceKey, engine })
+    } finally {
+      setUI(prev => ({ ...prev, playingPreview: null, previewLoading: null }))
+    }
   }
 
-  async function handleTadaSelectSample(): Promise<void> {
+  const handleTadaInstall = async () => {
+    setTadaInstalling(true)
+    setTadaInstallError(null)
     try {
-      const result = await window.electronAPI?.tadaSelectVoiceSample?.()
-      if (result?.success && result.path) {
-        setVoice(prev => ({ ...prev, tadaVoiceSample: result.path }))
+      const res = await api?.tadaInstall?.()
+      if (res?.success) {
+        setTadaInstalled(true)
+        refreshInstalledVoices()
+      } else {
+        setTadaInstallError(res?.error || 'Install failed')
       }
     } catch (e) {
-      console.error('Failed to select TADA voice sample:', e)
+      setTadaInstallError('Unexpected error')
     }
+    setTadaInstalling(false)
   }
 
-  async function handleTadaUseSample(sampleId: string): Promise<void> {
-    try {
-      const result = await window.electronAPI?.tadaUseSampleVoice?.(sampleId)
-      if (result?.success && result.path) {
-        setVoice(prev => ({ ...prev, tadaVoiceSample: result.path }))
-      }
-    } catch (e) {
-      console.error('Failed to use TADA sample voice:', e)
-    }
-  }
-
-  function toggleTool(tool: string): void {
-    setGeneral(prev => ({
-      ...prev,
-      autoAcceptTools: prev.autoAcceptTools.includes(tool)
-        ? prev.autoAcceptTools.filter(t => t !== tool)
-        : [...prev.autoAcceptTools, tool]
-    }))
-  }
-
-  function addCustomTool(): void {
-    const trimmed = general.customTool.trim()
-    if (trimmed && !general.autoAcceptTools.includes(trimmed)) {
-      setGeneral(prev => ({
-        ...prev,
-        autoAcceptTools: [...prev.autoAcceptTools, trimmed],
-        customTool: ''
-      }))
-    }
-  }
-
-  function removeCustomTool(tool: string): void {
-    setGeneral(prev => ({
-      ...prev,
-      autoAcceptTools: prev.autoAcceptTools.filter(t => t !== tool)
-    }))
-  }
-
-  async function handleInstallWhisperModel(model: string): Promise<void> {
-    setUI(prev => ({ ...prev, installingModel: model }))
-    try {
-      await window.electronAPI?.voiceInstallWhisper?.(model)
-      const status = await window.electronAPI?.voiceCheckWhisper?.()
-      if (status) setVoice(prev => ({ ...prev, whisperStatus: status }))
-    } catch (e) {
-      console.error('Failed to install Whisper model:', e)
-    }
-    setUI(prev => ({ ...prev, installingModel: null }))
-  }
-
-  // Remove TTS instructions from all projects (uninstall feature)
-  async function handleRemoveTTSFromAllProjects(): Promise<void> {
-    if (!confirm('This will remove TTS voice output instructions from CLAUDE.md files in ALL your projects. This is useful if you want to stop using Claude Terminal.\n\nContinue?')) {
-      return
-    }
-
-    setUI(prev => ({ ...prev, removingTTS: true, ttsRemovalResult: null }))
-
-    try {
-      const workspace = await window.electronAPI?.getWorkspace()
-      const projects = workspace?.projects || []
-
-      let success = 0
-      let failed = 0
-
-      for (const project of projects) {
-        try {
-          const result = await window.electronAPI?.ttsRemoveInstructions?.(project.path)
-          if (result?.success) {
-            success++
-          } else {
-            failed++
-          }
-        } catch {
-          failed++
-        }
-      }
-
-      setUI(prev => ({ ...prev, ttsRemovalResult: { success, failed } }))
-    } catch (e) {
-      console.error('Failed to remove TTS instructions:', e)
-      setUI(prev => ({ ...prev, ttsRemovalResult: { success: 0, failed: 1 } }))
-    }
-
-    setUI(prev => ({ ...prev, removingTTS: false }))
-  }
 
   if (!isOpen) return null
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal settings-modal" ref={focusTrapRef as React.RefObject<HTMLDivElement>} onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Settings</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+      <div 
+        ref={focusTrapRef}
+        className="codex-modal-content w-full max-w-4xl h-[650px] rounded-[var(--radius-modal)] flex overflow-hidden animate-in zoom-in-95 duration-200"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Sidebar */}
+        <div className="w-64 border-r border-white/10 bg-black/20 flex flex-col">
+          <div className="p-6">
+            <h2 className="text-xl font-bold bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent">Config</h2>
+            <p className="text-xs text-white/40 mt-1">Manage your environment</p>
+          </div>
+          
+          <nav className="flex-1 px-3 space-y-1">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group",
+                  activeCategory === cat.id 
+                    ? "bg-white/10 text-white shadow-sm" 
+                    : "text-white/40 hover:text-white/80 hover:bg-white/5"
+                )}
+              >
+                <cat.icon className={cn(
+                  "w-4 h-4 transition-transform duration-200",
+                  activeCategory === cat.id ? "scale-110" : "group-hover:scale-110"
+                )} />
+                <div className="flex flex-col items-start text-left">
+                  <span className="text-sm font-medium">{cat.label}</span>
+                </div>
+                {activeCategory === cat.id && (
+                  <ChevronRight className="w-3 h-3 ml-auto opacity-40" />
+                )}
+              </button>
+            ))}
+          </nav>
+
+          <div className="p-4 mt-auto border-t border-white/5 space-y-2">
+             <button 
+              onClick={handleSave}
+              className="w-full flex items-center justify-center gap-2 bg-white text-black hover:bg-white/90 px-4 py-2.5 rounded-md text-sm font-semibold transition-all active:scale-95 shadow-lg shadow-white/5"
+            >
+              <Save className="w-4 h-4" />
+              Save Changes
+            </button>
+            <button 
+              onClick={onClose}
+              className="w-full text-white/40 hover:text-white/60 text-xs py-2 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
-        <div className="modal-content">
-          <VersionSettings
-            appVersion={appVersion}
-            updateStatus={updateStatus}
-            onDownloadUpdate={onDownloadUpdate}
-            onInstallUpdate={onInstallUpdate}
-          />
 
-          <ThemeSettings
-            selectedTheme={general.selectedTheme}
-            customization={general.themeCustomization}
-            onThemeChange={onThemeChange}
-            onSelect={(themeId) => setGeneral(prev => ({ ...prev, selectedTheme: themeId }))}
-            onCustomizationChange={(customization) => setGeneral(prev => ({ ...prev, themeCustomization: customization }))}
-          />
+        {/* Content Area */}
+        <div className="flex-1 flex flex-col h-full bg-black/10">
+          <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+            <div className="max-w-2xl mx-auto space-y-8">
+              {activeCategory === 'general' && (
+                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-300">
+                  <section>
+                    <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Workspace</h3>
+                    <ProjectDirectorySettings 
+                      defaultProjectDir={general.defaultProjectDir}
+                      onChange={(dir) => setGeneral(prev => ({ ...prev, defaultProjectDir: dir }))}
+                    />
+                  </section>
+                  
+                  <section>
+                    <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Security</h3>
+                    <PermissionsSettings 
+                      permissionMode={general.permissionMode}
+                      autoAcceptTools={general.autoAcceptTools}
+                      customTool={general.customTool}
+                      onPermissionModeChange={(mode) => setGeneral(prev => ({ ...prev, permissionMode: mode }))}
+                      onCustomToolChange={(tool) => setGeneral(prev => ({ ...prev, customTool: tool }))}
+                      onToggleTool={(tool) => {
+                        setGeneral(prev => {
+                          const tools = prev.autoAcceptTools.includes(tool)
+                            ? prev.autoAcceptTools.filter(t => t !== tool)
+                            : [...prev.autoAcceptTools, tool]
+                          return { ...prev, autoAcceptTools: tools }
+                        })
+                      }}
+                      onAddCustomTool={() => {}} // Legacy
+                      onRemoveCustomTool={() => {}} // Legacy
+                    />
+                  </section>
 
-          <ProjectDirectorySettings
-            defaultProjectDir={general.defaultProjectDir}
-            onChange={(dir) => setGeneral(prev => ({ ...prev, defaultProjectDir: dir }))}
-          />
+                  <section>
+                    <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">AI Backend</h3>
+                    <BackendSettings 
+                      backend={general.backend}
+                      onChange={(backend) => setGeneral(prev => ({ ...prev, backend }))}
+                    />
+                  </section>
+                </div>
+              )}
 
-          <PermissionsSettings
-            autoAcceptTools={general.autoAcceptTools}
-            permissionMode={general.permissionMode}
-            customTool={general.customTool}
-            onToggleTool={toggleTool}
-            onPermissionModeChange={(mode) => setGeneral(prev => ({ ...prev, permissionMode: mode }))}
-            onCustomToolChange={(tool) => setGeneral(prev => ({ ...prev, customTool: tool }))}
-            onAddCustomTool={addCustomTool}
-            onRemoveCustomTool={removeCustomTool}
-          />
+              {activeCategory === 'appearance' && (
+                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-300">
+                  <section>
+                    <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Global Styling</h3>
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <label className="text-sm font-medium text-white/80">Glow Effect</label>
+                          <p className="text-xs text-white/40 mt-0.5">Enable soft accent glow behind panels</p>
+                        </div>
+                        <button
+                          onClick={() => setGeneral(prev => ({ ...prev, glowEnabled: !prev.glowEnabled }))}
+                          className={cn(
+                            "w-9 h-5 rounded-full transition-colors relative",
+                            general.glowEnabled ? "bg-primary" : "bg-white/10"
+                          )}
+                        >
+                          <div className={cn(
+                            "absolute top-1 w-3 h-3 rounded-full transition-all",
+                            general.glowEnabled ? "right-1 bg-white" : "left-1 bg-white/40"
+                          )} />
+                        </button>
+                      </div>
 
-          <BackendSettings
-            backend={general.backend}
-            onChange={(backend) => setGeneral(prev => ({ ...prev, backend }))}
-          />
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <label className="text-sm font-medium text-white/80">Accent Color</label>
+                          <p className="text-xs text-white/40 mt-0.5">Primary brand color for the interface</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={general.accentColor}
+                            onChange={(e) => setGeneral(prev => ({ ...prev, accentColor: e.target.value }))}
+                            className="w-8 h-8 bg-transparent border-0 cursor-pointer rounded-lg overflow-hidden"
+                          />
+                          <span className="text-xs font-mono text-white/40 uppercase">{general.accentColor}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
 
-          <ExtensionsSettings installedExtensions={installedExtensions} />
+                  <section>
+                    <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Visual Theme</h3>
+                    <ThemeSettings 
+                      selectedTheme={general.selectedTheme}
+                      onSelect={(themeId) => {
+                        setGeneral(prev => ({ ...prev, selectedTheme: themeId }))
+                      }}
+                      onThemeChange={(themeObj) => {
+                        if (themeObj && onThemeChange) onThemeChange(themeObj)
+                      }}
+                      customization={general.themeCustomization}
+                      onCustomizationChange={(c) => setGeneral(prev => ({ ...prev, themeCustomization: c }))}
+                    />
+                  </section>
+                </div>
+              )}
 
-          <VoiceInputSettings
-            whisperStatus={voice.whisperStatus}
-            activeWhisperModel={activeWhisperModel}
-            installingModel={ui.installingModel}
-            onSetActiveModel={setActiveWhisperModel}
-            onInstallModel={handleInstallWhisperModel}
-          />
+              {activeCategory === 'mcp' && (
+                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-300">
+                   <McpSettings 
+                      projectPath={projectPath}
+                      focusedTabPtyId={focusedTabPtyId}
+                      onOpenSession={onOpenSession}
+                    />
+                </div>
+              )}
 
-          <VoiceOutputSettings
-            voice={voice}
-            xtts={xtts}
-            playingPreview={ui.playingPreview}
-            previewLoading={ui.previewLoading}
-            voiceVolume={voiceVolume}
-            onVoiceSelect={handleVoiceSelect}
-            onSpeedChange={(speed) => setVoice(prev => ({ ...prev, ttsSpeed: speed }))}
-            onXttsChange={setXtts}
-            onShowVoiceBrowser={() => setUI(prev => ({ ...prev, showVoiceBrowser: true }))}
-            onPreviewStateChange={(state) => setUI(prev => ({ ...prev, ...state }))}
-            onTadaSelectSample={handleTadaSelectSample}
-            onTadaUseSample={handleTadaUseSample}
-            tadaVoiceSample={voice.tadaVoiceSample}
-            tadaSampleVoices={tadaSampleVoices}
-            tadaInstalled={tadaInstalled}
-            tadaInstalling={tadaInstalling}
-            tadaInstallError={tadaInstallError}
-            onTadaInstall={async () => {
-              setTadaInstalling(true)
-              setTadaInstallError(null)
-              try {
-                const result = await window.electronAPI?.tadaInstall?.()
-                if (result?.success) {
-                  setTadaInstalled(true)
-                  refreshInstalledVoices()
-                } else {
-                  setTadaInstallError(result?.error || 'Installation failed')
-                }
-              } catch (e) {
-                setTadaInstallError(e instanceof Error ? e.message : 'Installation failed')
-              }
-              setTadaInstalling(false)
-            }}
-            tadaHfAuthenticated={tadaHfAuthenticated}
-            onTadaHfLogin={async (token: string) => {
-              const result = await window.electronAPI?.tadaLoginHuggingFace?.(token)
-              if (result?.success) {
-                setTadaHfAuthenticated(true)
-                refreshInstalledVoices()
-              }
-              return result ?? { success: false, error: 'API not available' }
-            }}
-          />
+              {activeCategory === 'voice' && (
+                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-300">
+                  <section>
+                    <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Voice Input</h3>
+                    <VoiceInputSettings 
+                      whisperStatus={voice.whisperStatus}
+                      activeWhisperModel={activeWhisperModel}
+                      installingModel={ui.installingModel}
+                      onSetActiveModel={setActiveWhisperModel}
+                      onInstallModel={(model) => {
+                        setUI(prev => ({ ...prev, installingModel: model }))
+                        api?.voiceInstallWhisper?.(model)
+                      }}
+                    />
+                  </section>
 
-          <UninstallTTSSection
-            removingTTS={ui.removingTTS}
-            ttsRemovalResult={ui.ttsRemovalResult}
-            onRemove={handleRemoveTTSFromAllProjects}
-          />
-        </div>
-        <div className="modal-footer">
-          <a
-            href="https://ko-fi.com/donutsdelivery"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="kofi-link"
-            onClick={(e) => {
-              e.preventDefault()
-              window.electronAPI?.openExternal?.('https://ko-fi.com/donutsdelivery')
-            }}
-          >
-            ♥ Support on Ko-fi
-          </a>
-          <div className="modal-footer-buttons">
-            <button className="btn-secondary" onClick={onClose}>Cancel</button>
-            <button className="btn-primary" onClick={handleSave}>Save</button>
+                  <section>
+                    <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Voice Output</h3>
+                    <VoiceOutputSettings 
+                      voice={voice}
+                      xtts={xtts}
+                      playingPreview={ui.playingPreview}
+                      previewLoading={ui.previewLoading}
+                      voiceVolume={voiceVolume}
+                      onVoiceSelect={(voiceKey, source) => setVoice(prev => ({ ...prev, selectedVoice: voiceKey, selectedEngine: source as any }))}
+                      onSpeedChange={(s) => setVoice(prev => ({ ...prev, ttsSpeed: s }))}
+                      onXttsChange={(newXtts) => setXtts(prev => ({ ...prev, ...newXtts }))}
+                      onShowVoiceBrowser={() => setUI(prev => ({ ...prev, showVoiceBrowser: true }))}
+                      onPreviewStateChange={(state) => setUI(prev => ({ ...prev, ...state }))}
+                      tadaVoiceSample={voice.tadaVoiceSample}
+                      tadaSampleVoices={tadaSampleVoices}
+                      tadaInstalled={tadaInstalled}
+                      tadaHfAuthenticated={tadaHfAuthenticated}
+                      tadaInstalling={tadaInstalling}
+                      tadaInstallError={tadaInstallError}
+                      onTadaInstall={handleTadaInstall}
+                      onTadaHfLogin={async (token) => {
+                        const res = await api?.tadaLogin?.(token)
+                        return res || { success: false, error: 'Login failed' }
+                      }}
+                    />
+                  </section>
+                  
+                  <section className="pt-8 border-t border-white/5">
+                    <UninstallTTSSection 
+                      onRemove={async () => {
+                        setUI(prev => ({ ...prev, removingTTS: true }))
+                      }}
+                      removingTTS={ui.removingTTS}
+                      ttsRemovalResult={ui.ttsRemovalResult}
+                    />
+                  </section>
+                </div>
+              )}
+
+              {activeCategory === 'about' && (
+                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-300">
+                  <section>
+                    <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">System Information</h3>
+                    <VersionSettings 
+                      appVersion={appVersion}
+                      updateStatus={updateStatus}
+                      onDownloadUpdate={onDownloadUpdate}
+                      onInstallUpdate={onInstallUpdate}
+                    />
+                  </section>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      <VoiceBrowserModal
+      <VoiceBrowserModal 
         isOpen={ui.showVoiceBrowser}
-        onClose={() => {
-          setUI(prev => ({ ...prev, showVoiceBrowser: false }))
-          refreshInstalledVoices()
-        }}
+        onClose={() => setUI(prev => ({ ...prev, showVoiceBrowser: false }))}
         onVoiceSelect={(voiceKey, engine) => {
-          setVoice(prev => ({
-            ...prev,
-            selectedVoice: voiceKey,
-            selectedEngine: engine === 'xtts' ? 'xtts' : engine === 'tada' ? 'tada' : 'piper'
-          }))
-          window.electronAPI?.voiceSetVoice?.({ voice: voiceKey, engine })
+          setUI(prev => ({ ...prev, installingVoice: voiceKey }))
+          api?.voiceInstallVoice?.(voiceKey)
         }}
       />
     </div>

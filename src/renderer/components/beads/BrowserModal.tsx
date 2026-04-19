@@ -3,14 +3,16 @@ import ReactDOM from 'react-dom'
 import type { UnifiedTask } from './adapters/types.js'
 import { getPriorityClass, getPriorityLabel, PRIORITY_LABELS, formatStatusLabel, getStatusOrder } from './types.js'
 
+export type BrowserFilter = 'all' | 'open' | 'in_progress' | 'closed' | 'spec_linked' | 'missing_ac' | 'validation_failed' | 'automation_eligible'
+
 interface BrowserModalProps {
   show: boolean
   onClose: () => void
   projectName: string | null
   backendLabel: string
   tasks: UnifiedTask[]
-  filter: 'all' | 'open' | 'in_progress' | 'closed'
-  setFilter: (filter: 'all' | 'open' | 'in_progress' | 'closed') => void
+  filter: BrowserFilter
+  setFilter: (filter: BrowserFilter) => void
   sort: 'priority' | 'created' | 'status'
   setSort: (sort: 'priority' | 'created' | 'status') => void
   onRefresh: () => void
@@ -35,8 +37,16 @@ export function BrowserModal({
   const getFilteredTasks = () => {
     let filtered = [...tasks]
 
-    if (filter !== 'all') {
+    if (filter === 'open' || filter === 'in_progress' || filter === 'closed') {
       filtered = filtered.filter(t => t.status === filter)
+    } else if (filter === 'spec_linked') {
+      filtered = filtered.filter(t => (t.specItems && t.specItems.length > 0) || t.hasSpec)
+    } else if (filter === 'missing_ac') {
+      filtered = filtered.filter(t => (!t.acceptanceCriteria || t.acceptanceCriteria.length === 0) && t.source?.supportsAcceptanceCriteria)
+    } else if (filter === 'validation_failed') {
+      filtered = filtered.filter(t => t.validation?.status === 'failed')
+    } else if (filter === 'automation_eligible') {
+      filtered = filtered.filter(t => t.automation === 'eligible')
     }
 
     filtered.sort((a, b) => {
@@ -74,11 +84,19 @@ export function BrowserModal({
         <div className="beads-browser-toolbar">
           <div className="beads-browser-filters">
             <label>Filter:</label>
-            <select value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
+            <select value={filter} onChange={(e) => setFilter(e.target.value as BrowserFilter)}>
               <option value="all">All ({tasks.length})</option>
-              <option value="open">Open ({tasks.filter(t => t.status === 'open').length})</option>
-              <option value="in_progress">In Progress ({tasks.filter(t => t.status === 'in_progress').length})</option>
-              <option value="closed">Closed ({tasks.filter(t => t.status === 'closed').length})</option>
+              <optgroup label="Status">
+                <option value="open">Open ({tasks.filter(t => t.status === 'open').length})</option>
+                <option value="in_progress">In Progress ({tasks.filter(t => t.status === 'in_progress').length})</option>
+                <option value="closed">Closed ({tasks.filter(t => t.status === 'closed').length})</option>
+              </optgroup>
+              <optgroup label="Spec Compliance">
+                <option value="spec_linked">Linked to Spec ({tasks.filter(t => (t.specItems && t.specItems.length > 0) || t.hasSpec).length})</option>
+                <option value="missing_ac">Missing AC ({tasks.filter(t => (!t.acceptanceCriteria || t.acceptanceCriteria.length === 0) && t.source?.supportsAcceptanceCriteria).length})</option>
+                <option value="validation_failed">Validation Failed ({tasks.filter(t => t.validation?.status === 'failed').length})</option>
+                <option value="automation_eligible">Automation Eligible ({tasks.filter(t => t.automation === 'eligible').length})</option>
+              </optgroup>
             </select>
           </div>
           <div className="beads-browser-sort">
@@ -168,20 +186,49 @@ export function BrowserModal({
                         <option key={i} value={i}>P{i} {label}</option>
                       ))}
                     </select>
+                    
+                    {/* Source Backend */}
+                    <span className={`beads-task-backend backend-${task._backend}`} title={`Backend: ${task._backend}`}>
+                      {task._backend}
+                    </span>
+
+                    {/* Spec & AC Indicator */}
                     {task.hasSpec && (
-                      <span className="beads-task-spec-badge" title="Has acceptance criteria">AC</span>
+                      <span className="beads-task-spec-badge" title={task.specItems?.[0]?.title || 'Has linked spec'}>
+                        {task.acceptanceCriteria ? (
+                          `${task.acceptanceCriteria.filter(ac => ac.status === 'satisfied').length}/${task.acceptanceCriteria.length} AC`
+                        ) : 'SPEC'}
+                      </span>
                     )}
-                    {task.type && (
-                      <span className="beads-browser-type">{task.type}</span>
+
+                    {/* Validation Indicator */}
+                    {task.validation && (
+                      <span className={`beads-task-validation val-${task.validation.status}`} title={`Validation: ${task.validation.status}`}>
+                        {task.validation.status === 'passed' ? '✓' : task.validation.status === 'failed' ? '✗' : '!'}
+                      </span>
                     )}
+
+                    {/* Traits (capped to 2) */}
+                    {task.traits && task.traits.length > 0 && (
+                      <div className="beads-task-traits">
+                        {task.traits.slice(0, 2).map(trait => (
+                          <span key={trait.id} className="beads-task-trait-chip">{trait.label}</span>
+                        ))}
+                        {task.traits.length > 2 && (
+                          <span className="beads-task-trait-overflow">+{task.traits.length - 2}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {task.automation && (
+                      <span className={`beads-task-automation automation-${task.automation}`} title={`Automation: ${task.automation}`}>
+                        {task.automation === 'eligible' ? 'auto' : task.automation === 'needs_review' ? 'review' : 'manual'}
+                      </span>
+                    )}
+
                     {task.created_at && (
                       <span className="beads-browser-date">
                         {new Date(task.created_at).toLocaleDateString()}
-                      </span>
-                    )}
-                    {task.tags && task.tags.length > 0 && (
-                      <span className="beads-browser-tags">
-                        {task.tags.join(', ')}
                       </span>
                     )}
                   </div>

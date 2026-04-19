@@ -1,9 +1,14 @@
 import React from 'react'
 import { Project, useWorkspaceStore } from '../../stores/workspace.js'
+import { Api } from '../../api/types.js'
+import { Settings, LayoutGrid, Terminal, Plus, FolderPlus, FolderSearch, Zap, ChevronRight, Cpu } from 'lucide-react'
+import { cn } from '../../lib/utils'
 import { BeadsPanel } from '../BeadsPanel.js'
 import { GSDStatus } from '../GSDStatus.js'
 import { ExtensionBrowser } from '../ExtensionBrowser.js'
 import { ClaudeMdEditor } from '../ClaudeMdEditor.js'
+import { McpPanel } from '../McpPanel.js'
+import { McpBrowser } from '../mcp/McpBrowser.js'
 import {
   getCategoryGradient,
   ProjectItem,
@@ -25,36 +30,39 @@ export interface SidebarContentProps {
   handlers: SidebarHandlers
   projects: Project[]
   openTabs: OpenTab[]
-  activeTabId: string | null
-  focusedTabId: string | null
+  activeSection?: string
   onOpenSession: SidebarProps['onOpenSession']
   onRemoveProject: SidebarProps['onRemoveProject']
   onUpdateProject: SidebarProps['onUpdateProject']
   onAddProject: SidebarProps['onAddProject']
   onAddProjectsFromParent: SidebarProps['onAddProjectsFromParent']
+  onOpenProjectWizard: SidebarProps['onOpenProjectWizard']
   onOpenSettings: SidebarProps['onOpenSettings']
-  onOpenMakeProject: SidebarProps['onOpenMakeProject']
-  onOpenMobileConnect: SidebarProps['onOpenMobileConnect']
+  api: Api
   renderProjectItem: (project: Project) => React.ReactElement
 }
+
+import { useUpdater } from '../../hooks/useUpdater.js'
 
 export function SidebarContent(props: SidebarContentProps): React.ReactElement {
   const {
     state,
     handlers,
     projects,
-    activeTabId,
-    focusedTabId,
+    openTabs,
+    activeSection = 'terminal',
     onOpenSession,
     onRemoveProject,
     onUpdateProject,
     onAddProject,
     onAddProjectsFromParent,
+    onOpenProjectWizard,
     onOpenSettings,
-    onOpenMakeProject,
-    onOpenMobileConnect,
+    api,
     renderProjectItem,
   } = props
+
+  const { appVersion, updateStatus, checkForUpdate, downloadUpdate, installUpdate } = useUpdater()
 
   const {
     // Voice options
@@ -117,6 +125,8 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     handleCategoryHeaderDrop,
     handleCategoryDrop,
     setEditingCategory,
+    mcpBrowserOpen,
+    setMcpBrowserOpen,
   } = state
 
   const {
@@ -132,23 +142,310 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     handleClearExecutable,
   } = handlers
 
+  if (activeSection === 'config') {
+    return (
+      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-border/50 font-bold flex items-center justify-between bg-white/5">
+          <div className="flex items-center gap-2">
+            <Settings size={18} className="text-primary" />
+            <span className="tracking-tight">Configuration</span>
+          </div>
+          <div className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold uppercase tracking-wider">{appVersion || 'v0.1.0'}</div>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="space-y-3">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Global Settings</h4>
+            <button 
+              onClick={onOpenSettings}
+              className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/10 group active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shadow-lg shadow-primary/5">
+                  <LayoutGrid size={18} />
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-semibold">Appearance & Backend</span>
+                  <span className="text-[10px] text-muted-foreground">Themes, Layouts, Backend APIs</span>
+                </div>
+              </div>
+              <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+
+          <div className="space-y-3 pt-4 border-t border-white/5">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Agents & Tracking</h4>
+            <div className="p-1 rounded-xl bg-muted/10 border border-white/5">
+              <BeadsPanel
+                projectPath={beadsProjectPath}
+                isExpanded={true}
+                onToggle={() => {}}
+                onStartTaskInNewTab={(prompt) => {
+                  if (beadsProjectPath) onOpenSession(beadsProjectPath, undefined, undefined, prompt, true)
+                }}
+                onSendToCurrentTab={(prompt) => {
+                  if (focusedTabPtyId) {
+                    api.writePty(focusedTabPtyId, prompt)
+                    setTimeout(() => api.writePty(focusedTabPtyId, '\r'), 100)
+                  }
+                }}
+                currentTabPtyId={focusedTabPtyId}
+              />
+            </div>
+            <GSDStatus
+              projectPath={beadsProjectPath}
+              onCommand={(cmd) => {
+                if (focusedTabPtyId) {
+                  api.writePty(focusedTabPtyId, cmd)
+                  setTimeout(() => api.writePty(focusedTabPtyId, '\r'), 100)
+                }
+              }}
+            />
+          </div>
+
+          <div className="pt-4 border-t border-white/5">
+            <McpPanel projectPath={beadsProjectPath} />
+          </div>
+        </div>
+      </div>
+    )
+  } else if (activeSection === 'terminal') {
+    return (
+      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-border/50 font-bold flex items-center gap-2 bg-white/5">
+          <Terminal size={18} className="text-primary" />
+          <span className="tracking-tight">Active Sessions</span>
+        </div>
+        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          {openTabs.length > 0 ? (
+            openTabs.map((tab) => (
+              <div 
+                key={tab.id}
+                onClick={() => handlers.handleSwitchToTab(tab.id)}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all border border-transparent group",
+                  "hover:bg-white/5 hover:border-white/10"
+                )}
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <Terminal size={14} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold truncate">{tab.title}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{tab.backend || 'Claude'}</div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-4 text-muted-foreground/30">
+                <Terminal size={24} />
+              </div>
+              <p className="text-sm text-muted-foreground font-medium">No active sessions</p>
+              <p className="text-xs text-muted-foreground/50 mt-1">Open a project to start an agent session.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  } else if (activeSection === 'orchestration') {
+    return (
+      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-border/50 font-bold flex items-center gap-2 bg-white/5">
+          <LayoutGrid size={18} className="text-primary" />
+          <span className="tracking-tight">Orchestration</span>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="space-y-3">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">GSD Task Status</h4>
+            <div className="p-1 rounded-2xl bg-white/5 border border-white/5">
+              <GSDStatus
+                projectPath={beadsProjectPath}
+                onCommand={(cmd) => {
+                  if (focusedTabPtyId) {
+                    api.writePty(focusedTabPtyId, cmd)
+                    setTimeout(() => api.writePty(focusedTabPtyId, '\r'), 100)
+                  }
+                }}
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-3 pt-4 border-t border-white/5">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Active Beads</h4>
+            <div className="p-1 rounded-2xl bg-white/5 border border-white/5">
+              <BeadsPanel
+                projectPath={beadsProjectPath}
+                isExpanded={true}
+                onToggle={() => {}}
+                onStartTaskInNewTab={(prompt) => {
+                  if (beadsProjectPath) onOpenSession(beadsProjectPath, undefined, undefined, prompt, true)
+                }}
+                onSendToCurrentTab={(prompt) => {
+                  if (focusedTabPtyId) {
+                    api.writePty(focusedTabPtyId, prompt)
+                    setTimeout(() => api.writePty(focusedTabPtyId, '\r'), 100)
+                  }
+                }}
+                currentTabPtyId={focusedTabPtyId}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  } else if (activeSection === 'plugins') {
+    return (
+      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-border/50 font-semibold flex items-center gap-2">
+          <Cpu size={18} />
+          Plugins & Extensions
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="p-6 rounded-2xl bg-muted/30 border border-white/5 text-center">
+            <Cpu size={40} className="mx-auto mb-4 text-primary opacity-50" />
+            <h3 className="text-lg font-semibold mb-2">Extension Engine</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Expand your capabilities with specialized tools and agents.
+            </p>
+            <button 
+              onClick={() => setExtensionBrowserModal({ project: projects[0] || { path: '', name: 'Global' } })}
+              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+            >
+              Browse Extensions
+            </button>
+          </div>
+          
+          <div className="space-y-2">
+            <h4 className="px-2 text-xs font-bold uppercase text-muted-foreground tracking-widest">Active Plugins</h4>
+            <div className="p-3 rounded-xl bg-muted/20 border border-white/5 flex items-center justify-between group">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center text-green-500">
+                  <Zap size={16} />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold">Tauri Backend</div>
+                  <div className="text-[10px] text-muted-foreground uppercase">Core System</div>
+                </div>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setMcpBrowserOpen(true)}
+              className="w-full p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 flex items-center justify-between group transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
+                  <Cpu size={16} />
+                </div>
+                <div className="text-left">
+                  <div className="text-sm font-semibold">MCP Browser</div>
+                  <div className="text-[10px] text-muted-foreground uppercase">Tools & Resources</div>
+                </div>
+              </div>
+              <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  } else if (activeSection === 'help') {
+    return (
+      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-border/50 font-semibold flex items-center gap-2">
+          <Settings size={18} />
+          Help & Support
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          <div className="space-y-3">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Resources</h4>
+            <button 
+              onClick={() => checkForUpdate()}
+              disabled={updateStatus.status === 'checking'}
+              className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/10 group disabled:opacity-50"
+            >
+              <span className="text-sm">Check for Updates</span>
+              {updateStatus.status === 'checking' ? (
+                <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-1 transition-transform" />
+              )}
+            </button>
+            <a 
+              href="https://github.com/bobcat88/simple-code-gui/wiki" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/10 group"
+            >
+              <span className="text-sm">Documentation</span>
+              <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-1 transition-transform" />
+            </a>
+            <a 
+              href="https://github.com/bobcat88/simple-code-gui" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/10 group"
+            >
+              <span className="text-sm">GitHub Repository</span>
+              <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-1 transition-transform" />
+            </a>
+          </div>
+
+          {updateStatus.status !== 'idle' && updateStatus.status !== 'checking' && (
+            <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 shadow-lg shadow-primary/5 animate-in fade-in zoom-in duration-300">
+              <div className="text-sm font-bold text-primary mb-1">
+                {updateStatus.status === 'available' ? 'Update Available' : 
+                 updateStatus.status === 'downloading' ? 'Downloading...' :
+                 updateStatus.status === 'downloaded' ? 'Ready to Install' :
+                 'Update Error'}
+              </div>
+              <div className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                {updateStatus.status === 'available' ? `Version ${updateStatus.version} is now available.` : 
+                 updateStatus.status === 'downloading' ? `Fetching update files...` :
+                 updateStatus.status === 'downloaded' ? `Restart the application to apply the update.` :
+                 updateStatus.error || 'An unexpected error occurred.'}
+              </div>
+              
+              {updateStatus.status === 'available' && (
+                <button 
+                  onClick={() => downloadUpdate()}
+                  className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-md shadow-primary/20"
+                >
+                  Download Now
+                </button>
+              )}
+              
+              {updateStatus.status === 'downloaded' && (
+                <button 
+                  onClick={() => installUpdate()}
+                  className="w-full py-2.5 rounded-lg bg-green-500 text-white text-[10px] font-bold uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-md shadow-green-500/20"
+                >
+                  Restart & Install
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <>
-      <div className="sidebar-header">
-        Projects
+    <div className="flex flex-col h-full bg-background/80 backdrop-blur-sm animate-in slide-in-from-left duration-200">
+      <div className="p-4 flex items-center justify-between border-b border-border/50">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/70">Projects</h2>
         <button
-          className="add-category-btn"
+          className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-all"
           onClick={handleAddCategory}
           title="Add category"
-          aria-label="Add category"
         >
-          +
+          <Plus size={16} />
         </button>
       </div>
-      <div className="projects-list">
+      
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
         {/* All Projects meta-entry at top */}
         <div
-          className="meta-project-header"
+          className="group flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-primary/10 transition-all border border-transparent hover:border-primary/20"
           role="button"
           tabIndex={0}
           onClick={handleOpenAllProjects}
@@ -159,8 +456,10 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
             }
           }}
         >
-          <span className="meta-project-icon">⚡</span>
-          <span className="meta-project-name">All Projects</span>
+          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+            <Zap size={18} fill="currentColor" />
+          </div>
+          <span className="font-semibold text-sm text-foreground/80 group-hover:text-primary transition-colors">All Projects</span>
         </div>
 
         {sortedCategories.map((category) => {
@@ -248,81 +547,48 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
         )}
 
         {projects.length === 0 && (
-          <div className="empty-projects">
-            No projects yet.
-            <br />
-            Click + to add one.
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-4 text-muted-foreground/30">
+              <FolderPlus size={24} />
+            </div>
+            <p className="text-sm text-muted-foreground">No projects yet.</p>
+            <p className="text-xs text-muted-foreground/50 mt-1">Add one to get started.</p>
           </div>
         )}
-        <div className="project-add-buttons">
-          <button
-            className="add-project-btn"
-            onClick={onOpenMakeProject}
-            title="Create new project from scratch"
-          >
-            + make
-          </button>
-          <button
-            className="add-project-btn"
-            onClick={onAddProject}
-            title="Add existing project folder"
-          >
-            + add
-          </button>
-          <button
-            className="add-project-btn"
-            onClick={onAddProjectsFromParent}
-            title="Add all projects from a parent folder"
-          >
-            + folder
-          </button>
-        </div>
       </div>
 
-      <BeadsPanel
-        projectPath={beadsProjectPath}
-        isExpanded={beadsExpanded}
-        onToggle={() => setBeadsExpanded(!beadsExpanded)}
-        onStartTaskInNewTab={(prompt) => {
-          if (beadsProjectPath) onOpenSession(beadsProjectPath, undefined, undefined, prompt, true)
-        }}
-        onSendToCurrentTab={(prompt) => {
-          if (focusedTabPtyId) {
-            window.electronAPI?.writePty(focusedTabPtyId, prompt)
-            setTimeout(() => window.electronAPI?.writePty(focusedTabPtyId, '\r'), 100)
-          }
-        }}
-        currentTabPtyId={focusedTabPtyId}
-      />
-
-      <GSDStatus
-        projectPath={beadsProjectPath}
-        onCommand={(cmd) => {
-          if (focusedTabPtyId) {
-            window.electronAPI?.writePty(focusedTabPtyId, cmd)
-            setTimeout(() => window.electronAPI?.writePty(focusedTabPtyId, '\r'), 100)
-          }
-        }}
-      />
-
-      {voiceOutputEnabled && (
-        <VoiceOptionsPanel
-          volume={volume}
-          speed={speed}
-          skipOnNew={skipOnNew}
-          onVolumeChange={setVolume}
-          onSpeedChange={setSpeed}
-          onSkipOnNewChange={setSkipOnNew}
-        />
-      )}
+      <div className="p-3 grid grid-cols-3 gap-2 border-t border-border/50">
+        <button
+          className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20 group"
+          onClick={onOpenProjectWizard}
+          title="Create new project from scratch"
+        >
+          <Plus size={16} className="group-hover:scale-125 transition-transform" />
+          <span className="text-[10px] font-bold uppercase tracking-tighter">Make</span>
+        </button>
+        <button
+          className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20 group"
+          onClick={onAddProject}
+          title="Add existing project folder"
+        >
+          <FolderPlus size={16} className="group-hover:scale-125 transition-transform" />
+          <span className="text-[10px] font-bold uppercase tracking-tighter">Add</span>
+        </button>
+        <button
+          className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20 group"
+          onClick={onAddProjectsFromParent}
+          title="Add all projects from a parent folder"
+        >
+          <FolderSearch size={16} className="group-hover:scale-125 transition-transform" />
+          <span className="text-[10px] font-bold uppercase tracking-tighter">Scan</span>
+        </button>
+      </div>
 
       <SidebarActions
-        activeTabId={activeTabId}
-        focusedTabId={focusedTabId}
         focusedProject={focusedProject}
         apiStatus={focusedProjectPath ? apiStatus[focusedProjectPath] : undefined}
         isDebugMode={isDebugMode}
-        onOpenSettings={onOpenSettings}
+        api={api as any}
         onOpenProjectSettings={async (project) => {
           await handleOpenProjectSettings(project)
           setContextMenu(null)
@@ -331,7 +597,6 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
           await handleToggleApi(project)
           setContextMenu(null)
         }}
-        onOpenMobileConnect={onOpenMobileConnect}
       />
 
       {/* Context Menu */}
@@ -438,6 +703,10 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
           }}
         />
       )}
-    </>
+      {/* MCP Browser Modal */}
+      {mcpBrowserOpen && (
+        <McpBrowser onClose={() => setMcpBrowserOpen(false)} />
+      )}
+    </div>
   )
 }

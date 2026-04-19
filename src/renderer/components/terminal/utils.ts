@@ -1,7 +1,18 @@
 import type { Terminal as XTerm } from '@xterm/xterm'
 import type { MutableRefObject } from 'react'
 import type { TerminalGlobals } from './types.js'
-import { BUFFER_KEY, ERROR_HANDLER_KEY, MAX_BUFFER_CHUNKS } from './constants.js'
+import { BUFFER_KEY, ERROR_HANDLER_KEY, MAX_BUFFER_CHUNKS, ESTIMATED_CHAR_WIDTH, ESTIMATED_CHAR_HEIGHT } from './constants.js'
+
+/**
+ * Calculates terminal rows and columns based on pixel dimensions.
+ * Uses estimated character sizes if specific measurements are unavailable.
+ */
+export function calculatePtyDimensions(width: number, height: number): { cols: number; rows: number } {
+  return {
+    cols: Math.max(1, Math.floor(width / ESTIMATED_CHAR_WIDTH)),
+    rows: Math.max(1, Math.floor(height / ESTIMATED_CHAR_HEIGHT))
+  }
+}
 
 // Get or create the global buffer map (survives HMR)
 export function getTerminalBuffers(): Map<string, string[]> {

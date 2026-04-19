@@ -20,124 +20,7 @@ import {
 } from './types'
 import type { BackendId } from './types'
 
-/**
- * Type declaration for the global electronAPI
- */
-declare global {
-  interface Window {
-    electronAPI?: {
-      // PTY Management
-      spawnPty: (cwd: string, sessionId?: string, model?: string, backend?: BackendId) => Promise<string>
-      killPty: (id: string) => void
-      writePty: (id: string, data: string) => void
-      resizePty: (id: string, cols: number, rows: number) => void
-      onPtyData: (id: string, callback: (data: string) => void) => () => void
-      onPtyExit: (id: string, callback: (code: number) => void) => () => void
-      onPtyRecreated: (callback: (data: { oldId: string; newId: string; backend: BackendId }) => void) => () => void
-      setPtyBackend: (id: string, backend: BackendId) => Promise<void>
-      setAutoAccept?: (id: string, enabled: boolean) => void
-      getAutoAcceptStatus?: (id: string) => Promise<boolean>
 
-
-      // Session Management
-      discoverSessions: (projectPath: string, backend?: BackendId) => Promise<Session[]>
-
-      // Workspace Management
-      getWorkspace: () => Promise<Workspace>
-      saveWorkspace: (workspace: Workspace) => Promise<void>
-
-      // Settings Management
-      getSettings: () => Promise<Settings>
-      saveSettings: (settings: Settings) => Promise<void>
-
-      // Project Management
-      addProject: () => Promise<string | null>
-      addProjectsFromParent: () => Promise<Array<{ path: string; name: string }> | null>
-
-      // TTS
-      ttsInstallInstructions: (projectPath: string) => Promise<{ success: boolean }>
-      voiceGetInstalled?: () => Promise<Array<{ key: string; displayName: string; source: 'builtin' | 'downloaded' | 'custom'; quality?: string; language?: string }>>
-      xttsGetVoices?: () => Promise<Array<{ id: string; name: string; language: string; createdAt: number }>>
-      voiceGetSettings?: () => Promise<{ ttsVoice?: string; ttsEngine?: string; ttsSpeed?: number; xttsTemperature?: number; xttsTopK?: number; xttsTopP?: number; xttsRepetitionPenalty?: number; tadaVoiceSample?: string | null }>
-      voiceCheckWhisper?: () => Promise<{ installed: boolean; models: string[]; currentModel: string | null }>
-      voiceCheckTTS?: () => Promise<{ installed: boolean; engine: string | null; voices: string[]; currentVoice: string | null }>
-      voiceInstallWhisper?: (model: string) => Promise<{ success: boolean; error?: string }>
-      voiceApplySettings?: (settings: { ttsVoice?: string; ttsEngine?: string; ttsSpeed?: number; xttsTemperature?: number; xttsTopK?: number; xttsTopP?: number; xttsRepetitionPenalty?: number; tadaVoiceSample?: string | null }) => Promise<{ success: boolean }>
-      voiceSetVoice?: (voice: string | { voice: string; engine: 'piper' | 'xtts' | 'tada' }) => Promise<{ success: boolean }>
-      ttsRemoveInstructions?: (projectPath: string) => Promise<{ success: boolean }>
-      extensionsGetInstalled?: () => Promise<Array<{ id: string; name: string; type: string }>>
-      voiceSpeak: (text: string) => Promise<{ success: boolean; audioData?: string; error?: string }>
-      voiceStopSpeaking: () => Promise<{ success: boolean }>
-
-      // TADA (neural voice cloning)
-      tadaInstall?: () => Promise<{ success: boolean; error?: string }>
-      tadaCheck?: () => Promise<{ installed: boolean; pythonPath: string | null; venvExists: boolean; hfAuthenticated?: boolean; error?: string }>
-      tadaLoginHuggingFace?: (token: string) => Promise<{ success: boolean; error?: string }>
-      tadaSelectVoiceSample?: () => Promise<{ success: boolean; path?: string; error?: string }>
-      tadaSetVoiceSample?: (samplePath: string) => Promise<{ success: boolean; error?: string }>
-      tadaGetVoiceSample?: () => Promise<{ path: string | null }>
-      tadaSpeak?: (text: string) => Promise<{ success: boolean; audioData?: string; error?: string }>
-      tadaGetSampleVoices?: () => Promise<Array<{ id: string; name: string; description: string; available: boolean }>>
-      tadaUseSampleVoice?: (sampleId: string) => Promise<{ success: boolean; path?: string; error?: string }>
-
-      // XTTS speech synthesis
-      xttsSpeak?: (text: string, voiceId: string, language?: string) => Promise<{ success: boolean; audioData?: string; error?: string }>
-
-      // Events
-      onApiOpenSession: (callback: (data: { projectPath: string; autoClose: boolean; model?: string }) => void) => () => void
-
-      // API Server
-      apiStart?: (projectPath: string, port: number) => Promise<{ success: boolean; error?: string }>
-      apiStop?: (projectPath: string) => Promise<{ success: boolean }>
-
-      // Extended API (Desktop-only)
-      selectDirectory: () => Promise<string | null>
-      selectExecutable: () => Promise<string | null>
-      windowMinimize: () => void
-      windowMaximize: () => void
-      windowClose: () => void
-      windowIsMaximized: () => Promise<boolean>
-      getPathForFile: (file: File) => string
-      readClipboardImage: () => Promise<{ success: boolean; hasImage?: boolean; path?: string; error?: string }>
-      getVersion: () => Promise<string>
-      isDebugMode: () => Promise<boolean>
-      refresh: () => Promise<void>
-      openExternal: (url: string) => Promise<void>
-      debugLog: (message: string) => void
-
-      // Beads
-      beadsCheck: (cwd: string) => Promise<{ installed: boolean; initialized: boolean }>
-      beadsInit: (cwd: string) => Promise<{ success: boolean; error?: string }>
-      beadsInstall: () => Promise<{ success: boolean; error?: string; method?: string; needsPython?: boolean }>
-      beadsReady: (cwd: string) => Promise<{ success: boolean; tasks?: unknown[]; error?: string }>
-      beadsList: (cwd: string) => Promise<{ success: boolean; tasks?: unknown[]; error?: string }>
-      beadsShow: (cwd: string, taskId: string) => Promise<{ success: boolean; task?: unknown; error?: string }>
-      beadsCreate: (cwd: string, title: string, description?: string, priority?: number, type?: string, labels?: string) => Promise<{ success: boolean; task?: unknown; error?: string }>
-      beadsComplete: (cwd: string, taskId: string) => Promise<{ success: boolean; result?: unknown; error?: string }>
-      beadsDelete: (cwd: string, taskId: string) => Promise<{ success: boolean; error?: string }>
-      beadsStart: (cwd: string, taskId: string) => Promise<{ success: boolean; error?: string }>
-      beadsUpdate: (cwd: string, taskId: string, status?: string, title?: string, description?: string, priority?: number) => Promise<{ success: boolean; error?: string }>
-      beadsWatch: (cwd: string) => Promise<{ success: boolean; error?: string }>
-      beadsUnwatch: (cwd: string) => Promise<{ success: boolean; error?: string }>
-      onBeadsTasksChanged: (callback: (data: { cwd: string }) => void) => () => void
-
-      // Kspec
-      kspecCheck: (cwd: string) => Promise<{ exists: boolean }>
-      kspecInit: (cwd: string) => Promise<{ success: boolean; error?: string }>
-      kspecEnsureDaemon: (cwd: string) => Promise<{ success: boolean; alreadyRunning?: boolean; error?: string }>
-      kspecCheckCli: () => Promise<{ installed: boolean; version?: string }>
-      kspecInstallCli: () => Promise<{ success: boolean; error?: string }>
-      kspecMigrateFromBeads: (cwd: string) => Promise<{ success: boolean; migrated: number; error?: string }>
-      kspecDispatchStart: (cwd: string) => Promise<{ success: boolean; error?: string }>
-      kspecDispatchStop: (cwd: string) => Promise<{ success: boolean; error?: string }>
-      kspecDispatchStatus: (cwd: string) => Promise<{ running: boolean; [key: string]: unknown }>
-
-      // Install progress
-      pythonInstall: () => Promise<{ success: boolean; error?: string; method?: string }>
-      onInstallProgress: (callback: (data: { type: string; status: string; percent?: number }) => void) => () => void
-    }
-  }
-}
 
 /**
  * Electron backend implementation that delegates to window.electronAPI
@@ -157,9 +40,9 @@ export class ElectronBackend implements ExtendedApi {
   // PTY Management
   // ==========================================================================
 
-  async spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId): Promise<string> {
+  async spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId, rows?: number, cols?: number): Promise<string> {
     this.checkApi()
-    return window.electronAPI!.spawnPty(cwd, sessionId, model, backend)
+    return window.electronAPI!.spawnPty(cwd, sessionId, model, backend, rows, cols)
   }
 
   killPty(id: string): void {
@@ -194,7 +77,10 @@ export class ElectronBackend implements ExtendedApi {
 
   setPtyBackend(id: string, backend: BackendId): Promise<void> {
     this.checkApi()
-    return window.electronAPI!.setPtyBackend(id, backend)
+    if (window.electronAPI!.setPtyBackend) {
+      return window.electronAPI!.setPtyBackend(id, backend)
+    }
+    return Promise.resolve()
   }
 
   setAutoAccept(id: string, enabled: boolean): void {
@@ -284,6 +170,14 @@ export class ElectronBackend implements ExtendedApi {
     return window.electronAPI!.onApiOpenSession(callback)
   }
 
+  onSettingsChanged(callback: (settings: Settings) => void): Unsubscribe {
+    return () => {}
+  }
+
+  onWorkspaceChanged(callback: (workspace: Workspace) => void): Unsubscribe {
+    return () => {}
+  }
+
   // ==========================================================================
   // Extended API (Desktop-only features)
   // ==========================================================================
@@ -351,6 +245,25 @@ export class ElectronBackend implements ExtendedApi {
   debugLog(message: string): void {
     this.checkApi()
     window.electronAPI!.debugLog(message)
+  }
+
+  // Updater
+  async checkForUpdate(): Promise<{ available: boolean; version?: string; body?: string }> {
+    if (window.electronAPI?.checkForUpdate) {
+      return window.electronAPI.checkForUpdate()
+    }
+    return { available: false }
+  }
+
+  async downloadUpdate(): Promise<{ success: boolean; error?: string }> {
+    if (window.electronAPI?.downloadUpdate) {
+      return window.electronAPI.downloadUpdate()
+    }
+    return { success: false, error: 'Updater not implemented in Electron' }
+  }
+
+  async installUpdate(): Promise<void> {
+    window.electronAPI?.installUpdate?.()
   }
 }
 

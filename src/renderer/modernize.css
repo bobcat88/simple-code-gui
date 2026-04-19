@@ -1,0 +1,347 @@
+/* Codex-Inspired High-Fidelity Theme */
+:root {
+  --background: 240 10% 2%;
+  --foreground: 0 0% 98%;
+  
+  --bg-codex-dark: #0a0a0f;
+  --bg-codex-sidebar: rgba(5, 5, 7, 0.8);
+  --bg-codex-header: rgba(10, 10, 12, 0.4);
+  --bg-codex-accent: rgba(255, 255, 255, 0.03);
+  
+  --codex-blue: #3b82f6;
+  --codex-glow: rgba(59, 130, 246, 0.15);
+  
+  --radius-codex: 12px;
+  --radius-inner: 8px;
+  --radius-modal: 16px;
+  
+  /* Standard variable overrides */
+  --radius: 12px;
+  --radius-lg: 12px;
+  --radius-md: 8px;
+  --radius-sm: 6px;
+  
+  /* Override shadcn variables for deeper dark */
+  --card: 240 10% 3%;
+  --popover: 240 10% 3%;
+  --border: 240 5.9% 8%;
+  --input: 240 5.9% 8%;
+  --primary: 217.2 91.2% 59.8%;
+  --accent: 240 3.7% 12%;
+  --muted: 240 3.7% 8%;
+}
+
+/* Global resets and layout */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: transparent !important;
+}
+
+.app-container {
+  background-color: var(--bg-codex-dark);
+  color: #f0f0f0;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-codex);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  height: 100vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Force 12px corners everywhere */
+.rounded-\[2rem\], .rounded-2xl, .rounded-3xl {
+  border-radius: var(--radius-codex) !important;
+}
+
+.rounded-xl {
+  border-radius: var(--radius-inner) !important;
+}
+
+.glass-panel {
+  background: var(--bg-codex-sidebar);
+  backdrop-filter: blur(40px) saturate(210%);
+  -webkit-backdrop-filter: blur(40px) saturate(210%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 4px 24px -1px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-header {
+  background: var(--bg-codex-header);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.codex-modal-content {
+  background: rgba(10, 10, 12, 0.7);
+  backdrop-filter: blur(32px) saturate(150%);
+  -webkit-backdrop-filter: blur(32px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+}
+
+/* Aggressive Drag Region */
+[data-tauri-drag-region] {
+  cursor: default;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+.title-bar {
+  height: 32px !important;
+  background: transparent !important;
+  border-bottom: none !important;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  z-index: 9999;
+  position: relative;
+  pointer-events: auto !important;
+  -webkit-app-region: drag;
+}
+
+.title-bar-drag {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.title-bar-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.title-bar-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.title-bar-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 0.2s;
+}
+
+.title-bar-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.title-bar-btn.close:hover {
+  background: #ef4444;
+  color: white;
+}
+
+/* Custom Scrollbar Codex Look */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Button Refinement */
+.codex-btn {
+  @apply transition-all duration-200 active:scale-95;
+  border-radius: var(--radius-inner);
+}
+
+/* Sidebar Hover Collapse Bubble */
+.collapse-bubble {
+  position: absolute;
+  right: -11px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #020203;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);
+  cursor: pointer;
+  z-index: 100;
+  opacity: 0;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+}
+
+.sidebar-container:hover .collapse-bubble,
+.sidebar.collapsed .collapse-bubble {
+  opacity: 1;
+}
+
+.collapse-bubble:hover {
+  transform: translateY(-50%) scale(1.15);
+  background: white;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.2);
+}
+
+/* Staggered Entry Animations */
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-entry {
+  animation: slide-up-fade 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+
+/* Spotlight Search (Cmd+K) Styles */
+.spotlight-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spotlight-container {
+  width: 100%;
+  max-width: 600px;
+  background: var(--bg-codex-sidebar);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-codex);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+  padding: 8px;
+  margin-bottom: 20vh;
+}
+
+/* Tiled View Refinement */
+.terminal-tile {
+  background: var(--bg-codex-sidebar) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease !important;
+  overflow: hidden;
+}
+
+.terminal-tile.focused {
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
+.terminal-tile .tile-header {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  height: 34px !important;
+}
+
+.tile-subtab {
+  height: 100% !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.03) !important;
+  transition: all 0.2s !important;
+}
+
+.tile-subtab.active {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: white !important;
+}
+
+.tile-subtab:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.02) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Main Tab Bar Refinement */
+.tabs-bar {
+  background: var(--bg-codex-header) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  height: 42px !important;
+  padding: 0 8px !important;
+  gap: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.tab {
+  height: 32px !important;
+  padding: 0 16px !important;
+  border-radius: var(--radius-inner) !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  position: relative !important;
+}
+
+.tab:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.tab.active {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: var(--codex-blue);
+  box-shadow: 0 0 10px var(--codex-glow);
+  border-radius: 2px 2px 0 0;
+}

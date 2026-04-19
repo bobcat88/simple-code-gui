@@ -66,12 +66,12 @@ export function VoiceBrowserModal({ isOpen, onClose, onVoiceSelect }: VoiceBrows
 
     try {
       const [catalogData, installedData, xttsVoicesData, xttsSamplesData, xttsLangs, xttsCheck] = await Promise.all([
-        window.electronAPI?.voiceFetchCatalog(forceRefresh),
-        window.electronAPI?.voiceGetInstalled(),
-        window.electronAPI?.xttsGetVoices(),
-        window.electronAPI?.xttsGetSampleVoices(),
-        window.electronAPI?.xttsGetLanguages(),
-        window.electronAPI?.xttsCheck()
+        window.electronAPI?.voiceFetchCatalog?.(forceRefresh) || Promise.resolve([]),
+        window.electronAPI?.voiceGetInstalled?.() || Promise.resolve([]),
+        window.electronAPI?.xttsGetVoices?.() || Promise.resolve([]),
+        window.electronAPI?.xttsGetSampleVoices?.() || Promise.resolve([]),
+        window.electronAPI?.xttsGetLanguages?.() || Promise.resolve([]),
+        window.electronAPI?.xttsCheck?.() || Promise.resolve({ installed: false })
       ])
       setCatalog(catalogData)
       setInstalled(installedData)
@@ -185,11 +185,11 @@ export function VoiceBrowserModal({ isOpen, onClose, onVoiceSelect }: VoiceBrows
     setDownloading(voiceKey)
     try {
       if (engine === 'xtts') {
-        const result = await window.electronAPI?.xttsDownloadSampleVoice(voiceKey)
-        if (result.success) {
+        const result = await window.electronAPI?.xttsDownloadSampleVoice?.(voiceKey)
+        if (result?.success) {
           const [voices, samples] = await Promise.all([
-            window.electronAPI?.xttsGetVoices(),
-            window.electronAPI?.xttsGetSampleVoices()
+            window.electronAPI?.xttsGetVoices?.() || Promise.resolve([]),
+            window.electronAPI?.xttsGetSampleVoices?.() || Promise.resolve([])
           ])
           setXttsVoices(voices)
           setXttsSampleVoices(samples)
@@ -197,10 +197,10 @@ export function VoiceBrowserModal({ isOpen, onClose, onVoiceSelect }: VoiceBrows
           setError(result.error || 'Download failed')
         }
       } else {
-        const result = await window.electronAPI?.voiceDownloadFromCatalog(voiceKey)
-        if (result.success) {
-          const installedData = await window.electronAPI?.voiceGetInstalled()
-          setInstalled(installedData)
+        const result = await window.electronAPI?.voiceDownloadFromCatalog?.(voiceKey)
+        if (result?.success) {
+          const installedData = await window.electronAPI?.voiceGetInstalled?.()
+          if (installedData) setInstalled(installedData)
         } else {
           setError(result.error || 'Download failed')
         }
@@ -212,17 +212,17 @@ export function VoiceBrowserModal({ isOpen, onClose, onVoiceSelect }: VoiceBrows
   }
 
   async function handleImportCustom(): Promise<void> {
-    const result = await window.electronAPI?.voiceImportCustom()
-    if (result.success) {
-      const installedData = await window.electronAPI?.voiceGetInstalled()
-      setInstalled(installedData)
-    } else if (result.error) {
+    const result = await window.electronAPI?.voiceImportCustom?.()
+    if (result?.success) {
+      const installedData = await window.electronAPI?.voiceGetInstalled?.()
+      if (installedData) setInstalled(installedData)
+    } else if (result?.error) {
       setError(result.error)
     }
   }
 
   function handleOpenFolder(): void {
-    window.electronAPI?.voiceOpenCustomFolder()
+    window.electronAPI?.voiceOpenCustomFolder?.()
   }
 
   function handleSelect(voice: CombinedVoice): void {
@@ -286,8 +286,8 @@ export function VoiceBrowserModal({ isOpen, onClose, onVoiceSelect }: VoiceBrows
   async function handleDeleteXtts(voiceId: string, e: React.MouseEvent): Promise<void> {
     e.stopPropagation()
     if (!confirm('Delete this voice clone?')) return
-    const result = await window.electronAPI?.xttsDeleteVoice(voiceId)
-    if (result.success) {
+    const result = await window.electronAPI?.xttsDeleteVoice?.(voiceId)
+    if (result?.success) {
       setXttsVoices((prev) => prev.filter((v) => v.id !== voiceId))
     } else {
       setError(result.error || 'Failed to delete voice')
@@ -297,8 +297,8 @@ export function VoiceBrowserModal({ isOpen, onClose, onVoiceSelect }: VoiceBrows
   async function handleInstallXtts(): Promise<void> {
     setError(null)
     try {
-      const result = await window.electronAPI?.xttsInstall()
-      if (result.success) {
+      const result = await window.electronAPI?.xttsInstall?.()
+      if (result?.success) {
         setXttsStatus({ installed: true })
       } else {
         setError(result.error || 'XTTS installation failed')
@@ -311,10 +311,10 @@ export function VoiceBrowserModal({ isOpen, onClose, onVoiceSelect }: VoiceBrows
   async function handleCreateXttsVoice(name: string, language: string, audioPath: string): Promise<void> {
     setError(null)
     try {
-      const result = await window.electronAPI?.xttsCreateVoice(audioPath, name, language)
-      if (result.success) {
-        const voices = await window.electronAPI?.xttsGetVoices()
-        setXttsVoices(voices)
+      const result = await window.electronAPI?.xttsCreateVoice?.(audioPath, name, language)
+      if (result?.success) {
+        const voices = await window.electronAPI?.xttsGetVoices?.()
+        if (voices) setXttsVoices(voices)
         setShowCreateXtts(false)
       } else {
         setError(result.error || 'Failed to create voice')

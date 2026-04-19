@@ -20,6 +20,7 @@ import {
   isTerminalAtBottom,
   scrollDebug,
   scrollSnapshot,
+  calculatePtyDimensions
 } from '../utils.js'
 import {
   createWheelHandler,
@@ -296,7 +297,8 @@ function postOpenSetup(
   ptyOperations: PtyOperations,
   ptyId: string,
   options: UseTerminalSetupOptions,
-  state: InitState
+  state: InitState,
+  onReady?: () => void
 ): void {
   const container = containerRef.current
   if (!container) return
@@ -351,6 +353,7 @@ function postOpenSetup(
     state
   )
   ;(container as any).__cleanupFn = cleanupFn
+  onReady?.()
 
   // Defer fit to next frame
   requestAnimationFrame(() => {
@@ -374,7 +377,8 @@ export function initTerminal(
   ptyOperations: PtyOperations,
   ptyId: string,
   options: UseTerminalSetupOptions,
-  state: InitState
+  state: InitState,
+  onReady?: () => void
 ): boolean {
   console.log('[Terminal] initTerminal called, disposed:', state.disposed, 'terminal:', !!state.terminal, 'initPending:', state.initPending)
   if (state.disposed || state.terminal) return true
@@ -439,10 +443,14 @@ export function initTerminal(
   const savedFontSize = localStorage.getItem(FONT_SIZE_STORAGE_KEY)
   const initialFontSize = savedFontSize ? parseInt(savedFontSize, 10) : DEFAULT_FONT_SIZE
 
+  const { cols: initialCols, rows: initialRows } = calculatePtyDimensions(computedW, computedH)
+
   const newTerminal = new XTerm({
     ...TERMINAL_CONFIG,
     fontSize: initialFontSize,
     theme: initialTheme,
+    cols: initialCols,
+    rows: initialRows,
   })
 
   const newFitAddon = new FitAddon()
@@ -513,9 +521,10 @@ export function initTerminal(
       ptyOperations,
       ptyId,
       options,
-      state
+      state,
+      onReady
     )
-  }, 200)
+  }, 16) // Use a single frame delay instead of 200ms
 
   return false
 }
@@ -534,6 +543,7 @@ export function handlePtyData(
   onTTSChunk: (chunk: string) => void,
   onSummaryChunk: (chunk: string) => void,
   onAutoWorkMarker: (chunk: string) => void,
+  onTokenChunk: (chunk: string) => void,
   state: InitState
 ): void {
   addToBuffer(ptyId, data)
@@ -546,6 +556,7 @@ export function handlePtyData(
   onTTSChunk(cleanChunk)
   onSummaryChunk(cleanChunk)
   onAutoWorkMarker(cleanChunk)
+  onTokenChunk(cleanChunk)
 
   // Strip autowork marker from display
   displayData = displayData.replace(AUTOWORK_MARKER_REGEX, '')

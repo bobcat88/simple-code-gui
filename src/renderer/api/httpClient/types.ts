@@ -224,7 +224,7 @@ export type TerminalExitCallback = (ptyId: string, code: number) => void
  */
 export interface ApiClient {
   // Terminal
-  spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId): Promise<string>
+  spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId, rows?: number, cols?: number): Promise<string>
   writePty(id: string, data: string): void
   resizePty(id: string, cols: number, rows: number): void
   killPty(id: string): void

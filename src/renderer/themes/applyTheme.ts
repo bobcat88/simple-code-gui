@@ -149,3 +149,15 @@ export function applyTheme(theme: Theme, customization?: ThemeCustomization | nu
   console.log('[Theme] applyTheme dispatching terminal-theme-update, bg:', terminalTheme.background, 'theme:', theme.id)
   window.dispatchEvent(new CustomEvent('terminal-theme-update', { detail: terminalTheme }))
 }
+
+export function applyGlobalStyling(accentColor: string, glowEnabled: boolean): void {
+  const root = document.documentElement
+  const colors = generateAccentColors(accentColor)
+  
+  root.style.setProperty('--codex-blue', accentColor)
+  root.style.setProperty('--codex-glow', glowEnabled ? colors.accentGlow : 'transparent')
+  
+  // Also update standard accent variables for components using them
+  root.style.setProperty('--accent', colors.accent)
+  root.style.setProperty('--accent-glow', glowEnabled ? colors.accentGlow : 'transparent')
+}

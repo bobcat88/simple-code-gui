@@ -25,7 +25,7 @@ export class PtyApi {
     this.wsManager = wsManager
   }
 
-  async spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId): Promise<string> {
+  async spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId, rows?: number, cols?: number): Promise<string> {
     this.connection.setConnectionState('connecting')
 
     const data = await this.connection.fetchJson<{ ptyId: string }>('/api/pty/spawn', {
@@ -34,7 +34,9 @@ export class PtyApi {
         projectPath: cwd,
         sessionId,
         model,
-        backend
+        backend,
+        rows,
+        cols
       })
     })
 

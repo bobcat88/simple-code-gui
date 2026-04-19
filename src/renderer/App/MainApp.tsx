@@ -5,7 +5,7 @@ import { TerminalTabs } from '../components/TerminalTabs'
 import { Terminal } from '../components/terminal/Terminal'
 import { TiledTerminalView } from '../components/tiled/index.js'
 import { SettingsModal } from '../components/SettingsModal'
-import { MakeProjectModal } from '../components/MakeProjectModal'
+import { ProjectInitializationWizard } from '../components/ProjectInitializationWizard'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { FileBrowser } from '../components/mobile/FileBrowser'
 import type { HostConfig } from '../hooks/useHostConnection'
@@ -24,14 +24,23 @@ import {
 import type { Api } from '../api'
 import { InstallationPrompt } from './InstallationPrompt'
 import { MobileConnectModal } from './MobileConnectModal'
+import { IconBar } from '../components/IconBar'
+import { Header } from '../components/Header'
+import { LayoutGrid, Terminal as TerminalIcon } from 'lucide-react'
+import { cn } from '../lib/utils'
+import { Spotlight } from '../components/Spotlight'
+import { IntelligenceSidebar } from '../components/intelligence/IntelligenceSidebar'
+import { useProjectIntelligence } from '../hooks/useProjectIntelligence'
+import { Activity } from 'lucide-react'
 
 export interface MainAppProps {
   api: Api
   isElectron: boolean
+  isTauri?: boolean
   onDisconnect?: () => void
 }
 
-export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.ReactElement {
+export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps): React.ReactElement {
   const {
     projects,
     openTabs,
@@ -50,7 +59,7 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
   const voiceOutputEnabledRef = useRef(voiceOutputEnabled)
 
   // Modal state from context
-  const { settingsOpen, makeProjectOpen, openSettings, closeSettings, openMakeProject, closeMakeProject } = useModals()
+  const { settingsOpen, projectWizardOpen, openSettings, closeSettings, openProjectWizard, closeProjectWizard } = useModals()
 
   // Installation state from hook
   const {
@@ -64,7 +73,17 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
     handleInstallNode,
     handleInstallGit,
     handleInstallClaude
-  } = useInstallation()
+  } = useInstallation(api)
+
+  const activeTab = openTabs.find(t => t.id === activeTabId) || null
+
+  const handleNewSessionFromHeader = () => {
+    if (activeTab) {
+      handleOpenSession(activeTab.projectPath, undefined, undefined, undefined, true)
+    } else if (projects.length > 0) {
+      handleOpenSession(projects[0].path, undefined, undefined, undefined, true)
+    }
+  }
 
   // Updater state from hook
   const { appVersion, updateStatus, downloadUpdate, installUpdate } = useUpdater()
@@ -81,8 +100,17 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
     setLastFocusedTabId,
     setSidebarWidth,
     setSidebarCollapsed,
+    intelligenceWidth,
+    intelligenceCollapsed,
+    setIntelligenceWidth,
+    setIntelligenceCollapsed,
     toggleViewMode
   } = useViewState()
+
+  const { intelligence, loading: intelligenceLoading, refresh: refreshIntelligence } = useProjectIntelligence(
+    api as any,
+    activeTab?.projectPath || null
+  )
 
   // Workspace loader hook
   const {
@@ -145,8 +173,36 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
   const [mobileConnectOpen, setMobileConnectOpen] = useState(false)
   const [showFileBrowser, setShowFileBrowser] = useState(false)
   const [fileBrowserPath, setFileBrowserPath] = useState<string | null>(null)
+  const [activeSection, setActiveSection] = useState('terminal')
+  const [settingsCategory, setSettingsCategory] = useState('general')
+  const isMobile = !isElectron
   const hadProjectsRef = useRef(false)
   const terminalContainerRef = useRef<HTMLDivElement>(null)
+  const [spotlightOpen, setSpotlightOpen] = useState(false)
+
+  // Spotlight Hotkey (Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSpotlightOpen(prev => !prev)
+      }
+      if (e.key === 'Escape' && spotlightOpen) {
+        setSpotlightOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [spotlightOpen])
+
+  // Load MCP config on mount
+  useEffect(() => {
+    if (isTauri && api.mcpLoadConfig) {
+      api.mcpLoadConfig().catch(err => {
+        console.error('Failed to load MCP config:', err);
+      });
+    }
+  }, [api, isTauri]);
 
   // Keep ref in sync for callbacks
   useEffect(() => {
@@ -231,204 +287,210 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
     )
   }
 
-  const isMobile = !isElectron
-
   return (
-    <div className="app">
-      <TitleBar />
-      <div className="app-content">
-        <Sidebar
-          projects={projects}
-          openTabs={openTabs}
-          activeTabId={activeTabId}
-          lastFocusedTabId={lastFocusedTabId}
-          onAddProject={handleAddProject}
-          onAddProjectsFromParent={handleAddProjectsFromParent}
-          onRemoveProject={removeProject}
-          onOpenSession={handleOpenSession}
-          onSwitchToTab={setActiveTab}
-          onOpenSettings={openSettings}
-          onOpenMakeProject={openMakeProject}
-          onUpdateProject={updateProject}
-          onCloseProjectTabs={handleCloseProjectTabs}
-          width={sidebarWidth}
-          collapsed={sidebarCollapsed}
-          onWidthChange={setSidebarWidth}
-          onCollapsedChange={setSidebarCollapsed}
-          isMobileOpen={mobileDrawerOpen}
-          onMobileClose={closeMobileDrawer}
-          onOpenMobileConnect={() => setMobileConnectOpen(true)}
-          onDisconnect={onDisconnect}
-        />
-
-        {/* Mobile: render each terminal as its own slide */}
-        {isMobile && openTabs.map((tab) => (
-          <div key={tab.id} className="mobile-terminal-slide">
-            <div className="mobile-slide-header">
-              <span className="mobile-slide-title">{tab.title}</span>
-              <button className="mobile-slide-close" onClick={() => handleCloseTab(tab.id)}>×</button>
-            </div>
-            <div className="mobile-slide-content">
-              <ErrorBoundary componentName={`Terminal (${tab.title || tab.id})`}>
-                <Terminal
-                  ptyId={tab.id}
-                  isActive={true}
-                  theme={currentTheme}
-                  onFocus={() => setLastFocusedTabId(tab.id)}
-                  projectPath={tab.projectPath}
-                  backend={tab.backend}
-                  api={api}
-                  isMobile={true}
-                  onOpenFileBrowser={() => handleOpenFileBrowser(tab.projectPath || undefined)}
-                />
-              </ErrorBoundary>
-            </div>
-          </div>
-        ))}
-
-        {/* Desktop: wrap terminals in main-content */}
+    <div className="flex flex-row h-screen w-screen bg-transparent">
+      <div className="flex-1 flex flex-row bg-background/60 backdrop-blur-2xl text-foreground overflow-hidden shadow-2xl relative app-container">
         {!isMobile && (
-          <div className="main-content">
-            {claudeInstalled === false || gitBashInstalled === false ? (
-              <InstallationPrompt
-                claudeInstalled={claudeInstalled}
-                npmInstalled={npmInstalled}
-                gitBashInstalled={gitBashInstalled}
-                installing={installing}
-                installError={installError}
-                installMessage={installMessage}
-                onInstallNode={handleInstallNode}
-                onInstallGit={handleInstallGit}
-                onInstallClaude={handleInstallClaude}
-              />
-            ) : openTabs.length > 0 ? (
-              <>
-                <div className="terminal-header">
-                  {viewMode === 'tabs' && (
-                    <TerminalTabs
-                      tabs={openTabs}
-                      activeTabId={activeTabId}
-                      onSelectTab={setActiveTab}
+          <div className="animate-entry delay-100 h-full flex flex-row">
+            <IconBar 
+              activeSection={activeSection} 
+              onSectionChange={setActiveSection}
+              activeTabId={activeTabId}
+              focusedTabId={lastFocusedTabId}
+              onOpenSettings={openSettings}
+            />
+          </div>
+        )}
+      
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden animate-entry delay-200">
+        <TitleBar api={api} />
+        
+        <div className="flex-1 flex flex-row overflow-hidden relative">
+          <div className="animate-entry delay-300 h-full flex">
+            <Sidebar
+              projects={projects}
+              openTabs={openTabs}
+              activeTabId={activeTabId}
+              lastFocusedTabId={lastFocusedTabId}
+              onAddProject={handleAddProject}
+              onAddProjectsFromParent={handleAddProjectsFromParent}
+              onRemoveProject={removeProject}
+              onOpenSession={handleOpenSession}
+              onSwitchToTab={setActiveTab}
+              onOpenSettings={openSettings}
+              onOpenProjectWizard={openProjectWizard}
+              onUpdateProject={updateProject}
+              onCloseProjectTabs={handleCloseProjectTabs}
+              width={sidebarWidth}
+              collapsed={sidebarCollapsed}
+              onWidthChange={setSidebarWidth}
+              onCollapsedChange={setSidebarCollapsed}
+              isMobileOpen={mobileDrawerOpen}
+              onMobileClose={closeMobileDrawer}
+              onDisconnect={onDisconnect}
+              activeSection={activeSection}
+              api={api}
+            />
+          </div>
+
+          {/* Mobile: render each terminal as its own slide */}
+          {isMobile && openTabs.map((tab) => (
+            <div key={tab.id} className="mobile-terminal-slide">
+              <div className="mobile-slide-header">
+                <span className="mobile-slide-title">{tab.title}</span>
+                <button className="mobile-slide-close" onClick={() => handleCloseTab(tab.id)}>×</button>
+              </div>
+              <div className="mobile-slide-content">
+                <ErrorBoundary componentName={`Terminal (${tab.title || tab.id})`}>
+                  <Terminal
+                    ptyId={tab.id}
+                    isActive={true}
+                    theme={currentTheme}
+                    onFocus={() => setLastFocusedTabId(tab.id)}
+                    projectPath={tab.projectPath}
+                    backend={tab.backend}
+                    api={api}
+                    isMobile={true}
+                    onOpenFileBrowser={() => handleOpenFileBrowser(tab.projectPath || undefined)}
+                  />
+                </ErrorBoundary>
+              </div>
+            </div>
+          ))}
+
+          {/* Desktop: wrap terminals in main-content */}
+          {!isMobile && (
+            <>
+              <div className="flex-1 flex flex-col min-w-0 bg-background/50 overflow-hidden animate-entry delay-400">
+                {claudeInstalled === false || gitBashInstalled === false ? (
+                  <InstallationPrompt
+                    claudeInstalled={claudeInstalled}
+                    npmInstalled={npmInstalled}
+                    gitBashInstalled={gitBashInstalled}
+                    installing={installing}
+                    installError={installError}
+                    installMessage={installMessage}
+                    onInstallNode={handleInstallNode}
+                    onInstallGit={handleInstallGit}
+                    onInstallClaude={handleInstallClaude}
+                  />
+                ) : openTabs.length > 0 ? (
+                  <>
+                    <Header
+                      activeTab={activeTab}
+                      openTabs={openTabs}
+                      viewMode={viewMode}
+                      onToggleViewMode={toggleViewMode}
+                      onNewSession={handleNewSessionFromHeader}
+                      onSwitchToTab={setActiveTab}
                       onCloseTab={handleCloseTab}
-                      onRenameTab={handleRenameTab}
-                      onNewSession={(projectPath) => handleOpenSession(projectPath, undefined, undefined, undefined, true)}
-                      swipeContainerRef={terminalContainerRef as RefObject<HTMLElement>}
-                      onOpenSidebar={openMobileDrawer}
-                    />
-                  )}
-                  <button
-                    className="view-toggle-btn"
-                    onClick={toggleViewMode}
-                    title={viewMode === 'tabs' ? 'Switch to tiled view' : 'Switch to tabs view'}
-                  >
-                    {viewMode === 'tabs' ? '\u229E' : '\u25AD'}
-                  </button>
-                </div>
-                {viewMode === 'tabs' ? (
-                  <div className="terminal-container" ref={terminalContainerRef}>
-                    {openTabs.map((tab) => (
-                      <div
-                        key={tab.id}
-                        className={`terminal-wrapper ${tab.id === activeTabId ? 'active' : ''}`}
-                      >
-                        <ErrorBoundary componentName={`Terminal (${tab.title || tab.id})`}>
-                          <Terminal
-                            ptyId={tab.id}
-                            isActive={tab.id === activeTabId}
-                            theme={currentTheme}
-                            onFocus={() => setLastFocusedTabId(tab.id)}
-                            projectPath={tab.projectPath}
-                            backend={tab.backend}
-                            api={api}
-                          />
-                        </ErrorBoundary>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <ErrorBoundary componentName="TiledTerminalView">
-                    <TiledTerminalView
-                      tabs={openTabs}
-                      projects={projects}
-                      theme={currentTheme}
-                      focusedTabId={lastFocusedTabId}
-                      onCloseTab={handleCloseTab}
-                      onRenameTab={handleRenameTab}
-                      onFocusTab={setLastFocusedTabId}
-                      tileTree={tileTree}
-                      onTreeChange={setTileTree}
-                      onOpenSessionAtPosition={handleOpenSessionAtPosition}
-                      onAddTab={handleAddTabToTile}
-                      onUndoCloseTab={canUndoCloseTab ? handleUndoCloseTab : undefined}
+                      onToggleIntelligence={() => setIntelligenceCollapsed(!intelligenceCollapsed)}
+                      intelligenceCollapsed={intelligenceCollapsed}
                       api={api}
                     />
-                  </ErrorBoundary>
+                    {viewMode === 'tabs' ? (
+                      <div className="flex-1 relative overflow-hidden" ref={terminalContainerRef}>
+                        {openTabs.map((tab) => (
+                          <div
+                            key={tab.id}
+                            className={cn(
+                              "absolute inset-0 transition-opacity duration-200 pointer-events-none opacity-0",
+                              tab.id === activeTabId && "opacity-100 pointer-events-auto"
+                            )}
+                          >
+                            <ErrorBoundary componentName={`Terminal (${tab.title || tab.id})`}>
+                              <Terminal
+                                ptyId={tab.id}
+                                onTerminalTitle={(title) => updateTabTitle(tab.id, title)}
+                                onTerminalPath={(path) => updateTabPath(tab.id, path)}
+                                onProcessId={(pid) => updateTabPid(tab.id, pid)}
+                                onSessionEnded={() => handleTerminalExit(tab.id)}
+                                active={tab.id === activeTabId}
+                                terminalSettings={settings.terminal}
+                                api={api}
+                              />
+                            </ErrorBoundary>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex-1 overflow-hidden">
+                        <TiledTerminalView
+                          tabs={openTabs}
+                          activeTabId={activeTabId}
+                          onSetActiveTab={setActiveTab}
+                          onCloseTab={handleCloseTab}
+                          onUpdateTabTitle={updateTabTitle}
+                          onUpdateTabPath={updateTabPath}
+                          onUpdateTabPid={updateTabPid}
+                          onTerminalExit={handleTerminalExit}
+                          terminalSettings={settings.terminal}
+                          api={api}
+                        />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-700">
+                    <div className="w-20 h-20 mb-6 rounded-3xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shadow-inner">
+                      <TerminalIcon size={40} />
+                    </div>
+                    <h2 className="text-2xl font-bold mb-2 text-white/90">No Active Sessions</h2>
+                    <p className="text-muted-foreground max-w-sm">
+                      Add a project from the sidebar, then click a session to open it.
+                    </p>
+                  </div>
                 )}
-              </>
-            ) : (
-              <div className="empty-state">
-                <h2>Simple Code GUI</h2>
-                <p>Add a project from the sidebar, then click a session to open it</p>
               </div>
-            )}
-          </div>
-        )}
+              {/* Right Sidebar: Intelligence */}
+              {!intelligenceCollapsed && (
+                <IntelligenceSidebar
+                  intelligence={intelligence}
+                  loading={intelligenceLoading}
+                  onClose={() => setIntelligenceCollapsed(true)}
+                  onRefresh={refreshIntelligence}
+                  onWidthChange={setIntelligenceWidth}
+                  width={intelligenceWidth}
+                />
+              )}
+            </>
+          )}
+        </div>
+      </div>
 
-        <SettingsModal
-          isOpen={settingsOpen}
-          onClose={closeSettings}
-          onThemeChange={setCurrentTheme}
-          onSaved={(newSettings) => setSettings(newSettings)}
-          appVersion={appVersion}
-          updateStatus={updateStatus}
-          onDownloadUpdate={downloadUpdate}
-          onInstallUpdate={installUpdate}
-        />
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={closeSettings}
+        onThemeChange={setCurrentTheme}
+        onSaved={(newSettings) => setSettings(newSettings)}
+        appVersion={appVersion}
+        updateStatus={updateStatus}
+        onDownloadUpdate={downloadUpdate}
+        onInstallUpdate={installUpdate}
+        projectPath={activeTab?.projectPath || null}
+        focusedTabPtyId={activeTabId}
+        onOpenSession={handleOpenSession}
+        initialCategory={settingsCategory}
+        api={api}
+      />
 
-        <MakeProjectModal
-          isOpen={makeProjectOpen}
-          onClose={closeMakeProject}
+        <ProjectInitializationWizard
+          isOpen={projectWizardOpen}
+          onClose={closeProjectWizard}
           onProjectCreated={handleProjectCreated}
+          api={api}
         />
 
-        {/* Mobile Connect Modal (QR Code) - only show in Electron */}
-        {isElectron && (
-          <MobileConnectModal
-            isOpen={mobileConnectOpen}
-            onClose={() => setMobileConnectOpen(false)}
-            port={38470}
-          />
-        )}
-
-        {/* File Browser Modal (mobile only) */}
-        {isMobile && showFileBrowser && fileBrowserPath && (() => {
-          const connInfo = api.getConnectionInfo?.()
-          if (!connInfo) return null
-
-          const hostConfig: HostConfig = {
-            id: 'current',
-            name: 'Desktop',
-            host: connInfo.host,
-            port: connInfo.port,
-            token: connInfo.token
-          }
-          return (
-            <div style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 100
-            }}>
-              <FileBrowser
-                host={hostConfig}
-                basePath={fileBrowserPath}
-                onClose={() => setShowFileBrowser(false)}
-              />
-            </div>
-          )
-        })()}
+        <Spotlight 
+          isOpen={spotlightOpen}
+          onClose={() => setSpotlightOpen(false)}
+          projects={projects}
+          openTabs={openTabs}
+          onOpenSession={handleOpenSession}
+          onOpenSettings={openSettings}
+          onOpenProjectWizard={openProjectWizard}
+          onSwitchToTab={setActiveTab}
+        />
       </div>
     </div>
   )
