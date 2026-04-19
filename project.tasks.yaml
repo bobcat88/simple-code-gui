@@ -64,3 +64,25 @@ tasks:
     notes: []
     todos: []
     automation: eligible
+  - _ulid: 01KPJA33MHEH4H3S9XM3MPTSJA
+    slugs: []
+    title: Implement Project Initialization Wizard
+    type: task
+    description: Create a step-by-step funnel for onboarding new projects with stack detection and
+      capability selection.
+    spec_ref: null
+    meta_ref: null
+    plan_ref: null
+    status: pending
+    blocked_by: []
+    depends_on: []
+    context: []
+    priority: 3
+    tags:
+      - onboarding
+      - ui
+    vcs_refs: []
+    created_at: 2026-04-19T07:25:44.465Z
+    notes: []
+    todos: []
+    automation: eligible
