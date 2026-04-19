@@ -86,3 +86,24 @@ tasks:
     notes: []
     todos: []
     automation: eligible
+  - _ulid: 01KPJA354NG17D10R9SFHWTY8W
+    slugs: []
+    title: Implement Push-to-Talk Voice Workflow
+    type: task
+    description: Finalize the 'hands-free' interaction loop for dictating ACs and approving plans using STT/TTS.
+    spec_ref: null
+    meta_ref: null
+    plan_ref: null
+    status: pending
+    blocked_by: []
+    depends_on: []
+    context: []
+    priority: 4
+    tags:
+      - ux
+      - voice
+    vcs_refs: []
+    created_at: 2026-04-19T07:25:46.005Z
+    notes: []
+    todos: []
+    automation: eligible
