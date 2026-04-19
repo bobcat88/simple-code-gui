@@ -30,6 +30,7 @@
     "better-sqlite3": "^11.10.0",
     "clsx": "^2.1.1",
     "cors": "^2.8.5",
+    "gitnexus": "^1.6.2",
     "whisper-web-transcriber": "^0.2.5",
     "ws": "^8.19.0",
     "zustand": "^5.0.0"

@@ -28,10 +28,16 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
+  
+  --color-codex-dark: var(--bg-codex-dark);
+  --color-codex-sidebar: var(--bg-codex-sidebar);
+  --color-codex-header: var(--bg-codex-header);
+  --color-codex-blue: var(--codex-blue);
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  --radius-codex: var(--radius);
 }
 
 @layer base {
@@ -64,7 +70,7 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   .dark {
@@ -128,7 +134,10 @@
 }
 
 .borg-glass {
-  @apply bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl;
+  @apply bg-black/50 backdrop-blur-3xl border border-white/5 shadow-2xl;
+  box-shadow: 
+    0 10px 40px -10px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .glow-border {

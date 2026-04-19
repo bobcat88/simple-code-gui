@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { Minimize2, Maximize2, Square, X, Copy } from 'lucide-react'
 
 import type { Api } from '../api'
 
@@ -76,9 +77,7 @@ export function TitleBar({ api, title = 'Simple Code GUI' }: TitleBarProps) {
           title="Minimize"
           aria-label="Minimize window"
         >
-          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-            <rect x="2" y="5.5" width="8" height="1" fill="currentColor" />
-          </svg>
+          <Minimize2 size={14} />
         </button>
         <button
           className="title-bar-btn maximize"
@@ -86,16 +85,7 @@ export function TitleBar({ api, title = 'Simple Code GUI' }: TitleBarProps) {
           title={isMaximized ? 'Restore' : 'Maximize'}
           aria-label={isMaximized ? 'Restore window' : 'Maximize window'}
         >
-          {isMaximized ? (
-            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-              <rect x="3" y="1" width="7" height="7" fill="none" stroke="currentColor" strokeWidth="1" />
-              <rect x="1" y="3" width="7" height="7" fill="var(--bg-secondary)" stroke="currentColor" strokeWidth="1" />
-            </svg>
-          ) : (
-            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-              <rect x="1.5" y="1.5" width="9" height="9" fill="none" stroke="currentColor" strokeWidth="1" />
-            </svg>
-          )}
+          {isMaximized ? <Copy size={13} style={{ transform: 'rotate(180deg)' }} /> : <Square size={13} />}
         </button>
         <button
           className="title-bar-btn close"
@@ -103,9 +93,7 @@ export function TitleBar({ api, title = 'Simple Code GUI' }: TitleBarProps) {
           title="Close"
           aria-label="Close window"
         >
-          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-            <path d="M2 2 L10 10 M10 2 L2 10" stroke="currentColor" strokeWidth="1.5" />
-          </svg>
+          <X size={16} />
         </button>
       </div>
     </div>

@@ -85,8 +85,8 @@ export function IntelligenceSidebar({
   return (
     <div 
       className={cn(
-        "h-full border-l border-white/5 flex flex-col relative transition-all duration-300 ease-in-out",
-        "bg-black/20 backdrop-blur-3xl shadow-2xl z-20",
+        "h-full flex flex-col relative transition-all duration-300 ease-in-out",
+        "glass-sidebar shadow-2xl z-20",
         isResizing && "transition-none"
       )}
       style={{ width }}
@@ -192,7 +192,7 @@ export function IntelligenceSidebar({
                 )}
               </div>
               
-              <div className="grid grid-cols-2 gap-4 bg-white/5 rounded-xl p-3 border border-white/5">
+              <div className="grid grid-cols-2 gap-4 bg-white/5 rounded-codex p-3 border border-white/5">
                 <div className="space-y-1">
                   <div className="text-[10px] text-white/40 uppercase font-bold">Uncommitted</div>
                   <div className="text-lg font-semibold tabular-nums">{git.uncommittedCount}</div>
@@ -256,7 +256,7 @@ export function IntelligenceSidebar({
               </button>
             </div>
           ) : (
-            <div className="p-4 rounded-xl border border-dashed border-white/10 flex flex-col items-center justify-center text-center">
+            <div className="p-4 rounded-codex border border-dashed border-white/10 flex flex-col items-center justify-center text-center">
               <Layers className="w-8 h-8 text-white/10 mb-2" />
               <p className="text-[10px] text-white/30 max-w-[140px]">Initialize GitNexus to see architectural insights and blast radius.</p>
             </div>
@@ -296,7 +296,7 @@ function HealthItem({ label, active }: { label: string; active?: boolean }) {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-white/5 border border-white/5 rounded-xl p-3 flex flex-col items-center justify-center gap-1 hover:bg-white/10 hover:border-white/10 transition-all cursor-default group">
+    <div className="bg-white/5 border border-white/5 rounded-codex p-3 flex flex-col items-center justify-center gap-1 hover:bg-white/10 hover:border-white/10 transition-all cursor-default group">
       <div className="text-sm font-bold text-white group-hover:scale-110 transition-transform tabular-nums">
         {value > 1000 ? `${(value/1000).toFixed(1)}k` : value}
       </div>
