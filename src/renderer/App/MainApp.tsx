@@ -29,6 +29,9 @@ import { Header } from '../components/Header'
 import { LayoutGrid, Terminal as TerminalIcon } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { Spotlight } from '../components/Spotlight'
+import { IntelligenceSidebar } from '../components/intelligence/IntelligenceSidebar'
+import { useProjectIntelligence } from '../hooks/useProjectIntelligence'
+import { Activity } from 'lucide-react'
 
 export interface MainAppProps {
   api: Api
@@ -97,8 +100,17 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
     setLastFocusedTabId,
     setSidebarWidth,
     setSidebarCollapsed,
+    intelligenceWidth,
+    intelligenceCollapsed,
+    setIntelligenceWidth,
+    setIntelligenceCollapsed,
     toggleViewMode
   } = useViewState()
+
+  const { intelligence, loading: intelligenceLoading, refresh: refreshIntelligence } = useProjectIntelligence(
+    api as any,
+    activeTab?.projectPath || null
+  )
 
   // Workspace loader hook
   const {
@@ -348,87 +360,100 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
 
           {/* Desktop: wrap terminals in main-content */}
           {!isMobile && (
-            <div className="flex-1 flex flex-col min-w-0 bg-background/50 overflow-hidden animate-entry delay-400">
-              {claudeInstalled === false || gitBashInstalled === false ? (
-                <InstallationPrompt
-                  claudeInstalled={claudeInstalled}
-                  npmInstalled={npmInstalled}
-                  gitBashInstalled={gitBashInstalled}
-                  installing={installing}
-                  installError={installError}
-                  installMessage={installMessage}
-                  onInstallNode={handleInstallNode}
-                  onInstallGit={handleInstallGit}
-                  onInstallClaude={handleInstallClaude}
-                />
-              ) : openTabs.length > 0 ? (
-                <>
-                  <Header
-                    activeTab={activeTab}
-                    openTabs={openTabs}
-                    viewMode={viewMode}
-                    onToggleViewMode={toggleViewMode}
-                    onNewSession={handleNewSessionFromHeader}
-                    onSwitchToTab={setActiveTab}
-                    onCloseTab={handleCloseTab}
-                    api={api}
+            <>
+              <div className="flex-1 flex flex-col min-w-0 bg-background/50 overflow-hidden animate-entry delay-400">
+                {claudeInstalled === false || gitBashInstalled === false ? (
+                  <InstallationPrompt
+                    claudeInstalled={claudeInstalled}
+                    npmInstalled={npmInstalled}
+                    gitBashInstalled={gitBashInstalled}
+                    installing={installing}
+                    installError={installError}
+                    installMessage={installMessage}
+                    onInstallNode={handleInstallNode}
+                    onInstallGit={handleInstallGit}
+                    onInstallClaude={handleInstallClaude}
                   />
-                  {viewMode === 'tabs' ? (
-                    <div className="flex-1 relative overflow-hidden" ref={terminalContainerRef}>
-                      {openTabs.map((tab) => (
-                        <div
-                          key={tab.id}
-                          className={cn(
-                            "absolute inset-0 transition-opacity duration-200 pointer-events-none opacity-0",
-                            tab.id === activeTabId && "opacity-100 pointer-events-auto"
-                          )}
-                        >
-                          <ErrorBoundary componentName={`Terminal (${tab.title || tab.id})`}>
-                            <Terminal
-                              ptyId={tab.id}
-                              isActive={tab.id === activeTabId}
-                              theme={currentTheme}
-                              onFocus={() => setLastFocusedTabId(tab.id)}
-                              projectPath={tab.projectPath}
-                              backend={tab.backend}
-                              api={api}
-                            />
-                          </ErrorBoundary>
-                        </div>
-                      ))}
+                ) : openTabs.length > 0 ? (
+                  <>
+                    <Header
+                      activeTab={activeTab}
+                      openTabs={openTabs}
+                      viewMode={viewMode}
+                      onToggleViewMode={toggleViewMode}
+                      onNewSession={handleNewSessionFromHeader}
+                      onSwitchToTab={setActiveTab}
+                      onCloseTab={handleCloseTab}
+                      onToggleIntelligence={() => setIntelligenceCollapsed(!intelligenceCollapsed)}
+                      intelligenceCollapsed={intelligenceCollapsed}
+                      api={api}
+                    />
+                    {viewMode === 'tabs' ? (
+                      <div className="flex-1 relative overflow-hidden" ref={terminalContainerRef}>
+                        {openTabs.map((tab) => (
+                          <div
+                            key={tab.id}
+                            className={cn(
+                              "absolute inset-0 transition-opacity duration-200 pointer-events-none opacity-0",
+                              tab.id === activeTabId && "opacity-100 pointer-events-auto"
+                            )}
+                          >
+                            <ErrorBoundary componentName={`Terminal (${tab.title || tab.id})`}>
+                              <Terminal
+                                ptyId={tab.id}
+                                onTerminalTitle={(title) => updateTabTitle(tab.id, title)}
+                                onTerminalPath={(path) => updateTabPath(tab.id, path)}
+                                onProcessId={(pid) => updateTabPid(tab.id, pid)}
+                                onSessionEnded={() => handleTerminalExit(tab.id)}
+                                active={tab.id === activeTabId}
+                                terminalSettings={settings.terminal}
+                                api={api}
+                              />
+                            </ErrorBoundary>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex-1 overflow-hidden">
+                        <TiledTerminalView
+                          tabs={openTabs}
+                          activeTabId={activeTabId}
+                          onSetActiveTab={setActiveTab}
+                          onCloseTab={handleCloseTab}
+                          onUpdateTabTitle={updateTabTitle}
+                          onUpdateTabPath={updateTabPath}
+                          onUpdateTabPid={updateTabPid}
+                          onTerminalExit={handleTerminalExit}
+                          terminalSettings={settings.terminal}
+                          api={api}
+                        />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-700">
+                    <div className="w-20 h-20 mb-6 rounded-3xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shadow-inner">
+                      <TerminalIcon size={40} />
                     </div>
-                  ) : (
-                    <ErrorBoundary componentName="TiledTerminalView">
-                      <TiledTerminalView
-                        tabs={openTabs}
-                        projects={projects}
-                        theme={currentTheme}
-                        focusedTabId={lastFocusedTabId}
-                        onCloseTab={handleCloseTab}
-                        onRenameTab={handleRenameTab}
-                        onFocusTab={setLastFocusedTabId}
-                        tileTree={tileTree}
-                        onTreeChange={setTileTree}
-                        onOpenSessionAtPosition={handleOpenSessionAtPosition}
-                        onAddTab={handleAddTabToTile}
-                        onUndoCloseTab={canUndoCloseTab ? handleUndoCloseTab : undefined}
-                        api={api}
-                      />
-                    </ErrorBoundary>
-                  )}
-                </>
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500">
-                  <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-6 text-muted-foreground">
-                    <TerminalIcon size={32} />
+                    <h2 className="text-2xl font-bold mb-2 text-white/90">No Active Sessions</h2>
+                    <p className="text-muted-foreground max-w-sm">
+                      Add a project from the sidebar, then click a session to open it.
+                    </p>
                   </div>
-                  <h2 className="text-2xl font-semibold mb-2">Simple Code GUI</h2>
-                  <p className="text-muted-foreground max-w-sm">
-                    Add a project from the sidebar, then click a session to open it.
-                  </p>
-                </div>
+                )}
+              </div>
+              {/* Right Sidebar: Intelligence */}
+              {!intelligenceCollapsed && (
+                <IntelligenceSidebar
+                  intelligence={intelligence}
+                  loading={intelligenceLoading}
+                  onClose={() => setIntelligenceCollapsed(true)}
+                  onRefresh={refreshIntelligence}
+                  onWidthChange={setIntelligenceWidth}
+                  width={intelligenceWidth}
+                />
               )}
-            </div>
+            </>
           )}
         </div>
       </div>

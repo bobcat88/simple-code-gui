@@ -5,7 +5,8 @@ import {
   MoreVertical, 
   LayoutGrid,
   Search,
-  Plus
+  Plus,
+  Activity
 } from 'lucide-react'
 import { OpenTab } from '../stores/workspace'
 import { cn } from '../lib/utils'
@@ -21,6 +22,8 @@ interface HeaderProps {
   onNewSession: () => void
   onSwitchToTab: (id: string) => void
   onCloseTab: (id: string) => void
+  onToggleIntelligence: () => void
+  intelligenceCollapsed: boolean
   api: any
 }
 
@@ -32,6 +35,8 @@ export function Header({
   onNewSession,
   onSwitchToTab,
   onCloseTab,
+  onToggleIntelligence,
+  intelligenceCollapsed,
   api
 }: HeaderProps) {
   return (
@@ -75,6 +80,18 @@ export function Header({
           title={viewMode === 'tabs' ? 'Switch to tiled view' : 'Switch to tabs view'}
         >
           {viewMode === 'tabs' ? <LayoutGrid size={16} /> : <TerminalIcon size={16} />}
+        </button>
+
+        <button
+          className={cn(
+            "p-2 rounded-md transition-all",
+            "hover:bg-white/5 text-white/40 hover:text-white/80 active:scale-95",
+            !intelligenceCollapsed && "text-indigo-400 hover:text-indigo-300 bg-white/5"
+          )}
+          onClick={onToggleIntelligence}
+          title={intelligenceCollapsed ? 'Open Intelligence Sidebar' : 'Close Intelligence Sidebar'}
+        >
+          <Activity size={16} />
         </button>
 
         <button className="p-2 rounded-md hover:bg-white/5 text-white/40 hover:text-white/80 transition-all active:scale-95">

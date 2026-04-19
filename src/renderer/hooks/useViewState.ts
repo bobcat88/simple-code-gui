@@ -9,11 +9,15 @@ interface UseViewStateReturn {
   lastFocusedTabId: string | null
   sidebarWidth: number
   sidebarCollapsed: boolean
+  intelligenceWidth: number
+  intelligenceCollapsed: boolean
   setViewMode: (mode: ViewMode) => void
   setTileTree: (tree: TileNode | null) => void
   setLastFocusedTabId: (id: string | null) => void
   setSidebarWidth: (width: number) => void
   setSidebarCollapsed: (collapsed: boolean) => void
+  setIntelligenceWidth: (width: number) => void
+  setIntelligenceCollapsed: (collapsed: boolean) => void
   toggleViewMode: () => void
 }
 
@@ -23,6 +27,8 @@ export function useViewState(): UseViewStateReturn {
   const [lastFocusedTabId, setLastFocusedTabId] = useState<string | null>(null)
   const [sidebarWidth, setSidebarWidth] = useState(280)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [intelligenceWidth, setIntelligenceWidth] = useState(300)
+  const [intelligenceCollapsed, setIntelligenceCollapsed] = useState(false)
 
   const setViewMode = useCallback((mode: ViewMode) => {
     setViewModeState(mode)
@@ -42,11 +48,15 @@ export function useViewState(): UseViewStateReturn {
     lastFocusedTabId,
     sidebarWidth,
     sidebarCollapsed,
+    intelligenceWidth,
+    intelligenceCollapsed,
     setViewMode,
     setTileTree,
     setLastFocusedTabId,
     setSidebarWidth,
     setSidebarCollapsed,
+    setIntelligenceWidth,
+    setIntelligenceCollapsed,
     toggleViewMode
   }
 }
