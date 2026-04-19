@@ -118,6 +118,13 @@ tasks:
     session_id: 01KPJA46G5CDSJ9BGA1JKP6X0Z
     created_at: 2026-04-19T07:25:46.005Z
     started_at: 2026-04-19T07:26:35.333Z
-    notes: []
+    notes:
+      - _ulid: 01KPJA8TSHB2TV8HN21AZGY9KR
+        content: "Identified 4 gaps for hands-free loop: (1) TTS not interrupted when PTT starts, (2) no
+          live transcription overlay, (3) no auto-listen after TTS, (4) currentTranscription never
+          displayed. Implementing all four."
+        supersedes: null
+        author: "@claude"
+        created_at: 2026-04-19T07:28:52.017Z
     todos: []
     automation: eligible
