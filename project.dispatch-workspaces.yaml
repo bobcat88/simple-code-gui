@@ -76,7 +76,7 @@ workspaces:
         head: d270debc807a39e17556d3d1db6669aaf29664f8
         last_seen_at: 2026-04-19T07:26:12.132Z
         path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/build-project-intelligence-sidebar-01kpja31
-  - active_role: null
+  - active_role: worker
     base_branch_point: d270debc807a39e17556d3d1db6669aaf29664f8
     bootstrap:
       status: succeeded
@@ -123,7 +123,7 @@ workspaces:
       status: healthy
       issues: []
       summary: Workspace record matches current git branch and worktree state.
-      updated_at: 2026-04-19T07:26:13.793Z
+      updated_at: 2026-04-19T07:26:16.750Z
     integration:
       status: pending
       detail: null
@@ -132,16 +132,16 @@ workspaces:
       target_branch: main
       target_commit: d270debc807a39e17556d3d1db6669aaf29664f8
       updated_at: 2026-04-19T07:26:13.793Z
-    lifecycle_state: ready
+    lifecycle_state: active
     resolved_base_branch: main
     task_ref: "@01KPJA33MHEH4H3S9XM3MPTSJA"
     task_slug: implement-project-initialization-wizard
     timestamps:
       closed_at: null
-      last_active_at: null
-      last_reconciled_at: 2026-04-19T07:26:13.793Z
+      last_active_at: 2026-04-19T07:26:16.750Z
+      last_reconciled_at: 2026-04-19T07:26:16.750Z
       created_at: 2026-04-19T07:26:13.793Z
-      updated_at: 2026-04-19T07:26:16.008Z
+      updated_at: 2026-04-19T07:26:16.750Z
     workspace_id: dispatch-workspace-01KPJA33MHEH4H3S9XM3MPTSJA
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
