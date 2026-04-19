@@ -1,6 +1,7 @@
 agents:
   - _ulid: 01KK672F8BMSW2KDX95DC1PRPR
     description: Autonomous task worker. Picks up automation-eligible ready and needs_work tasks.
+    adapter: gemini
     auto_approve: true
     capabilities:
       - code
