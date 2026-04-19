@@ -11,6 +11,7 @@ import { OpenTab } from '../stores/workspace'
 import { cn } from '../lib/utils'
 
 import { SessionSwitcher } from './SessionSwitcher'
+import { SavingsHud } from './SavingsHud'
 
 interface HeaderProps {
   activeTab: OpenTab | null
@@ -20,6 +21,7 @@ interface HeaderProps {
   onNewSession: () => void
   onSwitchToTab: (id: string) => void
   onCloseTab: (id: string) => void
+  api: any
 }
 
 export function Header({ 
@@ -29,7 +31,8 @@ export function Header({
   onToggleViewMode, 
   onNewSession,
   onSwitchToTab,
-  onCloseTab
+  onCloseTab,
+  api
 }: HeaderProps) {
   return (
     <header className="h-14 glass-header flex items-center px-4 gap-4 sticky top-0 z-10" data-tauri-drag-region>
@@ -46,7 +49,12 @@ export function Header({
         onNewSession={onNewSession}
       />
 
+      <div className="flex-1 flex justify-center" data-tauri-drag-region>
+        <SavingsHud api={api} className="animate-in fade-in slide-in-from-top-2 duration-700" />
+      </div>
+
       <div className="flex items-center gap-2 shrink-0">
+
         <div className="relative hidden lg:block">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60" size={13} />
           <input 

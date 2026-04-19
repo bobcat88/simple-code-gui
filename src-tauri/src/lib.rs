@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 mod pty_manager;
 mod platform;
 mod settings_manager;
@@ -7,6 +8,7 @@ mod mcp_bridge;
 mod workspace_manager;
 mod session_manager;
 mod extension_manager;
+mod database;
 
 use pty_manager::PtyManager;
 use std::sync::Arc;
@@ -14,6 +16,7 @@ use std::thread;
 use settings_manager::{SettingsManager, AppSettings};
 use workspace_manager::{WorkspaceManager, Workspace};
 use voice_manager::{VoiceManager, voice_speak, voice_stop};
+use database::DatabaseManager;
 use orchestration::{
     get_beads_tasks, sync_workflow, beads_check, beads_init, beads_list, 
     beads_show, beads_create, beads_start, beads_complete, beads_delete, 
@@ -97,7 +100,7 @@ async fn kill_session(state: State<'_, Arc<PtyManager>>, id: String) -> Result<(
 // Settings Commands
 #[tauri::command]
 async fn get_settings(state: State<'_, SettingsManager>) -> Result<AppSettings, String> {
-    Ok(state.get())
+    Ok(state.get().await)
 }
 
 #[tauri::command]
@@ -106,9 +109,85 @@ async fn voice_save_settings(
     state: State<'_, SettingsManager>, 
     settings: AppSettings
 ) -> Result<(), String> {
-    state.save(settings.clone())?;
+    state.save(settings.clone()).await?;
     let _ = app.emit("settings-changed", settings);
     Ok(())
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct TokenStats {
+    pub total_input: i64,
+    pub total_output: i64,
+    pub total_saved: i64,
+    pub total_cost: f64,
+}
+
+#[tauri::command]
+async fn log_token_event(
+    db: State<'_, Arc<DatabaseManager>>,
+    project_id: Option<String>,
+    task_id: Option<String>,
+    model: String,
+    input_tokens: i64,
+    output_tokens: i64,
+    saved_tokens: Option<i64>,
+    cost_est: Option<f64>,
+) -> Result<(), String> {
+    sqlx::query(
+        "INSERT INTO token_events (project_id, task_id, model, input_tokens, output_tokens, saved_tokens, cost_est)
+         VALUES (?, ?, ?, ?, ?, ?, ?)"
+    )
+    .bind(project_id)
+    .bind(task_id)
+    .bind(model)
+    .bind(input_tokens)
+    .bind(output_tokens)
+    .bind(saved_tokens.unwrap_or(0))
+    .bind(cost_est.unwrap_or(0.0))
+    .execute(&db.pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn get_token_stats(
+    db: State<'_, Arc<DatabaseManager>>,
+    project_id: Option<String>,
+) -> Result<TokenStats, String> {
+    let query = if let Some(pid) = project_id {
+        sqlx::query_as::<_, (i64, i64, i64, f64)>(
+            "SELECT 
+                COALESCE(SUM(input_tokens), 0), 
+                COALESCE(SUM(output_tokens), 0), 
+                COALESCE(SUM(saved_tokens), 0), 
+                COALESCE(SUM(cost_est), 0.0) 
+             FROM token_events WHERE project_id = ?"
+        )
+        .bind(pid)
+    } else {
+        sqlx::query_as::<_, (i64, i64, i64, f64)>(
+            "SELECT 
+                COALESCE(SUM(input_tokens), 0), 
+                COALESCE(SUM(output_tokens), 0), 
+                COALESCE(SUM(saved_tokens), 0), 
+                COALESCE(SUM(cost_est), 0.0) 
+             FROM token_events"
+        )
+    };
+
+    let (total_input, total_output, total_saved, total_cost) = query
+        .fetch_one(&db.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(TokenStats {
+        total_input,
+        total_output,
+        total_saved,
+        total_cost,
+    })
 }
 
 #[tauri::command]
@@ -117,7 +196,7 @@ async fn save_settings(
     state: State<'_, SettingsManager>, 
     settings: AppSettings
 ) -> Result<(), String> {
-    state.save(settings.clone())?;
+    state.save(settings.clone()).await?;
     let _ = app.emit("settings-changed", settings);
     Ok(())
 }
@@ -125,12 +204,12 @@ async fn save_settings(
 // Workspace Commands
 #[tauri::command]
 async fn get_workspace(state: State<'_, WorkspaceManager>) -> Result<Workspace, String> {
-    Ok(state.get())
+    Ok(state.get().await)
 }
 
 #[tauri::command]
 async fn save_workspace(state: State<'_, WorkspaceManager>, workspace: Workspace) -> Result<(), String> {
-    state.save(workspace)
+    state.save(workspace).await
 }
 
 #[tauri::command]
@@ -209,6 +288,7 @@ fn report_ready() {
     println!("WEBVIEW_READY");
 }
 
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -274,12 +354,23 @@ pub fn run() {
                 })
                 .build(app)?;
 
-            // Initialize Managers
+            // Initialize Database and Managers
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::block_on(async move {
+                let db_manager = DatabaseManager::new(&app_handle).await.expect("Failed to initialize database");
+                let db_arc = Arc::new(db_manager);
+                
+                let settings_manager = SettingsManager::new(&app_handle, Arc::clone(&db_arc)).await;
+                let workspace_manager = WorkspaceManager::new(&app_handle, Arc::clone(&db_arc)).await;
+
+                app_handle.manage(db_arc);
+                app_handle.manage(settings_manager);
+                app_handle.manage(workspace_manager);
+            });
+
             let pty_manager = PtyManager::new();
             let pty_manager_arc = Arc::new(pty_manager);
             app.manage(Arc::clone(&pty_manager_arc));
-            app.manage(SettingsManager::new(app.handle()));
-            app.manage(WorkspaceManager::new(app.handle()));
             app.manage(VoiceManager::new());
             app.manage(OrchestrationState::default());
             app.manage(McpManager::new());
@@ -366,7 +457,10 @@ pub fn run() {
             mcp_read_resource,
             mcp_load_config,
             voice_save_settings,
+            log_token_event,
+            get_token_stats,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+

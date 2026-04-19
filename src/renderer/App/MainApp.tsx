@@ -371,6 +371,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
                     onNewSession={handleNewSessionFromHeader}
                     onSwitchToTab={setActiveTab}
                     onCloseTab={handleCloseTab}
+                    api={api}
                   />
                   {viewMode === 'tabs' ? (
                     <div className="flex-1 relative overflow-hidden" ref={terminalContainerRef}>

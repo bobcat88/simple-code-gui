@@ -407,6 +407,10 @@ export interface ExtendedApi extends Api {
 
   // Debug
   debugLog: (message: string) => void
+
+  // Token Metering
+  logTokenEvent: (projectId: string | null, input: number, output: number, saved: number, model: string) => Promise<void>
+  getTokenStats: (projectId?: string) => Promise<{ totalInput: number; totalOutput: number; totalSaved: number; totalCost: number }>
 }
 
 // ============================================================================

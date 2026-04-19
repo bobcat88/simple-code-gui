@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
-use std::sync::Mutex;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+use crate::database::DatabaseManager;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -61,41 +62,68 @@ impl Default for AppSettings {
 }
 
 pub struct SettingsManager {
-    path: PathBuf,
-    settings: Mutex<AppSettings>,
+    db: Arc<DatabaseManager>,
+    settings: RwLock<AppSettings>,
 }
 
 impl SettingsManager {
-    pub fn new(app: &AppHandle) -> Self {
+    pub async fn new(app: &AppHandle, db: Arc<DatabaseManager>) -> Self {
         let path = app.path().app_config_dir().unwrap().join("settings.json");
         
-        // Ensure directory exists
-        if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).ok();
-        }
+        // Try to load from DB first
+        let db_settings = sqlx::query_as::<_, (String, String)>("SELECT key, value FROM settings WHERE key = 'app_settings'")
+            .fetch_optional(&db.pool)
+            .await
+            .ok()
+            .flatten();
 
-        let settings = if path.exists() {
+        let settings = if let Some((_, value)) = db_settings {
+            serde_json::from_str(&value).unwrap_or_default()
+        } else if path.exists() {
+            // Migrate from JSON
             let content = fs::read_to_string(&path).unwrap_or_default();
-            serde_json::from_str(&content).unwrap_or_default()
+            let settings: AppSettings = serde_json::from_str(&content).unwrap_or_default();
+            
+            // Save to DB
+            let json = serde_json::to_string(&settings).unwrap();
+            sqlx::query("INSERT OR REPLACE INTO settings (key, value) VALUES ('app_settings', ?)")
+                .bind(json)
+                .execute(&db.pool)
+                .await
+                .ok();
+            
+            // Rename old file to mark migration
+            let mut new_path = path.clone();
+            new_path.set_extension("json.bak");
+            fs::rename(path, new_path).ok();
+            
+            settings
         } else {
             AppSettings::default()
         };
 
         Self {
-            path,
-            settings: Mutex::new(settings),
+            db,
+            settings: RwLock::new(settings),
         }
     }
 
-    pub fn get(&self) -> AppSettings {
-        self.settings.lock().unwrap().clone()
+    pub async fn get(&self) -> AppSettings {
+        self.settings.read().await.clone()
     }
 
-    pub fn save(&self, new_settings: AppSettings) -> Result<(), String> {
-        let content = serde_json::to_string_pretty(&new_settings)
+    pub async fn save(&self, new_settings: AppSettings) -> Result<(), String> {
+        let json = serde_json::to_string(&new_settings)
             .map_err(|e| e.to_string())?;
-        fs::write(&self.path, content).map_err(|e| e.to_string())?;
-        *self.settings.lock().unwrap() = new_settings;
+        
+        sqlx::query("INSERT OR REPLACE INTO settings (key, value) VALUES ('app_settings', ?)")
+            .bind(json)
+            .execute(&self.db.pool)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        *self.settings.write().await = new_settings;
         Ok(())
     }
 }
+

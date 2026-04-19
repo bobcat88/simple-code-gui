@@ -222,4 +222,13 @@ export class TauriBackend implements ExtendedApi {
       console.error('Failed to relaunch after update', e);
     }
   }
+
+  // Token Metering Implementation
+  async logTokenEvent(projectId: string | null, input: number, output: number, saved: number, model: string): Promise<void> {
+    await tauriIpc.logTokenEvent(projectId, input, output, saved, model);
+  }
+
+  async getTokenStats(projectId?: string): Promise<{ totalInput: number; totalOutput: number; totalSaved: number; totalCost: number }> {
+    return await tauriIpc.getTokenStats(projectId);
+  }
 }

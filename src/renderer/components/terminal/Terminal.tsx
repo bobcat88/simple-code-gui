@@ -10,6 +10,7 @@ import { useTerminalSetup } from './useTerminalSetup.js'
 import { useTTS } from './useTTS.js'
 import { useAutoWork } from './useAutoWork.js'
 import { useSummaryCapture } from './useSummaryCapture.js'
+import { useTokenMeter } from './useTokenMeter.js'
 import { clearTerminalBuffer, cleanupOrphanedBuffers, formatPathsForBackend } from './utils.js'
 
 // Re-export buffer utilities for external use
@@ -118,6 +119,13 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     triggerSummarize,
   })
 
+  // Token meter hook
+  const { processTokenChunk } = useTokenMeter({
+    ptyId,
+    api,
+    projectPath: projectPath || undefined
+  })
+
   // Terminal setup hook
   const {
     containerRef,
@@ -136,6 +144,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     onUserInput: handleUserInput,
     onSummaryChunk: processSummaryChunk,
     onAutoWorkMarker: handleAutoWorkMarker,
+    onTokenChunk: processTokenChunk,
     prePopulateSpokenContent,
     resetTTSState,
   })
