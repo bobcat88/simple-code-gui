@@ -89,7 +89,7 @@ tasks:
     spec_ref: null
     meta_ref: null
     plan_ref: null
-    status: pending
+    status: in_progress
     blocked_by: []
     depends_on: []
     context: []
@@ -100,7 +100,7 @@ tasks:
     vcs_refs: []
     session_id: null
     created_at: 2026-04-19T07:25:44.465Z
-    started_at: null
+    started_at: 2026-04-19T09:14:08.736Z
     notes:
       - _ulid: 01KPJA8Q0KGMQ5C5D9T9NTC5DC
         content: "Starting implementation. Plan: Rust scanner backend + multi-step wizard UI. Scanner reads
