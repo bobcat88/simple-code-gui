@@ -953,6 +953,24 @@ That is the version that feels coherent.
 
 If you want, I can turn this into a **full technical spec with folder structure, module boundaries, DB schema, and screen-by-screen UX map**.
 
+---
+
+## 21) Implementation Status (April 2026)
+
+### ✅ Completed Phases
+- **Phase 1: Rust Foundation**: Tauri shell, SQLite persistence, and multi-terminal IPC bridge.
+- **Phase 2: Modern UI/UX**: Glassmorphism shell, Tiled terminal view, and density-optimized layouts.
+- **Phase 4: Initialization & Upgrade**: Integrated Wizard for project setup and capability discovery.
+- **Phase 8: GitNexus Intelligence**: Full sidebar integration with repo health, stack detection, and architectural graph metadata.
+- **Phase 10: Updater**: Auto-update service for application binaries and dependencies.
+
+### 🚧 In Progress / Next
+- **Phase 9: Voice and TTS**: Push-to-Talk workflow with Piper/Whisper integration (Targeting next session).
+- **Phase 5: Spec/Task System**: Deepening the Beads integration for richer AC/Trait tracking.
+
+### 📍 Current Milestone
+**Intelligence & Observability Gate**: The app now provides a high-fidelity view of the repository's health and architecture, enabling agents to operate with context-awareness.
+
 [1]: https://donutsdelivery.online/index.php/about/?utm_source=chatgpt.com "DonutsDelivery.online — Free Open-Source Desktop Apps"
 [2]: https://www.skill-gallery.jp/en/skills/kynetic-ai/spec?utm_source=chatgpt.com "spec - Agent Skill | Skill Gallery"
 [3]: https://github.com/gsd-build/get-shit-done?utm_source=chatgpt.com "GitHub - gsd-build/get-shit-done: A light-weight and powerful meta-prompting, context engineering and spec-driven development system for Claude Code by TÂCHES. · GitHub"

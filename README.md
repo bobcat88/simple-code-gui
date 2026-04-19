@@ -85,6 +85,13 @@ sudo xattr -dr com.apple.quarantine "/Applications/Simple Code GUI.app"
 - **Track Progress** - Start, complete, and delete tasks
 - **Auto-Refresh** - Task list updates automatically
 
+### Project Intelligence & Observability
+- **Intelligence Sidebar** - Dedicated dashboard for repository health and metrics
+- **Stack Detection** - Auto-identifies frameworks, configurations, and tools
+- **Git Context** - Real-time branch monitoring, dirty-state tracking, and commit history
+- **GitNexus Integration** - Architectural graph awareness with staleness detection and audit triggers
+- **Dynamic Resizing** - Fluid sidebar interaction with persistence and glassmorphism styling
+
 ### Setup & Updates
 - **Auto-Install Dependencies** - Installs Claude Code, Node.js, Git if missing
 - **Auto Updates** - Downloads and installs updates automatically
