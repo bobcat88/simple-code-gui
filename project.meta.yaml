@@ -30,7 +30,7 @@ agents:
       - npm
   - _ulid: 01KK672F8EP6W56DA342BDJQRR
     description: Automated PR reviewer. Reviews pending_review tasks and merges when quality gates pass.
-    adapter: gemini
+    adapter: droid
     auto_approve: false
     capabilities:
       - review
