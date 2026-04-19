@@ -406,6 +406,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
           autoAccept={autoAccept}
           onToggleAutoAccept={handleToggleAutoAccept}
           isMobile={isMobile}
+          activeTabId={ptyId}
         />
       </div>
 

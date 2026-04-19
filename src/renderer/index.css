@@ -196,3 +196,37 @@
   from { transform: translateY(30px) scale(0.92); opacity: 0; }
   to { transform: translateY(0) scale(1); opacity: 1; }
 }
+
+/* Beads Voice Controls */
+.beads-voice-btn {
+  @apply p-1.5 rounded-md text-muted-foreground hover:bg-white/5 hover:text-primary transition-all duration-300 active:scale-90;
+}
+
+.beads-voice-btn.active {
+  @apply bg-primary/20 text-primary shadow-lg shadow-primary/10;
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.beads-modal-voice-panel {
+  @apply mt-4 p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  animation: slide-down 0.3s ease-out;
+}
+
+@keyframes slide-down {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.glass-panel {
+  @apply bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl;
+}
