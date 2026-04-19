@@ -118,7 +118,7 @@ workspaces:
       detail: null
       eligible: false
       reason: null
-      updated_at: 2026-04-19T07:51:07.331Z
+      updated_at: 2026-04-19T07:51:09.389Z
     health:
       status: stale
       issues:
@@ -128,7 +128,7 @@ workspaces:
             is missing or no longer registered.
           suggestion: Re-provision the worker worktree from the recorded canonical branch.
       summary: Workspace registry record is stale and needs reconciliation.
-      updated_at: 2026-04-19T07:51:07.331Z
+      updated_at: 2026-04-19T07:51:09.389Z
     integration:
       status: pending
       detail: null
@@ -136,7 +136,7 @@ workspaces:
       publication_mode: pull_request
       target_branch: main
       target_commit: d270debc807a39e17556d3d1db6669aaf29664f8
-      updated_at: 2026-04-19T07:51:07.331Z
+      updated_at: 2026-04-19T07:51:09.389Z
     lifecycle_state: stale
     resolved_base_branch: main
     task_ref: "@01KPJA33MHEH4H3S9XM3MPTSJA"
@@ -144,9 +144,9 @@ workspaces:
     timestamps:
       closed_at: null
       last_active_at: 2026-04-19T07:51:06.598Z
-      last_reconciled_at: 2026-04-19T07:51:07.331Z
+      last_reconciled_at: 2026-04-19T07:51:09.389Z
       created_at: 2026-04-19T07:26:13.793Z
-      updated_at: 2026-04-19T07:51:07.331Z
+      updated_at: 2026-04-19T07:51:09.389Z
     workspace_id: dispatch-workspace-01KPJA33MHEH4H3S9XM3MPTSJA
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
@@ -155,7 +155,7 @@ workspaces:
         branch_mode: branch
         branch_ref: dispatch/task/implement-project-initialization-wizard/01kpja33
         head: 4aa73f8c1dc901e9d4ddb099d722bd3eed295c39
-        last_seen_at: 2026-04-19T07:51:05.022Z
+        last_seen_at: 2026-04-19T07:51:09.389Z
         path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/implement-project-initialization-wizard-01kpja33
   - active_role: worker
     base_branch_point: d270debc807a39e17556d3d1db6669aaf29664f8
