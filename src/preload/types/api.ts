@@ -341,4 +341,7 @@ export interface ElectronAPI {
   extensionsAddCustomUrl: (url: string) => Promise<{ success: boolean }>
   extensionsRemoveCustomUrl: (url: string) => Promise<{ success: boolean }>
   extensionsGetCustomUrls: () => Promise<string[]>
+
+  // Intelligence
+  getProjectIntelligence: (projectPath: string) => Promise<{ repoHealth: number; stacks: string[]; gitNexusContext?: string }>
 }

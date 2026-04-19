@@ -352,6 +352,15 @@ export class ElectronBackend implements ExtendedApi {
     this.checkApi()
     window.electronAPI!.debugLog(message)
   }
+
+  // ==========================================================================
+  // Intelligence
+  // ==========================================================================
+
+  async getProjectIntelligence(projectPath: string): Promise<{ repoHealth: number; stacks: string[]; gitNexusContext?: string }> {
+    this.checkApi()
+    return window.electronAPI!.getProjectIntelligence(projectPath)
+  }
 }
 
 /**

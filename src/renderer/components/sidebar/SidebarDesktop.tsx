@@ -2,6 +2,8 @@ import React from 'react'
 import { SidebarContent, SidebarContentProps } from './SidebarContent.js'
 import { SidebarState } from './useSidebarState.js'
 import { SidebarHandlers } from './useSidebarHandlers.js'
+import { useIntelligence } from './hooks/useIntelligence.js'
+import { IntelligencePanel } from './IntelligencePanel.js'
 
 export interface SidebarDesktopProps extends Omit<SidebarContentProps, 'state' | 'handlers'> {
   state: SidebarState
@@ -16,6 +18,10 @@ export function SidebarDesktop(props: SidebarDesktopProps): React.ReactElement {
   const { sidebarRef } = state
   const { handleMouseDown } = handlers
 
+  // Fetch intelligence for the currently focused project
+  const focusedSession = contentProps.sessions.find(s => s.isFocused)
+  const { intelligence, loading, error } = useIntelligence(focusedSession?.path || null)
+
   return (
     <div className="sidebar" ref={sidebarRef} style={{ width }}>
       <button
@@ -28,6 +34,15 @@ export function SidebarDesktop(props: SidebarDesktopProps): React.ReactElement {
       </button>
 
       <SidebarContent state={state} handlers={handlers} {...contentProps} />
+
+      {!collapsed && (
+        <IntelligencePanel 
+          intelligence={intelligence} 
+          loading={loading} 
+          error={error} 
+          projectName={focusedSession?.name || null}
+        />
+      )}
 
       <div className="sidebar-resize-handle" onMouseDown={handleMouseDown} />
     </div>

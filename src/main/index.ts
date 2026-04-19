@@ -19,6 +19,7 @@ import {
   registerWindowHandlers,
   registerGsdHandlers,
   registerKspecHandlers,
+  registerIntelligenceHandlers,
 } from './ipc/index.js'
 
 import { setupAppConfig, setupSecurityHeaders } from './app/app-setup.js'
@@ -69,6 +70,7 @@ registerExtensionHandlers()
 registerWindowHandlers(getMainWindow)
 registerGsdHandlers()
 registerKspecHandlers()
+registerIntelligenceHandlers()
 registerWorkspaceHandlers(sessionStore, getMainWindow)
 registerPtyHandlers(ptyManager, sessionStore, apiServerManager, ptyToProject, ptyToBackend, getMainWindow)
 registerServerHandlers(apiServerManager, mobileServer)

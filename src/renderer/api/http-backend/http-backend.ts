@@ -225,4 +225,16 @@ export class HttpBackend implements Api {
     this.wsManager.disconnectAll()
     this.connection.setConnectionState('disconnected')
   }
+
+  async getProjectIntelligence(
+    projectPath: string
+  ): Promise<{ repoHealth: number; stacks: string[]; gitNexusContext?: string }> {
+    // For now, return a placeholder for HTTP backend
+    // In a real implementation, this would fetch from the server
+    return {
+      repoHealth: 100,
+      stacks: ['HTTP Backend'],
+      gitNexusContext: 'Unknown'
+    }
+  }
 }

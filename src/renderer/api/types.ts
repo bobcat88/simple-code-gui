@@ -151,6 +151,15 @@ export interface VoiceSettings {
   ttsVoice?: string
 }
 
+/**
+ * Project intelligence data
+ */
+export interface ProjectIntelligence {
+  repoHealth: number
+  stacks: string[]
+  gitNexusContext?: string
+}
+
 // ============================================================================
 // API Interface
 // ============================================================================
@@ -333,6 +342,12 @@ export interface Api {
    * @returns Unsubscribe function
    */
   onApiOpenSession: (callback: ApiOpenSessionCallback) => Unsubscribe
+
+  /**
+   * Get intelligence data for a project (repo health, stacks, etc.)
+   * @param projectPath Path to the project
+   */
+  getProjectIntelligence: (projectPath: string) => Promise<ProjectIntelligence>
 
   /**
    * Get connection info for external components (HTTP backend only)
