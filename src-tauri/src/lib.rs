@@ -27,6 +27,11 @@ use orchestration::{
     kspec_dispatch_stop, OrchestrationState
 };
 use mcp_bridge::{register_mcp_server, get_registered_mcp_servers, McpManager, mcp_list_tools, mcp_call_tool, mcp_list_resources, mcp_read_resource, mcp_load_config};
+mod project_scanner;
+mod project_intelligence;
+
+use project_scanner::{project_scan, project_generate_proposal, project_apply_proposal};
+use project_intelligence::scan_project_intelligence;
 use tauri::{AppHandle, State, Manager, Emitter};
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
@@ -459,6 +464,10 @@ pub fn run() {
             voice_save_settings,
             log_token_event,
             get_token_stats,
+            project_scan,
+            project_generate_proposal,
+            project_apply_proposal,
+            scan_project_intelligence,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

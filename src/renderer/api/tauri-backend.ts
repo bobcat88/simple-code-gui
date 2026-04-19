@@ -231,4 +231,21 @@ export class TauriBackend implements ExtendedApi {
   async getTokenStats(projectId?: string): Promise<{ totalInput: number; totalOutput: number; totalSaved: number; totalCost: number }> {
     return await tauriIpc.getTokenStats(projectId);
   }
+
+  // Project Initialization Wizard
+  async projectScan(path: string, options?: any): Promise<any> {
+    return await tauriIpc.projectScan(path, options || {});
+  }
+
+  async projectGenerateProposal(scan: any, preset: string, projectName: string, taskBackend: string): Promise<any> {
+    return await tauriIpc.projectGenerateProposal(scan, preset, projectName, taskBackend);
+  }
+
+  async projectApplyProposal(proposal: any): Promise<string[]> {
+    return await tauriIpc.projectApplyProposal(proposal);
+  }
+
+  async scanProjectIntelligence(path: string): Promise<any> {
+    return await tauriIpc.scanProjectIntelligence(path);
+  }
 }

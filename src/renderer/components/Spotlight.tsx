@@ -10,7 +10,7 @@ interface SpotlightProps {
   openTabs: any[]
   onOpenSession: (path: string) => void
   onOpenSettings: () => void
-  onAddProject: () => void
+  onOpenProjectWizard: () => void
   onSwitchToTab: (id: string) => void
 }
 
@@ -31,7 +31,7 @@ export function Spotlight({
   openTabs, 
   onOpenSession, 
   onOpenSettings, 
-  onAddProject,
+  onOpenProjectWizard,
   onSwitchToTab
 }: SpotlightProps) {
   const [query, setQuery] = useState('')
@@ -72,7 +72,7 @@ export function Spotlight({
         title: 'New Project', 
         type: 'command', 
         icon: <Plus size={16} />, 
-        action: onAddProject,
+        action: onOpenProjectWizard,
         shortcut: 'Cmd+N'
       },
       { 
@@ -118,7 +118,7 @@ export function Spotlight({
       if (!aTitleMatch && bTitleMatch) return 1
       return 0
     })
-  }, [query, projects, openTabs, onAddProject, onOpenSettings, onOpenSession, onSwitchToTab])
+  }, [query, projects, openTabs, onOpenProjectWizard, onOpenSettings, onOpenSession, onSwitchToTab])
 
   // Update selected index when results change
   useEffect(() => {

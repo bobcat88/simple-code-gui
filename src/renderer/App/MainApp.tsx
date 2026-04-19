@@ -5,7 +5,7 @@ import { TerminalTabs } from '../components/TerminalTabs'
 import { Terminal } from '../components/terminal/Terminal'
 import { TiledTerminalView } from '../components/tiled/index.js'
 import { SettingsModal } from '../components/SettingsModal'
-import { MakeProjectModal } from '../components/MakeProjectModal'
+import { ProjectInitializationWizard } from '../components/ProjectInitializationWizard'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { FileBrowser } from '../components/mobile/FileBrowser'
 import type { HostConfig } from '../hooks/useHostConnection'
@@ -56,7 +56,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
   const voiceOutputEnabledRef = useRef(voiceOutputEnabled)
 
   // Modal state from context
-  const { settingsOpen, makeProjectOpen, openSettings, closeSettings, openMakeProject, closeMakeProject } = useModals()
+  const { settingsOpen, projectWizardOpen, openSettings, closeSettings, openProjectWizard, closeProjectWizard } = useModals()
 
   // Installation state from hook
   const {
@@ -306,7 +306,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
               onOpenSession={handleOpenSession}
               onSwitchToTab={setActiveTab}
               onOpenSettings={openSettings}
-              onOpenMakeProject={openMakeProject}
+              onOpenProjectWizard={openProjectWizard}
               onUpdateProject={updateProject}
               onCloseProjectTabs={handleCloseProjectTabs}
               width={sidebarWidth}
@@ -449,10 +449,11 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
         api={api}
       />
 
-        <MakeProjectModal
-          isOpen={makeProjectOpen}
-          onClose={closeMakeProject}
+        <ProjectInitializationWizard
+          isOpen={projectWizardOpen}
+          onClose={closeProjectWizard}
           onProjectCreated={handleProjectCreated}
+          api={api}
         />
 
         <Spotlight 
@@ -462,7 +463,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
           openTabs={openTabs}
           onOpenSession={handleOpenSession}
           onOpenSettings={openSettings}
-          onAddProject={openMakeProject}
+          onOpenProjectWizard={openProjectWizard}
           onSwitchToTab={setActiveTab}
         />
       </div>

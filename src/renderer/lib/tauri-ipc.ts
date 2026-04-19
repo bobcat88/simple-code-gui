@@ -111,4 +111,16 @@ export const tauriIpc = {
 
   getTokenStats: (projectId?: string) =>
     invoke<any>('get_token_stats', { projectId }),
+
+  projectScan: (path: string, options: any) =>
+    invoke<any>('project_scan', { path, options }),
+
+  projectGenerateProposal: (scan: any, preset: string, projectName: string, taskBackend: string) =>
+    invoke<any>('project_generate_proposal', { scan, preset, project_name: projectName, task_backend: taskBackend }),
+
+  projectApplyProposal: (proposal: any) =>
+    invoke<string[]>('project_apply_proposal', { proposal }),
+
+  scanProjectIntelligence: (path: string) =>
+    invoke<any>('scan_project_intelligence', { cwd: path }),
 };

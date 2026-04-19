@@ -36,7 +36,7 @@ export interface SidebarContentProps {
   onUpdateProject: SidebarProps['onUpdateProject']
   onAddProject: SidebarProps['onAddProject']
   onAddProjectsFromParent: SidebarProps['onAddProjectsFromParent']
-  onOpenMakeProject: SidebarProps['onOpenMakeProject']
+  onOpenProjectWizard: SidebarProps['onOpenProjectWizard']
   onOpenSettings: SidebarProps['onOpenSettings']
   api: Api
   renderProjectItem: (project: Project) => React.ReactElement
@@ -56,7 +56,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     onUpdateProject,
     onAddProject,
     onAddProjectsFromParent,
-    onOpenMakeProject,
+    onOpenProjectWizard,
     onOpenSettings,
     api,
     renderProjectItem,
@@ -560,7 +560,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
       <div className="p-3 grid grid-cols-3 gap-2 border-t border-border/50">
         <button
           className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20 group"
-          onClick={onOpenMakeProject}
+          onClick={onOpenProjectWizard}
           title="Create new project from scratch"
         >
           <Plus size={16} className="group-hover:scale-125 transition-transform" />

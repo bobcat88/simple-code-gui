@@ -28,7 +28,7 @@ export interface SidebarProps {
   onOpenSession: (projectPath: string, sessionId?: string, slug?: string, initialPrompt?: string, forceNewSession?: boolean) => void
   onSwitchToTab: (tabId: string) => void
   onOpenSettings: () => void
-  onOpenMakeProject: () => void
+  onOpenProjectWizard: () => void
   onUpdateProject: (path: string, updates: Partial<Project>) => void
   onCloseProjectTabs: (projectPath: string) => void
   width: number

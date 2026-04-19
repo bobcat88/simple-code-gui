@@ -411,6 +411,145 @@ export interface ExtendedApi extends Api {
   // Token Metering
   logTokenEvent: (projectId: string | null, input: number, output: number, saved: number, model: string) => Promise<void>
   getTokenStats: (projectId?: string) => Promise<{ totalInput: number; totalOutput: number; totalSaved: number; totalCost: number }>
+
+  // Project Initialization Wizard
+  projectScan: (path: string, options?: ScanOptions) => Promise<ProjectCapabilityScan>
+  projectGenerateProposal: (scan: ProjectCapabilityScan, preset: string, projectName: string, taskBackend: string) => Promise<InitializationProposal>
+  projectApplyProposal: (proposal: InitializationProposal) => Promise<string[]>
+  scanProjectIntelligence: (path: string) => Promise<ProjectIntelligence>
+}
+
+// ============================================================================
+// Project Wizard Types
+// ============================================================================
+
+export interface ScanOptions {
+  includeCliHealth?: boolean
+  includeGitHealth?: boolean
+  maxDepth?: number
+}
+
+export type SourceSystem = 'simple_code_gui' | 'beads' | 'kspec' | 'gsd' | 'rtk' | 'gitnexus' | 'mcp' | 'provider' | 'git' | 'terminal' | 'user'
+export type CapabilityKind = 'task_backend' | 'spec_backend' | 'execution_workflow' | 'repo_intelligence' | 'token_optimizer' | 'mcp_server' | 'provider' | 'voice' | 'updater' | 'project_contract'
+export type CapabilityMode = 'full' | 'partial' | 'instruction_only' | 'degraded' | 'disabled' | 'unknown'
+export type HealthStatus = 'healthy' | 'warning' | 'error' | 'unknown'
+export type MarkerKind = 'file' | 'directory' | 'env_var' | 'process' | 'mcp_tool' | 'mcp_resource' | 'generated' | 'logic'
+export type MarkerStatus = 'present' | 'missing' | 'partially_present' | 'broken' | 'mismatched'
+export type Confidence = 'certain' | 'high' | 'medium' | 'low' | 'guessed'
+export type OperationKind = 'create_file' | 'modify_file' | 'create_directory' | 'run_command' | 'preserve' | 'skip'
+export type OperationRisk = 'low' | 'medium' | 'high'
+
+export interface DetectedMarker {
+  id: string
+  kind: MarkerKind
+  path?: string
+  sourceSystem: SourceSystem
+  confidence: Confidence
+  status: MarkerStatus
+}
+
+export interface CapabilityScanResult {
+  id: string
+  kind: CapabilityKind
+  sourceSystem: SourceSystem
+  installed: boolean
+  initialized: boolean
+  enabled: boolean
+  mode: CapabilityMode
+  health: HealthStatus
+  version?: string
+  markerIds: string[]
+}
+
+export interface ScanWarning {
+  id: string
+  severity: 'info' | 'warning'
+  title: string
+  detail: string
+  markerIds: string[]
+  capabilityIds: string[]
+}
+
+export interface ScanBlocker {
+  id: string
+  title: string
+  detail: string
+  markerIds: string[]
+  recommendedAction: string
+}
+
+export interface UpgradeProposalInput {
+  canProposeMinimal: boolean
+  canProposeStandard: boolean
+  canProposeFull: boolean
+  recommendedPreset: string
+  createCandidates: string[]
+  modifyCandidates: string[]
+  preserveCandidates: string[]
+  migrationSources: SourceSystem[]
+  rollbackNotes: string[]
+}
+
+export interface ProjectCapabilityScan {
+  rootPath: string
+  scannedAt: string
+  initializationState: string
+  markers: DetectedMarker[]
+  capabilities: CapabilityScanResult[]
+  warnings: ScanWarning[]
+  blockers: ScanBlocker[]
+  upgradeInputs: UpgradeProposalInput
+}
+
+export interface ProposalOperation {
+  id: string
+  kind: OperationKind
+  path?: string
+  command?: string
+  sourceSystem: SourceSystem
+  reason: string
+  preview?: string
+  risk: OperationRisk
+  requiresApproval: boolean
+}
+
+export interface InitializationProposal {
+  id: string
+  rootPath: string
+  createdAt: string
+  preset: string
+  summary: string
+  operations: ProposalOperation[]
+  warnings: ScanWarning[]
+  blockers: ScanBlocker[]
+}
+
+export interface ProjectIntelligence {
+  git?: {
+    branch: string
+    isDirty: boolean
+    uncommittedCount: number
+    recentCommits: Array<{ hash: string; message: string; author: string; date: string }>
+    remote?: string
+    ahead: number
+    behind: number
+  }
+  stacks: Array<{ name: string; icon: string; version?: string; configFile: string }>
+  health: {
+    score: number
+    hasGit: boolean
+    hasReadme: boolean
+    hasCi: boolean
+    hasTests: boolean
+    hasLinter: boolean
+    hasLockfile: boolean
+  }
+  gitnexus?: {
+    symbols: number
+    relationships: number
+    processes: number
+    stale: boolean
+  }
 }
 
 // ============================================================================

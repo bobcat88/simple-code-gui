@@ -2,32 +2,32 @@ import React, { createContext, useContext, useState, useCallback } from 'react'
 
 interface ModalContextValue {
   settingsOpen: boolean
-  makeProjectOpen: boolean
+  projectWizardOpen: boolean
   openSettings: () => void
   closeSettings: () => void
-  openMakeProject: () => void
-  closeMakeProject: () => void
+  openProjectWizard: () => void
+  closeProjectWizard: () => void
 }
 
 const ModalContext = createContext<ModalContextValue | null>(null)
 
 export function ModalProvider({ children }: { children: React.ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [makeProjectOpen, setMakeProjectOpen] = useState(false)
+  const [projectWizardOpen, setProjectWizardOpen] = useState(false)
 
   const openSettings = useCallback(() => setSettingsOpen(true), [])
   const closeSettings = useCallback(() => setSettingsOpen(false), [])
-  const openMakeProject = useCallback(() => setMakeProjectOpen(true), [])
-  const closeMakeProject = useCallback(() => setMakeProjectOpen(false), [])
+  const openProjectWizard = useCallback(() => setProjectWizardOpen(true), [])
+  const closeProjectWizard = useCallback(() => setProjectWizardOpen(false), [])
 
   return (
     <ModalContext.Provider value={{
       settingsOpen,
-      makeProjectOpen,
+      projectWizardOpen,
       openSettings,
       closeSettings,
-      openMakeProject,
-      closeMakeProject
+      openProjectWizard,
+      closeProjectWizard
     }}>
       {children}
     </ModalContext.Provider>

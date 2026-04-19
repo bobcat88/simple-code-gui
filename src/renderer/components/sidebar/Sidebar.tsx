@@ -125,7 +125,7 @@ export function Sidebar({
     onUpdateProject,
     onAddProject,
     onAddProjectsFromParent,
-    onOpenMakeProject,
+    onOpenProjectWizard,
     onOpenSettings,
     activeSection,
     api,
