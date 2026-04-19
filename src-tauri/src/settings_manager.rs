@@ -5,6 +5,7 @@ use tauri::{AppHandle, Manager};
 use std::sync::Mutex;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct AppSettings {
     pub default_project_dir: String,
     pub theme: String,
@@ -21,6 +22,16 @@ pub struct AppSettings {
     pub glow_enabled: bool,
     #[serde(default = "default_accent")]
     pub accent_color: String,
+    #[serde(default)]
+    pub xtts_temperature: f32,
+    #[serde(default)]
+    pub xtts_top_k: u32,
+    #[serde(default)]
+    pub xtts_top_p: f32,
+    #[serde(default)]
+    pub xtts_repetition_penalty: f32,
+    #[serde(default)]
+    pub tada_voice_sample: String,
 }
 
 fn default_true() -> bool { true }
@@ -40,6 +51,11 @@ impl Default for AppSettings {
             tts_speed: 1.0,
             glow_enabled: true,
             accent_color: String::from("#3b82f6"),
+            xtts_temperature: 0.7,
+            xtts_top_k: 50,
+            xtts_top_p: 0.8,
+            xtts_repetition_penalty: 2.0,
+            tada_voice_sample: String::from("v2/en_3"),
         }
     }
 }

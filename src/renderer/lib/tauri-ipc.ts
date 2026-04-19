@@ -10,8 +10,8 @@ export interface SessionInfo {
 }
 
 export const tauriIpc = {
-  spawnSession: (cwd: string, backend: string, sessionId?: string, slug?: string) => 
-    invoke<string>('spawn_session', { cwd, backend, session_id: sessionId, slug }),
+  spawnSession: (cwd: string, backend: string, sessionId?: string, slug?: string, rows?: number, cols?: number) => 
+    invoke<string>('spawn_session', { cwd, backend, session_id: sessionId, slug, rows, cols }),
     
   writeToPty: (id: string, data: string) => 
     invoke<void>('write_to_pty', { id, data }),
@@ -87,9 +87,6 @@ export const tauriIpc = {
 
   discoverSessions: (projectPath: string, backend?: string) =>
     invoke<any[]>('discover_sessions', { projectPath, backend }),
-
-  selectDirectory: () =>
-    invoke<string | null>('select_directory'),
 
   selectFile: () =>
     invoke<string | null>('select_file'),

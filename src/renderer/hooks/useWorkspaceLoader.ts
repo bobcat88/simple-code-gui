@@ -8,6 +8,7 @@ import { applyGlobalStyling } from '../themes/applyTheme'
 import { cleanupOrphanedBuffers } from '../components/terminal/Terminal'
 import type { TileNode } from '../components/tile-tree.js'
 import { deserializeTree, migrateFromFlat, remapTabIds, filterTabs } from '../components/tile-tree.js'
+import { calculatePtyDimensions } from '../components/terminal/utils.js'
 
 interface UseWorkspaceLoaderOptions {
   api: Api
@@ -168,11 +169,16 @@ export function useWorkspaceLoader({
                 }
               }
 
+              // Use window size as a fallback estimate for initial spawning
+              const { cols, rows } = calculatePtyDimensions(window.innerWidth, window.innerHeight)
+
               const ptyId = await api.spawnPty(
                 savedTab.projectPath,
                 sessionIdToRestore,
                 undefined,
-                effectiveBackendForTab
+                effectiveBackendForTab,
+                rows,
+                cols
               )
               if (savedTab.id) {
                 idMapping.set(savedTab.id, ptyId)
@@ -198,7 +204,11 @@ export function useWorkspaceLoader({
           // Auto-spawn default Claude session if nothing was restored
           try {
             const defaultPath = workspace.projects?.[0]?.path || '.'
-            const ptyId = await api.spawnPty(defaultPath, undefined, undefined, 'claude')
+            
+            // Use window size as a fallback estimate
+            const { cols, rows } = calculatePtyDimensions(window.innerWidth, window.innerHeight)
+
+            const ptyId = await api.spawnPty(defaultPath, undefined, undefined, 'claude', rows, cols)
             addTab({
               id: ptyId,
               projectPath: defaultPath,

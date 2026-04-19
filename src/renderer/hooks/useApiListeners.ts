@@ -3,6 +3,7 @@ import type { Api } from '../api'
 import type { BackendId } from '../api/types'
 import type { AppSettings } from './useSettings'
 import { useWorkspaceStore, OpenTab, Project } from '../stores/workspace'
+import { calculatePtyDimensions } from '../components/terminal/utils.js'
 
 interface UseApiListenersOptions {
   api: Api
@@ -41,7 +42,10 @@ export function useApiListeners({
         // Always install TTS instructions so Claude uses <tts> tags
         await api.ttsInstallInstructions?.(projectPath)
 
-        const ptyId = await api.spawnPty(projectPath, undefined, model, effectiveBackend)
+        // Use window size as a fallback estimate
+        const { cols, rows } = calculatePtyDimensions(window.innerWidth, window.innerHeight)
+
+        const ptyId = await api.spawnPty(projectPath, undefined, model, effectiveBackend, rows, cols)
         addTab({
           id: ptyId,
           projectPath,

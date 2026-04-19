@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { Api } from '../api'
 
 type InstallingType = 'node' | 'git' | 'claude' | null
@@ -35,6 +35,11 @@ export function useInstallation(api: Api): UseInstallationReturn {
       console.error('Check installation failed', e)
     }
   }, [api])
+  
+  // Check on mount
+  useEffect(() => {
+    checkInstallation()
+  }, [checkInstallation])
 
   const handleInstallNode = useCallback(async () => {
     setInstalling('node')

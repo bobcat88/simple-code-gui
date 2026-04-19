@@ -30,6 +30,11 @@ export const MIN_FONT_SIZE = 8
 export const MAX_FONT_SIZE = 32
 export const FONT_SIZE_STORAGE_KEY = 'terminal-font-size'
 
+// Estimated character dimensions for initial spawning (before fitAddon is available)
+// Based on JetBrains Mono at 14px
+export const ESTIMATED_CHAR_WIDTH = 9
+export const ESTIMATED_CHAR_HEIGHT = 18
+
 // Terminal configuration
 export const TERMINAL_CONFIG = {
   cursorBlink: false,

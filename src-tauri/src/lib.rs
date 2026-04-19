@@ -20,7 +20,8 @@ use orchestration::{
     beads_update, beads_watch, beads_unwatch, kspec_check, kspec_init, 
     kspec_list, kspec_show, kspec_create, kspec_start, kspec_complete,
     kspec_delete, kspec_update, kspec_watch, kspec_unwatch,
-    kspec_ensure_daemon, OrchestrationState
+    kspec_ensure_daemon, kspec_dispatch_status, kspec_dispatch_start,
+    kspec_dispatch_stop, OrchestrationState
 };
 use mcp_bridge::{register_mcp_server, get_registered_mcp_servers, McpManager, mcp_list_tools, mcp_call_tool, mcp_list_resources, mcp_read_resource, mcp_load_config};
 use tauri::{AppHandle, State, Manager, Emitter};
@@ -38,6 +39,8 @@ async fn spawn_session(
     backend: String,
     session_id: Option<String>,
     slug: Option<String>,
+    rows: u16,
+    cols: u16,
 ) -> Result<String, String> {
     println!("[spawn_session] project: {}, backend: {}", cwd, backend);
     
@@ -72,7 +75,7 @@ async fn spawn_session(
         // Aider specific args if needed
     }
 
-    state.spawn(app, cwd, cmd_name, args)
+    state.spawn(app, cwd, cmd_name, args, rows, cols)
 }
 
 #[tauri::command]
@@ -95,6 +98,17 @@ async fn kill_session(state: State<'_, Arc<PtyManager>>, id: String) -> Result<(
 #[tauri::command]
 async fn get_settings(state: State<'_, SettingsManager>) -> Result<AppSettings, String> {
     Ok(state.get())
+}
+
+#[tauri::command]
+async fn voice_save_settings(
+    app: AppHandle,
+    state: State<'_, SettingsManager>, 
+    settings: AppSettings
+) -> Result<(), String> {
+    state.save(settings.clone())?;
+    let _ = app.emit("settings-changed", settings);
+    Ok(())
 }
 
 #[tauri::command]
@@ -326,6 +340,9 @@ pub fn run() {
             kspec_watch,
             kspec_unwatch,
             kspec_ensure_daemon,
+            kspec_dispatch_status,
+            kspec_dispatch_start,
+            kspec_dispatch_stop,
             register_mcp_server,
             get_registered_mcp_servers,
             discover_sessions,
@@ -347,7 +364,8 @@ pub fn run() {
             mcp_call_tool,
             mcp_list_resources,
             mcp_read_resource,
-            mcp_load_config
+            mcp_load_config,
+            voice_save_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

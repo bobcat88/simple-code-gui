@@ -279,7 +279,7 @@ export interface Api {
    * @param model Optional model override
    * @param backend Optional backend override ('claude', 'gemini', etc.)
    */
-  spawnPty: (cwd: string, sessionId?: string, model?: string, backend?: BackendId) => Promise<string>
+  spawnPty: (cwd: string, sessionId?: string, model?: string, backend?: BackendId, rows?: number, cols?: number) => Promise<string>
 
   /**
    * Write data to a PTY

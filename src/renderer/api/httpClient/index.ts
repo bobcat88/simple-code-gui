@@ -106,8 +106,8 @@ export class HttpApiClient {
   // Terminal/PTY API
   // ===========================================================================
 
-  spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId): Promise<string> {
-    return terminal.spawnPty(this.config, this.wsManager, cwd, sessionId, model, backend)
+  spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId, rows?: number, cols?: number): Promise<string> {
+    return terminal.spawnPty(this.config, this.wsManager, cwd, sessionId, model, backend, rows, cols)
   }
 
   writePty(id: string, data: string): void {

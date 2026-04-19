@@ -145,13 +145,15 @@ impl PtyManager {
         cwd: String,
         backend: String,
         args: Vec<String>,
+        rows: u16,
+        cols: u16,
     ) -> Result<String, String> {
         let id = Uuid::new_v4().to_string();
         let pty_system = native_pty_system();
         
         let pair = pty_system.openpty(PtySize {
-            rows: 30,
-            cols: 120,
+            rows,
+            cols,
             pixel_width: 0,
             pixel_height: 0,
         }).map_err(|e: anyhow::Error| e.to_string())?;

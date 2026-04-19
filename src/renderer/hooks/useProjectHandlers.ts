@@ -15,6 +15,8 @@ import {
   findLeafById
 } from '../components/tile-tree.js'
 import { clearTerminalBuffer } from '../components/terminal/Terminal'
+import { calculatePtyDimensions } from '../components/terminal/utils.js'
+import { ESTIMATED_CHAR_WIDTH, ESTIMATED_CHAR_HEIGHT } from '../components/terminal/constants.js'
 
 interface UseProjectHandlersOptions {
   api: Api
@@ -134,7 +136,10 @@ export function useProjectHandlers({
     try {
       await api.ttsInstallInstructions?.(projectPath)
 
-      const ptyId = await api.spawnPty(projectPath, sessionId, undefined, effectiveBackend)
+      // Use window size as a fallback estimate for initial spawning
+      const { cols, rows } = calculatePtyDimensions(window.innerWidth, window.innerHeight)
+
+      const ptyId = await api.spawnPty(projectPath, sessionId, undefined, effectiveBackend, rows, cols)
 
       // Add leaf to tree — single operation, no race condition
       const currentTree = tileTreeRef.current
@@ -186,7 +191,11 @@ export function useProjectHandlers({
 
     try {
       await api.ttsInstallInstructions?.(projectPath)
-      const ptyId = await api.spawnPty(projectPath, undefined, undefined, effectiveBackend)
+      
+      // Calculate approximate rows/cols from containerSize
+      const { cols, rows } = calculatePtyDimensions(containerSize.width, containerSize.height)
+
+      const ptyId = await api.spawnPty(projectPath, undefined, undefined, effectiveBackend, rows, cols)
 
       let newTree: TileNode
 
@@ -250,7 +259,11 @@ export function useProjectHandlers({
 
     try {
       await api.ttsInstallInstructions?.(projectPath)
-      const ptyId = await api.spawnPty(projectPath, undefined, undefined, effectiveBackend)
+      
+      // Use window size as a fallback estimate for initial spawning
+      const { cols, rows } = calculatePtyDimensions(window.innerWidth, window.innerHeight)
+
+      const ptyId = await api.spawnPty(projectPath, undefined, undefined, effectiveBackend, rows, cols)
 
       const currentTree = tileTreeRef.current
       if (currentTree) {

@@ -584,3 +584,67 @@ pub async fn kspec_ensure_daemon(_cwd: String) -> Result<serde_json::Value, Stri
     // Keep it for now to avoid breaking existing code, but make it a no-op that says success
     Ok(serde_json::json!({ "success": true }))
 }
+
+#[tauri::command]
+pub async fn kspec_dispatch_status(cwd: String) -> Result<serde_json::Value, String> {
+    let output = Command::new("kspec")
+        .current_dir(&cwd)
+        .arg("agent")
+        .arg("dispatch")
+        .arg("status")
+        .arg("--json")
+        .output()
+        .map_err(|e| format!("Failed to execute kspec agent dispatch status: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "running": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    let status: serde_json::Value = serde_json::from_slice(&output.stdout)
+        .unwrap_or(serde_json::json!({ "running": false }));
+
+    Ok(status)
+}
+
+#[tauri::command]
+pub async fn kspec_dispatch_start(cwd: String) -> Result<serde_json::Value, String> {
+    let output = Command::new("kspec")
+        .current_dir(&cwd)
+        .arg("agent")
+        .arg("dispatch")
+        .arg("start")
+        .output()
+        .map_err(|e| format!("Failed to execute kspec agent dispatch start: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn kspec_dispatch_stop(cwd: String) -> Result<serde_json::Value, String> {
+    let output = Command::new("kspec")
+        .current_dir(&cwd)
+        .arg("agent")
+        .arg("dispatch")
+        .arg("stop")
+        .output()
+        .map_err(|e| format!("Failed to execute kspec agent dispatch stop: {}", e))?;
+
+    if !output.status.success() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": String::from_utf8_lossy(&output.stderr).to_string()
+        }));
+    }
+
+    Ok(serde_json::json!({ "success": true }))
+}

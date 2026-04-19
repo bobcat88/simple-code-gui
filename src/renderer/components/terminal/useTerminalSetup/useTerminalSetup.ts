@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Terminal as XTerm } from '@xterm/xterm'
 import type { FitAddon } from '@xterm/addon-fit'
 import { getLastTerminalTheme } from '../../../themes.js'
@@ -57,6 +57,7 @@ function createPtyOperations(api: UseTerminalSetupOptions['api']): PtyOperations
  * Handles terminal creation, PTY communication, WebGL addon, and event handlers.
  */
 export function useTerminalSetup(options: UseTerminalSetupOptions): UseTerminalSetupReturn {
+  const [isReady, setIsReady] = useState(false)
   const {
     ptyId,
     theme,
@@ -101,7 +102,8 @@ export function useTerminalSetup(options: UseTerminalSetupOptions): UseTerminalS
         ptyOperations,
         ptyId,
         options,
-        state
+        state,
+        () => setIsReady(true)
       )
     }
 
@@ -160,6 +162,7 @@ export function useTerminalSetup(options: UseTerminalSetupOptions): UseTerminalS
         window.removeEventListener('terminal-theme-update', handleThemeUpdate)
       }
       cleanupTerminal(containerRef, state, initCheckInterval, null, cleanupData, cleanupExit)
+      setIsReady(false)
     }
   }, [ptyId])
 
@@ -185,5 +188,6 @@ export function useTerminalSetup(options: UseTerminalSetupOptions): UseTerminalS
     userScrolledUpRef,
     currentLineInputRef,
     inputSuppressedRef,
+    isReady,
   }
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import type { UnifiedTask } from './adapters/types.js'
 import { CreateTaskModal } from './CreateTaskModal.js'
 import { TaskDetailModal } from './TaskDetailModal.js'
-import { BrowserModal } from './BrowserModal.js'
+import { BrowserModal, type BrowserFilter } from './BrowserModal.js'
 import { StartDropdown } from './StartDropdown.js'
 import { BeadsHeader } from './BeadsHeader.js'
 import { BeadsInstallView } from './BeadsInstallView.js'
@@ -107,7 +107,7 @@ export function BeadsPanel({
 
   // Browser modal state
   const [showBrowser, setShowBrowser] = useState(false)
-  const [browserFilter, setBrowserFilter] = useState<'all' | 'open' | 'in_progress' | 'closed'>('all')
+  const [browserFilter, setBrowserFilter] = useState<BrowserFilter>('all')
   const [browserSort, setBrowserSort] = useState<'priority' | 'created' | 'status'>('priority')
 
   // Start dropdown state

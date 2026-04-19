@@ -33,6 +33,28 @@ function toUnified(raw: Record<string, unknown>): UnifiedTask {
   const tags = Array.isArray(raw.tags) ? raw.tags.map(String) : undefined
   const slugs = Array.isArray(raw.slugs) ? raw.slugs : []
   const id = slugs.length > 0 ? String(slugs[0]) : String(raw._ulid ?? raw.slug ?? raw.id ?? '')
+  
+  const hasSpec = typeof raw.spec_ref === 'string' && raw.spec_ref.length > 0
+  const specItems = hasSpec ? [{
+    id: String(raw.spec_ref),
+    title: String(raw.spec_ref),
+    sourceSystem: 'kspec' as const
+  }] : undefined
+
+  const rawAC = Array.isArray(raw.acceptance_criteria) ? raw.acceptance_criteria : []
+  const acceptanceCriteria = rawAC.map((ac: any, index: number) => ({
+    id: ac.id ?? `ac-${index}`,
+    text: typeof ac === 'string' ? ac : String(ac.text ?? ''),
+    status: (ac.status ?? 'not_started') as any,
+    sourceSystem: 'kspec' as const
+  }))
+
+  const traits = tags?.map(tag => ({
+    id: tag,
+    label: tag,
+    sourceSystem: 'kspec' as const
+  }))
+
   return {
     id,
     displayId: slugs.length > 0 ? String(slugs[0]) : (id.length > 12 ? id.slice(0, 8) : id),
@@ -45,7 +67,20 @@ function toUnified(raw: Record<string, unknown>): UnifiedTask {
     updated_at: typeof raw.updated_at === 'string' ? raw.updated_at : undefined,
     tags,
     automation: typeof raw.automation === 'string' ? raw.automation as UnifiedTask['automation'] : undefined,
-    hasSpec: typeof raw.spec_ref === 'string' && raw.spec_ref.length > 0,
+    hasSpec,
+    specItems,
+    acceptanceCriteria: acceptanceCriteria.length > 0 ? acceptanceCriteria : undefined,
+    traits,
+    source: {
+      backend: 'kspec',
+      sourceSystem: 'kspec',
+      externalId: id,
+      supportsSpecItems: true,
+      supportsAcceptanceCriteria: true,
+      supportsTraits: true,
+      supportsValidation: true,
+      supportsDerivedTasks: true
+    },
     _backend: 'kspec'
   }
 }

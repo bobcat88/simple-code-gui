@@ -6,8 +6,8 @@ import { tauriIpc } from './tauri-ipc';
 export const setupTauriShim = () => {
   (window as any).electronAPI = {
     // PTY Operations
-    spawnPty: (cwd: string, sessionId?: string, model?: string, backend: string = 'claude') => 
-      tauriIpc.spawnSession(cwd, backend, sessionId, model),
+    spawnPty: (cwd: string, sessionId?: string, model?: string, backend: string = 'claude', rows?: number, cols?: number) => 
+      tauriIpc.spawnSession(cwd, backend, sessionId, model, rows, cols),
     writePty: (id: string, data: string) => 
       tauriIpc.writeToPty(id, data),
     resizePty: (id: string, cols: number, rows: number) => 
@@ -107,10 +107,11 @@ export const setupTauriShim = () => {
     
     // Voice (Native Rust implementation)
     voiceGetSettings: async () => invoke('get_settings').then((s: any) => ({
-      ttsVoice: s.tts_voice,
-      ttsEngine: s.tts_engine,
-      ttsSpeed: s.tts_speed
+      ttsVoice: s.ttsVoice,
+      ttsEngine: s.ttsEngine,
+      ttsSpeed: s.ttsSpeed
     })),
+    voiceSaveSettings: (settings: any) => invoke('voice_save_settings', { settings }),
     voiceApplySettings: async (settings: any) => invoke('save_settings', { 
       settings: { ...(await invoke('get_settings') as any), ...settings } 
     }),
@@ -166,6 +167,9 @@ export const setupTauriShim = () => {
       return () => unlisten?.();
     },
     kspecEnsureDaemon: (cwd: string) => invoke('kspec_ensure_daemon', { cwd }),
+    kspecDispatchStatus: (cwd: string) => invoke('kspec_dispatch_status', { cwd }),
+    kspecDispatchStart: (cwd: string) => invoke('kspec_dispatch_start', { cwd }),
+    kspecDispatchStop: (cwd: string) => invoke('kspec_dispatch_stop', { cwd }),
 
     // MCP Bridge
     mcpRegisterServer: (config: any) => invoke('register_mcp_server', { config }),

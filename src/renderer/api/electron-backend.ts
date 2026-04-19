@@ -40,9 +40,9 @@ export class ElectronBackend implements ExtendedApi {
   // PTY Management
   // ==========================================================================
 
-  async spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId): Promise<string> {
+  async spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId, rows?: number, cols?: number): Promise<string> {
     this.checkApi()
-    return window.electronAPI!.spawnPty(cwd, sessionId, model, backend)
+    return window.electronAPI!.spawnPty(cwd, sessionId, model, backend, rows, cols)
   }
 
   killPty(id: string): void {

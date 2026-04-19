@@ -24,6 +24,7 @@ export interface UseTerminalSetupReturn {
   userScrolledUpRef: MutableRefObject<boolean>
   currentLineInputRef: MutableRefObject<string>
   inputSuppressedRef: MutableRefObject<boolean>
+  isReady: boolean
 }
 
 export interface PtyOperations {

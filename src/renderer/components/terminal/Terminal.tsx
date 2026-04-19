@@ -126,6 +126,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     userScrolledUpRef,
     currentLineInputRef,
     inputSuppressedRef,
+    isReady,
   } = useTerminalSetup({
     ptyId,
     theme,
@@ -168,7 +169,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
       setTimeout(doFit, 50)
       setTimeout(doFit, 150)
     }
-  }, [isActive, ptyId, containerRef, terminalRef, fitAddonRef, userScrolledUpRef])
+  }, [isActive, isReady, ptyId, containerRef, terminalRef, fitAddonRef, userScrolledUpRef])
 
   // Check if a drag event is a tile/sidebar/sub-tab drag (not a file drop)
   const isTileDrag = useCallback((e: React.DragEvent) => {

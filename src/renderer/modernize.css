@@ -92,6 +92,8 @@ html, body, #root {
 /* Aggressive Drag Region */
 [data-tauri-drag-region] {
   cursor: default;
+  user-select: none !important;
+  -webkit-user-select: none !important;
 }
 
 .title-bar {
