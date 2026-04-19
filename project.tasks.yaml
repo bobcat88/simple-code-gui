@@ -43,3 +43,24 @@ tasks:
         created_at: 2026-03-10T04:54:39.644Z
     todos: []
     automation: eligible
+  - _ulid: 01KPJA31YGP5J1JY1FPD18VX1V
+    slugs: []
+    title: Build Project Intelligence Sidebar
+    type: task
+    description: Display repo health, detected stacks, and GitNexus architectural context in a right-side panel.
+    spec_ref: null
+    meta_ref: null
+    plan_ref: null
+    status: pending
+    blocked_by: []
+    depends_on: []
+    context: []
+    priority: 3
+    tags:
+      - intelligence
+      - ui
+    vcs_refs: []
+    created_at: 2026-04-19T07:25:42.736Z
+    notes: []
+    todos: []
+    automation: eligible
