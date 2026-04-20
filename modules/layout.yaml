@@ -137,6 +137,9 @@ features:
     title: Advanced Workspace Control
     type: feature
     description: Enhanced project switcher and home screen with usage summaries and alerts.
+    status:
+      maturity: draft
+      implementation: in_progress
     depends_on: []
     implements: []
     relates_to: []
