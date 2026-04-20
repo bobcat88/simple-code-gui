@@ -136,3 +136,11 @@ When creating tasks intended for automated dispatch, you MUST complete ALL of th
 - `/kspec:triage-inbox` — Process inbox items (promote to task/spec, merge, defer, delete)
 - `kspec inbox add "idea"` — Capture ideas for later triage (not yet tasks)
 <!-- TASK_MANAGEMENT_END -->
+
+<!-- BORG_KNOWLEDGE_WORKFLOW_START -->
+## Borg Knowledge Vault & AI Workflow
+
+- Shared memory lives in `/home/_johan/Documents/Borg`. Start with `300 Entities/Projects/Portfolio - Condensed Knowledge.md`, `400 Resources/Tech/AI Knowledge Map.md`, `000 OS / Meta/AI Collaboration Protocol.md`, and `300 Entities/People/Johan - Working Profile.md`.
+- This is a legacy detached checkout of `simple-code-gui`; prefer the active `300 Entities/Projects/simple-code-gui` symlink for current work.
+- Use kspec/Beads/GitNexus/RTK according to the local repo files, and mirror durable learning back into the vault.
+<!-- BORG_KNOWLEDGE_WORKFLOW_END -->
