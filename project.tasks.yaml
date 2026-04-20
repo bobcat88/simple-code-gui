@@ -89,9 +89,14 @@
   depends_on: []
   priority: 3
   tags: []
-  notes_count: 2
-  todos_count: 0
   created_at: 2026-04-20T17:02:12.431Z
+  notes:
+    - _ulid: 01KPPC9F6FG10KJXXEZXEGB8VQ
+      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 12am
+        (Europe/Paris)"
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-20T21:21:07.791Z
   automation: eligible
 - _ulid: 01KPNXFCN02DFXBTRJK5DV9RTY
   slugs:
