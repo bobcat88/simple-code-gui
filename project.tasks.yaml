@@ -101,11 +101,15 @@
   depends_on: []
   priority: 3
   tags: []
-  notes_count: 2
-  todos_count: 0
   created_at: 2026-04-20T17:02:12.431Z
   started_at: 2026-04-20T21:43:08.507Z
   submitted_at: 2026-04-20T21:43:11.143Z
+  notes:
+    - _ulid: 01KPPDKHSASXWQN381RVFCYPPV
+      content: '[AGENT-FAIL] Invocation failed: Executable not found in $PATH: "droid"'
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-20T21:44:06.698Z
   automation: eligible
 - _ulid: 01KPNXFCN02DFXBTRJK5DV9RTY
   slugs:
