@@ -133,6 +133,19 @@ features:
         tags: []
         created: 2026-04-20T16:52:54.844Z
         notes: []
+      - _ulid: 01KPNWYD38HED3GG5Y9BMWS814
+        slugs: []
+        title: Approval Workflow UI
+        type: requirement
+        description: Interactive prompts for user review of proposed agent modifications.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:52:56.553Z
+        notes: []
     created: 2026-04-20T16:52:04.804Z
     notes: []
 notes: []
