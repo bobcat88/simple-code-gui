@@ -107,6 +107,19 @@ features:
         tags: []
         created: 2026-04-20T16:50:48.896Z
         notes: []
+      - _ulid: 01KPNWTJ4624RN9A805Q6P3GDN
+        slugs: []
+        title: Wave-based Execution
+        type: requirement
+        description: Orchestrator for executing task waves with dependency awareness.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:50:50.631Z
+        notes: []
     created: 2026-04-20T16:49:35.488Z
     notes: []
   - _ulid: 01KPNWRA78HGZ4D06Q26CY9FKY
