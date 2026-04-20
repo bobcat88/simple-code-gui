@@ -133,6 +133,19 @@ features:
         tags: []
         created: 2026-04-20T16:50:52.284Z
         notes: []
+      - _ulid: 01KPNWTNCEYS2WKY5VPT18MZTH
+        slugs: []
+        title: Execution State Persistence
+        type: requirement
+        description: Tracking and resuming long-running agent sessions across app restarts.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:50:53.966Z
+        notes: []
     created: 2026-04-20T16:49:35.488Z
     notes: []
   - _ulid: 01KPNWRA78HGZ4D06Q26CY9FKY
