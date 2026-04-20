@@ -103,6 +103,20 @@ features:
     tests: []
     traits: []
     tags: []
+    requirements:
+      - _ulid: 01KPNWYKR6518NMTQF4NBW27DM
+        slugs: []
+        title: App & Plugin Health Dashboard
+        type: requirement
+        description: Status monitoring for core services and installed MCP/Plugins.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:53:03.366Z
+        notes: []
     created: 2026-04-20T16:52:08.715Z
     notes: []
 notes: []
