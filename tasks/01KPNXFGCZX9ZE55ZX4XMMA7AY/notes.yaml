@@ -1,0 +1,33 @@
+notes:
+  - _ulid: 01KPNXFGCY5X808W7TFA9AAXV3
+    content: |-
+      Implementation notes (auto-generated from spec):
+
+      Real-time tracking of token consumption and cost savings from RTK/MCP/GitNexus.
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-20T17:02:16.990Z
+  - _ulid: 01KPNYH9TDBBMS0KWQCAK34V0D
+    content: Reset from in_progress to pending
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-20T17:20:44.365Z
+  - _ulid: 01KPNYPZX4BP72DQC5AFNJQ5QQ
+    content: "Starting implementation. Architecture: Zustand store for telemetry state, parser hook that
+      intercepts PTY data in handlePtyData flow, compact widget in terminal bar. Will parse Claude
+      Code status line patterns for token counts and costs."
+    supersedes: null
+    author: "@claude"
+    created_at: 2026-04-20T17:23:50.820Z
+  - _ulid: 01KPNYT9YFH43JX0JFDEMN7WM4
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 12am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-20T17:25:39.407Z
+  - _ulid: 01KPNYTJVBJT6WBDEEV91KX7CT
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 12am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-20T17:25:48.523Z

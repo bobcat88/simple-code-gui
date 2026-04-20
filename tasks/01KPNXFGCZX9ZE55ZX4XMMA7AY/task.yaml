@@ -1,0 +1,21 @@
+_ulid: 01KPNXFGCZX9ZE55ZX4XMMA7AY
+slugs:
+  - task-token-economics-telemetry
+title: "Implement: Token Economics & Telemetry"
+type: task
+spec_ref: "@token-economics"
+derivation: auto
+status: blocked
+blocked_by:
+  - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
+    12am (Europe/Paris)"
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+session_id: 01KPNYPS7F82VDQEYEGPBJF2MS
+created_at: 2026-04-20T17:02:16.991Z
+started_at: 2026-04-20T17:23:59.896Z
+todos: []
+automation: eligible

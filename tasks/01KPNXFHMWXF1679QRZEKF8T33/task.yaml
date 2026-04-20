@@ -1,0 +1,17 @@
+_ulid: 01KPNXFHMWXF1679QRZEKF8T33
+slugs:
+  - task-savings-telemetry-rtk-mcp
+title: "Implement: Savings Telemetry (RTK/MCP)"
+type: task
+spec_ref: "@01KPNWTRXKAQ76CQYFP8CA18X9"
+derivation: auto
+status: pending
+blocked_by: []
+depends_on:
+  - "@task-token-economics-telemetry"
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-04-20T17:02:18.268Z
+todos: []

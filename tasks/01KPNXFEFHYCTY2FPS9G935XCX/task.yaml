@@ -1,0 +1,17 @@
+_ulid: 01KPNXFEFHYCTY2FPS9G935XCX
+slugs:
+  - task-execution-state-persistence
+title: "Implement: Execution State Persistence"
+type: task
+spec_ref: "@01KPNWTNCEYS2WKY5VPT18MZTH"
+derivation: auto
+status: pending
+blocked_by: []
+depends_on:
+  - "@task-gsd-execution-engine"
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-04-20T17:02:15.025Z
+todos: []

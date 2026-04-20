@@ -1,0 +1,17 @@
+_ulid: 01KPNXFJ8J5Y8A07F0XAKGH06H
+slugs:
+  - task-token-burn-history
+title: "Implement: Token Burn History"
+type: task
+spec_ref: "@01KPNWTTH2GSHV3Q4W2W7F7KV8"
+derivation: auto
+status: pending
+blocked_by: []
+depends_on:
+  - "@task-token-economics-telemetry"
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-04-20T17:02:18.898Z
+todos: []

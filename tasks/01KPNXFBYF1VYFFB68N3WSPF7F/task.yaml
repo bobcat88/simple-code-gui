@@ -1,0 +1,16 @@
+_ulid: 01KPNXFBYF1VYFFB68N3WSPF7F
+slugs:
+  - task-gsd-execution-engine
+title: "Implement: GSD Execution Engine"
+type: task
+spec_ref: "@gsd-engine"
+derivation: auto
+status: pending
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-04-20T17:02:12.431Z
+todos: []

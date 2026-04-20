@@ -1,0 +1,17 @@
+_ulid: 01KPNXFSKSCJADKNJGETRD4KG0
+slugs:
+  - task-project-quick-switcher
+title: "Implement: Project Quick-Switcher"
+type: task
+spec_ref: "@01KPNWYGEC5WX1JKYWJ2WF0YB0"
+derivation: auto
+status: pending
+blocked_by: []
+depends_on:
+  - "@task-advanced-workspace-control"
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-04-20T17:02:26.425Z
+todos: []

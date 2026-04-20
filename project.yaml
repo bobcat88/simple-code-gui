@@ -7,10 +7,12 @@ includes:
   - modules/connectivity.yaml
   - modules/extensions.yaml
   - modules/ai-core.yaml
-kynetic: "1.0"
+kynetic: "1.1"
 project:
   status: stable
   name: Claude Terminal
   version: 1.3.57
 sessions:
   storage: local
+task_storage:
+  format: split

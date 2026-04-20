@@ -1,0 +1,17 @@
+_ulid: 01KPNXFQ614D8VM70HTCK0TTKJ
+slugs:
+  - task-task-assignment-view
+title: "Implement: Task Assignment View"
+type: task
+spec_ref: "@01KPNWYETJGSJZF1EGYXTBK7QD"
+derivation: auto
+status: pending
+blocked_by: []
+depends_on:
+  - "@task-advanced-orchestration-ui"
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-04-20T17:02:23.937Z
+todos: []

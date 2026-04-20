@@ -1,0 +1,18 @@
+_ulid: 01KPNXFVX9J0TAT177R2PJFPZ2
+slugs:
+  - task-system-operational-telemetry
+title: "Implement: System Operational Telemetry"
+type: task
+spec_ref: "@system-ops"
+derivation: auto
+status: in_progress
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-04-20T17:02:28.777Z
+started_at: 2026-04-20T17:04:23.598Z
+todos: []
+automation: eligible

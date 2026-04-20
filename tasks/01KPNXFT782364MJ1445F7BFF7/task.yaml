@@ -1,0 +1,17 @@
+_ulid: 01KPNXFT782364MJ1445F7BFF7
+slugs:
+  - task-home-usage-summary
+title: "Implement: Home Usage Summary"
+type: task
+spec_ref: "@01KPNWYJ0X2PM2NVYDP2C4VQBJ"
+derivation: auto
+status: pending
+blocked_by: []
+depends_on:
+  - "@task-advanced-workspace-control"
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-04-20T17:02:27.048Z
+todos: []

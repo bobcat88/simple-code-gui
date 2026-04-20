@@ -1,0 +1,17 @@
+_ulid: 01KPNXFCN02DFXBTRJK5DV9RTY
+slugs:
+  - task-phase-based-decomposition
+title: "Implement: Phase-based Decomposition"
+type: task
+spec_ref: "@01KPNWTGE0H4SR3YYF0YNTHT2D"
+derivation: auto
+status: pending
+blocked_by: []
+depends_on:
+  - "@task-gsd-execution-engine"
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-04-20T17:02:13.152Z
+todos: []

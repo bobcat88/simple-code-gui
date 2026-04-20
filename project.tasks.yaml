@@ -4,311 +4,165 @@
   title: "Implement: Multi-Provider AI Runtime"
   type: task
   spec_ref: "@ai-runtime"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on: []
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:07.897Z
-  notes:
-    - _ulid: 01KPNXF7GRJ2Z9B3P3XK9KYDV0
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Abstraction layer and routing for Claude, OpenAI, Gemini, and Ollama providers.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:07.896Z
-  todos: []
 - _ulid: 01KPNXF874YW06MJEMRD6WBS2H
   slugs:
     - task-provider-abstraction-interface
   title: "Implement: Provider Abstraction Interface"
   type: task
   spec_ref: "@01KPNWT9DJJYXS5J0HCP3WJ0R6"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-multi-provider-ai-runtime"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:08.612Z
-  notes:
-    - _ulid: 01KPNXF874XC8JHM7FEYF87885
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Unified trait/interface for different LLM providers (Claude, OpenAI, Gemini, Ollama).
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:08.612Z
-  todos: []
 - _ulid: 01KPNXF8THWPDJ9ND0NFXFSTXY
   slugs:
     - task-auth-api-key-management
   title: "Implement: Auth & API Key Management"
   type: task
   spec_ref: "@01KPNWTB6935QVDS6ANRD4PQ9M"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-multi-provider-ai-runtime"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:09.233Z
-  notes:
-    - _ulid: 01KPNXF8THPWG3VVCK1AVMHXXE
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Secure storage and retrieval of provider credentials in SQLite.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:09.233Z
-  todos: []
 - _ulid: 01KPNXF9EP6879NQPQQCPVK54H
   slugs:
     - task-model-routing-policies
   title: "Implement: Model Routing Policies"
   type: task
   spec_ref: "@01KPNWTCV0CY2KPET8VX2X699P"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-multi-provider-ai-runtime"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:09.878Z
-  notes:
-    - _ulid: 01KPNXF9EPTC4KA3QKJDMDJ6NE
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        System for selecting models based on task type (planning, patching, summarization).
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:09.878Z
-  todos: []
 - _ulid: 01KPNXFA29G7E6Q0SQQV0AZ366
   slugs:
     - task-named-model-plans
   title: "Implement: Named Model Plans"
   type: task
   spec_ref: "@01KPNWTEKMYMVHRE4AB0AE6EF5"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-multi-provider-ai-runtime"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:10.505Z
-  notes:
-    - _ulid: 01KPNXFA28341F0W0PEW9FBQY1
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        User-definable presets for cost/quality balance (e.g., Budget, High-Quality).
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:10.505Z
-  todos: []
 - _ulid: 01KPNXFBYF1VYFFB68N3WSPF7F
   slugs:
     - task-gsd-execution-engine
   title: "Implement: GSD Execution Engine"
   type: task
   spec_ref: "@gsd-engine"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on: []
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:12.431Z
-  notes:
-    - _ulid: 01KPNXFBYERYA2SJTWMT44ZCNZ
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Phase-based agent execution engine with verifier loops and wave-based orchestration.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:12.430Z
-  todos: []
 - _ulid: 01KPNXFCN02DFXBTRJK5DV9RTY
   slugs:
     - task-phase-based-decomposition
   title: "Implement: Phase-based Decomposition"
   type: task
   spec_ref: "@01KPNWTGE0H4SR3YYF0YNTHT2D"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-gsd-execution-engine"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:13.152Z
-  notes:
-    - _ulid: 01KPNXFCN0KWE1432B1FVJ3DFF
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Logic to break large tasks into sequential, manageable phases.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:13.152Z
-  todos: []
 - _ulid: 01KPNXFD88V5E0D1500S2DTTWD
   slugs:
     - task-wave-based-execution
   title: "Implement: Wave-based Execution"
   type: task
   spec_ref: "@01KPNWTJ4624RN9A805Q6P3GDN"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-gsd-execution-engine"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:13.768Z
-  notes:
-    - _ulid: 01KPNXFD889CYKD0WDEH5TBY44
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Orchestrator for executing task waves with dependency awareness.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:13.768Z
-  todos: []
 - _ulid: 01KPNXFDVVA32MNJ7BAB6DBH4N
   slugs:
     - task-verification-retry-loop
   title: "Implement: Verification & Retry Loop"
   type: task
   spec_ref: "@01KPNWTKQVEQPD9KC2V24BVMS7"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-gsd-execution-engine"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:14.395Z
-  notes:
-    - _ulid: 01KPNXFDVVZB7V03F8YPR10K9J
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Automated quality checks and retry logic for failed agent actions.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:14.395Z
-  todos: []
 - _ulid: 01KPNXFEFHYCTY2FPS9G935XCX
   slugs:
     - task-execution-state-persistence
   title: "Implement: Execution State Persistence"
   type: task
   spec_ref: "@01KPNWTNCEYS2WKY5VPT18MZTH"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-gsd-execution-engine"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:15.025Z
-  notes:
-    - _ulid: 01KPNXFEFH5CDQFFSEPWPNWEB2
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Tracking and resuming long-running agent sessions across app restarts.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:15.025Z
-  todos: []
 - _ulid: 01KPNXFGCZX9ZE55ZX4XMMA7AY
   slugs:
     - task-token-economics-telemetry
   title: "Implement: Token Economics & Telemetry"
   type: task
   spec_ref: "@token-economics"
-  derivation: auto
   status: blocked
   blocked_by:
     - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
       12am (Europe/Paris)"
   depends_on: []
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
-  session_id: 01KPNYPS7F82VDQEYEGPBJF2MS
+  notes_count: 5
+  todos_count: 0
   created_at: 2026-04-20T17:02:16.991Z
   started_at: 2026-04-20T17:23:59.896Z
-  notes:
-    - _ulid: 01KPNXFGCY5X808W7TFA9AAXV3
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Real-time tracking of token consumption and cost savings from RTK/MCP/GitNexus.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:16.990Z
-    - _ulid: 01KPNYH9TDBBMS0KWQCAK34V0D
-      content: Reset from in_progress to pending
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:20:44.365Z
-    - _ulid: 01KPNYPZX4BP72DQC5AFNJQ5QQ
-      content: "Starting implementation. Architecture: Zustand store for telemetry state, parser hook that
-        intercepts PTY data in handlePtyData flow, compact widget in terminal bar. Will parse Claude
-        Code status line patterns for token counts and costs."
-      supersedes: null
-      author: "@claude"
-      created_at: 2026-04-20T17:23:50.820Z
-    - _ulid: 01KPNYT9YFH43JX0JFDEMN7WM4
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 12am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:25:39.407Z
-    - _ulid: 01KPNYTJVBJT6WBDEEV91KX7CT
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 12am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:25:48.523Z
-  todos: []
   automation: eligible
 - _ulid: 01KPNXFH0H4KFJFGB30FYVE8KB
   slugs:
@@ -316,27 +170,16 @@
   title: "Implement: Live Token/Cost HUD"
   type: task
   spec_ref: "@01KPNWTQ5WY2JVHCYXXKDFCKQ6"
-  derivation: auto
   status: in_progress
   blocked_by: []
   depends_on:
     - "@task-token-economics-telemetry"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:17.617Z
   started_at: 2026-04-20T17:02:57.895Z
-  notes:
-    - _ulid: 01KPNXFH0HVFAMKVV4FJVQ2RN6
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Real-time UI component showing current session burn and budget status.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:17.617Z
-  todos: []
   automation: eligible
 - _ulid: 01KPNXFHMWXF1679QRZEKF8T33
   slugs:
@@ -344,310 +187,178 @@
   title: "Implement: Savings Telemetry (RTK/MCP)"
   type: task
   spec_ref: "@01KPNWTRXKAQ76CQYFP8CA18X9"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-token-economics-telemetry"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:18.268Z
-  notes:
-    - _ulid: 01KPNXFHMWXG0DWWEJ8V531G48
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Calculation and display of tokens saved by using RTK, MCP, and local intelligence.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:18.268Z
-  todos: []
 - _ulid: 01KPNXFJ8J5Y8A07F0XAKGH06H
   slugs:
     - task-token-burn-history
   title: "Implement: Token Burn History"
   type: task
   spec_ref: "@01KPNWTTH2GSHV3Q4W2W7F7KV8"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-token-economics-telemetry"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:18.898Z
-  notes:
-    - _ulid: 01KPNXFJ8J3WH2TGJR2RGYNB90
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        SQLite-backed logging of all token transactions for historical analysis.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:18.898Z
-  todos: []
 - _ulid: 01KPNXFJWFFFH5361QM99H9ZKY
   slugs:
     - task-budget-rate-limits
   title: "Implement: Budget & Rate Limits"
   type: task
   spec_ref: "@01KPNWTW6207547YKZBEXCN1R1"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-token-economics-telemetry"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:19.535Z
-  notes:
-    - _ulid: 01KPNXFJWF6AZB28RK3KSHD6FD
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Configurable caps on token usage per task or session.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:19.535Z
-  todos: []
 - _ulid: 01KPNXFMNKXAXQ6W16WB8WP8KQ
   slugs:
     - task-advanced-orchestration-ui
   title: "Implement: Advanced Orchestration UI"
   type: task
   spec_ref: "@orchestration-ui"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on: []
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:21.363Z
-  notes:
-    - _ulid: 01KPNXFMNJVSTBZ1CKD7C8255G
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        High-fidelity dashboard for agent status, activity feeds, and approval workflows.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:21.363Z
-  todos: []
 - _ulid: 01KPNXFN9BXSATN38W1MHCH332
   slugs:
     - task-real-time-activity-feed
   title: "Implement: Real-time Activity Feed"
   type: task
   spec_ref: "@01KPNWY9P99S2EB736NTXXJM4V"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-advanced-orchestration-ui"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:21.995Z
-  notes:
-    - _ulid: 01KPNXFN9BNYW2RN04V4HE7F16
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Visual log of all system and agent activities across the current session.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:21.995Z
-  todos: []
 - _ulid: 01KPNXFNX6HA0YE4WBYD7H4ZEC
   slugs:
     - task-agent-status-cards
   title: "Implement: Agent Status Cards"
   type: task
   spec_ref: "@01KPNWYBDWVTS6N37AHF3MWPW6"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-advanced-orchestration-ui"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:22.630Z
-  notes:
-    - _ulid: 01KPNXFNX60W40M6K6EW8WXC5X
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Detailed status display for individual agents (Planner, Builder, Reviewer).
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:22.630Z
-  todos: []
 - _ulid: 01KPNXFPHY75XBPSVDJ93Y9YAS
   slugs:
     - task-approval-workflow-ui
   title: "Implement: Approval Workflow UI"
   type: task
   spec_ref: "@01KPNWYD38HED3GG5Y9BMWS814"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-advanced-orchestration-ui"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:23.294Z
-  notes:
-    - _ulid: 01KPNXFPHX1SNBJBDMBRKYBHPK
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Interactive prompts for user review of proposed agent modifications.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:23.294Z
-  todos: []
 - _ulid: 01KPNXFQ614D8VM70HTCK0TTKJ
   slugs:
     - task-task-assignment-view
   title: "Implement: Task Assignment View"
   type: task
   spec_ref: "@01KPNWYETJGSJZF1EGYXTBK7QD"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-advanced-orchestration-ui"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:23.937Z
-  notes:
-    - _ulid: 01KPNXFQ61CSQTY74BBD4BQNQW
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Management view for assigning agents to specific repositories or tasks.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:23.937Z
-  todos: []
 - _ulid: 01KPNXFS0NF89NNDQE8Q4P3R27
   slugs:
     - task-advanced-workspace-control
   title: "Implement: Advanced Workspace Control"
   type: task
   spec_ref: "@workspace-control"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on: []
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:25.813Z
-  notes:
-    - _ulid: 01KPNXFS0NXCY3HZ7T47RBZND0
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Enhanced project switcher and home screen with usage summaries and alerts.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:25.813Z
-  todos: []
 - _ulid: 01KPNXFSKSCJADKNJGETRD4KG0
   slugs:
     - task-project-quick-switcher
   title: "Implement: Project Quick-Switcher"
   type: task
   spec_ref: "@01KPNWYGEC5WX1JKYWJ2WF0YB0"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-advanced-workspace-control"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:26.425Z
-  notes:
-    - _ulid: 01KPNXFSKSY7Q2B5GYWE5YJDEH
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Global hotkey or UI element to jump between recent workspaces.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:26.425Z
-  todos: []
 - _ulid: 01KPNXFT782364MJ1445F7BFF7
   slugs:
     - task-home-usage-summary
   title: "Implement: Home Usage Summary"
   type: task
   spec_ref: "@01KPNWYJ0X2PM2NVYDP2C4VQBJ"
-  derivation: auto
   status: pending
   blocked_by: []
   depends_on:
     - "@task-advanced-workspace-control"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:27.048Z
-  notes:
-    - _ulid: 01KPNXFT780KJ5M6S3VWB82YA5
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Dashboard view of total token usage and activity across all projects.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:27.048Z
-  todos: []
 - _ulid: 01KPNXFVX9J0TAT177R2PJFPZ2
   slugs:
     - task-system-operational-telemetry
   title: "Implement: System Operational Telemetry"
   type: task
   spec_ref: "@system-ops"
-  derivation: auto
   status: in_progress
   blocked_by: []
   depends_on: []
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:28.777Z
   started_at: 2026-04-20T17:04:23.598Z
-  notes:
-    - _ulid: 01KPNXFVX83NE032SDSRCB13FB
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Operational monitoring for app health, crash reporting, and background jobs.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:28.777Z
-  todos: []
   automation: eligible
 - _ulid: 01KPNXFWGCXQK2P73CKDWCTHKK
   slugs:
@@ -655,27 +366,16 @@
   title: "Implement: App & Plugin Health Dashboard"
   type: task
   spec_ref: "@01KPNWYKR6518NMTQF4NBW27DM"
-  derivation: auto
   status: in_progress
   blocked_by: []
   depends_on:
     - "@task-system-operational-telemetry"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:29.388Z
   started_at: 2026-04-20T17:03:02.992Z
-  notes:
-    - _ulid: 01KPNXFWGCBEG9Z5TX8W4WN8KT
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Status monitoring for core services and installed MCP/Plugins.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:29.388Z
-  todos: []
   automation: eligible
 - _ulid: 01KPNXFX3WB1JDPRKSX3YQYNCS
   slugs:
@@ -683,25 +383,14 @@
   title: "Implement: Background Jobs Visibility"
   type: task
   spec_ref: "@01KPNWYNG72RVJCSF9M81S3P4G"
-  derivation: auto
   status: in_progress
   blocked_by: []
   depends_on:
     - "@task-system-operational-telemetry"
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:30.012Z
   started_at: 2026-04-20T17:03:00.414Z
-  notes:
-    - _ulid: 01KPNXFX3WA6SWJK8Q65NYQMQM
-      content: |-
-        Implementation notes (auto-generated from spec):
-
-        Panel to monitor running background processes (scans, indices, updates).
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T17:02:30.012Z
-  todos: []
   automation: eligible

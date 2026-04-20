@@ -1,0 +1,9 @@
+notes:
+  - _ulid: 01KPNXFCN0KWE1432B1FVJ3DFF
+    content: |-
+      Implementation notes (auto-generated from spec):
+
+      Logic to break large tasks into sequential, manageable phases.
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-20T17:02:13.152Z
