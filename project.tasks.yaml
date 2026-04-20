@@ -188,10 +188,8 @@
   title: "Implement: Token Economics & Telemetry"
   type: task
   spec_ref: "@token-economics"
-  status: blocked
-  blocked_by:
-    - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
-      12am (Europe/Paris)"
+  status: pending
+  blocked_by: []
   depends_on: []
   priority: 3
   tags: []
