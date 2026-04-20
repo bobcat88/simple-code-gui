@@ -162,7 +162,7 @@ features:
     description: Real-time tracking of token consumption and cost savings from RTK/MCP/GitNexus.
     status:
       maturity: draft
-      implementation: in_progress
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
