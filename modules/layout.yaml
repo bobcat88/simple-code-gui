@@ -165,6 +165,9 @@ features:
         title: Home Usage Summary
         type: requirement
         description: Dashboard view of total token usage and activity across all projects.
+        status:
+          maturity: draft
+          implementation: in_progress
         depends_on: []
         implements: []
         relates_to: []
