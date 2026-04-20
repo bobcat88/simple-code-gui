@@ -166,6 +166,9 @@ features:
         title: Live Token/Cost HUD
         type: requirement
         description: Real-time UI component showing current session burn and budget status.
+        status:
+          maturity: draft
+          implementation: in_progress
         depends_on: []
         implements: []
         relates_to: []
