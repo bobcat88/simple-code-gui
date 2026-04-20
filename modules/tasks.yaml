@@ -115,6 +115,9 @@ features:
         title: Real-time Activity Feed
         type: requirement
         description: Visual log of all system and agent activities across the current session.
+        status:
+          maturity: draft
+          implementation: in_progress
         depends_on: []
         implements: []
         relates_to: []
