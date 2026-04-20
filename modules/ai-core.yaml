@@ -120,6 +120,19 @@ features:
         tags: []
         created: 2026-04-20T16:50:50.631Z
         notes: []
+      - _ulid: 01KPNWTKQVEQPD9KC2V24BVMS7
+        slugs: []
+        title: Verification & Retry Loop
+        type: requirement
+        description: Automated quality checks and retry logic for failed agent actions.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:50:52.284Z
+        notes: []
     created: 2026-04-20T16:49:35.488Z
     notes: []
   - _ulid: 01KPNWRA78HGZ4D06Q26CY9FKY
