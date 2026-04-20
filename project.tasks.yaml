@@ -699,3 +699,28 @@ tasks:
         author: Johan.P
         created_at: 2026-04-20T16:53:24.493Z
     todos: []
+  - _ulid: 01KPNWZA5PYK6KXGNRK9693EYQ
+    slugs:
+      - task-advanced-workspace-control
+    title: "Implement: Advanced Workspace Control"
+    type: task
+    spec_ref: "@workspace-control"
+    derivation: auto
+    status: pending
+    blocked_by: []
+    depends_on: []
+    context: []
+    priority: 3
+    tags: []
+    vcs_refs: []
+    created_at: 2026-04-20T16:53:26.326Z
+    notes:
+      - _ulid: 01KPNWZA5N54KZ5W14C6V63Z16
+        content: |-
+          Implementation notes (auto-generated from spec):
+
+          Enhanced project switcher and home screen with usage summaries and alerts.
+        supersedes: null
+        author: Johan.P
+        created_at: 2026-04-20T16:53:26.326Z
+    todos: []
