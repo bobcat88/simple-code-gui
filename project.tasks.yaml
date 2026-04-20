@@ -385,7 +385,7 @@
   title: "Implement: Advanced Workspace Control"
   type: task
   spec_ref: "@workspace-control"
-  status: in_progress
+  status: pending_review
   blocked_by: []
   depends_on: []
   priority: 3
@@ -394,6 +394,7 @@
   todos_count: 0
   created_at: 2026-04-20T17:02:25.813Z
   started_at: 2026-04-20T22:25:51.726Z
+  submitted_at: 2026-04-20T22:31:11.834Z
 - _ulid: 01KPNXFSKSCJADKNJGETRD4KG0
   slugs:
     - task-project-quick-switcher
