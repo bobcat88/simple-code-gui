@@ -441,3 +441,28 @@ tasks:
         author: Johan.P
         created_at: 2026-04-20T16:51:43.607Z
     todos: []
+  - _ulid: 01KPNWW7TCMS5JCRF2ACFVC9FM
+    slugs:
+      - task-token-economics-telemetry
+    title: "Implement: Token Economics & Telemetry"
+    type: task
+    spec_ref: "@token-economics"
+    derivation: auto
+    status: pending
+    blocked_by: []
+    depends_on: []
+    context: []
+    priority: 3
+    tags: []
+    vcs_refs: []
+    created_at: 2026-04-20T16:51:45.612Z
+    notes:
+      - _ulid: 01KPNWW7TCFK134J6GTZ355C5P
+        content: |-
+          Implementation notes (auto-generated from spec):
+
+          Real-time tracking of token consumption and cost savings from RTK/MCP/GitNexus.
+        supersedes: null
+        author: Johan.P
+        created_at: 2026-04-20T16:51:45.612Z
+    todos: []
