@@ -96,33 +96,15 @@
   title: "Implement: GSD Execution Engine"
   type: task
   spec_ref: "@gsd-engine"
-  status: blocked
-  blocked_by:
-    - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
-      12am (Europe/Paris)"
+  status: in_progress
+  blocked_by: []
   depends_on: []
   priority: 3
   tags: []
+  notes_count: 2
+  todos_count: 0
   created_at: 2026-04-20T17:02:12.431Z
-  notes:
-    - _ulid: 01KPPC9F6FG10KJXXEZXEGB8VQ
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 12am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T21:21:07.791Z
-    - _ulid: 01KPPC9W2M3FRB98VXCWY4ZXR4
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 12am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T21:21:20.981Z
-    - _ulid: 01KPPCA9ZMGQSQDJAK8EHCRR0J
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 12am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T21:21:35.220Z
+  started_at: 2026-04-20T21:43:08.507Z
   automation: eligible
 - _ulid: 01KPNXFCN02DFXBTRJK5DV9RTY
   slugs:

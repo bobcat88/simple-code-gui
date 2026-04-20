@@ -5,7 +5,7 @@ title: "Implement: GSD Execution Engine"
 type: task
 spec_ref: "@gsd-engine"
 derivation: auto
-status: pending
+status: in_progress
 blocked_by: []
 depends_on: []
 context: []
@@ -20,6 +20,17 @@ history:
         previous: null
     command: task-set
     timestamp: 2026-04-20T21:20:18.277Z
+  - author: Johan.P
+    changes:
+      status:
+        new: in_progress
+        previous: pending
+      started_at:
+        new: 2026-04-20T21:43:08.507Z
+        previous: null
+    command: task-start
+    timestamp: 2026-04-20T21:43:08.507Z
 created_at: 2026-04-20T17:02:12.431Z
+started_at: 2026-04-20T21:43:08.507Z
 todos: []
 automation: eligible
