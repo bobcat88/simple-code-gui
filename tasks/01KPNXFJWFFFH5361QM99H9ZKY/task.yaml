@@ -5,7 +5,7 @@ title: "Implement: Budget & Rate Limits"
 type: task
 spec_ref: "@01KPNWTW6207547YKZBEXCN1R1"
 derivation: auto
-status: in_progress
+status: pending_review
 blocked_by: []
 depends_on:
   - "@task-token-economics-telemetry"
@@ -13,6 +13,14 @@ context: []
 priority: 3
 tags: []
 vcs_refs: []
+submission_linkage:
+  review_url: null
+  branch: dispatch/task/task-budget-rate-limits/01kpnxfj
+  captured_at: 2026-04-20T22:24:02.785Z
+  commit: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
+  remote: null
+  remote_url: null
+  upstream_ref: null
 history:
   - author: Johan.P
     changes:
@@ -24,6 +32,27 @@ history:
         previous: null
     command: task-start
     timestamp: 2026-04-20T22:19:25.603Z
+  - author: Johan.P
+    changes:
+      status:
+        new: pending_review
+        previous: in_progress
+      submission_linkage:
+        new:
+          review_url: null
+          branch: dispatch/task/task-budget-rate-limits/01kpnxfj
+          captured_at: 2026-04-20T22:24:02.785Z
+          commit: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
+          remote: null
+          remote_url: null
+          upstream_ref: null
+        previous: null
+      submitted_at:
+        new: 2026-04-20T22:24:02.791Z
+        previous: null
+    command: task-submit
+    timestamp: 2026-04-20T22:24:02.792Z
 created_at: 2026-04-20T17:02:19.535Z
 started_at: 2026-04-20T22:19:25.603Z
+submitted_at: 2026-04-20T22:24:02.791Z
 todos: []
