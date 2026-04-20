@@ -210,7 +210,7 @@ features:
         description: Calculation and display of tokens saved by using RTK, MCP, and local intelligence.
         status:
           maturity: draft
-          implementation: in_progress
+          implementation: implemented
         depends_on: []
         implements: []
         relates_to: []
