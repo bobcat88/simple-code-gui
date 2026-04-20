@@ -1,0 +1,113 @@
+{
+  "workspaceId": "dispatch-workspace-01KPNXFBYF1VYFFB68N3WSPF7F",
+  "taskRef": "@01KPNXFBYF1VYFFB68N3WSPF7F",
+  "taskSlug": "task-gsd-execution-engine",
+  "baseBranch": "main",
+  "baseBranchPoint": "d270debc807a39e17556d3d1db6669aaf29664f8",
+  "mergeTargetBranch": "main",
+  "integrationTargetBranch": "main",
+  "integrationTargetCommit": "d270debc807a39e17556d3d1db6669aaf29664f8",
+  "canonicalBranch": "dispatch/task/task-gsd-execution-engine/01kpnxfb",
+  "canonicalBranchHead": "d270debc807a39e17556d3d1db6669aaf29664f8",
+  "branchProvenance": {
+    "ownership": "dispatcher-managed",
+    "source": "provisioned",
+    "remote_ref": null,
+    "adopted_from": null,
+    "adopted_at": null,
+    "rehydrated": null
+  },
+  "publicationMode": "pull_request",
+  "integrationState": "pending",
+  "integrationOutcome": "pull_request",
+  "integrationUpdatedAt": "2026-04-20T21:21:38.921Z",
+  "worktreeRoot": "/home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees",
+  "workerWorktreeDir": "/home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-gsd-execution-engine-01kpnxfb",
+  "reviewerWorktreeDir": null,
+  "lifecycleState": "ready",
+  "activeRole": null,
+  "bootstrapState": {
+    "status": "succeeded",
+    "configHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "canonicalBranchHead": "d270debc807a39e17556d3d1db6669aaf29664f8",
+    "lastRunAt": "2026-04-20T21:20:56.305Z",
+    "invalidationReasons": [],
+    "steps": [],
+    "failureMessage": null,
+    "lastRole": "worker",
+    "roleStates": {
+      "worker": {
+        "status": "succeeded",
+        "configHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "canonicalBranchHead": "d270debc807a39e17556d3d1db6669aaf29664f8",
+        "lastRunAt": "2026-04-20T21:20:56.305Z",
+        "invalidationReasons": [],
+        "steps": [],
+        "failureMessage": null
+      },
+      "reviewer": {
+        "status": "not_run",
+        "configHash": null,
+        "canonicalBranchHead": null,
+        "lastRunAt": null,
+        "invalidationReasons": [],
+        "steps": [],
+        "failureMessage": null
+      }
+    }
+  },
+  "healthState": {
+    "status": "healthy",
+    "summary": "Workspace record matches current git branch and worktree state.",
+    "issues": [],
+    "updated_at": "2026-04-20T21:21:38.921Z"
+  },
+  "cleanupState": {
+    "status": "not_scheduled",
+    "eligible": false,
+    "reason": null,
+    "detail": null,
+    "updated_at": "2026-04-20T21:21:38.921Z"
+  },
+  "healthStatus": "healthy",
+  "healthReason": null,
+  "bootstrap": {
+    "status": "succeeded",
+    "configHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "canonicalBranchHead": "d270debc807a39e17556d3d1db6669aaf29664f8",
+    "lastRunAt": "2026-04-20T21:20:56.305Z",
+    "invalidationReasons": [],
+    "steps": [],
+    "failureMessage": null,
+    "lastRole": "worker",
+    "roleStates": {
+      "worker": {
+        "status": "succeeded",
+        "configHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "canonicalBranchHead": "d270debc807a39e17556d3d1db6669aaf29664f8",
+        "lastRunAt": "2026-04-20T21:20:56.305Z",
+        "invalidationReasons": [],
+        "steps": [],
+        "failureMessage": null
+      },
+      "reviewer": {
+        "status": "not_run",
+        "configHash": null,
+        "canonicalBranchHead": null,
+        "lastRunAt": null,
+        "invalidationReasons": [],
+        "steps": [],
+        "failureMessage": null
+      }
+    }
+  },
+  "cleanupEligible": false,
+  "cleanupReason": null,
+  "cleanupScheduledAt": null,
+  "cleanupBlockedReason": null,
+  "createdAt": "2026-04-20T21:20:54.557Z",
+  "updatedAt": "2026-04-20T21:21:38.921Z",
+  "lastReconciledAt": "2026-04-20T21:21:38.921Z",
+  "lastActiveAt": "2026-04-20T21:21:28.638Z",
+  "closedAt": null
+}
