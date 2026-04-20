@@ -20,6 +20,9 @@ features:
     title: Multi-Provider AI Runtime
     type: feature
     description: Abstraction layer and routing for Claude, OpenAI, Gemini, and Ollama providers.
+    status:
+      maturity: draft
+      implementation: in_progress
     depends_on: []
     implements: []
     relates_to: []
