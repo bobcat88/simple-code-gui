@@ -313,7 +313,7 @@ workspaces:
         head: d270debc807a39e17556d3d1db6669aaf29664f8
         last_seen_at: 2026-04-20T17:25:42.115Z
         path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-token-economics-telemetry-01kpnxfg
-  - active_role: worker
+  - active_role: null
     base_branch_point: d270debc807a39e17556d3d1db6669aaf29664f8
     bootstrap:
       status: succeeded
@@ -355,12 +355,12 @@ workspaces:
       detail: null
       eligible: false
       reason: null
-      updated_at: 2026-04-20T21:21:05.059Z
+      updated_at: 2026-04-20T21:21:19.924Z
     health:
       status: healthy
       issues: []
       summary: Workspace record matches current git branch and worktree state.
-      updated_at: 2026-04-20T21:21:11.977Z
+      updated_at: 2026-04-20T21:21:19.924Z
     integration:
       status: pending
       detail: null
@@ -368,17 +368,17 @@ workspaces:
       publication_mode: pull_request
       target_branch: main
       target_commit: d270debc807a39e17556d3d1db6669aaf29664f8
-      updated_at: 2026-04-20T21:21:05.059Z
-    lifecycle_state: active
+      updated_at: 2026-04-20T21:21:19.924Z
+    lifecycle_state: ready
     resolved_base_branch: main
     task_ref: "@01KPNXF7GSCJ2TTZ0JPD63YX18"
     task_slug: task-multi-provider-ai-runtime
     timestamps:
       closed_at: null
       last_active_at: 2026-04-20T21:21:11.977Z
-      last_reconciled_at: 2026-04-20T21:21:11.977Z
+      last_reconciled_at: 2026-04-20T21:21:19.924Z
       created_at: 2026-04-20T21:20:52.601Z
-      updated_at: 2026-04-20T21:21:11.977Z
+      updated_at: 2026-04-20T21:21:19.924Z
     workspace_id: dispatch-workspace-01KPNXF7GSCJ2TTZ0JPD63YX18
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
