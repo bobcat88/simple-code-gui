@@ -143,6 +143,20 @@ features:
     tests: []
     traits: []
     tags: []
+    requirements:
+      - _ulid: 01KPNWYGEC5WX1JKYWJ2WF0YB0
+        slugs: []
+        title: Project Quick-Switcher
+        type: requirement
+        description: Global hotkey or UI element to jump between recent workspaces.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:52:59.980Z
+        notes: []
     created: 2026-04-20T16:52:06.752Z
     notes: []
 notes: []
