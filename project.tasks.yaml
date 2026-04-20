@@ -89,7 +89,7 @@ tasks:
     spec_ref: null
     meta_ref: null
     plan_ref: null
-    status: in_progress
+    status: pending_review
     blocked_by: []
     depends_on: []
     context: []
@@ -98,9 +98,18 @@ tasks:
       - onboarding
       - ui
     vcs_refs: []
+    submission_linkage:
+      review_url: null
+      branch: task/initialization-wizard-01KPJA33
+      captured_at: 2026-04-20T16:34:16.493Z
+      commit: 5b33785bbcc429b2dac2a1c5bd939b42fac86b29
+      remote: origin
+      remote_url: https://github.com/bobcat88/simple-code-gui
+      upstream_ref: refs/heads/task/initialization-wizard-01KPJA33
     session_id: null
     created_at: 2026-04-19T07:25:44.465Z
     started_at: 2026-04-19T09:14:08.736Z
+    submitted_at: 2026-04-20T16:34:16.498Z
     notes:
       - _ulid: 01KPJA8Q0KGMQ5C5D9T9NTC5DC
         content: "Starting implementation. Plan: Rust scanner backend + multi-step wizard UI. Scanner reads
