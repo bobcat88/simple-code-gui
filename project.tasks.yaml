@@ -570,3 +570,28 @@ tasks:
         author: Johan.P
         created_at: 2026-04-20T16:51:48.274Z
     todos: []
+  - _ulid: 01KPNWZ5SXG75JV78R7TNTB6XC
+    slugs:
+      - task-advanced-orchestration-ui
+    title: "Implement: Advanced Orchestration UI"
+    type: task
+    spec_ref: "@orchestration-ui"
+    derivation: auto
+    status: pending
+    blocked_by: []
+    depends_on: []
+    context: []
+    priority: 3
+    tags: []
+    vcs_refs: []
+    created_at: 2026-04-20T16:53:21.853Z
+    notes:
+      - _ulid: 01KPNWZ5SXS33KRX5W1AYCVJP5
+        content: |-
+          Implementation notes (auto-generated from spec):
+
+          High-fidelity dashboard for agent status, activity feeds, and approval workflows.
+        supersedes: null
+        author: Johan.P
+        created_at: 2026-04-20T16:53:21.853Z
+    todos: []
