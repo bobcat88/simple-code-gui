@@ -394,34 +394,16 @@
   title: "Implement: System Operational Telemetry"
   type: task
   spec_ref: "@system-ops"
-  status: blocked
-  blocked_by:
-    - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
-      12am (Europe/Paris)"
+  status: pending_review
+  blocked_by: []
   depends_on: []
   priority: 3
   tags: []
+  notes_count: 1
+  todos_count: 0
   created_at: 2026-04-20T17:02:28.777Z
   started_at: 2026-04-20T17:04:23.598Z
-  notes:
-    - _ulid: 01KPPCAKMHBEET5K4A6YPW3932
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 12am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T21:21:45.105Z
-    - _ulid: 01KPPCB2X6KHWVZ3V0DNY4YH1D
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 12am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T21:22:00.742Z
-    - _ulid: 01KPPCBDWYYSW3BEBTF6RQVB7S
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 12am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T21:22:11.998Z
+  submitted_at: 2026-04-20T21:58:58.455Z
   automation: eligible
 - _ulid: 01KPNXFWGCXQK2P73CKDWCTHKK
   slugs:
