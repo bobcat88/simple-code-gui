@@ -146,6 +146,19 @@ features:
         tags: []
         created: 2026-04-20T16:52:56.553Z
         notes: []
+      - _ulid: 01KPNWYETJGSJZF1EGYXTBK7QD
+        slugs: []
+        title: Task Assignment View
+        type: requirement
+        description: Management view for assigning agents to specific repositories or tasks.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:52:58.322Z
+        notes: []
     created: 2026-04-20T16:52:04.804Z
     notes: []
 notes: []
