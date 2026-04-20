@@ -775,3 +775,29 @@ tasks:
         author: Johan.P
         created_at: 2026-04-20T16:53:29.360Z
     todos: []
+  - _ulid: 01KPNWZDRBA0503RR4P0ST29H6
+    slugs:
+      - task-app-plugin-health-dashboard
+    title: "Implement: App & Plugin Health Dashboard"
+    type: task
+    spec_ref: "@01KPNWYKR6518NMTQF4NBW27DM"
+    derivation: auto
+    status: pending
+    blocked_by: []
+    depends_on:
+      - "@task-system-operational-telemetry"
+    context: []
+    priority: 3
+    tags: []
+    vcs_refs: []
+    created_at: 2026-04-20T16:53:29.995Z
+    notes:
+      - _ulid: 01KPNWZDRBQ6AZMVCP5XKPVWTG
+        content: |-
+          Implementation notes (auto-generated from spec):
+
+          Status monitoring for core services and installed MCP/Plugins.
+        supersedes: null
+        author: Johan.P
+        created_at: 2026-04-20T16:53:29.995Z
+    todos: []
