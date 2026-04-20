@@ -518,3 +518,29 @@ tasks:
         author: Johan.P
         created_at: 2026-04-20T16:51:46.932Z
     todos: []
+  - _ulid: 01KPNWW9T27E250N4ZHK5T0CEA
+    slugs:
+      - task-token-burn-history
+    title: "Implement: Token Burn History"
+    type: task
+    spec_ref: "@01KPNWTTH2GSHV3Q4W2W7F7KV8"
+    derivation: auto
+    status: pending
+    blocked_by: []
+    depends_on:
+      - "@task-token-economics-telemetry"
+    context: []
+    priority: 3
+    tags: []
+    vcs_refs: []
+    created_at: 2026-04-20T16:51:47.650Z
+    notes:
+      - _ulid: 01KPNWW9T2E39131R3B9EB1B2D
+        content: |-
+          Implementation notes (auto-generated from spec):
+
+          SQLite-backed logging of all token transactions for historical analysis.
+        supersedes: null
+        author: Johan.P
+        created_at: 2026-04-20T16:51:47.650Z
+    todos: []
