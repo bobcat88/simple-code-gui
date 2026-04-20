@@ -167,6 +167,10 @@ features:
         id: ac-1
         then: The system parses and stores token counts per session in the telemetry store
         when: Token usage data appears in terminal output
+      - given: Token data has been collected for one or more sessions
+        id: ac-2
+        then: Session token totals, estimated cost, and cumulative totals are displayed
+        when: The user views the telemetry panel
     tags: []
     requirements:
       - _ulid: 01KPNWTQ5WY2JVHCYXXKDFCKQ6
