@@ -53,6 +53,19 @@ features:
         tags: []
         created: 2026-04-20T16:50:43.529Z
         notes: []
+      - _ulid: 01KPNWTCV0CY2KPET8VX2X699P
+        slugs: []
+        title: Model Routing Policies
+        type: requirement
+        description: System for selecting models based on task type (planning, patching, summarization).
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:50:45.216Z
+        notes: []
     created: 2026-04-20T16:49:33.771Z
     notes: []
   - _ulid: 01KPNWR8R0ZM1G5XD8NWD50KJX
