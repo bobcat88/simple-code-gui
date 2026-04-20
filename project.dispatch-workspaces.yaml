@@ -279,12 +279,17 @@ workspaces:
       detail: integrated-into-base-branch
       eligible: true
       reason: integrated-into-base-branch
-      updated_at: 2026-04-20T22:24:02.685Z
+      updated_at: 2026-04-20T22:26:02.643Z
     health:
-      status: healthy
-      issues: []
-      summary: Workspace record matches current git branch and worktree state.
-      updated_at: 2026-04-20T22:24:02.685Z
+      status: stale
+      issues:
+        - code: missing_worker_worktree
+          message: Worker worktree
+            "/home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-token-economics-telemetry-01kpnxfg"
+            is missing or no longer registered.
+          suggestion: Re-provision the worker worktree from the recorded canonical branch.
+      summary: Workspace registry record is stale and needs reconciliation.
+      updated_at: 2026-04-20T22:26:02.643Z
     integration:
       status: merged
       detail: integration:merged
@@ -292,17 +297,17 @@ workspaces:
       publication_mode: pull_request
       target_branch: main
       target_commit: d270debc807a39e17556d3d1db6669aaf29664f8
-      updated_at: 2026-04-20T22:24:02.685Z
-    lifecycle_state: closing
+      updated_at: 2026-04-20T22:26:02.643Z
+    lifecycle_state: stale
     resolved_base_branch: main
     task_ref: "@01KPNXFGCZX9ZE55ZX4XMMA7AY"
     task_slug: task-token-economics-telemetry
     timestamps:
       closed_at: null
       last_active_at: 2026-04-20T22:10:05.136Z
-      last_reconciled_at: 2026-04-20T22:24:05.439Z
+      last_reconciled_at: 2026-04-20T22:26:02.643Z
       created_at: 2026-04-20T17:23:42.274Z
-      updated_at: 2026-04-20T22:24:05.439Z
+      updated_at: 2026-04-20T22:26:02.643Z
     workspace_id: dispatch-workspace-01KPNXFGCZX9ZE55ZX4XMMA7AY
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
