@@ -109,6 +109,9 @@ features:
         title: App & Plugin Health Dashboard
         type: requirement
         description: Status monitoring for core services and installed MCP/Plugins.
+        status:
+          maturity: draft
+          implementation: in_progress
         depends_on: []
         implements: []
         relates_to: []
