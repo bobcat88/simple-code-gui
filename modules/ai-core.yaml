@@ -200,6 +200,19 @@ features:
         tags: []
         created: 2026-04-20T16:50:59.235Z
         notes: []
+      - _ulid: 01KPNWTW6207547YKZBEXCN1R1
+        slugs: []
+        title: Budget & Rate Limits
+        type: requirement
+        description: Configurable caps on token usage per task or session.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:51:00.931Z
+        notes: []
     created: 2026-04-20T16:49:37.000Z
     notes: []
 notes: []
