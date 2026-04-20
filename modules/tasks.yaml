@@ -3,95 +3,109 @@ slugs:
   - tasks
 title: Task Management
 type: module
+description: Integrated task tracking via Beads and Kspec backends with unified adapter pattern
 status:
   maturity: draft
   implementation: not_started
-description: Integrated task tracking via Beads and Kspec backends with unified adapter pattern
-tags:
-  - feature
 depends_on: []
 implements: []
 relates_to: []
 tests: []
 traits: []
-notes: []
+tags:
+  - feature
 features:
   - _ulid: 01KK67D0FDNH5K951SXXWFSQYM
     slugs:
       - beads-backend
     title: Beads Task Backend
     type: feature
-    tags: []
     description: Task CRUD via Beads CLI (bd command). File watchers on .beads/ directory with 500ms
       debounce. Task ID validation, shell injection prevention via spawn().
+    status:
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
-    notes: []
+    tags: []
     created: 2026-03-08T08:00:44.525Z
-    status:
-      implementation: implemented
+    notes: []
   - _ulid: 01KK67D2TP6ANDE0XJR4WWXKAF
     slugs:
       - kspec-backend
     title: Kspec Task Backend
     type: feature
-    tags: []
     description: Spec-driven task management via kspec CLI. Daemon lifecycle management, auto-injection
       of task instructions into CLAUDE.md, dispatch for autonomous agents.
+    status:
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
-    notes: []
+    tags: []
     created: 2026-03-08T08:00:46.934Z
-    status:
-      implementation: implemented
+    notes: []
   - _ulid: 01KK67D43YDQQSPB0N6QEN22Q4
     slugs:
       - task-adapter
     title: Unified Task Adapter
     type: feature
-    tags: []
     description: Adapter pattern abstracting Beads and Kspec backends behind a unified TaskAdapter
       interface. Auto-detection of initialized backend, transparent routing, migration support.
+    status:
+      maturity: draft
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
-    notes: []
-    created: 2026-03-08T08:00:48.254Z
     acceptance_criteria:
-      - id: ac-1
-        given: a project has kspec initialized
-        when: the task panel loads
+      - given: a project has kspec initialized
+        id: ac-1
         then: the kspec adapter is auto-detected and used for all task operations transparently
-      - id: ac-2
-        given: a project has beads initialized
-        when: user clicks upgrade to kspec
+        when: the task panel loads
+      - given: a project has beads initialized
+        id: ac-2
         then: tasks are migrated from beads to kspec format and the adapter switches to kspec backend
-    status:
-      maturity: draft
-      implementation: implemented
+        when: user clicks upgrade to kspec
+    tags: []
+    created: 2026-03-08T08:00:48.254Z
+    notes: []
   - _ulid: 01KK67D5YWCHVC8RJGVH5MGVKD
     slugs:
       - task-panel
     title: Task Panel UI
     type: feature
-    tags: []
     description: "Collapsible bottom panel showing task list with filtering, sorting, inline editing,
       status cycling, create/detail modals, and resizable height. State machine: loading →
       not_installed → not_initialized → ready."
+    status:
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
-    notes: []
+    tags: []
     created: 2026-03-08T08:00:50.140Z
-    status:
-      implementation: implemented
+    notes: []
+  - _ulid: 01KPNWWTJ4QM238RFJP3APGK9P
+    slugs:
+      - orchestration-ui
+    title: Advanced Orchestration UI
+    type: feature
+    description: High-fidelity dashboard for agent status, activity feeds, and approval workflows.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-04-20T16:52:04.804Z
+    notes: []
+notes: []
