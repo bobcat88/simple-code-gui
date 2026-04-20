@@ -66,7 +66,7 @@ export function IntelligenceSidebar({
     return (
       <div 
         style={{ width }}
-        className="h-full border-l border-white/10 bg-black/20 backdrop-blur-xl flex flex-col items-center justify-center p-8 text-center"
+        className="h-full glass-sidebar flex flex-col items-center justify-center p-8 text-center"
       >
         <Box className="w-12 h-12 text-white/20 mb-4" />
         <p className="text-white/40 text-sm">No project intelligence available. Select a project to scan.</p>
