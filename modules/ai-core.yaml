@@ -175,6 +175,10 @@ features:
         id: ac-3
         then: RTK savings data from rtk gain is displayed alongside raw token usage
         when: The telemetry panel renders
+      - given: Multiple terminal sessions are active
+        id: ac-4
+        then: Per-session and aggregate totals update in real-time without page refresh
+        when: Token data updates in any session
     tags: []
     requirements:
       - _ulid: 01KPNWTQ5WY2JVHCYXXKDFCKQ6
