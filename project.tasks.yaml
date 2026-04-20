@@ -125,7 +125,7 @@ tasks:
     spec_ref: null
     meta_ref: null
     plan_ref: null
-    status: in_progress
+    status: pending_review
     blocked_by: []
     depends_on: []
     context: []
@@ -134,9 +134,18 @@ tasks:
       - ux
       - voice
     vcs_refs: []
+    submission_linkage:
+      review_url: null
+      branch: task/initialization-wizard-01KPJA33
+      captured_at: 2026-04-20T16:30:30.411Z
+      commit: 5b33785bbcc429b2dac2a1c5bd939b42fac86b29
+      remote: origin
+      remote_url: https://github.com/bobcat88/simple-code-gui
+      upstream_ref: refs/heads/task/initialization-wizard-01KPJA33
     session_id: null
     created_at: 2026-04-19T07:25:46.005Z
     started_at: 2026-04-20T16:30:28.465Z
+    submitted_at: 2026-04-20T16:30:30.415Z
     notes:
       - _ulid: 01KPJA8TSHB2TV8HN21AZGY9KR
         content: "Identified 4 gaps for hands-free loop: (1) TTS not interrupted when PTT starts, (2) no
