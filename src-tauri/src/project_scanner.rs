@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
-use std::time::SystemTime;
+use std::path::Path;
 use chrono::Utc;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -616,7 +615,6 @@ pub fn generate_proposal(
     task_backend: &str,
 ) -> InitializationProposal {
     let mut operations = Vec::new();
-    let root = Path::new(&scan.root_path);
 
     let now = Utc::now().to_rfc3339();
     let proposal_id = uuid::Uuid::new_v4().to_string();
