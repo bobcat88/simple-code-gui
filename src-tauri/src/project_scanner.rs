@@ -614,12 +614,21 @@ pub fn generate_proposal(
     preset: &ProposalPreset,
     project_name: &str,
     task_backend: &str,
+    enabled_capability_ids: Option<Vec<String>>,
 ) -> InitializationProposal {
     let mut operations = Vec::new();
     let root = Path::new(&scan.root_path);
 
     let now = Utc::now().to_rfc3339();
     let proposal_id = uuid::Uuid::new_v4().to_string();
+
+    let is_enabled = |cap_id: &str| {
+        if let Some(ref ids) = enabled_capability_ids {
+            ids.contains(&cap_id.to_string())
+        } else {
+            true // Default to true if not specified (legacy behavior)
+        }
+    };
 
     // Create .simplecode directory
     if !marker_present(&scan.markers, "simplecode_manifest") {
@@ -662,20 +671,21 @@ mcp = false
             task_backend == "kspec",
         );
 
-        operations.push(ProposalOperation {
-            id: "create_manifest".into(),
-            kind: OperationKind::CreateFile,
-            path: Some(".simplecode/manifest.toml".into()),
-            command: None,
-            source_system: SourceSystem::SimpleCodeGui,
-            reason: "Machine-readable project initialization record".into(),
-            preview: Some(manifest_content),
-            risk: OperationRisk::Low,
-            requires_approval: false,
-        });
+        if is_enabled("simplecode_project_contract") {
+            operations.push(ProposalOperation {
+                id: "create_manifest".into(),
+                kind: OperationKind::CreateFile,
+                path: Some(".simplecode/manifest.toml".into()),
+                command: None,
+                source_system: SourceSystem::SimpleCodeGui,
+                reason: "Machine-readable project initialization record".into(),
+                preview: Some(manifest_content),
+                risk: OperationRisk::Low,
+                requires_approval: false,
+            });
 
-        let profile_content = format!(
-            r#"{{
+            let profile_content = format!(
+                r#"{{
   "version": 1,
   "projectId": "{}",
   "displayName": "{}",
@@ -684,24 +694,25 @@ mcp = false
   "createdAt": "{}",
   "updatedAt": "{}"
 }}"#,
-            proposal_id, project_name, now, now
-        );
+                proposal_id, project_name, now, now
+            );
 
-        operations.push(ProposalOperation {
-            id: "create_profile".into(),
-            kind: OperationKind::CreateFile,
-            path: Some(".simplecode/project-profile.json".into()),
-            command: None,
-            source_system: SourceSystem::SimpleCodeGui,
-            reason: "App-owned UI projection and defaults".into(),
-            preview: Some(profile_content),
-            risk: OperationRisk::Low,
-            requires_approval: false,
-        });
+            operations.push(ProposalOperation {
+                id: "create_profile".into(),
+                kind: OperationKind::CreateFile,
+                path: Some(".simplecode/project-profile.json".into()),
+                command: None,
+                source_system: SourceSystem::SimpleCodeGui,
+                reason: "App-owned UI projection and defaults".into(),
+                preview: Some(profile_content),
+                risk: OperationRisk::Low,
+                requires_approval: false,
+            });
+        }
     }
 
     // ai.md for standard+ presets
-    if !matches!(preset, ProposalPreset::Minimal | ProposalPreset::Guarded) && !marker_present(&scan.markers, "ai_contract") {
+    if !matches!(preset, ProposalPreset::Minimal | ProposalPreset::Guarded) && !marker_present(&scan.markers, "ai_contract") && is_enabled("simplecode_project_contract") {
         let ai_content = format!(
             r#"# {} — AI Contract
 
@@ -738,7 +749,7 @@ mcp = false
     }
 
     // AGENTS.md for standard+ presets
-    if !matches!(preset, ProposalPreset::Minimal) && !marker_present(&scan.markers, "agents_contract") {
+    if !matches!(preset, ProposalPreset::Minimal) && !marker_present(&scan.markers, "agents_contract") && is_enabled("agents_instructions") {
         operations.push(ProposalOperation {
             id: "create_agents".into(),
             kind: OperationKind::CreateFile,
@@ -769,7 +780,7 @@ mcp = false
 
     // Task backend init for standard/full presets
     if matches!(preset, ProposalPreset::Standard | ProposalPreset::FullSpecDriven) {
-        if task_backend == "kspec" && !marker_present(&scan.markers, "kspec_worktree") {
+        if task_backend == "kspec" && !marker_present(&scan.markers, "kspec_worktree") && is_enabled("kspec_spec_backend") {
             operations.push(ProposalOperation {
                 id: "kspec_init".into(),
                 kind: OperationKind::RunCommand,
@@ -781,7 +792,7 @@ mcp = false
                 risk: OperationRisk::Medium,
                 requires_approval: true,
             });
-        } else if task_backend == "beads" && !marker_present(&scan.markers, "beads_dir") {
+        } else if task_backend == "beads" && !marker_present(&scan.markers, "beads_dir") && is_enabled("beads_task_backend") {
             operations.push(ProposalOperation {
                 id: "beads_init".into(),
                 kind: OperationKind::RunCommand,
@@ -890,7 +901,30 @@ pub fn apply_proposal(proposal: &InitializationProposal) -> Result<Vec<String>, 
                     }
                 }
             }
-            OperationKind::Preserve | OperationKind::Skip | OperationKind::ModifyFile => {
+            OperationKind::ModifyFile => {
+                if let Some(ref path) = op.path {
+                    let full = root.join(path);
+                    if full.exists() {
+                        if let Some(ref content) = op.preview {
+                            // Basic append for now, but in a real scenario this might be smarter
+                            let mut existing = std::fs::read_to_string(&full)
+                                .map_err(|e| format!("Failed to read {}: {}", path, e))?;
+                            if !existing.contains(content) {
+                                if !existing.ends_with('\n') {
+                                    existing.push('\n');
+                                }
+                                existing.push_str(content);
+                                std::fs::write(&full, existing)
+                                    .map_err(|e| format!("Failed to update {}: {}", path, e))?;
+                                applied.push(format!("Modified file: {}", path));
+                            } else {
+                                applied.push(format!("File {} already contains changes", path));
+                            }
+                        }
+                    }
+                }
+            }
+            OperationKind::Preserve | OperationKind::Skip => {
                 // No-op
             }
         }
@@ -909,8 +943,9 @@ pub async fn project_generate_proposal(
     preset: ProposalPreset,
     project_name: String,
     task_backend: String,
+    enabled_capability_ids: Option<Vec<String>>,
 ) -> Result<InitializationProposal, String> {
-    Ok(generate_proposal(&scan, &preset, &project_name, &task_backend))
+    Ok(generate_proposal(&scan, &preset, &project_name, &task_backend, enabled_capability_ids))
 }
 
 #[tauri::command]

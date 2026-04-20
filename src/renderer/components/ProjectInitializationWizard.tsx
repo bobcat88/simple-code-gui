@@ -18,6 +18,7 @@ export function ProjectInitializationWizard({ isOpen, onClose, onProjectCreated,
   const [selectedPreset, setSelectedPreset] = useState('standard')
   const [projectName, setProjectName] = useState('')
   const [taskBackend, setTaskBackend] = useState('beads')
+  const [enabledCapabilities, setEnabledCapabilities] = useState<string[]>([])
 
   useEffect(() => {
     if (isOpen) {
@@ -25,6 +26,7 @@ export function ProjectInitializationWizard({ isOpen, onClose, onProjectCreated,
       setProjectName('')
       setSelectedPreset('standard')
       setTaskBackend('beads')
+      setEnabledCapabilities([])
     }
   }, [isOpen])
 
@@ -35,6 +37,9 @@ export function ProjectInitializationWizard({ isOpen, onClose, onProjectCreated,
     }
     if (wizard.scan?.upgradeInputs.recommendedPreset) {
       setSelectedPreset(wizard.scan.upgradeInputs.recommendedPreset)
+    }
+    if (wizard.scan?.capabilities) {
+      setEnabledCapabilities(wizard.scan.capabilities.map(c => c.id))
     }
   }, [wizard.scan])
 
@@ -48,7 +53,7 @@ export function ProjectInitializationWizard({ isOpen, onClose, onProjectCreated,
   }
 
   const handleGenerateProposal = () => {
-    wizard.generateProposal(selectedPreset, projectName, taskBackend)
+    wizard.generateProposal(selectedPreset, projectName, taskBackend, enabledCapabilities)
   }
 
   const handleApply = async () => {
@@ -208,16 +213,27 @@ export function ProjectInitializationWizard({ isOpen, onClose, onProjectCreated,
                       Capabilities
                     </div>
                     <div className="space-y-1.5">
-                      {wizard.scan.capabilities.slice(0, 4).map(c => (
-                        <div key={c.id} className="flex items-center justify-between text-[10px]">
-                          <span className="text-white/60">{c.id}</span>
-                          <span className={cn(
-                            "px-1.5 py-0.5 rounded-full font-bold",
-                            c.installed ? "bg-green-500/10 text-green-500" : "bg-white/5 text-white/20"
+                      {wizard.scan.capabilities.slice(0, 6).map(c => (
+                        <button 
+                          key={c.id} 
+                          onClick={() => {
+                            setEnabledCapabilities(prev => 
+                              prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]
+                            )
+                          }}
+                          className={cn(
+                            "w-full flex items-center justify-between text-[10px] p-1.5 rounded transition-colors group",
+                            enabledCapabilities.includes(c.id) ? "hover:bg-white/5" : "opacity-40 grayscale hover:opacity-100 hover:grayscale-0"
+                          )}
+                        >
+                          <span className="text-white/60 group-hover:text-white transition-colors">{c.id.replace(/_/g, ' ')}</span>
+                          <div className={cn(
+                            "w-3 h-3 rounded-sm border flex items-center justify-center transition-all",
+                            enabledCapabilities.includes(c.id) ? "bg-primary border-primary text-black" : "border-white/20"
                           )}>
-                            {c.installed ? 'Found' : 'Missing'}
-                          </span>
-                        </div>
+                            {enabledCapabilities.includes(c.id) && <CheckCircle2 size={8} strokeWidth={4} />}
+                          </div>
+                        </button>
                       ))}
                     </div>
                   </div>

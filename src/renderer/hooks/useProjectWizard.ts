@@ -30,12 +30,12 @@ export function useProjectWizard(api: Api) {
     }
   }, [api]);
 
-  const generateProposal = useCallback(async (preset: string, name: string, backend: string) => {
+  const generateProposal = useCallback(async (preset: string, name: string, backend: string, enabledCapabilities?: string[]) => {
     if (!scan) return;
     setLoading(true);
     setError(null);
     try {
-      const result = await api.projectGenerateProposal(scan, preset, name, backend);
+      const result = await api.projectGenerateProposal(scan, preset, name, backend, enabledCapabilities);
       setProposal(result);
       setStep('proposal');
     } catch (err: any) {

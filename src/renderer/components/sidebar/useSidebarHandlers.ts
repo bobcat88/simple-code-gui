@@ -170,8 +170,11 @@ export function useSidebarHandlers(params: UseSidebarHandlersParams): SidebarHan
       categoryRenameCancelledRef.current = false
       return
     }
-    if (editingCategory && editingCategory.name.trim()) {
-      updateCategory(editingCategory.id, { name: editingCategory.name.trim() })
+    if (editingCategory) {
+      const sanitizedName = editingCategory.name.trim().replace(/[\\/:*?"<>|]/g, '_')
+      if (sanitizedName) {
+        updateCategory(editingCategory.id, { name: sanitizedName })
+      }
     }
     setEditingCategory(null)
   }, [editingCategory, updateCategory, setEditingCategory])
