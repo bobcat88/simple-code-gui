@@ -89,6 +89,7 @@ export const setupTauriShim = () => {
     extensionsDisableForProject: (id: string, path: string) => tauriIpc.extensionsDisableForProject(id, path),
     extensionsGetCustomUrls: () => tauriIpc.extensionsGetCustomUrls(),
     extensionsAddCustomUrl: (url: string) => tauriIpc.extensionsAddCustomUrl(url),
+    extensionsRemoveCustomUrl: (url: string) => tauriIpc.extensionsRemoveCustomUrl(url),
     extensionsFetchFromUrl: (url: string) => tauriIpc.extensionsFetchFromUrl(url),
     extensionsSetConfig: (id: string, config: any) => tauriIpc.extensionsSetConfig(id, config),
     
@@ -118,8 +119,8 @@ export const setupTauriShim = () => {
     voiceCheckTTS: async () => invoke('voice_check_tts'),
     voiceInstallPiper: async () => invoke('voice_install_piper'),
     voiceInstallVoice: async (voice: string) => invoke('voice_install_voice', { voice }),
-    voiceGetInstalled: async () => [],
-    voiceSpeak: async (text: string) => invoke('voice_speak', { text }),
+    voiceGetInstalled: async () => invoke('voice_get_installed'),
+    voiceSpeak: async (text: string, voice?: string, speed?: number) => invoke('voice_speak', { text, voice, speed }),
     voiceStopSpeaking: async () => invoke('voice_stop'),
     xttsGetVoices: async () => [],
     xttsSpeak: async (text: string, voice: string, language: string) => ({ success: false, error: 'XTTS not implemented' }),

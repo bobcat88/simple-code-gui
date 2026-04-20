@@ -70,6 +70,8 @@ export const tauriIpc = {
     invoke<any | null>('extensions_fetch_from_url', { url }),
   extensionsAddCustomUrl: (url: string) =>
     invoke<void>('extensions_add_custom_url', { url }),
+  extensionsRemoveCustomUrl: (url: string) =>
+    invoke<void>('extensions_remove_custom_url', { url }),
   extensionsSetConfig: (id: string, config: any) =>
     invoke<void>('extensions_set_config', { id, config }),
 

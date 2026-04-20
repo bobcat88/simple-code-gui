@@ -15,7 +15,7 @@ use std::sync::Arc;
 use std::thread;
 use settings_manager::{SettingsManager, AppSettings};
 use workspace_manager::{WorkspaceManager, Workspace};
-use voice_manager::{VoiceManager, voice_speak, voice_stop, voice_check_tts, voice_install_piper, voice_install_voice};
+use voice_manager::{VoiceManager, voice_speak, voice_stop, voice_check_tts, voice_install_piper, voice_install_voice, voice_get_installed};
 use database::DatabaseManager;
 use orchestration::{
     get_beads_tasks, sync_workflow, beads_check, beads_init, beads_list, 
@@ -455,6 +455,7 @@ pub fn run() {
             extension_manager::extensions_disable_for_project,
             extension_manager::extensions_fetch_from_url,
             extension_manager::extensions_add_custom_url,
+            extension_manager::extensions_remove_custom_url,
             extension_manager::extensions_set_config,
             mcp_list_tools,
             mcp_call_tool,
@@ -470,6 +471,7 @@ pub fn run() {
             voice_check_tts,
             voice_install_piper,
             voice_install_voice,
+            voice_get_installed,
             scan_project_intelligence,
         ])
         .run(tauri::generate_context!())
