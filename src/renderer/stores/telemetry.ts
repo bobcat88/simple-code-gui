@@ -23,11 +23,13 @@ interface TelemetryState {
   global: TelemetryData
   session: Record<string, TelemetryData> // ptyId -> data
   budgetStatus: Record<string, BudgetStatus> // projectPath -> status
+  projectStats: Record<string, TelemetryData> // projectPath -> stats
   addUsage: (ptyId: string, usage: Partial<TelemetryData>, context?: { projectPath: string; backend: string }) => void
   resetSession: (ptyId: string) => void
   resetGlobal: () => void
   initialize: () => Promise<void>
   checkBudget: (projectPath?: string) => Promise<BudgetStatus>
+  fetchProjectStats: (projectPath: string) => Promise<void>
 }
 
 const createEmptyData = (): TelemetryData => ({
@@ -42,6 +44,7 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
   global: createEmptyData(),
   session: {},
   budgetStatus: {},
+  projectStats: {},
 
   initialize: async () => {
     if (window.electronAPI?.telemetry) {
@@ -152,5 +155,33 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
       }
     }
     return { exceeded: false }
+  },
+
+  fetchProjectStats: async (projectPath) => {
+    if (window.electronAPI?.telemetry) {
+      try {
+        const stats = await window.electronAPI.telemetry.getStats(projectPath)
+        if (stats) {
+          set((state) => ({
+            projectStats: {
+              ...state.projectStats,
+              [projectPath]: {
+                tokens: { 
+                  prompt: stats.prompt || 0, 
+                  completion: stats.completion || 0, 
+                  total: stats.total || 0 
+                },
+                cost: stats.cost || 0,
+                savings: stats.savings || 0,
+                tokensSaved: stats.tokensSaved || 0,
+                cacheHits: stats.cacheHits || 0,
+              }
+            }
+          }))
+        }
+      } catch (err) {
+        console.error('[TelemetryStore] Failed to fetch project stats:', err)
+      }
+    }
   },
 }))

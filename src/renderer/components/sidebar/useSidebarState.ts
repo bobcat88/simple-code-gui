@@ -1,7 +1,8 @@
 import React, { useState, useRef, useMemo } from 'react'
 import { Project, useWorkspaceStore } from '../../stores/workspace.js'
 import { useVoice } from '../../contexts/VoiceContext.js'
-import { SidebarProps, OpenTab, ClaudeSession } from './types.js'
+import { useTelemetryStore } from '../../stores/telemetry.js'
+import { SidebarProps, OpenTab, ClaudeSession, BudgetStatus } from './types.js'
 import { useSessions, useDragAndDrop, useProjectSettingsModal } from './hooks/index.js'
 
 export interface SidebarState {
@@ -98,6 +99,7 @@ export interface SidebarState {
   setDeleteConfirmModal: (v: { project: Project } | null) => void
   taskCounts: Record<string, { open: number; inProgress: number }>
   setTaskCounts: (v: Record<string, { open: number; inProgress: number }>) => void
+  budgetStatus: Record<string, BudgetStatus>
 
   // Refs
   sidebarRef: React.RefObject<HTMLDivElement>
@@ -131,6 +133,9 @@ export function useSidebarState(params: UseSidebarStateParams): SidebarState {
   // Voice context
   const { volume, setVolume, speed, setSpeed, skipOnNew, setSkipOnNew, voiceOutputEnabled } =
     useVoice()
+
+  // Telemetry store
+  const budgetStatus = useTelemetryStore((state) => state.budgetStatus)
 
   // Workspace store
   const categories = useWorkspaceStore((state) => state.categories)
@@ -338,6 +343,7 @@ export function useSidebarState(params: UseSidebarStateParams): SidebarState {
     setDeleteConfirmModal,
     taskCounts,
     setTaskCounts,
+    budgetStatus,
 
     // Refs
     sidebarRef,

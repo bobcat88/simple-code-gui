@@ -1,7 +1,7 @@
 import React from 'react'
 import { Project } from '../../stores/workspace.js'
 import { ProjectIcon } from '../ProjectIcon.js'
-import { ClaudeSession, DropTarget } from './types.js'
+import { ClaudeSession, DropTarget, BudgetStatus } from './types.js'
 import { formatDate } from './utils.js'
 
 interface ProjectItemProps {
@@ -14,8 +14,9 @@ interface ProjectItemProps {
   editingName: string
   sessions: ClaudeSession[]
   taskCounts?: { open: number; inProgress: number }
+  budgetStatus?: BudgetStatus
   dropTarget: DropTarget | null
-  editInputRef: React.RefObject<HTMLInputElement | null>
+  editInputRef: React.RefObject<HTMLInputElement>
   onToggleExpand: (e: React.MouseEvent) => void
   onOpenSession: (sessionId?: string, slug?: string, isNewSession?: boolean) => void
   onRunExecutable: () => void
@@ -41,6 +42,7 @@ export const ProjectItem = React.memo(function ProjectItem({
   editingName,
   sessions,
   taskCounts,
+  budgetStatus,
   dropTarget,
   editInputRef,
   onToggleExpand,
@@ -65,7 +67,7 @@ export const ProjectItem = React.memo(function ProjectItem({
       {showDropBefore && <div className="drop-indicator" />}
 
       <div
-        className={`project-item ${isExpanded ? 'expanded' : ''} ${hasOpenTab ? 'has-open-tab' : ''} ${project.executable ? 'has-executable' : ''} ${project.color ? 'has-color' : ''} ${isFocused ? 'focused' : ''} ${isDragging ? 'dragging' : ''}`}
+        className={`project-item ${isExpanded ? 'expanded' : ''} ${hasOpenTab ? 'has-open-tab' : ''} ${project.executable ? 'has-executable' : ''} ${project.color ? 'has-color' : ''} ${isFocused ? 'focused' : ''} ${isDragging ? 'dragging' : ''} ${budgetStatus?.exceeded ? 'budget-exceeded' : ''}`}
         style={project.color ? { backgroundColor: `${project.color}20` } : undefined}
         draggable={!isEditing}
         onDragStart={onDragStart}
@@ -120,7 +122,10 @@ export const ProjectItem = React.memo(function ProjectItem({
               )}
             </div>
           ) : (
-            <div className="project-path" title={project.path}>{project.path}</div>
+            <div className="project-path" title={project.path}>
+              {budgetStatus?.exceeded && <span className="budget-alert-dot" title={budgetStatus.reason}>⚠️</span>}
+              {project.path}
+            </div>
           )}
         </div>
         {project.executable && (

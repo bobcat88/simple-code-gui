@@ -92,6 +92,7 @@ export function Sidebar({
         editingName={state.editingProject?.path === project.path ? state.editingProject.name : ''}
         sessions={state.sessions[project.path] || []}
         taskCounts={state.taskCounts[project.path]}
+        budgetStatus={state.budgetStatus[project.path]}
         dropTarget={state.dropTarget}
         editInputRef={state.editInputRef}
         onToggleExpand={(e) => callbacks.handleProjectToggleExpand(e, project.path)}

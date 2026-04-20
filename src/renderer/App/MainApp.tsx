@@ -26,6 +26,7 @@ import type { Api } from '../api'
 import { InstallationPrompt } from './InstallationPrompt'
 import { MobileConnectModal } from './MobileConnectModal'
 import { OrchestrationPanel } from '../components/orchestration/OrchestrationPanel'
+import { HomeDashboard } from '../components/HomeDashboard'
 
 export interface MainAppProps {
   api: Api
@@ -396,10 +397,7 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
                 )}
               </>
             ) : (
-              <div className="empty-state">
-                <h2>Simple Code GUI</h2>
-                <p>Add a project from the sidebar, then click a session to open it</p>
-              </div>
+              <HomeDashboard onOpenSession={handleOpenSession} />
             )}
             {orchestrationOpen && (
               <div className="orchestration-sidebar">

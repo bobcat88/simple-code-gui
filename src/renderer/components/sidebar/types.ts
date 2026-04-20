@@ -1,4 +1,7 @@
 import { Project } from '../../stores/workspace.js'
+import { BudgetStatus } from '../../stores/telemetry.js'
+
+export type { BudgetStatus }
 
 export interface ClaudeSession {
   sessionId: string

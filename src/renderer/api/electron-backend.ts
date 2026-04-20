@@ -141,6 +141,15 @@ declare global {
       onAgentStatus: (callback: (status: any) => void) => () => void
       approveAction: (actionId: string) => Promise<{ success: boolean }>
       rejectAction: (actionId: string) => Promise<{ success: boolean }>
+
+      // Telemetry
+      telemetry: {
+        addRecord: (record: any) => Promise<any>
+        getStats: (projectPath?: string) => Promise<any>
+        getHistory: (limit?: number) => Promise<any[]>
+        clear: () => Promise<void>
+        checkBudget: (projectPath?: string) => Promise<{ exceeded: boolean; reason?: string }>
+      }
     }
   }
 }
