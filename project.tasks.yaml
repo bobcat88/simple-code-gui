@@ -4,7 +4,7 @@
   title: "Implement: Multi-Provider AI Runtime"
   type: task
   spec_ref: "@ai-runtime"
-  status: in_progress
+  status: pending_review
   blocked_by: []
   depends_on: []
   priority: 3
@@ -13,6 +13,7 @@
   todos_count: 0
   created_at: 2026-04-20T17:02:07.897Z
   started_at: 2026-04-20T21:40:25.485Z
+  submitted_at: 2026-04-20T21:40:31.423Z
   automation: eligible
 - _ulid: 01KPNXF874YW06MJEMRD6WBS2H
   slugs:
