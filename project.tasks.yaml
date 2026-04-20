@@ -650,7 +650,7 @@
   type: task
   spec_ref: "@01KPNWYNG72RVJCSF9M81S3P4G"
   derivation: auto
-  status: pending
+  status: in_progress
   blocked_by: []
   depends_on:
     - "@task-system-operational-telemetry"
@@ -659,6 +659,7 @@
   tags: []
   vcs_refs: []
   created_at: 2026-04-20T17:02:30.012Z
+  started_at: 2026-04-20T17:03:00.414Z
   notes:
     - _ulid: 01KPNXFX3WA6SWJK8Q65NYQMQM
       content: |-
