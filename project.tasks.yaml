@@ -12,6 +12,7 @@
   notes_count: 2
   todos_count: 0
   created_at: 2026-04-20T17:02:07.897Z
+  automation: eligible
 - _ulid: 01KPNXF874YW06MJEMRD6WBS2H
   slugs:
     - task-provider-abstraction-interface
