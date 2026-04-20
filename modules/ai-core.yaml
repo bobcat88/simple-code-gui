@@ -171,6 +171,10 @@ features:
         id: ac-2
         then: Session token totals, estimated cost, and cumulative totals are displayed
         when: The user views the telemetry panel
+      - given: RTK is installed and available
+        id: ac-3
+        then: RTK savings data from rtk gain is displayed alongside raw token usage
+        when: The telemetry panel renders
     tags: []
     requirements:
       - _ulid: 01KPNWTQ5WY2JVHCYXXKDFCKQ6
