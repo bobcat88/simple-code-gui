@@ -87,6 +87,7 @@
   notes_count: 2
   todos_count: 0
   created_at: 2026-04-20T17:02:12.431Z
+  automation: eligible
 - _ulid: 01KPNXFCN02DFXBTRJK5DV9RTY
   slugs:
     - task-phase-based-decomposition
