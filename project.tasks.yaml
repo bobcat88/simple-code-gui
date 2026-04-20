@@ -250,7 +250,7 @@
   title: "Implement: Savings Telemetry (RTK/MCP)"
   type: task
   spec_ref: "@01KPNWTRXKAQ76CQYFP8CA18X9"
-  status: pending_review
+  status: completed
   blocked_by: []
   depends_on:
     - "@task-token-economics-telemetry"
@@ -261,6 +261,7 @@
   created_at: 2026-04-20T17:02:18.268Z
   started_at: 2026-04-20T22:11:34.504Z
   submitted_at: 2026-04-20T22:13:16.689Z
+  completed_at: 2026-04-20T22:13:18.651Z
 - _ulid: 01KPNXFJ8J5Y8A07F0XAKGH06H
   slugs:
     - task-token-burn-history

@@ -5,8 +5,10 @@ title: "Implement: Savings Telemetry (RTK/MCP)"
 type: task
 spec_ref: "@01KPNWTRXKAQ76CQYFP8CA18X9"
 derivation: auto
-status: pending_review
+status: completed
 blocked_by: []
+closed_reason: Enhanced HUD to show RTK, MCP, and Cache Hit savings. Added logic to estimate $
+  savings from tokens saved if not explicitly reported. Verified with tests.
 depends_on:
   - "@task-token-economics-telemetry"
 context: []
@@ -52,7 +54,22 @@ history:
         previous: null
     command: task-submit
     timestamp: 2026-04-20T22:13:16.689Z
+  - author: Johan.P
+    changes:
+      status:
+        new: completed
+        previous: pending_review
+      closed_reason:
+        new: Enhanced HUD to show RTK, MCP, and Cache Hit savings. Added logic to estimate $ savings from
+          tokens saved if not explicitly reported. Verified with tests.
+        previous: null
+      completed_at:
+        new: 2026-04-20T22:13:18.651Z
+        previous: null
+    command: task-complete
+    timestamp: 2026-04-20T22:13:18.659Z
 created_at: 2026-04-20T17:02:18.268Z
 started_at: 2026-04-20T22:11:34.504Z
 submitted_at: 2026-04-20T22:13:16.689Z
+completed_at: 2026-04-20T22:13:18.651Z
 todos: []
