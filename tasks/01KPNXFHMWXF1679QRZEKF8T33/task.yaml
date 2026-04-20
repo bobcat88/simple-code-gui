@@ -5,7 +5,7 @@ title: "Implement: Savings Telemetry (RTK/MCP)"
 type: task
 spec_ref: "@01KPNWTRXKAQ76CQYFP8CA18X9"
 derivation: auto
-status: in_progress
+status: pending_review
 blocked_by: []
 depends_on:
   - "@task-token-economics-telemetry"
@@ -13,6 +13,14 @@ context: []
 priority: 3
 tags: []
 vcs_refs: []
+submission_linkage:
+  review_url: null
+  branch: main
+  captured_at: 2026-04-20T22:13:16.683Z
+  commit: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
+  remote: origin
+  remote_url: https://github.com/bobcat88/simple-code-gui
+  upstream_ref: refs/heads/main
 history:
   - author: Johan.P
     changes:
@@ -24,6 +32,27 @@ history:
         previous: null
     command: task-start
     timestamp: 2026-04-20T22:11:34.505Z
+  - author: Johan.P
+    changes:
+      status:
+        new: pending_review
+        previous: in_progress
+      submission_linkage:
+        new:
+          review_url: null
+          branch: main
+          captured_at: 2026-04-20T22:13:16.683Z
+          commit: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
+          remote: origin
+          remote_url: https://github.com/bobcat88/simple-code-gui
+          upstream_ref: refs/heads/main
+        previous: null
+      submitted_at:
+        new: 2026-04-20T22:13:16.689Z
+        previous: null
+    command: task-submit
+    timestamp: 2026-04-20T22:13:16.689Z
 created_at: 2026-04-20T17:02:18.268Z
 started_at: 2026-04-20T22:11:34.504Z
+submitted_at: 2026-04-20T22:13:16.689Z
 todos: []
