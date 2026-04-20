@@ -168,11 +168,25 @@ export interface AgentAction {
 export interface AgentStatus {
   id: string
   name: string
+  role?: string
   status: 'idle' | 'busy' | 'blocked' | 'error'
   currentTask?: string
   progress?: number
   lastAction?: string
   worktree?: string
+  metrics?: {
+    tasksCompleted: number
+    uptime: number
+    memoryUsage?: number
+  }
+}
+
+export interface SystemTelemetry {
+  cpu: number
+  memory: number
+  activeJobs: number
+  uptime: number
+  health: 'healthy' | 'warning' | 'degraded'
 }
 
 // ============================================================================
@@ -377,6 +391,11 @@ export interface Api {
    * Subscribe to agent status updates
    */
   onAgentStatus: (callback: (status: AgentStatus) => void) => Unsubscribe
+
+  /**
+   * Subscribe to system telemetry updates
+   */
+  onTelemetry: (callback: (telemetry: SystemTelemetry) => void) => Unsubscribe
 
   /**
    * Approve a pending action

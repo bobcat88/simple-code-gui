@@ -9,7 +9,13 @@ import {
   ShieldAlert,
   Cpu,
   Clock,
-  ExternalLink
+  ExternalLink,
+  Brain,
+  Hammer,
+  Eye,
+  Zap,
+  Database,
+  Timer
 } from 'lucide-react'
 import { AgentAction, AgentStatus, OrchestrationState } from './types'
 import './OrchestrationPanel.css'
@@ -24,7 +30,14 @@ export function OrchestrationPanel() {
   const [state, setState] = useState<OrchestrationState>({
     agents: [],
     recentActions: [],
-    pendingApprovals: []
+    pendingApprovals: [],
+    telemetry: {
+      cpu: 0,
+      memory: 0,
+      activeJobs: 0,
+      uptime: 0,
+      health: 'healthy'
+    }
   })
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -73,9 +86,14 @@ export function OrchestrationPanel() {
       })
     })
 
+    const unsubTelemetry = window.api.onTelemetry((telemetry: any) => {
+      setState(prev => ({ ...prev, telemetry }))
+    })
+
     return () => {
       unsubAction()
       unsubStatus()
+      unsubTelemetry()
     }
   }, [])
 
@@ -106,10 +124,31 @@ export function OrchestrationPanel() {
   return (
     <div className="orchestration-panel">
       <div className="orchestration-header">
-        <h2>Orchestration Hub</h2>
-        <div className="status-summary">
-          <span className="dot busy"></span> {state.agents.filter(a => a.status === 'busy').length} Active
-          <span className="dot blocked"></span> {state.agents.filter(a => a.status === 'blocked').length} Blocked
+        <div className="header-title-container">
+          <h2>Orchestration Hub</h2>
+          <div className="system-health">
+            <div className={`health-dot ${state.telemetry?.health || 'healthy'}`}></div>
+            <span>System {state.telemetry?.health || 'Healthy'}</span>
+          </div>
+        </div>
+        
+        <div className="system-telemetry">
+          <div className="telemetry-item" title="CPU Usage">
+            <Zap size={14} />
+            <span>{state.telemetry?.cpu || 0}%</span>
+          </div>
+          <div className="telemetry-item" title="Memory Usage">
+            <Database size={14} />
+            <span>{state.telemetry?.memory || 0}MB</span>
+          </div>
+          <div className="telemetry-item" title="Active Jobs">
+            <Activity size={14} />
+            <span>{state.telemetry?.activeJobs || 0}</span>
+          </div>
+          <div className="telemetry-item" title="System Uptime">
+            <Clock size={14} />
+            <span>{Math.floor((state.telemetry?.uptime || 0) / 3600)}h {Math.floor(((state.telemetry?.uptime || 0) % 3600) / 60)}m</span>
+          </div>
         </div>
       </div>
 
@@ -119,22 +158,58 @@ export function OrchestrationPanel() {
         )}
         {state.agents.map(agent => (
           <div key={agent.id} className={`agent-card ${agent.status}`}>
-            <div className="agent-info">
-              <span className="agent-name">{agent.name}</span>
-              <span className={`status-tag ${agent.status}`}>{agent.status}</span>
-            </div>
-            {agent.currentTask && (
-              <div className="agent-task">
-                <span className="task-label">Working on:</span>
-                <span className="task-name">{agent.currentTask}</span>
+            <div className="agent-header">
+              <div className="agent-role-icon">
+                {agent.role === 'Planner' && <Brain size={18} />}
+                {agent.role === 'Builder' && <Hammer size={18} />}
+                {agent.role === 'Reviewer' && <Eye size={18} />}
+                {!agent.role && <Cpu size={18} />}
               </div>
-            )}
-            {agent.progress !== undefined && (
-              <div className="agent-progress">
-                <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${agent.progress}%` }}></div>
+              <div className="agent-title">
+                <span className="agent-name">{agent.name}</span>
+                <span className="agent-role-label">{agent.role || 'Agent'}</span>
+              </div>
+              <div className={`status-dot ${agent.status}`}></div>
+            </div>
+
+            <div className="agent-body">
+              {agent.currentTask ? (
+                <div className="agent-task">
+                  <span className="task-label">Active Task</span>
+                  <span className="task-name">{agent.currentTask}</span>
                 </div>
-                <span className="progress-text">{agent.progress}%</span>
+              ) : (
+                <div className="agent-idle">
+                  <span>Standing by for instructions</span>
+                </div>
+              )}
+
+              {agent.progress !== undefined && agent.status === 'busy' && (
+                <div className="agent-progress">
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${agent.progress}%` }}></div>
+                  </div>
+                  <span className="progress-text">{agent.progress}%</span>
+                </div>
+              )}
+            </div>
+
+            {agent.metrics && (
+              <div className="agent-metrics">
+                <div className="metric-item" title="Tasks Completed">
+                  <Zap size={12} />
+                  <span>{agent.metrics.tasksCompleted}</span>
+                </div>
+                <div className="metric-item" title="Uptime">
+                  <Timer size={12} />
+                  <span>{Math.floor(agent.metrics.uptime / 60)}m</span>
+                </div>
+                {agent.metrics.memoryUsage && (
+                  <div className="metric-item" title="Memory Usage">
+                    <Database size={12} />
+                    <span>{agent.metrics.memoryUsage}MB</span>
+                  </div>
+                )}
               </div>
             )}
           </div>

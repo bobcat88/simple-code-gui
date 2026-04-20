@@ -15,6 +15,22 @@ export function registerOrchestrationHandlers(getMainWindow: () => BrowserWindow
     mainWindow?.webContents.send('orchestration:status', status)
   }
 
+  const sendTelemetry = (telemetry: any) => {
+    const mainWindow = getMainWindow()
+    mainWindow?.webContents.send('orchestration:telemetry', telemetry)
+  }
+
+  // Mock telemetry loop
+  setInterval(() => {
+    sendTelemetry({
+      cpu: Math.floor(Math.random() * 20) + 5,
+      memory: Math.floor(Math.random() * 500) + 1200,
+      activeJobs: Math.floor(Math.random() * 3),
+      uptime: process.uptime(),
+      health: 'healthy'
+    })
+  }, 5000)
+
   // Handle approvals from renderer
   ipcMain.handle('orchestration:approve', async (_, actionId: string) => {
     console.log(`[Orchestration] Approved action: ${actionId}`)

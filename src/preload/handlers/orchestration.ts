@@ -13,6 +13,12 @@ export const orchestrationHandlers = {
     return () => ipcRenderer.removeListener('orchestration:status', subscription)
   },
 
+  onTelemetry: (callback: (telemetry: any) => void) => {
+    const subscription = (_event: any, telemetry: any) => callback(telemetry)
+    ipcRenderer.on('orchestration:telemetry', subscription)
+    return () => ipcRenderer.removeListener('orchestration:telemetry', subscription)
+  },
+
   approveAction: (actionId: string) => ipcRenderer.invoke('orchestration:approve', actionId),
   rejectAction: (actionId: string) => ipcRenderer.invoke('orchestration:reject', actionId)
 }
