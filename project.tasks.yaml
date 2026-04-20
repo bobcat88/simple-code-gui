@@ -410,8 +410,10 @@
   title: "Implement: System Operational Telemetry"
   type: task
   spec_ref: "@system-ops"
-  status: in_progress
-  blocked_by: []
+  status: blocked
+  blocked_by:
+    - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
+      12am (Europe/Paris)"
   depends_on: []
   priority: 3
   tags: []
