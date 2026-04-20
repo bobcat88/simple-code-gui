@@ -263,7 +263,7 @@
   type: task
   spec_ref: "@token-economics"
   derivation: auto
-  status: in_progress
+  status: pending
   blocked_by: []
   depends_on: []
   context: []
@@ -271,7 +271,7 @@
   tags: []
   vcs_refs: []
   created_at: 2026-04-20T17:02:16.991Z
-  started_at: 2026-04-20T17:04:21.063Z
+  started_at: null
   notes:
     - _ulid: 01KPNXFGCY5X808W7TFA9AAXV3
       content: |-
@@ -281,6 +281,11 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-20T17:02:16.990Z
+    - _ulid: 01KPNYH9TDBBMS0KWQCAK34V0D
+      content: Reset from in_progress to pending
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-20T17:20:44.365Z
   todos: []
   automation: eligible
 - _ulid: 01KPNXFH0H4KFJFGB30FYVE8KB
