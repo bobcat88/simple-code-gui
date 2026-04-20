@@ -131,6 +131,9 @@ features:
         title: Agent Status Cards
         type: requirement
         description: Detailed status display for individual agents (Planner, Builder, Reviewer).
+        status:
+          maturity: draft
+          implementation: in_progress
         depends_on: []
         implements: []
         relates_to: []
