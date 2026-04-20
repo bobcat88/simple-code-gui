@@ -6,6 +6,8 @@ import { pendingApiPrompts, autoCloseSessions } from '../api-prompt-handler.js'
 import { appendFileSync } from 'fs'
 import { homedir } from 'os'
 import { join } from 'path'
+import type { TelemetryStore } from '../../telemetry/telemetry-store.js'
+import { TokenAccumulator } from '../../telemetry/token-parser.js'
 
 const DEBUG_LOG = '/tmp/auto-accept-debug.log'
 const SCROLL_DEBUG_LOG = join(homedir(), 'scroll-debug.log')
@@ -96,7 +98,9 @@ export function registerPtyHandlers(
   apiServerManager: ApiServerManager,
   ptyToProject: Map<string, string>,
   ptyToBackend: Map<string, string>,
-  getMainWindow: () => BrowserWindow | null
+  getMainWindow: () => BrowserWindow | null,
+  telemetryStore?: TelemetryStore,
+  tokenAccumulators?: Map<string, TokenAccumulator>
 ): void {
   ipcMain.handle('pty:spawn', (_, { cwd, sessionId, model, backend }: { cwd: string; sessionId?: string; model?: string; backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider' }) => {
     try {
@@ -129,9 +133,27 @@ export function registerPtyHandlers(
 
       const mainWindow = getMainWindow()
 
+      // Create token accumulator for telemetry parsing
+      if (tokenAccumulators && telemetryStore) {
+        tokenAccumulators.set(id, new TokenAccumulator(effectiveBackend))
+      }
+
       ptyManager.onData(id, (data) => {
         maybeRespondToCursorPositionRequest(ptyManager, ptyToBackend, id, data)
         maybeAutoAccept(ptyManager, id, data)
+
+        // Parse token usage from terminal output
+        if (tokenAccumulators && telemetryStore) {
+          const accumulator = tokenAccumulators.get(id)
+          if (accumulator) {
+            const tokenEvent = accumulator.append(data)
+            if (tokenEvent) {
+              const projectPath = ptyToProject.get(id) || cwd
+              telemetryStore.recordTokenEvent(id, projectPath, effectiveBackend, tokenEvent)
+            }
+          }
+        }
+
         try {
           mainWindow?.webContents.send(`pty:data:${id}`, data)
         } catch (e) {
@@ -151,6 +173,10 @@ export function registerPtyHandlers(
         autoAcceptEnabled.delete(id)
         autoAcceptBuffers.delete(id)
         autoAcceptCooldown.delete(id)
+        // Clean up token accumulator
+        if (tokenAccumulators) {
+          tokenAccumulators.delete(id)
+        }
       })
 
       if (pending) {
@@ -216,9 +242,28 @@ export function registerPtyHandlers(
     autoAcceptBuffers.delete(oldId)
     autoAcceptCooldown.delete(oldId)
 
+    // Update token accumulator for new backend
+    if (tokenAccumulators) {
+      tokenAccumulators.delete(oldId)
+      tokenAccumulators.set(newId, new TokenAccumulator(newBackend))
+    }
+
     ptyManager.onData(newId, (data) => {
       maybeRespondToCursorPositionRequest(ptyManager, ptyToBackend, newId, data)
       maybeAutoAccept(ptyManager, newId, data)
+
+      // Parse token usage from terminal output
+      if (tokenAccumulators && telemetryStore) {
+        const accumulator = tokenAccumulators.get(newId)
+        if (accumulator) {
+          const tokenEvent = accumulator.append(data)
+          if (tokenEvent) {
+            const proj = ptyToProject.get(newId) || ''
+            telemetryStore.recordTokenEvent(newId, proj, newBackend, tokenEvent)
+          }
+        }
+      }
+
       mainWindow?.webContents.send(`pty:data:${newId}`, data)
     })
 
@@ -229,6 +274,7 @@ export function registerPtyHandlers(
       autoAcceptEnabled.delete(newId)
       autoAcceptBuffers.delete(newId)
       autoAcceptCooldown.delete(newId)
+      if (tokenAccumulators) tokenAccumulators.delete(newId)
     })
 
     mainWindow?.webContents.send('pty:recreated', { oldId, newId, backend: newBackend })

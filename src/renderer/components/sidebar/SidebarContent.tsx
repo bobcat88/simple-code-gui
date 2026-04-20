@@ -2,6 +2,7 @@ import React from 'react'
 import { Project, useWorkspaceStore } from '../../stores/workspace.js'
 import { BeadsPanel } from '../BeadsPanel.js'
 import { GSDStatus } from '../GSDStatus.js'
+import { TelemetryPanel } from '../TelemetryPanel.js'
 import { ExtensionBrowser } from '../ExtensionBrowser.js'
 import { ClaudeMdEditor } from '../ClaudeMdEditor.js'
 import {
@@ -304,6 +305,8 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
           }
         }}
       />
+
+      <TelemetryPanel activeTabPtyId={focusedTabPtyId} />
 
       {voiceOutputEnabled && (
         <VoiceOptionsPanel

@@ -341,4 +341,61 @@ export interface ElectronAPI {
   extensionsAddCustomUrl: (url: string) => Promise<{ success: boolean }>
   extensionsRemoveCustomUrl: (url: string) => Promise<{ success: boolean }>
   extensionsGetCustomUrls: () => Promise<string[]>
+
+  // Telemetry
+  telemetryGetSummary: () => Promise<{
+    sessions: Array<{
+      sessionId: string
+      ptyId: string
+      projectPath: string
+      backend: string
+      startedAt: number
+      lastUpdatedAt: number
+      totalInputTokens: number
+      totalOutputTokens: number
+      totalTokens: number
+      totalCacheReadTokens: number
+      totalCacheWriteTokens: number
+      estimatedCost: number
+      eventCount: number
+    }>
+    aggregate: {
+      totalTokens: number
+      totalInputTokens: number
+      totalOutputTokens: number
+      totalCacheReadTokens: number
+      totalCacheWriteTokens: number
+      estimatedCost: number
+      sessionCount: number
+    }
+    rtkSavings: {
+      totalSaved: number
+      percentSaved: number
+      commandCount: number
+      lastUpdated: number
+    } | null
+  }>
+  telemetryGetSession: (ptyId: string) => Promise<{
+    sessionId: string
+    ptyId: string
+    projectPath: string
+    backend: string
+    startedAt: number
+    lastUpdatedAt: number
+    totalInputTokens: number
+    totalOutputTokens: number
+    totalTokens: number
+    totalCacheReadTokens: number
+    totalCacheWriteTokens: number
+    estimatedCost: number
+    eventCount: number
+  } | null>
+  telemetryRtkAvailable: () => Promise<boolean>
+  telemetryRtkRefresh: () => Promise<{
+    totalSaved: number
+    percentSaved: number
+    commandCount: number
+    lastUpdated: number
+  } | null>
+  onTelemetryUpdated: (callback: (data: any) => void) => () => void
 }

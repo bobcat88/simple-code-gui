@@ -8,6 +8,7 @@ import { ApiServerManager } from './api-server.js'
 import { OrchestratorApi } from './orchestrator-api.js'
 import { MobileServer } from './mobile-server.js'
 import { voiceManager } from './voice-manager.js'
+import { TelemetryStore, TokenAccumulator, registerTelemetryHandlers, fetchRtkSavings } from './telemetry/index.js'
 import { setPortableBinDirs } from './platform.js'
 import { getPortableBinDirs } from './portable-deps.js'
 import { initUpdater } from './updater.js'
@@ -51,6 +52,10 @@ const ptyManager = new PtyManager()
 const sessionStore = new SessionStore()
 const apiServerManager = new ApiServerManager()
 const mobileServer = new MobileServer()
+const telemetryStore = new TelemetryStore()
+
+// Token accumulators per PTY — parse terminal output for token usage
+const tokenAccumulators = new Map<string, TokenAccumulator>()
 
 // PTY tracking
 const ptyToProject = new Map<string, string>()
@@ -70,9 +75,10 @@ registerWindowHandlers(getMainWindow)
 registerGsdHandlers()
 registerKspecHandlers()
 registerWorkspaceHandlers(sessionStore, getMainWindow)
-registerPtyHandlers(ptyManager, sessionStore, apiServerManager, ptyToProject, ptyToBackend, getMainWindow)
+registerPtyHandlers(ptyManager, sessionStore, apiServerManager, ptyToProject, ptyToBackend, getMainWindow, telemetryStore, tokenAccumulators)
 registerServerHandlers(apiServerManager, mobileServer)
 registerSettingsHandlers(sessionStore, getMainWindow)
+registerTelemetryHandlers(telemetryStore, getMainWindow)
 
 // Setup API prompt handler
 setupApiPromptHandler(apiServerManager, sessionStore, ptyManager, ptyToProject, getMainWindow)
@@ -145,6 +151,18 @@ app.whenReady().then(() => {
     console.error('[Startup] Failed to refresh task instructions:', e)
   }
 
+  // Refresh RTK savings on startup
+  fetchRtkSavings().then(savings => {
+    if (savings) telemetryStore.updateRtkSavings(savings)
+  }).catch(() => { /* RTK not available */ })
+
+  // Periodically refresh RTK savings (every 5 minutes)
+  setInterval(() => {
+    fetchRtkSavings().then(savings => {
+      if (savings) telemetryStore.updateRtkSavings(savings)
+    }).catch(() => {})
+  }, 5 * 60 * 1000)
+
   // Start orchestrator API for MCP-based session control
   orchestratorApi.start()
 
@@ -177,4 +195,5 @@ app.on('before-quit', () => {
   mobileServer.stop()
   apiServerManager.stopAll()
   ptyManager.killAll()
+  telemetryStore.dispose()
 })
