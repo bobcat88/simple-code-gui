@@ -492,3 +492,29 @@ tasks:
         author: Johan.P
         created_at: 2026-04-20T16:51:46.267Z
     todos: []
+  - _ulid: 01KPNWW93MJ401M5MVPWCAYZV1
+    slugs:
+      - task-savings-telemetry-rtk-mcp
+    title: "Implement: Savings Telemetry (RTK/MCP)"
+    type: task
+    spec_ref: "@01KPNWTRXKAQ76CQYFP8CA18X9"
+    derivation: auto
+    status: pending
+    blocked_by: []
+    depends_on:
+      - "@task-token-economics-telemetry"
+    context: []
+    priority: 3
+    tags: []
+    vcs_refs: []
+    created_at: 2026-04-20T16:51:46.932Z
+    notes:
+      - _ulid: 01KPNWW93M6B24J1NT5RCKBRAF
+        content: |-
+          Implementation notes (auto-generated from spec):
+
+          Calculation and display of tokens saved by using RTK, MCP, and local intelligence.
+        supersedes: null
+        author: Johan.P
+        created_at: 2026-04-20T16:51:46.932Z
+    todos: []
