@@ -8,6 +8,7 @@ import { Router } from 'express'
 import terminalRoutes from './terminal'
 import projectRoutes from './projects'
 import settingsRoutes from './settings'
+import aiRoutes from './ai'
 
 /**
  * Create the main API router that aggregates all sub-routes
@@ -70,6 +71,14 @@ export function createApiRouter(): Router {
    */
   router.use('/settings', settingsRoutes)
 
+  /**
+   * AI Runtime Routes
+   *
+   * POST   /api/ai/chat                      - AI completion/streaming
+   * GET    /api/ai/providers                 - List providers
+   */
+  router.use('/ai', aiRoutes)
+
   // ==========================================================================
   // API Documentation Endpoint
   // ==========================================================================
@@ -114,6 +123,10 @@ export function createApiRouter(): Router {
             'GET /settings/cli/status': 'Get all CLI statuses',
             'GET /settings/cli/:tool': 'Get specific CLI status'
           },
+          ai: {
+            'POST /ai/chat': 'AI completion (supports streaming)',
+            'GET /ai/providers': 'List available AI providers'
+          },
           websocket: {
             'WS /ws': 'Real-time terminal streaming',
             'auth message': '{ type: "auth", payload: { token: "..." } }',
@@ -135,3 +148,4 @@ export function createApiRouter(): Router {
 export { default as terminalRoutes } from './terminal'
 export { default as projectRoutes } from './projects'
 export { default as settingsRoutes } from './settings'
+export { default as aiRoutes } from './ai'
