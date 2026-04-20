@@ -349,18 +349,18 @@ workspaces:
       remote_ref: null
       source: provisioned
     canonical_branch: dispatch/task/task-multi-provider-ai-runtime/01kpnxf7
-    canonical_branch_head: d270debc807a39e17556d3d1db6669aaf29664f8
+    canonical_branch_head: d16fd5074fc2a0d1c31d28ad153600a48f60f52d
     cleanup:
       status: not_scheduled
       detail: null
       eligible: false
       reason: null
-      updated_at: 2026-04-20T21:37:13.101Z
+      updated_at: 2026-04-20T21:41:02.546Z
     health:
       status: healthy
       issues: []
       summary: Workspace record matches current git branch and worktree state.
-      updated_at: 2026-04-20T21:37:13.101Z
+      updated_at: 2026-04-20T21:41:02.546Z
     integration:
       status: pending
       detail: null
@@ -368,17 +368,17 @@ workspaces:
       publication_mode: pull_request
       target_branch: main
       target_commit: d270debc807a39e17556d3d1db6669aaf29664f8
-      updated_at: 2026-04-20T21:37:13.101Z
-    lifecycle_state: ready
+      updated_at: 2026-04-20T21:41:02.546Z
+    lifecycle_state: integrating
     resolved_base_branch: main
     task_ref: "@01KPNXF7GSCJ2TTZ0JPD63YX18"
     task_slug: task-multi-provider-ai-runtime
     timestamps:
       closed_at: null
       last_active_at: 2026-04-20T21:37:04.501Z
-      last_reconciled_at: 2026-04-20T21:37:13.101Z
+      last_reconciled_at: 2026-04-20T21:41:02.546Z
       created_at: 2026-04-20T21:20:52.601Z
-      updated_at: 2026-04-20T21:37:13.101Z
+      updated_at: 2026-04-20T21:41:02.546Z
     workspace_id: dispatch-workspace-01KPNXF7GSCJ2TTZ0JPD63YX18
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
