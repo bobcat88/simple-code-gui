@@ -136,3 +136,12 @@ Examples:
 ✗ «tts»src/Header.tsx«/tts»  (file path - don't wrap)
 ✗ «tts»npm install«/tts»  (command - don't wrap)
 <!-- TTS_VOICE_OUTPUT_END -->
+
+<!-- BORG_KNOWLEDGE_WORKFLOW_START -->
+## Borg Knowledge Vault & AI Workflow
+
+- Shared memory lives in `/home/_johan/Documents/Borg`. Start with `300 Entities/Projects/Portfolio - Condensed Knowledge.md`, `400 Resources/Tech/AI Knowledge Map.md`, `000 OS / Meta/AI Collaboration Protocol.md`, and `300 Entities/People/Johan - Working Profile.md`.
+- For this repo, also read `AGENTS.md`, `CLAUDE.md`, `kspec-agents.md`, and the vault symlink `300 Entities/Projects/simple-code-gui`.
+- kspec is the primary spec/task layer here; Beads may still exist for legacy tracking. Use GitNexus before symbol edits and RTK for command output.
+- Mirror durable cross-project learning back into the vault instead of leaving it only in chat.
+<!-- BORG_KNOWLEDGE_WORKFLOW_END -->
