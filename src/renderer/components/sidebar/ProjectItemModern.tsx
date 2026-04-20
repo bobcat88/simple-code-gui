@@ -3,7 +3,7 @@ import { Project } from '../../stores/workspace.js'
 import { ProjectIcon } from '../ProjectIcon.js'
 import { ClaudeSession, DropTarget } from './types.js'
 import { formatDate } from './utils.js'
-import { ChevronRight, ChevronDown, Play, X, MoreVertical } from 'lucide-react'
+import { ChevronRight, ChevronDown, Play, X, MoreVertical, Plus } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
 interface ProjectItemModernProps {
@@ -95,7 +95,7 @@ export const ProjectItemModern = React.memo(function ProjectItemModern({
           }}
           title="Show all sessions"
         >
-          {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          {isExpanded ? <ChevronDown size={14} strokeWidth={2.5} /> : <ChevronRight size={14} strokeWidth={2.5} />}
         </button>
 
         <div className="relative">
@@ -155,7 +155,7 @@ export const ProjectItemModern = React.memo(function ProjectItemModern({
               }}
               title={`Run: ${project.executable}`}
             >
-              <Play size={12} fill="currentColor" />
+              <Play size={12} strokeWidth={2.5} fill="currentColor" />
             </button>
           )}
           {hasOpenTab && (
@@ -167,7 +167,7 @@ export const ProjectItemModern = React.memo(function ProjectItemModern({
               }}
               title="Close all terminals"
             >
-              <X size={14} />
+              <X size={14} strokeWidth={2.5} />
             </button>
           )}
           <button
@@ -177,7 +177,7 @@ export const ProjectItemModern = React.memo(function ProjectItemModern({
               onContextMenu(e)
             }}
           >
-            <MoreVertical size={14} />
+            <MoreVertical size={14} strokeWidth={2} />
           </button>
         </div>
       </div>
@@ -194,7 +194,7 @@ export const ProjectItemModern = React.memo(function ProjectItemModern({
             }}
           >
             <div className="w-5 h-5 flex items-center justify-center rounded-md bg-muted/50 group-hover/new-session:bg-primary/20 group-hover/new-session:text-primary transition-colors">
-              <span className="text-sm font-bold">+</span>
+              <Plus size={12} strokeWidth={3} />
             </div>
             <span className="text-xs font-medium">New Session</span>
           </div>

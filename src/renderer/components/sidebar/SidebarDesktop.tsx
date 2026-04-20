@@ -28,7 +28,7 @@ export function SidebarDesktop(props: SidebarDesktopProps): React.ReactElement {
         onClick={() => onCollapsedChange(true)}
         title="Collapse sidebar"
       >
-        <ChevronLeft size={14} />
+        <ChevronLeft size={12} strokeWidth={2.5} />
       </button>
 
       <div className="sidebar-resize-handle" onMouseDown={handleMouseDown} />
@@ -48,11 +48,10 @@ export function SidebarCollapsed(props: SidebarCollapsedProps): React.ReactEleme
     <div className="sidebar collapsed relative group" ref={sidebarRef}>
       <button
         className="collapse-bubble"
-        style={{ right: '-12px' }}
         onClick={() => onCollapsedChange(false)}
         title="Expand sidebar"
       >
-        <ChevronRight size={14} />
+        <ChevronRight size={12} strokeWidth={2.5} />
       </button>
     </div>
   )

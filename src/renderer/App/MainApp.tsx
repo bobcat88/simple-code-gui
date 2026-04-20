@@ -26,7 +26,10 @@ import { InstallationPrompt } from './InstallationPrompt'
 import { MobileConnectModal } from './MobileConnectModal'
 import { IconBar } from '../components/IconBar'
 import { Header } from '../components/Header'
-import { LayoutGrid, Terminal as TerminalIcon } from 'lucide-react'
+import {  HelpCircle,
+  LayoutGrid,
+  MessageSquare
+} from 'lucide-react'
 import { cn } from '../lib/utils'
 import { Spotlight } from '../components/Spotlight'
 import { IntelligenceSidebar } from '../components/intelligence/IntelligenceSidebar'
@@ -433,11 +436,11 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
                 ) : (
                   <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-700">
                     <div className="w-20 h-20 mb-6 rounded-3xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shadow-inner">
-                      <TerminalIcon size={40} />
+                      <MessageSquare size={40} strokeWidth={1.5} />
                     </div>
-                    <h2 className="text-2xl font-bold mb-2 text-white/90">No Active Sessions</h2>
+                    <h2 className="text-2xl font-bold mb-2 text-white/90">No Active Threads</h2>
                     <p className="text-muted-foreground max-w-sm">
-                      Add a project from the sidebar, then click a session to open it.
+                      Add a project from the workspace, then click a session to open a thread.
                     </p>
                   </div>
                 )}
