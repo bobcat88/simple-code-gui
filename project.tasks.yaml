@@ -260,3 +260,29 @@ tasks:
         author: Johan.P
         created_at: 2026-04-20T16:51:37.994Z
     todos: []
+  - _ulid: 01KPNWW0YW584EEQ7H1J0E766A
+    slugs:
+      - task-model-routing-policies
+    title: "Implement: Model Routing Policies"
+    type: task
+    spec_ref: "@01KPNWTCV0CY2KPET8VX2X699P"
+    derivation: auto
+    status: pending
+    blocked_by: []
+    depends_on:
+      - "@task-multi-provider-ai-runtime"
+    context: []
+    priority: 3
+    tags: []
+    vcs_refs: []
+    created_at: 2026-04-20T16:51:38.588Z
+    notes:
+      - _ulid: 01KPNWW0YWDHH5P2YENCBBR5V6
+        content: |-
+          Implementation notes (auto-generated from spec):
+
+          System for selecting models based on task type (planning, patching, summarization).
+        supersedes: null
+        author: Johan.P
+        created_at: 2026-04-20T16:51:38.588Z
+    todos: []
