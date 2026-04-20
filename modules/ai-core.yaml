@@ -90,6 +90,9 @@ features:
     title: GSD Execution Engine
     type: feature
     description: Phase-based agent execution engine with verifier loops and wave-based orchestration.
+    status:
+      maturity: draft
+      implementation: in_progress
     depends_on: []
     implements: []
     relates_to: []
