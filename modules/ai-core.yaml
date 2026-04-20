@@ -28,4 +28,18 @@ features:
     tags: []
     created: 2026-04-20T16:49:33.771Z
     notes: []
+  - _ulid: 01KPNWR8R0ZM1G5XD8NWD50KJX
+    slugs:
+      - gsd-engine
+    title: GSD Execution Engine
+    type: feature
+    description: Phase-based agent execution engine with verifier loops and wave-based orchestration.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-04-20T16:49:35.488Z
+    notes: []
 notes: []
