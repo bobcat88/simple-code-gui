@@ -5,7 +5,7 @@ title: "Implement: Multi-Provider AI Runtime"
 type: task
 spec_ref: "@ai-runtime"
 derivation: auto
-status: pending
+status: in_progress
 blocked_by: []
 depends_on: []
 context: []
@@ -20,6 +20,17 @@ history:
         previous: null
     command: task-set
     timestamp: 2026-04-20T21:20:14.221Z
+  - author: Johan.P
+    changes:
+      status:
+        new: in_progress
+        previous: pending
+      started_at:
+        new: 2026-04-20T21:40:25.485Z
+        previous: null
+    command: task-start
+    timestamp: 2026-04-20T21:40:25.485Z
 created_at: 2026-04-20T17:02:07.897Z
+started_at: 2026-04-20T21:40:25.485Z
 todos: []
 automation: eligible

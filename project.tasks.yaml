@@ -4,21 +4,15 @@
   title: "Implement: Multi-Provider AI Runtime"
   type: task
   spec_ref: "@ai-runtime"
-  status: blocked
-  blocked_by:
-    - "Agent task-worker failed 4 consecutive times: Internal error: You've hit your limit · resets
-      12am (Europe/Paris)"
+  status: in_progress
+  blocked_by: []
   depends_on: []
   priority: 3
   tags: []
+  notes_count: 3
+  todos_count: 0
   created_at: 2026-04-20T17:02:07.897Z
-  notes:
-    - _ulid: 01KPPD6T5Y9PW0T7MMD5GNEAZ5
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 12am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T21:37:09.310Z
+  started_at: 2026-04-20T21:40:25.485Z
   automation: eligible
 - _ulid: 01KPNXF874YW06MJEMRD6WBS2H
   slugs:
