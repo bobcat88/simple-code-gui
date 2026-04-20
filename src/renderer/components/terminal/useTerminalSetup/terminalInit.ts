@@ -534,6 +534,7 @@ export function handlePtyData(
   onTTSChunk: (chunk: string) => void,
   onSummaryChunk: (chunk: string) => void,
   onAutoWorkMarker: (chunk: string) => void,
+  onTelemetryChunk: (chunk: string) => void,
   state: InitState
 ): void {
   addToBuffer(ptyId, data)
@@ -546,6 +547,7 @@ export function handlePtyData(
   onTTSChunk(cleanChunk)
   onSummaryChunk(cleanChunk)
   onAutoWorkMarker(cleanChunk)
+  onTelemetryChunk(cleanChunk)
 
   // Strip autowork marker from display
   displayData = displayData.replace(AUTOWORK_MARKER_REGEX, '')

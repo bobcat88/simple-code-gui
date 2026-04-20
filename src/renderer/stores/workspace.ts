@@ -8,6 +8,12 @@ export interface ProjectCategory {
   order: number
 }
 
+export interface BudgetSettings {
+  maxCost?: number
+  maxTokens?: number
+  period?: 'daily' | 'monthly' | 'total'
+}
+
 export interface Project {
   path: string
   name: string
@@ -24,6 +30,7 @@ export interface Project {
   backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
   categoryId?: string
   order?: number
+  budget?: BudgetSettings
 }
 
 export interface OpenTab {

@@ -64,6 +64,7 @@ export function useTerminalSetup(options: UseTerminalSetupOptions): UseTerminalS
     onTTSChunk,
     onSummaryChunk,
     onAutoWorkMarker,
+    onTelemetryChunk,
     resetTTSState,
   } = options
 
@@ -118,6 +119,7 @@ export function useTerminalSetup(options: UseTerminalSetupOptions): UseTerminalS
         onTTSChunk,
         onSummaryChunk,
         onAutoWorkMarker,
+        onTelemetryChunk,
         state
       )
     })

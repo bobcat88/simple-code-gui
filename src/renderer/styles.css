@@ -6233,9 +6233,12 @@ html, body, #root {
   border-top: 1px solid var(--border-subtle);
   z-index: 100;
   overflow: hidden;
+  display: flex;
+  align-items: center;
 }
 
 .terminal-bar-scroll {
+  flex: 1;
   display: flex;
   gap: 6px;
   padding: 6px 10px;
@@ -6398,6 +6401,52 @@ html, body, #root {
 .terminal-bar-dropdown-item.selected {
   background: var(--accent);
   color: white;
+}
+
+/* Telemetry HUD styles */
+.terminal-bar-telemetry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-subtle);
+  height: 100%;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.telemetry-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.telemetry-label {
+  color: var(--text-tertiary);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.telemetry-value {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.telemetry-item--savings {
+  color: var(--success);
+}
+
+.telemetry-item--savings .telemetry-label {
+  color: var(--success);
+  opacity: 0.8;
+}
+
+.telemetry-item--savings .telemetry-value {
+  color: var(--success);
+  font-weight: 600;
 }
 
 .terminal-bar-dropdown-item.toggle-item {
@@ -7081,4 +7130,36 @@ html, body, #root {
   color: #4cc9f0;
   background: rgba(76, 201, 240, 0.1);
   box-shadow: 0 0 10px rgba(76, 201, 240, 0.2);
+}
+
+/* ============================================
+   Budget Enforcement Styles
+   ============================================ */
+
+.budget-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  background: var(--danger-subtle);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  color: var(--danger);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  animation: pulse-border 2s infinite;
+  cursor: help;
+  margin-right: var(--space-sm);
+  white-space: nowrap;
+}
+
+.budget-warning .warning-icon {
+  font-size: 12px;
+}
+
+@keyframes pulse-border {
+  0% { border-color: var(--danger); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { border-color: var(--danger); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+  100% { border-color: var(--danger); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }

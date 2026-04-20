@@ -11,6 +11,7 @@ import { voiceManager } from './voice-manager.js'
 import { setPortableBinDirs } from './platform.js'
 import { getPortableBinDirs } from './portable-deps.js'
 import { initUpdater } from './updater.js'
+import { BudgetService } from './budget-service.js'
 import {
   registerCliHandlers,
   registerBeadsHandlers,
@@ -20,6 +21,7 @@ import {
   registerGsdHandlers,
   registerKspecHandlers,
   registerOrchestrationHandlers,
+  registerTelemetryHandlers,
 } from './ipc/index.js'
 
 import { setupAppConfig, setupSecurityHeaders } from './app/app-setup.js'
@@ -52,6 +54,7 @@ const ptyManager = new PtyManager()
 const sessionStore = new SessionStore()
 const apiServerManager = new ApiServerManager()
 const mobileServer = new MobileServer()
+const budgetService = new BudgetService(sessionStore)
 
 // PTY tracking
 const ptyToProject = new Map<string, string>()
@@ -71,6 +74,7 @@ registerWindowHandlers(getMainWindow)
 registerGsdHandlers()
 registerKspecHandlers()
 registerOrchestrationHandlers(getMainWindow)
+registerTelemetryHandlers(sessionStore, budgetService)
 registerWorkspaceHandlers(sessionStore, getMainWindow)
 registerPtyHandlers(ptyManager, sessionStore, apiServerManager, ptyToProject, ptyToBackend, getMainWindow)
 registerServerHandlers(apiServerManager, mobileServer)

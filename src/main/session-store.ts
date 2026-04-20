@@ -10,6 +10,12 @@ export interface ProjectCategory {
   order: number
 }
 
+export interface BudgetSettings {
+  maxCost?: number         // Maximum cost allowed
+  maxTokens?: number       // Maximum tokens allowed
+  period?: 'daily' | 'monthly' | 'total'
+}
+
 export interface Project {
   path: string
   name: string
@@ -26,6 +32,7 @@ export interface Project {
   backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider' // Per-project backend (overrides global)
   categoryId?: string         // Category this project belongs to
   order?: number              // Order within category or uncategorized list
+  budget?: BudgetSettings     // Per-project budget limits
 }
 
 export interface OpenTab {
@@ -92,6 +99,7 @@ export interface Settings {
   autoAcceptTools?: string[]
   permissionMode?: string
   backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
+  globalBudget?: BudgetSettings
 }
 
 

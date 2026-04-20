@@ -13,6 +13,7 @@ export interface UseTerminalSetupOptions {
   onUserInput: (data: string) => void
   onSummaryChunk: (cleanChunk: string) => void
   onAutoWorkMarker: (cleanChunk: string) => void
+  onTelemetryChunk: (cleanChunk: string) => void
   prePopulateSpokenContent: (chunks: string[]) => void
   resetTTSState: () => void
 }

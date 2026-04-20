@@ -10,6 +10,7 @@ import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from
 import ReactDOM from 'react-dom'
 import { getCommandMenuItems } from '../utils/backendCommands'
 import { AutoWorkOptions } from './TerminalMenu'
+import { useTelemetryStore } from '../stores/telemetry'
 
 interface TerminalBarProps {
   ptyId: string
@@ -18,6 +19,7 @@ interface TerminalBarProps {
   currentBackend: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
   onBackendChange: (backend: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider') => void
   isMobile?: boolean
+  projectPath?: string
   onOpenFileBrowser?: () => void
   onClearWithRestore?: () => void
   onCompactWithRestore?: () => void
@@ -65,9 +67,11 @@ export function TerminalBar({
   isMobile = false,
   onOpenFileBrowser,
   onClearWithRestore,
-  onCompactWithRestore
+  onCompactWithRestore,
+  projectPath
 }: TerminalBarProps): React.ReactElement {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
+  const budgetStatus = useTelemetryStore(state => state.budgetStatus[projectPath || 'global'])
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, visible: false })
   const barRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -302,6 +306,14 @@ export function TerminalBar({
 
   const openCategory = menuCategories.find((category) => category.id === openMenu)
 
+  const sessionTelemetry = useTelemetryStore((state) => state.session[ptyId])
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'k'
+    return num.toString()
+  }
+
   return (
     <div className="terminal-bar" ref={barRef}>
       <div className="terminal-bar-scroll" ref={scrollRef}>
@@ -421,6 +433,49 @@ export function TerminalBar({
           </div>
         ))}
       </div>
+
+      {sessionTelemetry && (sessionTelemetry.tokens.total > 0 || sessionTelemetry.cost > 0 || sessionTelemetry.tokensSaved > 0) && (
+        <div className="terminal-bar-telemetry">
+          {budgetStatus?.exceeded && (
+            <div className="budget-warning" title={budgetStatus.reason || 'Budget Exceeded'}>
+              <span className="warning-icon">⚠️</span>
+              <span className="warning-text">BUDGET EXCEEDED</span>
+            </div>
+          )}
+          <div className="telemetry-item" title="Prompt Tokens">
+            <span className="telemetry-label">P:</span>
+            <span className="telemetry-value">{formatNumber(sessionTelemetry.tokens.prompt)}</span>
+          </div>
+          <div className="telemetry-item" title="Completion Tokens">
+            <span className="telemetry-label">C:</span>
+            <span className="telemetry-value">{formatNumber(sessionTelemetry.tokens.completion)}</span>
+          </div>
+          <div className="telemetry-item" title="Estimated Cost">
+            <span className="telemetry-label">$</span>
+            <span className="telemetry-value">{sessionTelemetry.cost.toFixed(4)}</span>
+          </div>
+          
+          {sessionTelemetry.cacheHits > 0 && (
+            <div className="telemetry-item" title="Cache Hits">
+              <span className="telemetry-label">Hits:</span>
+              <span className="telemetry-value">{formatNumber(sessionTelemetry.cacheHits)}</span>
+            </div>
+          )}
+
+          {(sessionTelemetry.tokensSaved > 0 || sessionTelemetry.savings > 0) && (
+            <div className="telemetry-item telemetry-item--savings" title="Tokens & Cost Saved (via RTK/MCP/Cache)">
+              <span className="telemetry-label">Saved:</span>
+              <span className="telemetry-value">
+                {sessionTelemetry.tokensSaved > 0 && formatNumber(sessionTelemetry.tokensSaved)}
+                {sessionTelemetry.savings > 0 && ` ($${sessionTelemetry.savings.toFixed(4)})`}
+                {sessionTelemetry.savings === 0 && sessionTelemetry.tokensSaved > 0 && sessionTelemetry.cost > 0 && sessionTelemetry.tokens.total > 0 && (
+                   ` (~$${((sessionTelemetry.cost / sessionTelemetry.tokens.total) * sessionTelemetry.tokensSaved).toFixed(4)})`
+                )}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {openCategory && ReactDOM.createPortal(
         <div

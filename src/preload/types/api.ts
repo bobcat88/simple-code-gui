@@ -347,4 +347,32 @@ export interface ElectronAPI {
   onAgentStatus: (callback: (status: any) => void) => () => void
   approveAction: (actionId: string) => Promise<{ success: boolean }>
   rejectAction: (actionId: string) => Promise<{ success: boolean }>
+  
+  // Telemetry
+  telemetry: {
+    addRecord: (record: {
+      ptyId: string
+      projectPath: string
+      backend: string
+      promptTokens: number
+      completionTokens: number
+      totalTokens: number
+      cost: number
+      savings: number
+      tokensSaved: number
+      cacheHits: number
+    }) => Promise<any>
+    getStats: (projectPath?: string) => Promise<{
+      prompt: number
+      completion: number
+      total: number
+      cost: number
+      savings: number
+      tokensSaved: number
+      cacheHits: number
+    }>
+    getHistory: (limit?: number) => Promise<any[]>
+    clear: () => Promise<void>
+    checkBudget: (projectPath?: string) => Promise<{ exceeded: boolean; reason?: string }>
+  }
 }

@@ -9,6 +9,7 @@ import { useTerminalSetup } from './useTerminalSetup.js'
 import { useTTS } from './useTTS.js'
 import { useAutoWork } from './useAutoWork.js'
 import { useSummaryCapture } from './useSummaryCapture.js'
+import { useTelemetryCapture } from './useTelemetryCapture.js'
 import { clearTerminalBuffer, cleanupOrphanedBuffers, formatPathsForBackend } from './utils.js'
 
 // Re-export buffer utilities for external use
@@ -77,6 +78,9 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     autoWorkWithSummary: autoWorkHookPlaceholder.autoWorkState.withSummary,
     buildAutoWorkPrompt: autoWorkHookPlaceholder.buildAutoWorkPrompt,
   })
+  
+  // Telemetry capture hook
+  const { processTelemetryChunk } = useTelemetryCapture({ ptyId, projectPath, backend })
 
   // Reconnect auto work with actual triggerSummarize
   const {
@@ -110,6 +114,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     onUserInput: handleUserInput,
     onSummaryChunk: processSummaryChunk,
     onAutoWorkMarker: handleAutoWorkMarker,
+    onTelemetryChunk: processTelemetryChunk,
     prePopulateSpokenContent,
     resetTTSState,
   })
@@ -362,6 +367,7 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
         currentBackend={(backend || 'claude') as 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'}
         onBackendChange={handleBackendChange}
         isMobile={isMobile}
+        projectPath={projectPath}
         onOpenFileBrowser={onOpenFileBrowser}
         onClearWithRestore={handleClearWithRestore}
         onCompactWithRestore={handleCompactWithRestore}

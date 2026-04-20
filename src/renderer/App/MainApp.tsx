@@ -12,6 +12,7 @@ import type { HostConfig } from '../hooks/useHostConnection'
 import { useWorkspaceStore } from '../stores/workspace'
 import { useVoice } from '../contexts/VoiceContext'
 import { useModals } from '../contexts/ModalContext'
+import { useTelemetryStore } from '../stores/telemetry'
 import {
   useInstallation,
   useUpdater,
@@ -154,6 +155,26 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
   useEffect(() => {
     voiceOutputEnabledRef.current = voiceOutputEnabled
   }, [voiceOutputEnabled])
+
+  // Initialize telemetry and budgets on mount
+  const checkBudget = useTelemetryStore(state => state.checkBudget)
+  const initializeTelemetry = useTelemetryStore(state => state.initialize)
+  
+  useEffect(() => {
+    initializeTelemetry().then(() => {
+      // Initial checks
+      checkBudget() // Global
+      projects.forEach(p => checkBudget(p.path))
+    })
+
+    // Periodic check every 5 minutes
+    const interval = setInterval(() => {
+      checkBudget()
+      projects.forEach(p => checkBudget(p.path))
+    }, 5 * 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [initializeTelemetry, checkBudget, projects])
 
   // Apply per-project voice settings when active tab changes
   useEffect(() => {
