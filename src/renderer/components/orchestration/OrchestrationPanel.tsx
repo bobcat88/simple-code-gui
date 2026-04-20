@@ -1,4 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { 
+  Activity, 
+  Terminal, 
+  Lightbulb, 
+  AlertCircle, 
+  CheckCircle2, 
+  UserCheck, 
+  ShieldAlert,
+  Cpu,
+  Clock,
+  ExternalLink
+} from 'lucide-react'
 import { AgentAction, AgentStatus, OrchestrationState } from './types'
 import './OrchestrationPanel.css'
 
@@ -130,16 +142,44 @@ export function OrchestrationPanel() {
       </div>
 
       <div className="activity-feed">
-        <h3>Live Activity</h3>
+        <div className="feed-header">
+          <Activity size={16} className="header-icon" />
+          <h3>Live Activity Feed</h3>
+        </div>
         <div className="actions-list" ref={scrollRef}>
           {state.recentActions.length === 0 && (
-            <div className="no-activity">Waiting for agent activity...</div>
+            <div className="no-activity">
+              <Cpu size={32} className="empty-icon" />
+              <p>Waiting for agent activity...</p>
+            </div>
           )}
           {state.recentActions.map(action => (
             <div key={action.id} className={`action-item ${action.type}`}>
-              <span className="action-timestamp">{new Date(action.timestamp).toLocaleTimeString()}</span>
-              <span className="action-agent">[{action.agentName}]</span>
-              <span className="action-message">{action.message}</span>
+              <div className="action-icon">
+                {action.type === 'thought' && <Lightbulb size={14} />}
+                {action.type === 'command' && <Terminal size={14} />}
+                {action.type === 'error' && <AlertCircle size={14} />}
+                {action.type === 'success' && <CheckCircle2 size={14} />}
+                {action.type === 'approval_request' && <ShieldAlert size={14} />}
+              </div>
+              <div className="action-content">
+                <div className="action-meta">
+                  <span className="action-agent">{action.agentName}</span>
+                  <div className="action-time">
+                    <Clock size={10} />
+                    <span className="action-timestamp">{new Date(action.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                  </div>
+                </div>
+                <div className="action-message-container">
+                  <span className="action-message">{action.message}</span>
+                  {action.metadata?.file && (
+                    <div className="action-file">
+                      <ExternalLink size={10} />
+                      <span>{action.metadata.file}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
         </div>
