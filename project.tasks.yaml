@@ -268,7 +268,7 @@
   title: "Implement: Token Burn History"
   type: task
   spec_ref: "@01KPNWTTH2GSHV3Q4W2W7F7KV8"
-  status: pending
+  status: in_progress
   blocked_by: []
   depends_on:
     - "@task-token-economics-telemetry"
@@ -277,6 +277,7 @@
   notes_count: 1
   todos_count: 0
   created_at: 2026-04-20T17:02:18.898Z
+  started_at: 2026-04-20T22:13:24.026Z
 - _ulid: 01KPNXFJWFFFH5361QM99H9ZKY
   slugs:
     - task-budget-rate-limits
