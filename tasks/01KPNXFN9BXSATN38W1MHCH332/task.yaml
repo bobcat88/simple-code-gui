@@ -5,7 +5,7 @@ title: "Implement: Real-time Activity Feed"
 type: task
 spec_ref: "@01KPNWY9P99S2EB736NTXXJM4V"
 derivation: auto
-status: pending
+status: in_progress
 blocked_by: []
 depends_on:
   - "@task-advanced-orchestration-ui"
@@ -13,5 +13,17 @@ context: []
 priority: 3
 tags: []
 vcs_refs: []
+history:
+  - author: Johan.P
+    changes:
+      status:
+        new: in_progress
+        previous: pending
+      started_at:
+        new: 2026-04-20T21:50:26.730Z
+        previous: null
+    command: task-start
+    timestamp: 2026-04-20T21:50:26.730Z
 created_at: 2026-04-20T17:02:21.995Z
+started_at: 2026-04-20T21:50:26.730Z
 todos: []
