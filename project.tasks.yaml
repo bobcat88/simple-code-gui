@@ -286,3 +286,29 @@ tasks:
         author: Johan.P
         created_at: 2026-04-20T16:51:38.588Z
     todos: []
+  - _ulid: 01KPNWW1HHNV1EVRYC3XZKCDKQ
+    slugs:
+      - task-named-model-plans
+    title: "Implement: Named Model Plans"
+    type: task
+    spec_ref: "@01KPNWTEKMYMVHRE4AB0AE6EF5"
+    derivation: auto
+    status: pending
+    blocked_by: []
+    depends_on:
+      - "@task-multi-provider-ai-runtime"
+    context: []
+    priority: 3
+    tags: []
+    vcs_refs: []
+    created_at: 2026-04-20T16:51:39.185Z
+    notes:
+      - _ulid: 01KPNWW1HHT5J69XTFHK9M3KYD
+        content: |-
+          Implementation notes (auto-generated from spec):
+
+          User-definable presets for cost/quality balance (e.g., Budget, High-Quality).
+        supersedes: null
+        author: Johan.P
+        created_at: 2026-04-20T16:51:39.185Z
+    todos: []
