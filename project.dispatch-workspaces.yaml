@@ -355,12 +355,12 @@ workspaces:
       detail: null
       eligible: false
       reason: null
-      updated_at: 2026-04-20T21:41:08.190Z
+      updated_at: 2026-04-20T21:41:10.014Z
     health:
       status: healthy
       issues: []
       summary: Workspace record matches current git branch and worktree state.
-      updated_at: 2026-04-20T21:41:09.058Z
+      updated_at: 2026-04-20T21:41:10.014Z
     integration:
       status: pending
       detail: null
@@ -368,26 +368,31 @@ workspaces:
       publication_mode: pull_request
       target_branch: main
       target_commit: d270debc807a39e17556d3d1db6669aaf29664f8
-      updated_at: 2026-04-20T21:41:08.190Z
-    lifecycle_state: ready
+      updated_at: 2026-04-20T21:41:10.014Z
+    lifecycle_state: integrating
     resolved_base_branch: main
     task_ref: "@01KPNXF7GSCJ2TTZ0JPD63YX18"
     task_slug: task-multi-provider-ai-runtime
     timestamps:
       closed_at: null
       last_active_at: 2026-04-20T21:41:05.490Z
-      last_reconciled_at: 2026-04-20T21:41:09.058Z
+      last_reconciled_at: 2026-04-20T21:41:10.014Z
       created_at: 2026-04-20T21:20:52.601Z
-      updated_at: 2026-04-20T21:41:09.058Z
+      updated_at: 2026-04-20T21:41:10.014Z
     workspace_id: dispatch-workspace-01KPNXF7GSCJ2TTZ0JPD63YX18
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
-      reviewer: null
+      reviewer:
+        branch_mode: detached
+        branch_ref: null
+        head: d16fd5074fc2a0d1c31d28ad153600a48f60f52d
+        last_seen_at: 2026-04-20T21:41:10.014Z
+        path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-multi-provider-ai-runtime-01kpnxf7-review
       worker:
         branch_mode: branch
         branch_ref: dispatch/task/task-multi-provider-ai-runtime/01kpnxf7
         head: d16fd5074fc2a0d1c31d28ad153600a48f60f52d
-        last_seen_at: 2026-04-20T21:41:03.659Z
+        last_seen_at: 2026-04-20T21:41:10.014Z
         path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-multi-provider-ai-runtime-01kpnxf7
   - active_role: null
     base_branch_point: d270debc807a39e17556d3d1db6669aaf29664f8
