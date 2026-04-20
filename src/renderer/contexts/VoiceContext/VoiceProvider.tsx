@@ -21,6 +21,58 @@ export function VoiceProvider({ children }: { children: React.ReactNode }): Reac
   // Initialize STT handlers
   const stt = useSTTHandlers({ saveVoiceSetting })
 
+  // Transcription handlers registry
+  const handlersRef = useRef<Map<string, (text: string) => void>>(new Map())
+
+  const registerTranscriptionHandler = useCallback((id: string, handler: (text: string) => void) => {
+    handlersRef.current.set(id, handler)
+  }, [])
+
+  const unregisterTranscriptionHandler = useCallback((id: string) => {
+    handlersRef.current.delete(id)
+  }, [])
+
+  const handleGlobalTranscription = useCallback((text: string) => {
+    // Call all registered handlers (usually only one)
+    handlersRef.current.forEach(handler => handler(text))
+  }, [])
+
+  // Global PTT listener
+  useEffect(() => {
+    let pttActive = false
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!stt.pushToTalkEnabled) return
+      if (e.code !== 'Space' || !e.ctrlKey) return
+      if (e.repeat) return
+      if (stt.isModelLoading) return
+
+      e.preventDefault()
+      if (!pttActive) {
+        pttActive = true
+        stt.startRecording(handleGlobalTranscription)
+      }
+    }
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (!stt.pushToTalkEnabled) return
+      if (e.code !== 'Space') return // Note: ctrl might have been released first
+
+      if (pttActive) {
+        pttActive = false
+        stt.stopRecording()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [stt.pushToTalkEnabled, stt.isModelLoading, stt.startRecording, stt.stopRecording, handleGlobalTranscription])
+
   // Load settings on mount
   useEffect(() => {
     if (!window.electronAPI) {
@@ -110,7 +162,10 @@ export function VoiceProvider({ children }: { children: React.ReactNode }): Reac
     stopRecording: stt.stopRecording,
     // Push-to-Talk
     pushToTalkEnabled: stt.pushToTalkEnabled,
-    setPushToTalkEnabled: stt.setPushToTalkEnabled
+    setPushToTalkEnabled: stt.setPushToTalkEnabled,
+    // Transcription handlers
+    registerTranscriptionHandler,
+    unregisterTranscriptionHandler
   }), [
     tts.voiceOutputEnabled,
     tts.setVoiceOutputEnabled,
@@ -138,7 +193,9 @@ export function VoiceProvider({ children }: { children: React.ReactNode }): Reac
     stt.startRecording,
     stt.stopRecording,
     stt.pushToTalkEnabled,
-    stt.setPushToTalkEnabled
+    stt.setPushToTalkEnabled,
+    registerTranscriptionHandler,
+    unregisterTranscriptionHandler
   ])
 
   return (

@@ -258,43 +258,66 @@ pub async fn voice_install_voice(app: AppHandle, state: State<'_, VoiceManager>,
 }
 
 #[tauri::command]
-pub async fn voice_speak(app: AppHandle, state: State<'_, VoiceManager>, text: String) -> Result<TTSResult, String> {
+pub async fn voice_get_installed(app: AppHandle, state: State<'_, VoiceManager>) -> Result<Vec<String>, String> {
+    Ok(state.get_available_voices(&app))
+}
+
+#[tauri::command]
+pub async fn voice_speak(
+    app: AppHandle, 
+    state: State<'_, VoiceManager>, 
+    text: String, 
+    voice: Option<String>,
+    speed: Option<f32>
+) -> Result<TTSResult, String> {
     if state.is_piper_installed(&app) {
         let piper_exe = state.get_piper_path(&app);
         let voices_dir = state.get_voices_dir(&app);
         
-        // Find first available voice
-        let voices = state.get_available_voices(&app);
-        if let Some(voice) = voices.first() {
-            let model_path = voices_dir.join(format!("{}.onnx", voice));
-            let temp_wav = std::env::temp_dir().join(format!("piper_{}.wav", uuid::Uuid::new_v4()));
+        // Use provided voice or find first available
+        let selected_voice = voice.or_else(|| {
+            state.get_available_voices(&app).first().cloned()
+        });
 
-            let mut child = Command::new(&piper_exe)
-                .arg("--model").arg(&model_path)
-                .arg("--output_file").arg(&temp_wav)
-                .stdin(Stdio::piped())
-                .spawn()
-                .map_err(|e| e.to_string())?;
+        if let Some(voice_name) = selected_voice {
+            let model_path = voices_dir.join(format!("{}.onnx", voice_name));
+            if model_path.exists() {
+                let temp_wav = std::env::temp_dir().join(format!("piper_{}.wav", uuid::Uuid::new_v4()));
 
-            if let Some(mut stdin) = child.stdin.take() {
-                stdin.write_all(text.as_bytes()).map_err(|e| e.to_string())?;
-            }
-
-            let status = child.wait().map_err(|e| e.to_string())?;
-            if status.success() && temp_wav.exists() {
-                let mut file = File::open(&temp_wav).map_err(|e| e.to_string())?;
-                let mut buffer = Vec::new();
-                file.read_to_end(&mut buffer).map_err(|e| e.to_string())?;
+                let mut cmd = Command::new(&piper_exe);
+                cmd.arg("--model").arg(&model_path)
+                   .arg("--output_file").arg(&temp_wav);
                 
-                // Cleanup
-                let _ = fs::remove_file(&temp_wav);
+                if let Some(s) = speed {
+                    cmd.arg("--length_scale").arg((1.0 / s).to_string());
+                }
 
-                let base64_data = base64_encode(&buffer);
-                return Ok(TTSResult {
-                    success: true,
-                    audio_data: Some(base64_data),
-                    error: None,
-                });
+                let mut child = cmd.stdin(Stdio::piped())
+                    .spawn()
+                    .map_err(|e| e.to_string())?;
+
+                if let Some(mut stdin) = child.stdin.take() {
+                    stdin.write_all(text.as_bytes()).map_err(|e| e.to_string())?;
+                }
+
+                let status = child.wait().map_err(|e| e.to_string())?;
+                if status.success() && temp_wav.exists() {
+                    let mut file = File::open(&temp_wav).map_err(|e| e.to_string())?;
+                    let mut buffer = Vec::new();
+                    file.read_to_end(&mut buffer).map_err(|e| e.to_string())?;
+                    
+                    // Cleanup
+                    let _ = fs::remove_file(&temp_wav);
+
+                    let base64_data = base64_encode(&buffer);
+                    return Ok(TTSResult {
+                        success: true,
+                        audio_data: Some(base64_data),
+                        error: None,
+                    });
+                } else {
+                    return Err(format!("Piper failed with status: {}", status));
+                }
             }
         }
     }

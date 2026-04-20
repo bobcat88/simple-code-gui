@@ -59,6 +59,10 @@ export interface VoiceContextValue {
   // Push-to-Talk
   pushToTalkEnabled: boolean
   setPushToTalkEnabled: (enabled: boolean) => void
+
+  // Transcription handlers
+  registerTranscriptionHandler: (id: string, handler: (text: string) => void) => void
+  unregisterTranscriptionHandler: (id: string) => void
 }
 
 // TTS refs interface for handler functions

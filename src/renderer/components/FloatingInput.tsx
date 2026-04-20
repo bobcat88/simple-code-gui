@@ -11,6 +11,7 @@ import {
   Mic
 } from 'lucide-react'
 import { cn } from '../lib/utils'
+import { useVoice } from '../contexts/VoiceContext'
 import { VoiceControls } from './VoiceControls.js'
 
 interface FloatingInputProps {
@@ -62,6 +63,8 @@ export function FloatingInput({
     }
   }
 
+  const { registerTranscriptionHandler, unregisterTranscriptionHandler } = useVoice()
+
   const handleTranscription = useCallback((text: string) => {
     const cleaned = text.trim()
     if (!cleaned) return
@@ -91,6 +94,11 @@ export function FloatingInput({
     // Auto-focus after transcription
     textareaRef.current?.focus()
   }, [onInput])
+
+  useEffect(() => {
+    registerTranscriptionHandler('floating-input', handleTranscription)
+    return () => unregisterTranscriptionHandler('floating-input')
+  }, [handleTranscription, registerTranscriptionHandler, unregisterTranscriptionHandler])
 
   useEffect(() => {
     adjustHeight()

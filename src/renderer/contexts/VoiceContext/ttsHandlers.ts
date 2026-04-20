@@ -177,7 +177,12 @@ export function useTTSHandlers({ settingsLoaded }: UseTTSHandlersOptions): UseTT
         if (!window.electronAPI?.voiceSpeak) {
           continue
         }
-        const result = await window.electronAPI?.voiceSpeak?.(text)
+        
+        // Determine voice and speed
+        const currentVoice = projectVoiceRef.current?.ttsVoice || globalVoiceRef.current?.voice
+        const currentSpeed = speed // state variable
+
+        const result = await window.electronAPI?.voiceSpeak?.(text, currentVoice, currentSpeed)
 
         if (processingGenerationRef.current !== myGeneration) {
           return

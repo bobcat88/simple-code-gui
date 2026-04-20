@@ -27,6 +27,7 @@ export function VoiceControls({
 
   const [ttsInstalled, setTtsInstalled] = useState(false)
   const [installingTTS, setInstallingTTS] = useState(false)
+  const [installProgress, setInstallProgress] = useState(0)
   const [showLevelMeter, setShowLevelMeter] = useState(false)
 
   // Use ref to always have latest activeTabId for transcription callback
@@ -49,8 +50,13 @@ export function VoiceControls({
     checkInstallation()
 
     const cleanup = window.electronAPI?.onInstallProgress?.((data: any) => {
-      if ((data.type === 'piper' || data.type === 'piper-voice') && data.percent === 100) {
+      console.log('Voice install progress:', data)
+      if (data.status === 'downloading' || data.status === 'extracting') {
+        setInstallProgress(data.percent || 0)
+      }
+      if (data.percent === 100) {
         setInstallingTTS(false)
+        setInstallProgress(0)
         checkInstallation()
       }
     })
@@ -86,45 +92,9 @@ export function VoiceControls({
   const handleTranscriptionRef = useRef(handleTranscription)
   useEffect(() => { handleTranscriptionRef.current = handleTranscription }, [handleTranscription])
 
-  // Push-to-Talk keyboard handler (Ctrl+Space)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!pttEnabledRef.current) return
-      if (e.code !== 'Space' || !e.ctrlKey) return
-      if (e.repeat) return // Ignore key repeat
-      if (isModelLoadingRef.current) return
-
-      e.preventDefault()
-      e.stopPropagation()
-
-      if (!isRecordingRef.current && !pttActiveRef.current) {
-        pttActiveRef.current = true
-        startRecording(handleTranscriptionRef.current)
-      }
-    }
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (!pttEnabledRef.current) return
-      if (e.code !== 'Space') return
-      if (!pttActiveRef.current) return
-
-      e.preventDefault()
-      e.stopPropagation()
-
-      pttActiveRef.current = false
-      if (isRecordingRef.current) {
-        stopRecording()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown, true)
-    window.addEventListener('keyup', handleKeyUp, true)
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown, true)
-      window.removeEventListener('keyup', handleKeyUp, true)
-    }
-  }, [startRecording, stopRecording])
+  // Push-to-Talk keyboard handler (Ctrl+Space) - DEPRECATED: Now handled globally by VoiceProvider
+  // We keep the ref sync for UI display only
+  const pttActive = isRecording && pushToTalkEnabled
 
   const handleVoiceInput = async () => {
     if (isModelLoading) return
@@ -171,7 +141,7 @@ export function VoiceControls({
     if (isModelLoading) return `Loading Whisper... ${modelLoadProgress}%`
     if (isRecording) {
       if (pushToTalkEnabled) {
-        return pttActiveRef.current ? 'Held - Speak now' : 'Push Ctrl+Space'
+        return pttActive ? 'Held - Speak now' : 'Push Ctrl+Space'
       }
       return 'Recording...'
     }
@@ -209,12 +179,21 @@ export function VoiceControls({
       </button>
 
       <button
-        className={cn(buttonClass, voiceOutputEnabled && "bg-primary/20 text-primary scale-100", installingTTS && "animate-spin")}
+        className={cn(buttonClass, voiceOutputEnabled && "bg-primary/20 text-primary scale-100")}
         onClick={handleVoiceOutput}
         disabled={installingTTS}
-        title={installingTTS ? 'Installing Piper...' : 'Toggle Voice Output'}
+        title={installingTTS ? `Installing Piper... ${installProgress}%` : 'Toggle Voice Output'}
       >
-        {installingTTS ? <Loader2 size={20} /> : <Volume2 size={20} />}
+        {installingTTS ? (
+          <div className="relative">
+            <Loader2 size={20} className="animate-spin text-primary" />
+            <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold whitespace-nowrap">
+              {installProgress}%
+            </span>
+          </div>
+        ) : (
+          <Volume2 size={20} className={cn(!ttsInstalled && "opacity-50")} />
+        )}
       </button>
     </div>
   )

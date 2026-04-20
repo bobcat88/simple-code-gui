@@ -135,6 +135,21 @@ pub async fn extensions_fetch_registry(force_refresh: bool) -> Result<Registry, 
                 mcps.extend(remote_data.mcps.into_iter().filter(|m| !mcp_ids.contains(&m.id)));
                 agents.extend(remote_data.agents.into_iter().filter(|a| !agent_ids.contains(&a.id)));
 
+                // Add custom URLs
+                if let Ok(custom_urls) = extensions_get_custom_urls().await {
+                    for url in custom_urls {
+                        if let Ok(Some(ext)) = extensions_fetch_from_url(url.clone()).await {
+                            if ext.r#type == "skill" && !skill_ids.contains(&ext.id) {
+                                skills.push(ext);
+                            } else if ext.r#type == "mcp" && !mcp_ids.contains(&ext.id) {
+                                mcps.push(ext);
+                            } else if ext.r#type == "agent" && !agent_ids.contains(&ext.id) {
+                                agents.push(ext);
+                            }
+                        }
+                    }
+                }
+
                 let data = Registry {
                     version: u32::max(builtin.version, remote_data.version),
                     skills,
@@ -159,7 +174,36 @@ pub async fn extensions_fetch_registry(force_refresh: bool) -> Result<Registry, 
         }
     }
 
-    Ok(get_builtin_registry())
+    let builtin = get_builtin_registry();
+    let mut skills = builtin.skills;
+    let mut mcps = builtin.mcps;
+    let mut agents = builtin.agents;
+
+    let skill_ids: HashSet<_> = skills.iter().map(|s| s.id.clone()).collect();
+    let mcp_ids: HashSet<_> = mcps.iter().map(|m| m.id.clone()).collect();
+    let agent_ids: HashSet<_> = agents.iter().map(|a| a.id.clone()).collect();
+
+    // Add custom URLs
+    if let Ok(custom_urls) = extensions_get_custom_urls().await {
+        for url in custom_urls {
+            if let Ok(Some(ext)) = extensions_fetch_from_url(url.clone()).await {
+                if ext.r#type == "skill" && !skill_ids.contains(&ext.id) {
+                    skills.push(ext);
+                } else if ext.r#type == "mcp" && !mcp_ids.contains(&ext.id) {
+                    mcps.push(ext);
+                } else if ext.r#type == "agent" && !agent_ids.contains(&ext.id) {
+                    agents.push(ext);
+                }
+            }
+        }
+    }
+
+    Ok(Registry {
+        version: builtin.version,
+        skills,
+        mcps,
+        agents,
+    })
 }
 
 #[tauri::command]
@@ -173,10 +217,50 @@ pub async fn extensions_get_installed() -> Result<Vec<InstalledExtension>, Strin
     serde_json::from_str(&content).map_err(|e| e.to_string())
 }
 
+fn get_custom_urls_path() -> PathBuf {
+    get_extensions_dir().join("custom-urls.json")
+}
+
 #[tauri::command]
 pub async fn extensions_get_custom_urls() -> Result<Vec<String>, String> {
-    // For now, return empty or read from a config
-    Ok(vec![])
+    let path = get_custom_urls_path();
+    if !path.exists() {
+        return Ok(vec![]);
+    }
+
+    let content = fs::read_to_string(path).map_err(|e| e.to_string())?;
+    serde_json::from_str(&content).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn extensions_add_custom_url(url: String) -> Result<(), String> {
+    let mut urls = extensions_get_custom_urls().await?;
+    if !urls.contains(&url) {
+        urls.push(url);
+        let path = get_custom_urls_path();
+        let _ = fs::create_dir_all(get_extensions_dir());
+        let json = serde_json::to_string_pretty(&urls).map_err(|e| e.to_string())?;
+        fs::write(path, json).map_err(|e| e.to_string())?;
+        
+        // Invalidate cache
+        let _ = fs::remove_file(get_registry_cache_path());
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn extensions_remove_custom_url(url: String) -> Result<(), String> {
+    let mut urls = extensions_get_custom_urls().await?;
+    if let Some(idx) = urls.iter().position(|u| u == &url) {
+        urls.remove(idx);
+        let path = get_custom_urls_path();
+        let json = serde_json::to_string_pretty(&urls).map_err(|e| e.to_string())?;
+        fs::write(path, json).map_err(|e| e.to_string())?;
+        
+        // Invalidate cache
+        let _ = fs::remove_file(get_registry_cache_path());
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -336,11 +420,68 @@ pub async fn extensions_fetch_from_url(url: String) -> Result<Option<Extension>,
         return Err("Invalid GitHub URL".to_string());
     }
 
-    let repo_name = parts[4].replace(".git", "");
+    let user = parts[3];
+    let repo = parts[4].replace(".git", "");
     
+    // Try to fetch extension.json or package.json from main/master
+    let branches = vec!["main", "master"];
+    let files = vec!["extension.json", "package.json"];
+
+    for branch in branches {
+        for file in &files {
+            let raw_url = format!("https://raw.githubusercontent.com/{}/{}/{}/{}", user, repo, branch, file);
+            if let Ok(response) = reqwest::get(&raw_url).await {
+                if response.status().is_success() {
+                    if let Ok(json) = response.json::<serde_json::Value>().await {
+                        let mut ext = Extension {
+                            id: repo.clone(),
+                            name: repo.clone(),
+                            description: format!("Extension from {}", url),
+                            r#type: "skill".to_string(),
+                            repo: Some(url.clone()),
+                            npm: None,
+                            commands: None,
+                            tags: None,
+                            config_schema: None,
+                        };
+
+                        if *file == "extension.json" {
+                            if let Some(name) = json.get("name").and_then(|v| v.as_str()) {
+                                ext.name = name.to_string();
+                            }
+                            if let Some(desc) = json.get("description").and_then(|v| v.as_str()) {
+                                ext.description = desc.to_string();
+                            }
+                            if let Some(ext_type) = json.get("type").and_then(|v| v.as_str()) {
+                                ext.r#type = ext_type.to_string();
+                            }
+                            if let Some(schema) = json.get("configSchema") {
+                                ext.config_schema = Some(schema.clone());
+                            }
+                        } else if *file == "package.json" {
+                            if let Some(name) = json.get("name").and_then(|v| v.as_str()) {
+                                ext.name = name.to_string();
+                            }
+                            if let Some(desc) = json.get("description").and_then(|v| v.as_str()) {
+                                ext.description = desc.to_string();
+                            }
+                            // Guess if it's an MCP
+                            if json.get("mcpServers").is_some() || json.get("dependencies").and_then(|d| d.get("@modelcontextprotocol/sdk")).is_some() {
+                                ext.r#type = "mcp".to_string();
+                            }
+                        }
+                        
+                        return Ok(Some(ext));
+                    }
+                }
+            }
+        }
+    }
+
+    // Fallback
     Ok(Some(Extension {
-        id: repo_name.clone(),
-        name: repo_name.clone(),
+        id: repo.clone(),
+        name: repo.clone(),
         description: format!("Extension from {}", url),
         r#type: "skill".to_string(),
         repo: Some(url),
@@ -351,10 +492,6 @@ pub async fn extensions_fetch_from_url(url: String) -> Result<Option<Extension>,
     }))
 }
 
-#[tauri::command]
-pub async fn extensions_add_custom_url(_url: String) -> Result<(), String> {
-    Ok(())
-}
 
 #[tauri::command]
 pub async fn extensions_set_config(id: String, config: serde_json::Value) -> Result<(), String> {
