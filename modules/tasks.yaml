@@ -100,6 +100,9 @@ features:
     title: Advanced Orchestration UI
     type: feature
     description: High-fidelity dashboard for agent status, activity feeds, and approval workflows.
+    status:
+      maturity: draft
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
