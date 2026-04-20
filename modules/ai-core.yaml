@@ -1,0 +1,16 @@
+_ulid: 01KPNWQND5PA8ZVZEEWXQXK7GH
+slugs:
+  - ai-core
+title: AI Intelligence & Orchestration
+type: module
+description: Everything related to model providers, agent execution, and repository intelligence.
+status:
+  maturity: draft
+  implementation: not_started
+depends_on: []
+implements: []
+relates_to: []
+tests: []
+traits: []
+tags: []
+notes: []
