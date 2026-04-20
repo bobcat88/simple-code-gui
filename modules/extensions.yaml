@@ -117,6 +117,19 @@ features:
         tags: []
         created: 2026-04-20T16:53:03.366Z
         notes: []
+      - _ulid: 01KPNWYNG72RVJCSF9M81S3P4G
+        slugs: []
+        title: Background Jobs Visibility
+        type: requirement
+        description: Panel to monitor running background processes (scans, indices, updates).
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:53:05.159Z
+        notes: []
     created: 2026-04-20T16:52:08.715Z
     notes: []
 notes: []
