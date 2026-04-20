@@ -5,8 +5,10 @@ title: "Implement: Advanced Orchestration UI"
 type: task
 spec_ref: "@orchestration-ui"
 derivation: auto
-status: pending
+status: completed
 blocked_by: []
+closed_reason: Implemented full wiring for Advanced Orchestration UI including shared types,
+  renderer API integration, main process IPC handlers, and preload exposure.
 depends_on: []
 context: []
 priority: 3
@@ -20,6 +22,25 @@ history:
         previous: null
     command: task-set
     timestamp: 2026-04-20T21:20:22.225Z
+  - author: Johan.P
+    changes:
+      status:
+        new: completed
+        previous: pending
+      closed_reason:
+        new: Implemented full wiring for Advanced Orchestration UI including shared types, renderer API
+          integration, main process IPC handlers, and preload exposure.
+        previous: null
+      started_at:
+        new: 2026-04-20T21:47:40.487Z
+        previous: null
+      completed_at:
+        new: 2026-04-20T21:47:40.487Z
+        previous: null
+    command: task-complete
+    timestamp: 2026-04-20T21:47:40.500Z
 created_at: 2026-04-20T17:02:21.363Z
+started_at: 2026-04-20T21:47:40.487Z
+completed_at: 2026-04-20T21:47:40.487Z
 todos: []
 automation: eligible
