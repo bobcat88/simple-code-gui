@@ -135,6 +135,12 @@ declare global {
       // Install progress
       pythonInstall: () => Promise<{ success: boolean; error?: string; method?: string }>
       onInstallProgress: (callback: (data: { type: string; status: string; percent?: number }) => void) => () => void
+
+      // Orchestration
+      onAgentAction: (callback: (action: any) => void) => () => void
+      onAgentStatus: (callback: (status: any) => void) => () => void
+      approveAction: (actionId: string) => Promise<{ success: boolean }>
+      rejectAction: (actionId: string) => Promise<{ success: boolean }>
     }
   }
 }
@@ -351,6 +357,30 @@ export class ElectronBackend implements ExtendedApi {
   debugLog(message: string): void {
     this.checkApi()
     window.electronAPI!.debugLog(message)
+  }
+
+  // ==========================================================================
+  // Orchestration
+  // ==========================================================================
+
+  onAgentAction(callback: (action: any) => void): Unsubscribe {
+    this.checkApi()
+    return window.electronAPI!.onAgentAction(callback)
+  }
+
+  onAgentStatus(callback: (status: any) => void): Unsubscribe {
+    this.checkApi()
+    return window.electronAPI!.onAgentStatus(callback)
+  }
+
+  async approveAction(actionId: string): Promise<{ success: boolean }> {
+    this.checkApi()
+    return window.electronAPI!.approveAction(actionId)
+  }
+
+  async rejectAction(actionId: string): Promise<{ success: boolean }> {
+    this.checkApi()
+    return window.electronAPI!.rejectAction(actionId)
   }
 }
 

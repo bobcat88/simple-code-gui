@@ -78,7 +78,9 @@ export type {
   PtyRecreatedCallback,
   ApiOpenSessionCallback,
   Unsubscribe,
-  ApiContext
+  ApiContext,
+  AgentAction,
+  AgentStatus
 } from './types'
 
 export { ElectronBackend, isElectronAvailable, getElectronBackend } from './electron-backend'

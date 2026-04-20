@@ -152,6 +152,30 @@ export interface VoiceSettings {
 }
 
 // ============================================================================
+// Orchestration Types
+// ============================================================================
+
+export interface AgentAction {
+  id: string
+  agentId: string
+  agentName: string
+  type: 'thought' | 'command' | 'file_change' | 'approval_request' | 'error' | 'success'
+  message: string
+  timestamp: number
+  metadata?: any
+}
+
+export interface AgentStatus {
+  id: string
+  name: string
+  status: 'idle' | 'busy' | 'blocked' | 'error'
+  currentTask?: string
+  progress?: number
+  lastAction?: string
+  worktree?: string
+}
+
+// ============================================================================
 // API Interface
 // ============================================================================
 
@@ -339,6 +363,30 @@ export interface Api {
    * @returns Connection info or undefined if not applicable
    */
   getConnectionInfo?: () => { host: string; port: number; token: string }
+
+  // ==========================================================================
+  // Orchestration
+  // ==========================================================================
+
+  /**
+   * Subscribe to agent actions
+   */
+  onAgentAction: (callback: (action: AgentAction) => void) => Unsubscribe
+
+  /**
+   * Subscribe to agent status updates
+   */
+  onAgentStatus: (callback: (status: AgentStatus) => void) => Unsubscribe
+
+  /**
+   * Approve a pending action
+   */
+  approveAction: (actionId: string) => Promise<{ success: boolean }>
+
+  /**
+   * Reject a pending action
+   */
+  rejectAction: (actionId: string) => Promise<{ success: boolean }>
 }
 
 // ============================================================================

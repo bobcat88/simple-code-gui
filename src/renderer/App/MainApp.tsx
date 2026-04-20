@@ -24,6 +24,7 @@ import {
 import type { Api } from '../api'
 import { InstallationPrompt } from './InstallationPrompt'
 import { MobileConnectModal } from './MobileConnectModal'
+import { OrchestrationPanel } from '../components/orchestration/OrchestrationPanel'
 
 export interface MainAppProps {
   api: Api
@@ -144,6 +145,7 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const [mobileConnectOpen, setMobileConnectOpen] = useState(false)
   const [showFileBrowser, setShowFileBrowser] = useState(false)
+  const [orchestrationOpen, setOrchestrationOpen] = useState(false)
   const [fileBrowserPath, setFileBrowserPath] = useState<string | null>(null)
   const hadProjectsRef = useRef(false)
   const terminalContainerRef = useRef<HTMLDivElement>(null)
@@ -323,6 +325,13 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
                   >
                     {viewMode === 'tabs' ? '\u229E' : '\u25AD'}
                   </button>
+                  <button
+                    className={`orchestration-toggle-btn ${orchestrationOpen ? 'active' : ''}`}
+                    onClick={() => setOrchestrationOpen(!orchestrationOpen)}
+                    title="Toggle Orchestration Hub"
+                  >
+                    🤖
+                  </button>
                 </div>
                 {viewMode === 'tabs' ? (
                   <div className="terminal-container" ref={terminalContainerRef}>
@@ -369,6 +378,11 @@ export function MainApp({ api, isElectron, onDisconnect }: MainAppProps): React.
               <div className="empty-state">
                 <h2>Simple Code GUI</h2>
                 <p>Add a project from the sidebar, then click a session to open it</p>
+              </div>
+            )}
+            {orchestrationOpen && (
+              <div className="orchestration-sidebar">
+                <OrchestrationPanel />
               </div>
             )}
           </div>

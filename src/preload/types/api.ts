@@ -341,4 +341,10 @@ export interface ElectronAPI {
   extensionsAddCustomUrl: (url: string) => Promise<{ success: boolean }>
   extensionsRemoveCustomUrl: (url: string) => Promise<{ success: boolean }>
   extensionsGetCustomUrls: () => Promise<string[]>
+
+  // Orchestration
+  onAgentAction: (callback: (action: any) => void) => () => void
+  onAgentStatus: (callback: (status: any) => void) => () => void
+  approveAction: (actionId: string) => Promise<{ success: boolean }>
+  rejectAction: (actionId: string) => Promise<{ success: boolean }>
 }

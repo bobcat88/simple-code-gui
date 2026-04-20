@@ -25,6 +25,7 @@ import { ConnectionManager } from './connection'
 import { PtyWebSocketManager } from './pty-websocket'
 import { PtyApi } from './pty-api'
 import { WorkspaceApi } from './workspace-api'
+import { OrchestrationApi } from './orchestration-api'
 
 export class HttpBackend implements Api {
   voiceGetInstalled?: () => Promise<
@@ -52,6 +53,7 @@ export class HttpBackend implements Api {
   private wsManager: PtyWebSocketManager
   private ptyApi: PtyApi
   private workspaceApi: WorkspaceApi
+  private orchestrationApi: OrchestrationApi
 
   constructor(config: HttpBackendConfig) {
     // Validate port to prevent requests to invalid addresses like localhost:1
@@ -89,6 +91,7 @@ export class HttpBackend implements Api {
     this.wsManager = new PtyWebSocketManager(wsBaseUrl, config.token)
     this.ptyApi = new PtyApi(this.connection, this.wsManager)
     this.workspaceApi = new WorkspaceApi(this.connection)
+    this.orchestrationApi = new OrchestrationApi(this.connection, this.wsManager)
   }
 
   // Connection State Management
@@ -189,6 +192,24 @@ export class HttpBackend implements Api {
 
   onApiOpenSession(callback: ApiOpenSessionCallback): Unsubscribe {
     return this.workspaceApi.onApiOpenSession(callback)
+  }
+
+  // Orchestration
+
+  onAgentAction(callback: (action: AgentAction) => void): Unsubscribe {
+    return this.orchestrationApi.onAgentAction(callback)
+  }
+
+  onAgentStatus(callback: (status: AgentStatus) => void): Unsubscribe {
+    return this.orchestrationApi.onAgentStatus(callback)
+  }
+
+  approveAction(actionId: string): Promise<{ success: boolean }> {
+    return this.orchestrationApi.approveAction(actionId)
+  }
+
+  rejectAction(actionId: string): Promise<{ success: boolean }> {
+    return this.orchestrationApi.rejectAction(actionId)
   }
 
   // Connection Management

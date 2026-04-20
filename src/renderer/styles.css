@@ -7029,3 +7029,56 @@ html, body, #root {
 .skip-link:focus {
   top: 0;
 }
+
+/* ============================================
+   Orchestration Hub
+   ============================================ */
+
+.orchestration-sidebar {
+  width: 350px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  z-index: 50;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.orchestration-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orchestration-toggle-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  transform: scale(1.1);
+}
+
+.orchestration-toggle-btn.active {
+  color: #4cc9f0;
+  background: rgba(76, 201, 240, 0.1);
+  box-shadow: 0 0 10px rgba(76, 201, 240, 0.2);
+}

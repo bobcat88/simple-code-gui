@@ -1,0 +1,215 @@
+.orchestration-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+  background: rgba(20, 20, 25, 0.7);
+  backdrop-filter: blur(12px);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.orchestration-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.orchestration-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #fff, #aaa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.status-summary {
+  font-size: 0.85rem;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: #888;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot.busy { background: #4cc9f0; box-shadow: 0 0 8px #4cc9f0; }
+.dot.blocked { background: #f72585; box-shadow: 0 0 8px #f72585; }
+
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.agent-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.agent-card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.agent-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.agent-name {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.status-tag {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.status-tag.busy { background: rgba(76, 201, 240, 0.1); color: #4cc9f0; }
+.status-tag.idle { background: rgba(128, 128, 128, 0.1); color: #888; }
+.status-tag.blocked { background: rgba(247, 37, 133, 0.1); color: #f72585; }
+
+.agent-task {
+  font-size: 0.8rem;
+  margin-bottom: 12px;
+}
+
+.task-label {
+  color: #666;
+  margin-right: 4px;
+}
+
+.task-name {
+  color: #bbb;
+}
+
+.agent-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4361ee, #4cc9f0);
+  border-radius: 2px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-text {
+  font-size: 0.7rem;
+  color: #888;
+  min-width: 28px;
+}
+
+.activity-feed {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 16px;
+}
+
+.activity-feed h3 {
+  margin: 0 0 16px 0;
+  font-size: 0.9rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.actions-list {
+  flex: 1;
+  overflow-y: auto;
+  font-family: 'Fira Code', 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.actions-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.actions-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.action-item {
+  margin-bottom: 8px;
+  display: flex;
+  gap: 8px;
+  line-height: 1.4;
+  opacity: 0.85;
+}
+
+.action-timestamp { color: #555; }
+.action-agent { color: #4361ee; font-weight: 500; }
+
+.action-item.thought { color: #888; font-style: italic; }
+.action-item.command { color: #4cc9f0; }
+.action-item.error { color: #f72585; }
+
+.approvals-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.approval-card {
+  background: rgba(67, 97, 238, 0.05);
+  border: 1px solid rgba(67, 97, 238, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.btn-approve {
+  background: #4361ee;
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn-reject {
+  background: transparent;
+  color: #f72585;
+  border: 1px solid rgba(247, 37, 133, 0.3);
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-left: 12px;
+}
