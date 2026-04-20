@@ -40,6 +40,19 @@ features:
         tags: []
         created: 2026-04-20T16:50:41.714Z
         notes: []
+      - _ulid: 01KPNWTB6935QVDS6ANRD4PQ9M
+        slugs: []
+        title: Auth & API Key Management
+        type: requirement
+        description: Secure storage and retrieval of provider credentials in SQLite.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:50:43.529Z
+        notes: []
     created: 2026-04-20T16:49:33.771Z
     notes: []
   - _ulid: 01KPNWR8R0ZM1G5XD8NWD50KJX
