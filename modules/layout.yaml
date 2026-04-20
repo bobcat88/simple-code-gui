@@ -3,132 +3,146 @@ slugs:
   - layout
 title: Layout & Navigation
 type: module
+description: Tiled and tabbed terminal layout, sidebar navigation, project management UI
 status:
   maturity: draft
   implementation: not_started
-description: Tiled and tabbed terminal layout, sidebar navigation, project management UI
-tags:
-  - ui
 depends_on: []
 implements: []
 relates_to: []
 tests: []
 traits: []
-notes: []
+tags:
+  - ui
 features:
   - _ulid: 01KK67C21DPVGAHNPTREZFH029
     slugs:
       - tiled-layout
     title: Tiled Terminal Layout
     type: feature
-    tags: []
     description: Flexible grid layout where terminals are positioned as tiles using percentage-based
       coordinates. Supports splitting, swapping, and multi-tab tiles on a pannable canvas.
+    status:
+      maturity: draft
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
-    notes: []
-    created: 2026-03-08T08:00:13.357Z
     acceptance_criteria:
-      - id: ac-1
-        given: user is in tiled view mode
-        when: a new session is opened
+      - given: user is in tiled view mode
+        id: ac-1
         then: a new tile is added to the layout with percentage-based coordinates and the terminal renders
           inside it
-      - id: ac-2
-        given: multiple tiles exist on the canvas
-        when: a tile is split
+        when: a new session is opened
+      - given: multiple tiles exist on the canvas
+        id: ac-2
         then: the tile divides into two tiles in the specified direction (top/bottom/left/right) each
           getting half the space
-    status:
-      maturity: draft
-      implementation: implemented
+        when: a tile is split
+    tags: []
+    created: 2026-03-08T08:00:13.357Z
+    notes: []
   - _ulid: 01KK67C43QN01EYHYHABV8BBVE
     slugs:
       - tile-drag-drop
     title: Tile Drag & Drop
     type: feature
-    tags: []
     description: Drag projects from sidebar or tabs between tiles. Drop zones support swap,
       split-top/bottom/left/right. Visual preview during drag.
+    status:
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
-    notes: []
+    tags: []
     created: 2026-03-08T08:00:15.480Z
-    status:
-      implementation: implemented
+    notes: []
   - _ulid: 01KK67C5G8P9DBB3ZC020NS5MQ
     slugs:
       - tile-resizing
     title: Tile Resizing
     type: feature
-    tags: []
     description: Resize tiles by dragging edges. Proportional resizing spreads width/height among
       adjacent tiles. Visual edge highlighting on hover.
+    status:
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
-    notes: []
+    tags: []
     created: 2026-03-08T08:00:16.905Z
-    status:
-      implementation: implemented
+    notes: []
   - _ulid: 01KK67C74KF39CXGH08EAA3089
     slugs:
       - canvas-panning
     title: Canvas Panning
     type: feature
-    tags: []
     description: Middle-mouse-button horizontal panning across a virtual canvas wider than the viewport.
       3px threshold before drag starts, suppresses paste during panning.
+    status:
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
-    notes: []
+    tags: []
     created: 2026-03-08T08:00:18.579Z
-    status:
-      implementation: implemented
+    notes: []
   - _ulid: 01KK67C9AQPXS2BZXTN88KXCNT
     slugs:
       - sidebar
     title: Sidebar Navigation
     type: feature
-    tags: []
     description: "Project tree with categories, session lists, inline rename, drag-to-reorder, context
       menus. Desktop: collapsible left panel with resize handle. Mobile: drawer overlay with
       hamburger toggle."
+    status:
+      maturity: draft
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
-    notes: []
+    tags: []
     created: 2026-03-08T08:00:20.824Z
-    status:
-      maturity: draft
-      implementation: implemented
+    notes: []
   - _ulid: 01KK67CAKFEEA1S2W21BYEESQA
     slugs:
       - tabbed-view
     title: Tabbed View Mode
     type: feature
-    tags: []
     description: Traditional tab-based terminal switching as alternative to tiled layout. Supports undo
       close tab.
+    status:
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
-    notes: []
+    tags: []
     created: 2026-03-08T08:00:22.127Z
-    status:
-      implementation: implemented
+    notes: []
+  - _ulid: 01KPNWWWEZYCZCYNWMBNYWJWWN
+    slugs:
+      - workspace-control
+    title: Advanced Workspace Control
+    type: feature
+    description: Enhanced project switcher and home screen with usage summaries and alerts.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-04-20T16:52:06.752Z
+    notes: []
+notes: []
