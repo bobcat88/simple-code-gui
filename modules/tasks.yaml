@@ -106,6 +106,20 @@ features:
     tests: []
     traits: []
     tags: []
+    requirements:
+      - _ulid: 01KPNWY9P99S2EB736NTXXJM4V
+        slugs: []
+        title: Real-time Activity Feed
+        type: requirement
+        description: Visual log of all system and agent activities across the current session.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:52:53.066Z
+        notes: []
     created: 2026-04-20T16:52:04.804Z
     notes: []
 notes: []
