@@ -26,6 +26,20 @@ features:
     tests: []
     traits: []
     tags: []
+    requirements:
+      - _ulid: 01KPNWT9DJJYXS5J0HCP3WJ0R6
+        slugs: []
+        title: Provider Abstraction Interface
+        type: requirement
+        description: Unified trait/interface for different LLM providers (Claude, OpenAI, Gemini, Ollama).
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:50:41.714Z
+        notes: []
     created: 2026-04-20T16:49:33.771Z
     notes: []
   - _ulid: 01KPNWR8R0ZM1G5XD8NWD50KJX
