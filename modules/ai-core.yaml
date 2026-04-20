@@ -160,6 +160,20 @@ features:
     tests: []
     traits: []
     tags: []
+    requirements:
+      - _ulid: 01KPNWTQ5WY2JVHCYXXKDFCKQ6
+        slugs: []
+        title: Live Token/Cost HUD
+        type: requirement
+        description: Real-time UI component showing current session burn and budget status.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:50:55.804Z
+        notes: []
     created: 2026-04-20T16:49:37.000Z
     notes: []
 notes: []
