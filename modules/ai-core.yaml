@@ -240,6 +240,9 @@ features:
         title: Budget & Rate Limits
         type: requirement
         description: Configurable caps on token usage per task or session.
+        status:
+          maturity: draft
+          implementation: in_progress
         depends_on: []
         implements: []
         relates_to: []
