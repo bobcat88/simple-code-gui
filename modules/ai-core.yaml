@@ -154,6 +154,9 @@ features:
     title: Token Economics & Telemetry
     type: feature
     description: Real-time tracking of token consumption and cost savings from RTK/MCP/GitNexus.
+    status:
+      maturity: draft
+      implementation: in_progress
     depends_on: []
     implements: []
     relates_to: []
