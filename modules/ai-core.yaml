@@ -187,6 +187,19 @@ features:
         tags: []
         created: 2026-04-20T16:50:57.587Z
         notes: []
+      - _ulid: 01KPNWTTH2GSHV3Q4W2W7F7KV8
+        slugs: []
+        title: Token Burn History
+        type: requirement
+        description: SQLite-backed logging of all token transactions for historical analysis.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:50:59.235Z
+        notes: []
     created: 2026-04-20T16:49:37.000Z
     notes: []
 notes: []
