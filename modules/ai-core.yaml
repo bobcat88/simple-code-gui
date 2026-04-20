@@ -224,6 +224,9 @@ features:
         title: Token Burn History
         type: requirement
         description: SQLite-backed logging of all token transactions for historical analysis.
+        status:
+          maturity: draft
+          implementation: in_progress
         depends_on: []
         implements: []
         relates_to: []
