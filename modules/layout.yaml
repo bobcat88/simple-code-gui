@@ -157,6 +157,19 @@ features:
         tags: []
         created: 2026-04-20T16:52:59.980Z
         notes: []
+      - _ulid: 01KPNWYJ0X2PM2NVYDP2C4VQBJ
+        slugs: []
+        title: Home Usage Summary
+        type: requirement
+        description: Dashboard view of total token usage and activity across all projects.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:53:01.597Z
+        notes: []
     created: 2026-04-20T16:52:06.752Z
     notes: []
 notes: []
