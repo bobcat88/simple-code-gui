@@ -583,12 +583,12 @@ workspaces:
       detail: null
       eligible: false
       reason: null
-      updated_at: 2026-04-20T21:21:47.667Z
+      updated_at: 2026-04-20T21:21:49.427Z
     health:
       status: healthy
       issues: []
       summary: Workspace record matches current git branch and worktree state.
-      updated_at: 2026-04-20T21:21:47.667Z
+      updated_at: 2026-04-20T21:21:49.427Z
     integration:
       status: pending
       detail: null
@@ -596,7 +596,7 @@ workspaces:
       publication_mode: pull_request
       target_branch: main
       target_commit: d270debc807a39e17556d3d1db6669aaf29664f8
-      updated_at: 2026-04-20T21:21:47.667Z
+      updated_at: 2026-04-20T21:21:49.427Z
     lifecycle_state: ready
     resolved_base_branch: main
     task_ref: "@01KPNXFVX9J0TAT177R2PJFPZ2"
@@ -604,9 +604,9 @@ workspaces:
     timestamps:
       closed_at: null
       last_active_at: 2026-04-20T21:21:34.050Z
-      last_reconciled_at: 2026-04-20T21:21:47.667Z
+      last_reconciled_at: 2026-04-20T21:21:49.427Z
       created_at: 2026-04-20T21:21:31.226Z
-      updated_at: 2026-04-20T21:21:47.667Z
+      updated_at: 2026-04-20T21:21:49.427Z
     workspace_id: dispatch-workspace-01KPNXFVX9J0TAT177R2PJFPZ2
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
@@ -615,5 +615,5 @@ workspaces:
         branch_mode: branch
         branch_ref: dispatch/task/task-system-operational-telemetry/01kpnxfv
         head: d270debc807a39e17556d3d1db6669aaf29664f8
-        last_seen_at: 2026-04-20T21:21:31.226Z
+        last_seen_at: 2026-04-20T21:21:49.427Z
         path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-system-operational-telemetry-01kpnxfv
