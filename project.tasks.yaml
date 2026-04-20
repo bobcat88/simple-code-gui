@@ -208,3 +208,29 @@ tasks:
         author: Johan.P
         created_at: 2026-04-20T16:51:36.789Z
     todos: []
+  - _ulid: 01KPNWVZT0EGWG9FW6YJWG19FK
+    slugs:
+      - task-provider-abstraction-interface
+    title: "Implement: Provider Abstraction Interface"
+    type: task
+    spec_ref: "@01KPNWT9DJJYXS5J0HCP3WJ0R6"
+    derivation: auto
+    status: pending
+    blocked_by: []
+    depends_on:
+      - "@task-multi-provider-ai-runtime"
+    context: []
+    priority: 3
+    tags: []
+    vcs_refs: []
+    created_at: 2026-04-20T16:51:37.408Z
+    notes:
+      - _ulid: 01KPNWVZT0PJCYBYPY3BEKJPXN
+        content: |-
+          Implementation notes (auto-generated from spec):
+
+          Unified trait/interface for different LLM providers (Claude, OpenAI, Gemini, Ollama).
+        supersedes: null
+        author: Johan.P
+        created_at: 2026-04-20T16:51:37.408Z
+    todos: []
