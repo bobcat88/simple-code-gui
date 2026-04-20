@@ -3,9 +3,10 @@ import {
   Settings, 
   Terminal, 
   HelpCircle, 
-  FolderOpen,
+  LayoutGrid,
+  MessageSquare,
   Cpu,
-  Layers
+  Zap
 } from 'lucide-react'
 import { cn } from '../lib/utils'
 
@@ -25,10 +26,10 @@ export function IconBar({
   onOpenSettings
 }: IconBarProps) {
   const items = [
-    { id: 'projects', icon: FolderOpen, label: 'Projects' },
-    { id: 'terminal', icon: Terminal, label: 'Sessions' },
-    { id: 'orchestration', icon: Layers, label: 'Orchestration' },
-    { id: 'plugins', icon: Cpu, label: 'Plugins' },
+    { id: 'projects', icon: LayoutGrid, label: 'Workspace' },
+    { id: 'terminal', icon: MessageSquare, label: 'Threads' },
+    { id: 'orchestration', icon: Zap, label: 'Automations' },
+    { id: 'plugins', icon: Cpu, label: 'Tools' },
   ]
 
   return (

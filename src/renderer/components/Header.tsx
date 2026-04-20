@@ -6,7 +6,8 @@ import {
   LayoutGrid,
   Search,
   Plus,
-  Activity
+  Activity,
+  MessageSquare
 } from 'lucide-react'
 import { OpenTab } from '../stores/workspace'
 import { cn } from '../lib/utils'
@@ -43,8 +44,8 @@ export function Header({
   return (
     <header className="h-14 glass-header flex items-center px-4 gap-4 sticky top-0 z-10" data-tauri-drag-region>
       <div className="flex items-center gap-2 text-muted-foreground shrink-0 border-r border-border pr-4 h-8" data-tauri-drag-region>
-        <TerminalIcon size={16} data-tauri-drag-region />
-        <span className="text-xs font-bold uppercase tracking-wider select-none" data-tauri-drag-region>Codex One</span>
+        <MessageSquare size={16} strokeWidth={2.5} className="text-primary" data-tauri-drag-region />
+        <span className="text-[13px] font-bold tracking-tight text-white/90 select-none" data-tauri-drag-region>Codex</span>
       </div>
       
       <SessionSwitcher 

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Project, useWorkspaceStore } from '../../stores/workspace.js'
 import { Api } from '../../api/types.js'
-import { Settings, LayoutGrid, Terminal, Plus, FolderPlus, FolderSearch, Zap, ChevronRight, Cpu } from 'lucide-react'
+import { Settings, LayoutGrid, Terminal, Plus, FolderPlus, FolderSearch, Zap, ChevronRight, Cpu, MessageSquare } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { BeadsPanel } from '../BeadsPanel.js'
 import { GSDStatus } from '../GSDStatus.js'
@@ -213,8 +213,8 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     return (
       <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
         <div className="p-4 border-b border-border/50 font-bold flex items-center gap-2 bg-white/5">
-          <Terminal size={18} className="text-primary" />
-          <span className="tracking-tight">Active Sessions</span>
+          <MessageSquare size={18} className="text-primary" />
+          <span className="tracking-tight text-white/90">Threads</span>
         </div>
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {openTabs.length > 0 ? (
@@ -252,8 +252,8 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     return (
       <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
         <div className="p-4 border-b border-border/50 font-bold flex items-center gap-2 bg-white/5">
-          <LayoutGrid size={18} className="text-primary" />
-          <span className="tracking-tight">Orchestration</span>
+          <Zap size={18} className="text-primary" />
+          <span className="tracking-tight text-white/90">Automations</span>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <div className="space-y-3">

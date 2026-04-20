@@ -87,6 +87,30 @@ html, body, #root {
   backdrop-filter: blur(40px) saturate(210%);
   -webkit-backdrop-filter: blur(40px) saturate(210%);
   border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar.collapsed {
+  width: 12px !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  border-right: none !important;
+  cursor: pointer;
+}
+
+.sidebar.collapsed::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: transparent;
+  transition: background 0.2s;
+}
+
+.sidebar.collapsed:hover::after {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .glass-header {
@@ -202,34 +226,35 @@ html, body, #root {
 /* Sidebar Hover Collapse Bubble */
 .collapse-bubble {
   position: absolute;
-  right: -11px;
+  right: -10px;
   top: 50%;
-  transform: translateY(-50%);
-  width: 22px;
-  height: 22px;
-  background: rgba(255, 255, 255, 0.95);
-  color: #020203;
+  transform: translateY(-50%) scale(0.8);
+  width: 20px;
+  height: 20px;
+  background: white;
+  color: #000;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);
   cursor: pointer;
-  z-index: 100;
+  z-index: 1000;
   opacity: 0;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  border: none;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border: 1px solid rgba(0,0,0,0.1);
 }
 
 .sidebar-container:hover .collapse-bubble,
-.sidebar.collapsed .collapse-bubble {
+.sidebar.collapsed:hover .collapse-bubble {
   opacity: 1;
+  transform: translateY(-50%) scale(1);
 }
 
 .collapse-bubble:hover {
-  transform: translateY(-50%) scale(1.15);
+  transform: translateY(-50%) scale(1.1) !important;
   background: white;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.2);
 }
 
 /* Staggered Entry Animations */
