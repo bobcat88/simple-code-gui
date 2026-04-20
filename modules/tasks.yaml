@@ -133,7 +133,7 @@ features:
         description: Detailed status display for individual agents (Planner, Builder, Reviewer).
         status:
           maturity: draft
-          implementation: in_progress
+          implementation: implemented
         depends_on: []
         implements: []
         relates_to: []
