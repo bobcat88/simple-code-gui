@@ -115,11 +115,16 @@ export const setupTauriShim = () => {
     voiceApplySettings: async (settings: any) => invoke('save_settings', { 
       settings: { ...(await invoke('get_settings') as any), ...settings } 
     }),
+    voiceCheckTTS: async () => invoke('voice_check_tts'),
+    voiceInstallPiper: async () => invoke('voice_install_piper'),
+    voiceInstallVoice: async (voice: string) => invoke('voice_install_voice', { voice }),
     voiceGetInstalled: async () => [],
     voiceSpeak: async (text: string) => invoke('voice_speak', { text }),
     voiceStopSpeaking: async () => invoke('voice_stop'),
     xttsGetVoices: async () => [],
+    xttsSpeak: async (text: string, voice: string, language: string) => ({ success: false, error: 'XTTS not implemented' }),
     tadaCheck: async () => ({ installed: false }),
+    tadaSpeak: async (text: string) => ({ success: false, error: 'TADA not implemented' }),
 
     // Beads (Native Orchestration)
     beadsCheck: (cwd: string) => invoke('beads_check', { cwd }),

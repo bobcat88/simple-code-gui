@@ -66,10 +66,20 @@ export function FloatingInput({
     const cleaned = text.trim()
     if (!cleaned) return
 
-    // Special case: short confirmations for plan approval
-    const lower = cleaned.toLowerCase()
-    if (lower === 'yes' || lower === 'approve' || lower === 'y' || lower === 'do it') {
+    // Special case: short confirmations or cancellations
+    const lower = cleaned.toLowerCase().replace(/[.!?]/g, '')
+    
+    // Positive confirmations
+    const positiveKeywords = ['yes', 'approve', 'y', 'do it', 'yep', 'sure', 'confirm', 'go ahead', 'proceed']
+    if (positiveKeywords.includes(lower)) {
       onInput('y\r')
+      return
+    }
+
+    // Negative responses / Cancellations
+    const negativeKeywords = ['no', 'cancel', 'stop', 'nope', 'negative', 'dont', "don't"]
+    if (negativeKeywords.includes(lower)) {
+      onInput('n\r') // Send 'n' to unblock prompts that expect y/n
       return
     }
 
