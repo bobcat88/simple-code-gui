@@ -99,7 +99,7 @@ features:
     description: Operational monitoring for app health, crash reporting, and background jobs.
     status:
       maturity: draft
-      implementation: in_progress
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
