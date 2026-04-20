@@ -4,8 +4,10 @@
   title: "Implement: Multi-Provider AI Runtime"
   type: task
   spec_ref: "@ai-runtime"
-  status: pending
-  blocked_by: []
+  status: blocked
+  blocked_by:
+    - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
+      12am (Europe/Paris)"
   depends_on: []
   priority: 3
   tags: []
