@@ -36,6 +36,7 @@ import { Spotlight } from '../components/Spotlight'
 import { IntelligenceSidebar } from '../components/intelligence/IntelligenceSidebar'
 import { useProjectIntelligence } from '../hooks/useProjectIntelligence'
 import { Activity } from 'lucide-react'
+import { TranscriptionOverlay } from '../components/voice/TranscriptionOverlay'
 
 export interface MainAppProps {
   api: Api
@@ -498,6 +499,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
           onOpenProjectWizard={openProjectWizard}
           onSwitchToTab={setActiveTab}
         />
+        <TranscriptionOverlay />
       </div>
     </div>
   )

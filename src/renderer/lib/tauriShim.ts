@@ -137,16 +137,13 @@ export const setupTauriShim = () => {
     beadsStart: (cwd: string, taskId: string) => invoke('beads_start', { cwd, taskId }),
     beadsComplete: (cwd: string, taskId: string) => invoke('beads_complete', { cwd, taskId }),
     beadsDelete: (cwd: string, taskId: string) => invoke('beads_delete', { cwd, taskId }),
-    beadsUpdate: (cwd: string, taskId: string, status?: string, title?: string, description?: string, priority?: number) => 
-      invoke('beads_update', { cwd, taskId, status, title, description, priority }),
+    beadsUpdate: (cwd: string, taskId: string, status?: string, title?: string, description?: string, priority?: number, acceptance_criteria?: any[], traits?: any[]) => 
+      invoke('beads_update', { cwd, taskId, status, title, description, priority, acceptance_criteria, traits }),
     beadsWatch: (cwd: string) => invoke('beads_watch', { cwd }),
     beadsUnwatch: (cwd: string) => invoke('beads_unwatch', { cwd }),
     onBeadsTasksChanged: (callback: (data: { cwd: string }) => void) => {
-      let unlisten: (() => void) | undefined;
-      listen('beads-tasks-changed', (event: any) => {
-        callback(event.payload);
-      }).then(u => unlisten = u);
-      return () => unlisten?.();
+      const unlisten = listen('beads-tasks-changed', (event: any) => callback(event.payload));
+      return () => { unlisten.then(fn => fn()); };
     },
     beadsGetTasks: () => invoke('get_beads_tasks'),
     beadsSyncWorkflow: () => invoke('sync_workflow'),
@@ -156,13 +153,13 @@ export const setupTauriShim = () => {
     kspecInit: (cwd: string) => invoke('kspec_init', { cwd }),
     kspecList: (cwd: string) => invoke('kspec_list', { cwd }),
     kspecShow: (cwd: string, taskId: string) => invoke('kspec_show', { cwd, taskId }),
-    kspecCreate: (cwd: string, title: string, description?: string, priority?: number, type?: string, tags?: string) => 
+    kspecCreate: (cwd: string, title: string, description?: string, priority?: number, type?: string, tags?: string[]) => 
       invoke('kspec_create', { cwd, title, description, priority, task_type: type, tags }),
     kspecStart: (cwd: string, taskId: string) => invoke('kspec_start', { cwd, taskId }),
     kspecComplete: (cwd: string, taskId: string) => invoke('kspec_complete', { cwd, taskId }),
     kspecDelete: (cwd: string, taskId: string) => invoke('kspec_delete', { cwd, taskId }),
-    kspecUpdate: (cwd: string, taskId: string, status?: string, title?: string, description?: string, priority?: number) => 
-      invoke('kspec_update', { cwd, taskId, status, title, description, priority }),
+    kspecUpdate: (cwd: string, taskId: string, status?: string, title?: string, description?: string, priority?: number, acceptance_criteria?: any[], traits?: any[]) => 
+      invoke('kspec_update', { cwd, taskId, status, title, description, priority, acceptance_criteria, traits }),
     kspecWatch: (cwd: string) => invoke('kspec_watch', { cwd }),
     kspecUnwatch: (cwd: string) => invoke('kspec_unwatch', { cwd }),
     onKspecTasksChanged: (callback: (data: { cwd: string }) => void) => {

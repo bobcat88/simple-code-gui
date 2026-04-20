@@ -125,12 +125,14 @@ export class BeadsAdapter implements TaskAdapter {
 
   async update(cwd: string, taskId: string, params: UpdateTaskParams): Promise<{ success: boolean; error?: string }> {
     const result = await window.electronAPI?.beadsUpdate(
-      cwd,
-      taskId,
-      params.status,
-      params.title,
-      params.description,
-      params.priority
+      cwd, 
+      taskId, 
+      params.status, 
+      params.title, 
+      params.description, 
+      params.priority,
+      params.acceptanceCriteria,
+      params.traits
     )
     return { success: !!result?.success, error: result?.error }
   }
