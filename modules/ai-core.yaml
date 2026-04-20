@@ -174,6 +174,19 @@ features:
         tags: []
         created: 2026-04-20T16:50:55.804Z
         notes: []
+      - _ulid: 01KPNWTRXKAQ76CQYFP8CA18X9
+        slugs: []
+        title: Savings Telemetry (RTK/MCP)
+        type: requirement
+        description: Calculation and display of tokens saved by using RTK, MCP, and local intelligence.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        tags: []
+        created: 2026-04-20T16:50:57.587Z
+        notes: []
     created: 2026-04-20T16:49:37.000Z
     notes: []
 notes: []
