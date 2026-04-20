@@ -337,3 +337,29 @@ tasks:
         author: Johan.P
         created_at: 2026-04-20T16:51:41.180Z
     todos: []
+  - _ulid: 01KPNWW42VQ75P9NSX2GTQ7CFC
+    slugs:
+      - task-phase-based-decomposition
+    title: "Implement: Phase-based Decomposition"
+    type: task
+    spec_ref: "@01KPNWTGE0H4SR3YYF0YNTHT2D"
+    derivation: auto
+    status: pending
+    blocked_by: []
+    depends_on:
+      - "@task-gsd-execution-engine"
+    context: []
+    priority: 3
+    tags: []
+    vcs_refs: []
+    created_at: 2026-04-20T16:51:41.787Z
+    notes:
+      - _ulid: 01KPNWW42TFF10NA6112C9HS23
+        content: |-
+          Implementation notes (auto-generated from spec):
+
+          Logic to break large tasks into sequential, manageable phases.
+        supersedes: null
+        author: Johan.P
+        created_at: 2026-04-20T16:51:41.787Z
+    todos: []
