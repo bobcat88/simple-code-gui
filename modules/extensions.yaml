@@ -122,6 +122,9 @@ features:
         title: Background Jobs Visibility
         type: requirement
         description: Panel to monitor running background processes (scans, indices, updates).
+        status:
+          maturity: draft
+          implementation: in_progress
         depends_on: []
         implements: []
         relates_to: []
