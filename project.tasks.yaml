@@ -188,7 +188,7 @@
   title: "Implement: Token Economics & Telemetry"
   type: task
   spec_ref: "@token-economics"
-  status: pending
+  status: in_progress
   blocked_by: []
   depends_on: []
   priority: 3
@@ -196,7 +196,7 @@
   notes_count: 5
   todos_count: 0
   created_at: 2026-04-20T17:02:16.991Z
-  started_at: 2026-04-20T17:23:59.896Z
+  started_at: 2026-04-20T22:09:01.490Z
   automation: eligible
 - _ulid: 01KPNXFH0H4KFJFGB30FYVE8KB
   slugs:
