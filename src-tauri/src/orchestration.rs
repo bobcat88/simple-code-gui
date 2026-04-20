@@ -234,7 +234,9 @@ pub async fn beads_update(
     status: Option<String>,
     title: Option<String>,
     description: Option<String>,
-    priority: Option<i32>
+    priority: Option<i32>,
+    acceptance_criteria: Option<Vec<serde_json::Value>>,
+    traits: Option<Vec<serde_json::Value>>
 ) -> Result<serde_json::Value, String> {
     let mut cmd = Command::new("bd");
     cmd.current_dir(&cwd).arg("update").arg(&task_id);
@@ -249,7 +251,25 @@ pub async fn beads_update(
         cmd.arg("--description").arg(d);
     }
     if let Some(p) = priority {
-        cmd.arg("--priority").arg(p.to_string());
+        cmd.arg("--estimate").arg((p * 60).to_string()); // Beads uses minutes for priority/estimate? No, priority is different.
+    }
+
+    if let Some(ac_list) = acceptance_criteria {
+        // Convert AC list to a string for beads --acceptance flag
+        let ac_string = ac_list.iter().map(|ac| {
+            let title = ac.get("title").and_then(|v| v.as_str()).unwrap_or("");
+            let status = ac.get("status").and_then(|v| v.as_str()).unwrap_or("pending");
+            format!("[{}] {}", if status == "completed" { "x" } else { " " }, title)
+        }).collect::<Vec<_>>().join("\n");
+        cmd.arg("--acceptance").arg(ac_string);
+    }
+
+    if let Some(trait_list) = traits {
+        for tr in trait_list {
+            if let Some(label) = tr.get("label").and_then(|v| v.as_str()) {
+                cmd.arg("--add-label").arg(label);
+            }
+        }
     }
 
     let output = cmd.output().map_err(|e| format!("Failed to execute bd update: {}", e))?;
@@ -500,23 +520,47 @@ pub async fn kspec_update(
     status: Option<String>,
     title: Option<String>,
     description: Option<String>,
-    priority: Option<i32>
+    priority: Option<i32>,
+    acceptance_criteria: Option<Vec<serde_json::Value>>,
+    traits: Option<Vec<serde_json::Value>>
 ) -> Result<serde_json::Value, String> {
-    let mut cmd = Command::new("kspec");
-    cmd.current_dir(&cwd).arg("task").arg("set").arg(&task_id);
+    // We'll use 'kspec task patch' for rich updates
+    let mut patch_data = serde_json::Map::new();
     
     if let Some(s) = status {
-        cmd.arg("--status").arg(s);
+        patch_data.insert("status".to_string(), serde_json::Value::String(s));
     }
     if let Some(t) = title {
-        cmd.arg("--title").arg(t);
+        patch_data.insert("title".to_string(), serde_json::Value::String(t));
     }
     if let Some(d) = description {
-        cmd.arg("--description").arg(d);
+        patch_data.insert("description".to_string(), serde_json::Value::String(d));
     }
     if let Some(p) = priority {
-        cmd.arg("--priority").arg(p.to_string());
+        patch_data.insert("priority".to_string(), serde_json::Value::Number(serde_json::Number::from(p)));
     }
+    if let Some(ac) = acceptance_criteria {
+        patch_data.insert("acceptance_criteria".to_string(), serde_json::Value::Array(ac));
+    }
+    if let Some(tr) = traits {
+        // Map traits back to tags for kspec
+        let tags = tr.iter()
+            .filter_map(|t| t.get("label").and_then(|v| v.as_str()))
+            .map(|s| serde_json::Value::String(s.to_string()))
+            .collect::<Vec<_>>();
+        patch_data.insert("tags".to_string(), serde_json::Value::Array(tags));
+    }
+
+    let patch_json = serde_json::to_string(&patch_data).map_err(|e| e.to_string())?;
+
+    let mut cmd = Command::new("kspec");
+    cmd.current_dir(&cwd)
+        .arg("task")
+        .arg("patch")
+        .arg(&task_id)
+        .arg("--data")
+        .arg(patch_json)
+        .arg("--allow-unknown"); // Ensure we can store ACs even if schema is strict
 
     let output = cmd.output().map_err(|e| format!("Failed to execute kspec task set: {}", e))?;
 

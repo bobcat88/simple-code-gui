@@ -114,6 +114,9 @@ export interface UpdateTaskParams {
   description?: string
   priority?: number
   automation?: AutomationEligibility
+  acceptanceCriteria?: TaskAcceptanceCriterion[]
+  traits?: TaskTrait[]
+  specItems?: TaskSpecLink[]
 }
 
 export type BackendKind = 'beads' | 'kspec' | 'none'

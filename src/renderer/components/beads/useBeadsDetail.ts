@@ -18,6 +18,10 @@ export interface DetailModalState {
   setEditDetailPriority: React.Dispatch<React.SetStateAction<number>>
   editDetailStatus: string
   setEditDetailStatus: React.Dispatch<React.SetStateAction<string>>
+  editDetailAcceptanceCriteria: any[]
+  setEditDetailAcceptanceCriteria: React.Dispatch<React.SetStateAction<any[]>>
+  editDetailTraits: any[]
+  setEditDetailTraits: React.Dispatch<React.SetStateAction<any[]>>
 }
 
 export interface DetailModalCallbacks {
@@ -47,6 +51,8 @@ export function useBeadsDetail({
   const [editDetailDescription, setEditDetailDescription] = useState('')
   const [editDetailPriority, setEditDetailPriority] = useState<number>(2)
   const [editDetailStatus, setEditDetailStatus] = useState<string>('open')
+  const [editDetailAcceptanceCriteria, setEditDetailAcceptanceCriteria] = useState<any[]>([])
+  const [editDetailTraits, setEditDetailTraits] = useState<any[]>([])
 
   const handleOpenDetail = async (task: UnifiedTask): Promise<void> => {
     if (!projectPath || !adapter) return
@@ -63,6 +69,8 @@ export function useBeadsDetail({
         setEditDetailDescription(fullTask.description || '')
         setEditDetailPriority(fullTask.priority ?? 2)
         setEditDetailStatus(fullTask.status || 'open')
+        setEditDetailAcceptanceCriteria(fullTask.acceptanceCriteria || [])
+        setEditDetailTraits(fullTask.traits || [])
       } else {
         setError('Failed to load task details')
         setShowDetailModal(false)
@@ -89,7 +97,9 @@ export function useBeadsDetail({
         status: editDetailStatus as UnifiedTask['status'],
         title: editDetailTitle.trim(),
         description: editDetailDescription.trim(),
-        priority: editDetailPriority
+        priority: editDetailPriority,
+        acceptanceCriteria: editDetailAcceptanceCriteria,
+        traits: editDetailTraits
       })
       if (result.success) {
         setDetailTask({
@@ -97,7 +107,9 @@ export function useBeadsDetail({
           title: editDetailTitle.trim(),
           description: editDetailDescription.trim(),
           status: editDetailStatus as UnifiedTask['status'],
-          priority: editDetailPriority
+          priority: editDetailPriority,
+          acceptanceCriteria: editDetailAcceptanceCriteria,
+          traits: editDetailTraits
         })
         setEditingDetail(false)
         loadTasks()
@@ -126,6 +138,10 @@ export function useBeadsDetail({
     setEditDetailPriority,
     editDetailStatus,
     setEditDetailStatus,
+    editDetailAcceptanceCriteria,
+    setEditDetailAcceptanceCriteria,
+    editDetailTraits,
+    setEditDetailTraits,
     handleOpenDetail,
     handleCloseDetail,
     handleSaveDetail

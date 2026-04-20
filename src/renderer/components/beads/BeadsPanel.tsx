@@ -277,6 +277,10 @@ export function BeadsPanel({
         setEditPriority={detailOps.setEditDetailPriority}
         editStatus={detailOps.editDetailStatus}
         setEditStatus={detailOps.setEditDetailStatus}
+        editAcceptanceCriteria={detailOps.editDetailAcceptanceCriteria}
+        setEditAcceptanceCriteria={detailOps.setEditDetailAcceptanceCriteria}
+        editTraits={detailOps.editDetailTraits}
+        setEditTraits={detailOps.setEditDetailTraits}
         onClose={detailOps.handleCloseDetail}
         onSave={detailOps.handleSaveDetail}
       />

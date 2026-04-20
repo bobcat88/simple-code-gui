@@ -395,3 +395,120 @@ html, body, #root {
   box-shadow: 0 0 10px var(--codex-glow);
   border-radius: 2px 2px 0 0;
 }
+/* Beads Rich Task Editing Styles */
+.beads-ac-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.beads-ac-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.beads-ac-edit-row input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.beads-ac-edit-row input[type="text"] {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  color: white;
+  padding: 4px;
+}
+
+.beads-ac-edit-row input[type="text"]:focus {
+  outline: none;
+}
+
+.beads-ac-remove {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.beads-ac-remove:hover {
+  color: #ff4d4d;
+}
+
+.beads-ac-add {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+
+.beads-ac-add:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: white;
+}
+
+.beads-traits-editor {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.beads-traits-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.beads-trait-chip.editing {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  padding-right: 4px;
+}
+
+.beads-trait-remove {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.beads-trait-remove:hover {
+  color: white;
+}
+
+.beads-traits-editor input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: white;
+  margin-top: 8px;
+}

@@ -182,7 +182,9 @@ export class KspecAdapter implements TaskAdapter {
         status, 
         params.title, 
         params.description, 
-        params.priority
+        params.priority,
+        params.acceptanceCriteria,
+        params.traits
       )
       return { success: !!res?.success, error: res?.error }
     } catch (e) {

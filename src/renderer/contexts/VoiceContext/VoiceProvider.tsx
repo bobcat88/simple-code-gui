@@ -7,6 +7,7 @@ export const VoiceContext = createContext<VoiceContextValue | null>(null)
 
 export function VoiceProvider({ children }: { children: React.ReactNode }): React.ReactElement {
   const [settingsLoaded, setSettingsLoaded] = useState(false)
+  const [autoListenEnabled, setAutoListenEnabledState] = useState(false)
 
   // Initialize TTS handlers
   const tts = useTTSHandlers({ settingsLoaded })
@@ -17,6 +18,11 @@ export function VoiceProvider({ children }: { children: React.ReactNode }): Reac
     const settings = await window.electronAPI?.getSettings()
     await window.electronAPI?.saveSettings({ ...settings, [key]: value })
   }, [settingsLoaded])
+
+  const setAutoListenEnabled = useCallback((enabled: boolean) => {
+    setAutoListenEnabledState(enabled)
+    saveVoiceSetting('voiceAutoListen', enabled)
+  }, [saveVoiceSetting])
 
   // Initialize STT handlers
   const stt = useSTTHandlers({ saveVoiceSetting })
@@ -50,6 +56,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }): Reac
       e.preventDefault()
       if (!pttActive) {
         pttActive = true
+        tts.stopSpeaking()
         stt.startRecording(handleGlobalTranscription)
       }
     }
@@ -71,7 +78,22 @@ export function VoiceProvider({ children }: { children: React.ReactNode }): Reac
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [stt.pushToTalkEnabled, stt.isModelLoading, stt.startRecording, stt.stopRecording, handleGlobalTranscription])
+  }, [stt.pushToTalkEnabled, stt.isModelLoading, stt.startRecording, stt.stopRecording, handleGlobalTranscription, tts])
+
+  // GAP 3: Auto-listen after TTS logic
+  const lastSpeakingRef = useRef(false)
+  useEffect(() => {
+    if (lastSpeakingRef.current && !tts.isSpeaking && autoListenEnabled) {
+      // Small delay to ensure audio system is ready
+      const timer = setTimeout(() => {
+        if (!stt.isRecording) {
+          stt.startRecording(handleGlobalTranscription)
+        }
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+    lastSpeakingRef.current = tts.isSpeaking
+  }, [tts.isSpeaking, autoListenEnabled, stt.isRecording, stt.startRecording, handleGlobalTranscription])
 
   // Load settings on mount
   useEffect(() => {
@@ -89,6 +111,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }): Reac
       }
       if (settings.voiceSkipOnNew !== undefined) tts.setSkipOnNewState(settings.voiceSkipOnNew)
       if (settings.voicePushToTalk !== undefined) stt.setPushToTalkEnabledState(settings.voicePushToTalk)
+      if (settings.voiceAutoListen !== undefined) setAutoListenEnabledState(settings.voiceAutoListen)
       setSettingsLoaded(true)
     }).catch(() => setSettingsLoaded(true))
 
@@ -163,6 +186,9 @@ export function VoiceProvider({ children }: { children: React.ReactNode }): Reac
     // Push-to-Talk
     pushToTalkEnabled: stt.pushToTalkEnabled,
     setPushToTalkEnabled: stt.setPushToTalkEnabled,
+    // Auto-listen
+    autoListenEnabled,
+    setAutoListenEnabled,
     // Transcription handlers
     registerTranscriptionHandler,
     unregisterTranscriptionHandler
@@ -194,6 +220,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }): Reac
     stt.stopRecording,
     stt.pushToTalkEnabled,
     stt.setPushToTalkEnabled,
+    autoListenEnabled,
+    setAutoListenEnabled,
     registerTranscriptionHandler,
     unregisterTranscriptionHandler
   ])

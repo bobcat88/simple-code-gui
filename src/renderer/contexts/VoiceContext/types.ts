@@ -60,6 +60,10 @@ export interface VoiceContextValue {
   pushToTalkEnabled: boolean
   setPushToTalkEnabled: (enabled: boolean) => void
 
+  // Auto-listen
+  autoListenEnabled: boolean
+  setAutoListenEnabled: (enabled: boolean) => void
+
   // Transcription handlers
   registerTranscriptionHandler: (id: string, handler: (text: string) => void) => void
   unregisterTranscriptionHandler: (id: string) => void

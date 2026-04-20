@@ -20,6 +20,10 @@ interface TaskDetailModalProps {
   setEditPriority: (priority: number) => void
   editStatus: string
   setEditStatus: (status: string) => void
+  editAcceptanceCriteria: any[]
+  setEditAcceptanceCriteria: (ac: any[]) => void
+  editTraits: any[]
+  setEditTraits: (traits: any[]) => void
   onClose: () => void
   onSave: () => void
 }
@@ -30,6 +34,8 @@ export function TaskDetailModal({
   editDescription, setEditDescription,
   editPriority, setEditPriority,
   editStatus, setEditStatus,
+  editAcceptanceCriteria, setEditAcceptanceCriteria,
+  editTraits, setEditTraits,
   onClose, onSave
 }: TaskDetailModalProps) {
   const [activeVoiceField, setActiveVoiceField] = useState<'title' | 'description' | null>(null)
@@ -114,6 +120,89 @@ export function TaskDetailModal({
                     onChange={(e) => setEditDescription(e.target.value)}
                     rows={5}
                   />
+                </div>
+
+                <div className="beads-form-group">
+                  <label>Acceptance Criteria</label>
+                  <div className="beads-ac-editor">
+                    {editAcceptanceCriteria.map((ac, idx) => (
+                      <div key={ac.id || idx} className="beads-ac-edit-row">
+                        <input 
+                          type="checkbox" 
+                          checked={ac.status === 'completed' || ac.status === 'satisfied'} 
+                          onChange={(e) => {
+                            const newACs = [...editAcceptanceCriteria]
+                            newACs[idx] = { ...ac, status: e.target.checked ? 'completed' : 'pending' }
+                            setEditAcceptanceCriteria(newACs)
+                          }}
+                        />
+                        <input 
+                          type="text" 
+                          value={ac.title || ac.text || ''} 
+                          placeholder="Criterion text..."
+                          onChange={(e) => {
+                            const newACs = [...editAcceptanceCriteria]
+                            newACs[idx] = { ...ac, title: e.target.value, text: e.target.value }
+                            setEditAcceptanceCriteria(newACs)
+                          }}
+                        />
+                        <button 
+                          className="beads-ac-remove" 
+                          onClick={() => {
+                            setEditAcceptanceCriteria(editAcceptanceCriteria.filter((_, i) => i !== idx))
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <button 
+                      className="beads-ac-add"
+                      onClick={() => {
+                        setEditAcceptanceCriteria([...editAcceptanceCriteria, { 
+                          id: `ac-${Date.now()}`, 
+                          title: '', 
+                          status: 'pending' 
+                        }])
+                      }}
+                    >
+                      + Add Criterion
+                    </button>
+                  </div>
+                </div>
+
+                <div className="beads-form-group">
+                  <label>Traits (Tags)</label>
+                  <div className="beads-traits-editor">
+                    <div className="beads-traits-list">
+                      {editTraits.map((trait, idx) => (
+                        <span key={trait.id || idx} className="beads-trait-chip editing">
+                          {trait.label}
+                          <button 
+                            className="beads-trait-remove"
+                            onClick={() => setEditTraits(editTraits.filter((_, i) => i !== idx))}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <input 
+                        type="text" 
+                        placeholder="Add tag..." 
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const val = e.currentTarget.value.trim()
+                            if (val && !editTraits.some(t => t.label === val)) {
+                              setEditTraits([...editTraits, { id: val, label: val, sourceSystem: 'gui' }])
+                              e.currentTarget.value = ''
+                            }
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {activeVoiceField && (
