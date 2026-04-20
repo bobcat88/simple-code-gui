@@ -13,4 +13,19 @@ relates_to: []
 tests: []
 traits: []
 tags: []
+features:
+  - _ulid: 01KPNWR72BE4HPN4TY5W0X3R88
+    slugs:
+      - ai-runtime
+    title: Multi-Provider AI Runtime
+    type: feature
+    description: Abstraction layer and routing for Claude, OpenAI, Gemini, and Ollama providers.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-04-20T16:49:33.771Z
+    notes: []
 notes: []
