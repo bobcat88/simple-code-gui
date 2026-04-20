@@ -5,12 +5,24 @@ title: "Implement: Advanced Workspace Control"
 type: task
 spec_ref: "@workspace-control"
 derivation: auto
-status: pending
+status: in_progress
 blocked_by: []
 depends_on: []
 context: []
 priority: 3
 tags: []
 vcs_refs: []
+history:
+  - author: Johan.P
+    changes:
+      status:
+        new: in_progress
+        previous: pending
+      started_at:
+        new: 2026-04-20T22:25:51.726Z
+        previous: null
+    command: task-start
+    timestamp: 2026-04-20T22:25:51.727Z
 created_at: 2026-04-20T17:02:25.813Z
+started_at: 2026-04-20T22:25:51.726Z
 todos: []
