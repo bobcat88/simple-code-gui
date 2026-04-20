@@ -1,7 +1,7 @@
 agents:
   - _ulid: 01KK672F8BMSW2KDX95DC1PRPR
     description: Autonomous task worker. Picks up automation-eligible ready and needs_work tasks.
-    adapter: claude-code
+    adapter: claude-agent-acp
     auto_approve: true
     capabilities:
       - code
@@ -30,7 +30,7 @@ agents:
       - npm
   - _ulid: 01KK672F8EP6W56DA342BDJQRR
     description: Automated PR reviewer. Reviews pending_review tasks and merges when quality gates pass.
-    adapter: droid
+    adapter: droid-acp
     auto_approve: false
     capabilities:
       - review
