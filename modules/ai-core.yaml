@@ -162,6 +162,11 @@ features:
     relates_to: []
     tests: []
     traits: []
+    acceptance_criteria:
+      - given: A terminal session is running an AI backend (Claude, Gemini, etc.)
+        id: ac-1
+        then: The system parses and stores token counts per session in the telemetry store
+        when: Token usage data appears in terminal output
     tags: []
     requirements:
       - _ulid: 01KPNWTQ5WY2JVHCYXXKDFCKQ6
