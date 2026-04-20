@@ -16,7 +16,7 @@ export function VoiceControls({
 }: VoiceControlsProps) {
   const {
     // Voice Output
-    voiceOutputEnabled, setVoiceOutputEnabled, isSpeaking, stopSpeaking, volume,
+    voiceOutputEnabled, setVoiceOutputEnabled, isSpeaking, stopSpeaking, volume, speakText,
     // Voice Input
     isRecording, isModelLoading, isModelLoaded, modelLoadProgress, modelLoadStatus,
     currentTranscription, startRecording, stopRecording,
@@ -161,25 +161,20 @@ export function VoiceControls({
 
       // Test TTS when enabling
       if (newState) {
-        window.electronAPI?.voiceSpeak?.('Voice output enabled. Hello!')
-          .then((result: any) => {
-            if (result?.success && result.audioData) {
-              const audioData = Uint8Array.from(atob(result.audioData), c => c.charCodeAt(0))
-              const blob = new Blob([audioData], { type: 'audio/wav' })
-              const url = URL.createObjectURL(blob)
-              const audio = new Audio(url)
-              audio.volume = volume
-              audio.play().catch((e: any) => console.error('Play failed:', e))
-            }
-          })
-          .catch((e: any) => console.error('TTS failed:', e))
+        // Use the context's speakText for consistency
+        speakText('Voice output enabled. Hello!')
       }
     }
   }
 
   const getVoiceInputTitle = () => {
     if (isModelLoading) return `Loading Whisper... ${modelLoadProgress}%`
-    if (isRecording) return pushToTalkEnabled ? 'Release Ctrl+Space to send' : 'Recording...'
+    if (isRecording) {
+      if (pushToTalkEnabled) {
+        return pttActiveRef.current ? 'Held - Speak now' : 'Push Ctrl+Space'
+      }
+      return 'Recording...'
+    }
     return pushToTalkEnabled ? 'Push-to-Talk (Ctrl+Space)' : 'Click to start voice'
   }
 
