@@ -193,12 +193,39 @@
   depends_on: []
   priority: 3
   tags: []
-  notes_count: 5
-  todos_count: 0
   created_at: 2026-04-20T17:02:16.991Z
   started_at: 2026-04-20T22:09:01.490Z
   submitted_at: 2026-04-20T22:11:13.515Z
   completed_at: 2026-04-20T22:11:18.578Z
+  notes:
+    - _ulid: 01KPPF7Y8MKJYCW1ZME9R1XY7S
+      content: >-
+        Approach: Electron app w/ React renderer, xterm.js terminals, zustand store. PTY data flows:
+        main→IPC→renderer onPtyData. Will add:
+
+        1. Token parser in main process (parse PTY output for token patterns from Claude/Gemini/etc)
+
+        2. Telemetry store in main process (in-memory + persist to userData)
+
+        3. IPC bridge (telemetry:get-sessions, telemetry:update event)
+
+        4. RTK integration (shell out to 'rtk gain --json')
+
+        5. TelemetryPanel React component (sidebar or overlay)
+
+        6. Real-time updates via IPC events pushed on token parse
+
+
+        Token patterns to parse:
+
+        - Claude: 'Total cost:' lines, token count summaries
+
+        - Gemini: usage stats in output
+
+        Edge cases: multiple sessions, backend switches, partial output buffering.
+      supersedes: null
+      author: "@claude"
+      created_at: 2026-04-20T22:12:43.413Z
   automation: eligible
 - _ulid: 01KPNXFH0H4KFJFGB30FYVE8KB
   slugs:
