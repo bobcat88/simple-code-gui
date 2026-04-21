@@ -999,3 +999,80 @@ fn preset_to_str(preset: &ProposalPreset) -> &str {
         ProposalPreset::ManualReview => "manual_review",
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    fn capability_with_health_score(id: &str, health_score: f32) -> CapabilityScanResult {
+        CapabilityScanResult {
+            id: id.to_string(),
+            kind: CapabilityKind::TaskBackend,
+            source_system: SourceSystem::SimpleCodeGui,
+            installed: true,
+            initialized: true,
+            enabled: true,
+            mode: CapabilityMode::Full,
+            health: HealthStatus::Healthy,
+            health_score,
+            version: None,
+            marker_ids: Vec::new(),
+        }
+    }
+
+    fn assert_nearly_eq(actual: f32, expected: f32) {
+        assert!(
+            (actual - expected).abs() < f32::EPSILON,
+            "expected {expected}, got {actual}"
+        );
+    }
+
+    #[test]
+    fn project_health_score_averages_capability_health_scores() {
+        let capabilities = vec![
+            capability_with_health_score("low", 0.25),
+            capability_with_health_score("high", 0.75),
+            capability_with_health_score("over_max", 1.5),
+            capability_with_health_score("under_min", -1.0),
+        ];
+
+        assert_nearly_eq(calculate_project_health(&capabilities), 50.0);
+    }
+
+    #[test]
+    fn scan_output_includes_metric_fields_with_serialized_contract() {
+        let root = std::env::temp_dir().join(format!(
+            "simple-code-gui-scanner-test-{}",
+            uuid::Uuid::new_v4()
+        ));
+        fs::create_dir_all(root.join("nested")).expect("create temp scanner fixture");
+        fs::write(root.join("README.md"), "fixture").expect("write root fixture file");
+        fs::write(root.join("nested").join("notes.md"), "fixture")
+            .expect("write nested fixture file");
+        fs::create_dir(root.join(".beads")).expect("create beads marker");
+
+        let scan = scan_project(
+            root.to_str().expect("temp path is valid UTF-8"),
+            &ScanOptions {
+                include_cli_health: Some(false),
+                include_git_health: Some(false),
+                max_depth: Some(2),
+            },
+        );
+
+        let expected_health_score = calculate_project_health(&scan.capabilities);
+        assert_nearly_eq(scan.project_health_score, expected_health_score);
+        assert!(scan.total_file_count >= 4);
+
+        let serialized = serde_json::to_value(&scan).expect("serialize scan output");
+        assert!(serialized.get("totalFileCount").is_some());
+        assert!(serialized.get("scanDurationMs").is_some());
+        assert!(serialized.get("projectHealthScore").is_some());
+        assert!(serialized.get("total_file_count").is_none());
+        assert!(serialized.get("scan_duration_ms").is_none());
+        assert!(serialized.get("project_health_score").is_none());
+
+        fs::remove_dir_all(root).expect("remove temp scanner fixture");
+    }
+}
