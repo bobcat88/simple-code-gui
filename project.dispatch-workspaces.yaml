@@ -1248,7 +1248,7 @@ workspaces:
         head: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
         last_seen_at: 2026-04-21T22:00:48.889Z
         path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-multi-provider-ai-runtime-01kps0ge
-  - active_role: worker
+  - active_role: null
     base_branch_point: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
     bootstrap:
       status: succeeded
@@ -1290,12 +1290,12 @@ workspaces:
       detail: null
       eligible: false
       reason: null
-      updated_at: 2026-04-21T22:00:52.827Z
+      updated_at: 2026-04-21T22:01:11.057Z
     health:
       status: healthy
       issues: []
       summary: Workspace record matches current git branch and worktree state.
-      updated_at: 2026-04-21T22:01:03.872Z
+      updated_at: 2026-04-21T22:01:11.057Z
     integration:
       status: pending
       detail: null
@@ -1303,17 +1303,17 @@ workspaces:
       publication_mode: pull_request
       target_branch: main
       target_commit: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
-      updated_at: 2026-04-21T22:00:52.827Z
-    lifecycle_state: active
+      updated_at: 2026-04-21T22:01:11.057Z
+    lifecycle_state: ready
     resolved_base_branch: main
     task_ref: "@01KPS0GE3XDTDGATRJTWYREYXC"
     task_slug: task-gsd-execution-engine
     timestamps:
       closed_at: null
       last_active_at: 2026-04-21T22:01:03.872Z
-      last_reconciled_at: 2026-04-21T22:01:03.872Z
+      last_reconciled_at: 2026-04-21T22:01:11.057Z
       created_at: 2026-04-21T22:00:52.827Z
-      updated_at: 2026-04-21T22:01:03.872Z
+      updated_at: 2026-04-21T22:01:11.057Z
     workspace_id: dispatch-workspace-01KPS0GE3XDTDGATRJTWYREYXC
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
