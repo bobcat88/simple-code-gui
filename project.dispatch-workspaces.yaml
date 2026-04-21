@@ -1214,12 +1214,12 @@ workspaces:
       detail: null
       eligible: false
       reason: null
-      updated_at: 2026-04-21T22:01:01.804Z
+      updated_at: 2026-04-21T22:01:18.759Z
     health:
       status: healthy
       issues: []
       summary: Workspace record matches current git branch and worktree state.
-      updated_at: 2026-04-21T22:01:01.804Z
+      updated_at: 2026-04-21T22:01:18.759Z
     integration:
       status: pending
       detail: null
@@ -1227,7 +1227,7 @@ workspaces:
       publication_mode: pull_request
       target_branch: main
       target_commit: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
-      updated_at: 2026-04-21T22:01:01.804Z
+      updated_at: 2026-04-21T22:01:18.759Z
     lifecycle_state: ready
     resolved_base_branch: main
     task_ref: "@01KPS0GE1Y0DMY1MKT77AASR4Z"
@@ -1235,9 +1235,9 @@ workspaces:
     timestamps:
       closed_at: null
       last_active_at: 2026-04-21T22:00:51.941Z
-      last_reconciled_at: 2026-04-21T22:01:01.804Z
+      last_reconciled_at: 2026-04-21T22:01:18.759Z
       created_at: 2026-04-21T22:00:48.889Z
-      updated_at: 2026-04-21T22:01:01.804Z
+      updated_at: 2026-04-21T22:01:18.759Z
     workspace_id: dispatch-workspace-01KPS0GE1Y0DMY1MKT77AASR4Z
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
@@ -1246,7 +1246,7 @@ workspaces:
         branch_mode: branch
         branch_ref: dispatch/task/task-multi-provider-ai-runtime/01kps0ge
         head: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
-        last_seen_at: 2026-04-21T22:00:48.889Z
+        last_seen_at: 2026-04-21T22:01:18.759Z
         path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-multi-provider-ai-runtime-01kps0ge
   - active_role: null
     base_branch_point: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
