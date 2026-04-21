@@ -528,6 +528,7 @@ pub fn run() {
             ai_runtime::ai_list_models,
             ai_runtime::ai_list_providers,
             ai_runtime::ai_save_key,
+            ai_runtime::ai_dispatch,
             gsd_engine::gsd_create_plan,
             gsd_engine::gsd_add_phase,
             gsd_engine::gsd_add_step,

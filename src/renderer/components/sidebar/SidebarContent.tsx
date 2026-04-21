@@ -11,6 +11,7 @@ import { McpPanel } from '../McpPanel.js'
 import { McpBrowser } from '../mcp/McpBrowser.js'
 import { TaskAssignmentView } from '../orchestration/TaskAssignmentView.js'
 import { ActivityFeed } from '../ActivityFeed'
+import { JobMonitor } from '../JobMonitor'
 import { AgentBoard } from '../AgentBoard'
 import { HealthDashboard } from '../HealthDashboard'
 import {
@@ -325,6 +326,13 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Agent Board</h4>
             <div className="p-1 rounded-2xl bg-white/5 border border-white/5 overflow-hidden">
               <AgentBoard />
+            </div>
+          </section>
+          
+          <section className="space-y-3 pt-4 border-t border-white/5">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Job Monitor</h4>
+            <div className="p-0 rounded-2xl overflow-hidden">
+              <JobMonitor />
             </div>
           </section>
           

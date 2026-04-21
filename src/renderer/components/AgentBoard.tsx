@@ -43,24 +43,48 @@ export const AgentBoard: React.FC = () => {
         {agents.map((agent) => (
           <div 
             key={agent.id}
-            className="p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-default"
+            className="p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-default flex flex-col"
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-lg bg-zinc-800 text-zinc-400">
-                {getRoleIcon(agent.role)}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 rounded-lg bg-zinc-800 text-zinc-400">
+                  {getRoleIcon(agent.role)}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-zinc-200 truncate">{agent.name}</div>
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-wider">{agent.role}</div>
+                </div>
               </div>
-              <div className="min-w-0">
-                <div className="text-xs font-bold text-zinc-200 truncate">{agent.name}</div>
-                <div className="text-[10px] text-zinc-500 uppercase tracking-wider">{agent.role}</div>
+              <div className="flex flex-col items-end">
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded bg-zinc-800 border border-white/5 ${
+                  agent.quality_score >= 0.8 ? 'text-emerald-400' : 
+                  agent.quality_score >= 0.5 ? 'text-blue-400' : 'text-zinc-500'
+                }`}>
+                  Q:{(agent.quality_score * 100).toFixed(0)}
+                </span>
               </div>
             </div>
-            <div className="flex items-center justify-between mt-auto">
+
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-zinc-500">Provider</span>
+                <span className="text-zinc-300 font-medium capitalize">{agent.provider}</span>
+              </div>
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-zinc-500">Model</span>
+                <span className="text-zinc-300 font-mono truncate ml-2 max-w-[80px]" title={agent.model}>
+                  {agent.model}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/5">
               <div className="flex items-center gap-1.5">
                 <div className={`w-2 h-2 rounded-full ${getStatusColor(agent.status)}`} />
                 <span className="text-[10px] text-zinc-400 capitalize">{agent.status}</span>
               </div>
               <div className="text-[9px] text-zinc-600">
-                {agent.last_active ? 'Active' : 'Offline'}
+                {agent.last_active ? 'Online' : 'Offline'}
               </div>
             </div>
           </div>

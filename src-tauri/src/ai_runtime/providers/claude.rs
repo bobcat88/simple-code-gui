@@ -26,12 +26,13 @@ impl AIProvider for ClaudeProvider {
     }
 
     async fn completion(&self, request: CompletionRequest) -> Result<CompletionResponse, String> {
+        let model = request.model.clone().expect("Model must be specified");
         let response = self.client.post("https://api.anthropic.com/v1/messages")
             .header("x-api-key", &self.api_key)
             .header("anthropic-version", "2023-06-01")
             .header("content-type", "application/json")
             .json(&json!({
-                "model": request.model,
+                "model": model,
                 "messages": request.messages,
                 "max_tokens": request.max_tokens.unwrap_or(1024),
                 "temperature": request.temperature.unwrap_or(0.7),
@@ -61,17 +62,19 @@ impl AIProvider for ClaudeProvider {
 
         Ok(CompletionResponse {
             id: json["id"].as_str().unwrap_or("unknown").to_string(),
-            model: request.model,
+            model,
             content,
             usage: Some(usage),
         })
     }
 
     async fn list_models(&self) -> Result<Vec<ModelInfo>, String> {
+        use crate::ai_runtime::types::ModelTier;
         Ok(vec![
             ModelInfo {
                 id: "claude-3-5-sonnet-20241022".to_string(),
                 name: "Claude 3.5 Sonnet (New)".to_string(),
+                tier: ModelTier::Tier1,
                 context_window: 200000,
                 pricing_input_1m: 3.0,
                 pricing_output_1m: 15.0,
@@ -79,6 +82,7 @@ impl AIProvider for ClaudeProvider {
             ModelInfo {
                 id: "claude-3-5-haiku-20241022".to_string(),
                 name: "Claude 3.5 Haiku".to_string(),
+                tier: ModelTier::Tier3,
                 context_window: 200000,
                 pricing_input_1m: 0.25,
                 pricing_output_1m: 1.25,
@@ -86,6 +90,7 @@ impl AIProvider for ClaudeProvider {
             ModelInfo {
                 id: "claude-3-opus-20240229".to_string(),
                 name: "Claude 3 Opus".to_string(),
+                tier: ModelTier::Tier1,
                 context_window: 200000,
                 pricing_input_1m: 15.0,
                 pricing_output_1m: 75.0,

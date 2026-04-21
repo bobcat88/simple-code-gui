@@ -3,7 +3,7 @@ import { useJobStore } from '../stores/jobs'
 import { useWorkspaceStore } from '../stores/workspace'
 
 export function useJobPolling(api: any) {
-  const { setStatus, setPolling } = useJobStore()
+  const { setStatus, setJobs, setPolling } = useJobStore()
   const { projects } = useWorkspaceStore()
   
   const poll = useCallback(async () => {
@@ -13,15 +13,22 @@ export function useJobPolling(api: any) {
     const activeTab = openTabs.find(t => t.id === activeTabId)
     const activeProjectPath = activeTab?.projectPath || projects[0]?.path
     
-    if (!activeProjectPath || !api.kspec_dispatch_status) return
-
     try {
-      const status = await api.kspec_dispatch_status(activeProjectPath)
-      setStatus(status)
+      // 1. Poll Kspec dispatch status if available
+      if (activeProjectPath && api.kspec_dispatch_status) {
+        const status = await api.kspec_dispatch_status(activeProjectPath)
+        setStatus(status)
+      }
+
+      // 2. Poll generic background jobs
+      if (api.jobs_list) {
+        const jobs = await api.jobs_list()
+        setJobs(jobs)
+      }
     } catch (err) {
       console.error('Failed to poll job status:', err)
     }
-  }, [api, projects, setStatus])
+  }, [api, setStatus, setJobs])
 
   useEffect(() => {
     setPolling(true)

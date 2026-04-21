@@ -28,9 +28,10 @@ impl AIProvider for OllamaProvider {
     async fn completion(&self, request: CompletionRequest) -> Result<CompletionResponse, String> {
         let url = format!("{}/api/chat", self.base_url);
 
+        let model = request.model.clone().expect("Model must be specified");
         let response = self.client.post(&url)
             .json(&json!({
-                "model": request.model,
+                "model": model,
                 "messages": request.messages,
                 "stream": false,
                 "options": {
@@ -63,7 +64,7 @@ impl AIProvider for OllamaProvider {
 
         Ok(CompletionResponse {
             id: "ollama-resp".to_string(),
-            model: request.model,
+            model,
             content,
             usage: Some(usage),
         })
@@ -81,6 +82,7 @@ impl AIProvider for OllamaProvider {
                     models.push(ModelInfo {
                         id: name.to_string(),
                         name: name.to_string(),
+                        tier: crate::ai_runtime::types::ModelTier::Tier3,
                         context_window: 4096, // Default for most local models
                         pricing_input_1m: 0.0,
                         pricing_output_1m: 0.0,

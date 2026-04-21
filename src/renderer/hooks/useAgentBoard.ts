@@ -7,6 +7,10 @@ export interface Agent {
   role: string;
   status: string;
   last_active?: string;
+  model: string;
+  provider: string;
+  burn_rate: number;
+  quality_score: number;
 }
 
 export function useAgentBoard() {

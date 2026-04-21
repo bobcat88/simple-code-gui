@@ -26,9 +26,10 @@ impl AIProvider for GeminiProvider {
     }
 
     async fn completion(&self, request: CompletionRequest) -> Result<CompletionResponse, String> {
+        let model = request.model.clone().expect("Model must be specified");
         let url = format!(
             "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
-            request.model, self.api_key
+            model, self.api_key
         );
 
         let contents: Vec<Value> = request.messages.iter().map(|m| {
@@ -71,17 +72,19 @@ impl AIProvider for GeminiProvider {
 
         Ok(CompletionResponse {
             id: "gemini-resp".to_string(), // Gemini doesn't seem to provide a response ID in the same way
-            model: request.model,
+            model,
             content,
             usage: Some(usage),
         })
     }
 
     async fn list_models(&self) -> Result<Vec<ModelInfo>, String> {
+        use crate::ai_runtime::types::ModelTier;
         Ok(vec![
             ModelInfo {
                 id: "gemini-1.5-pro".to_string(),
                 name: "Gemini 1.5 Pro".to_string(),
+                tier: ModelTier::Tier1,
                 context_window: 2000000,
                 pricing_input_1m: 1.25,
                 pricing_output_1m: 5.0,
@@ -89,6 +92,7 @@ impl AIProvider for GeminiProvider {
             ModelInfo {
                 id: "gemini-1.5-flash".to_string(),
                 name: "Gemini 1.5 Flash".to_string(),
+                tier: ModelTier::Tier2,
                 context_window: 1000000,
                 pricing_input_1m: 0.075,
                 pricing_output_1m: 0.3,
