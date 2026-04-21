@@ -33,6 +33,7 @@ import {  HelpCircle,
 } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { Spotlight } from '../components/Spotlight'
+import { ProjectQuickSwitcher } from '../components/ProjectQuickSwitcher'
 import { IntelligenceSidebar } from '../components/intelligence/IntelligenceSidebar'
 import { useProjectIntelligence } from '../hooks/useProjectIntelligence'
 import { Activity } from 'lucide-react'
@@ -57,7 +58,8 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
     addTab,
     removeTab,
     updateTab,
-    setActiveTab
+    setActiveTab,
+    touchProject
   } = useWorkspaceStore()
 
   const { voiceOutputEnabled, setProjectVoice } = useVoice()

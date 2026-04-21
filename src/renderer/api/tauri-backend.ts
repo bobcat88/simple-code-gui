@@ -129,9 +129,16 @@ export class TauriBackend implements ExtendedApi {
   }
 
   // TTS
-  async ttsInstallInstructions(projectPath: string): Promise<{ success: boolean }> { return { success: false }; }
-  async ttsSpeak(text: string): Promise<{ success: boolean; error?: string }> { return { success: false }; }
-  async ttsStop(): Promise<{ success: boolean }> { return { success: false }; }
+  async ttsInstallInstructions(projectPath: string): Promise<{ success: boolean }> { 
+    return await tauriIpc.voiceInstallPiper(); 
+  }
+  async ttsSpeak(text: string, voice?: string, speed?: number): Promise<{ success: boolean; error?: string }> { 
+    return await tauriIpc.voiceSpeak(text, voice, speed); 
+  }
+  async ttsStop(): Promise<{ success: boolean }> { 
+    await tauriIpc.voiceStop();
+    return { success: true };
+  }
 
   // Events
   onApiOpenSession(callback: ApiOpenSessionCallback): Unsubscribe {

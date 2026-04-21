@@ -18,13 +18,14 @@ use workspace_manager::{WorkspaceManager, Workspace};
 use voice_manager::{VoiceManager, voice_speak, voice_stop, voice_check_tts, voice_install_piper, voice_install_voice, voice_get_installed};
 use database::DatabaseManager;
 use orchestration::{
-    get_beads_tasks, sync_workflow, beads_check, beads_init, beads_list, 
-    beads_show, beads_create, beads_start, beads_complete, beads_delete, 
-    beads_update, beads_watch, beads_unwatch, kspec_check, kspec_init, 
+    get_beads_tasks, sync_workflow, beads_check, beads_init, beads_list,
+    beads_show, beads_create, beads_start, beads_complete, beads_delete,
+    beads_update, beads_watch, beads_unwatch, kspec_check, kspec_init,
     kspec_list, kspec_show, kspec_create, kspec_start, kspec_complete,
     kspec_delete, kspec_update, kspec_watch, kspec_unwatch,
     kspec_ensure_daemon, kspec_dispatch_status, kspec_dispatch_start,
-    kspec_dispatch_stop, OrchestrationState
+    kspec_dispatch_stop, get_pending_approvals, respond_to_approval,
+    submit_approval_request, OrchestrationState
 };
 use mcp_bridge::{register_mcp_server, get_registered_mcp_servers, McpManager, mcp_list_tools, mcp_call_tool, mcp_list_resources, mcp_read_resource, mcp_load_config};
 mod project_scanner;
@@ -439,6 +440,9 @@ pub fn run() {
             kspec_dispatch_status,
             kspec_dispatch_start,
             kspec_dispatch_stop,
+            get_pending_approvals,
+            respond_to_approval,
+            submit_approval_request,
             register_mcp_server,
             get_registered_mcp_servers,
             discover_sessions,

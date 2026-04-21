@@ -149,4 +149,18 @@ export const tauriIpc = {
     invoke<{ success: boolean }>('respond_to_approval', { response }),
   getPendingApprovals: (cwd: string) =>
     invoke<any[]>('get_pending_approvals', { cwd }),
+
+  // Voice
+  voiceCheckTts: () =>
+    invoke<any>('voice_check_tts'),
+  voiceInstallPiper: () =>
+    invoke<any>('voice_install_piper'),
+  voiceInstallVoice: (modelId: string) =>
+    invoke<any>('voice_install_voice', { model_id: modelId }),
+  voiceGetInstalled: () =>
+    invoke<string[]>('voice_get_installed'),
+  voiceSpeak: (text: string, voice?: string, speed?: number) =>
+    invoke<any>('voice_speak', { text, voice, speed }),
+  voiceStop: () =>
+    invoke<void>('voice_stop'),
 };
