@@ -1,7 +1,7 @@
 import React from 'react';
 import { useActivityLog } from '../hooks/useActivityLog';
 import { formatDistanceToNow } from 'date-fns';
-import { Terminal, Info, AlertTriangle, CheckCircle, Cpu, User } from 'lucide-react';
+import { Terminal, Info, AlertTriangle, CheckCircle, Cpu, User, Activity } from 'lucide-react';
 
 export const ActivityFeed: React.FC = () => {
   const { events, loading } = useActivityLog(20);

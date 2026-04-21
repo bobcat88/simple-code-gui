@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { useExtensionUpdates } from '../hooks/useExtensions'
 import { cn } from '../lib/utils'
+import { Api } from '../api/types.js'
 
 interface Extension {
   id: string
@@ -46,11 +47,12 @@ interface ExtensionBrowserProps {
   projectPath: string
   projectName: string
   onClose: () => void
+  api: Api
 }
 
 type TabType = 'skills' | 'mcps' | 'agents'
 
-export function ExtensionBrowser({ projectPath, projectName, onClose }: ExtensionBrowserProps) {
+export function ExtensionBrowser({ projectPath, projectName, onClose, api }: ExtensionBrowserProps) {
   const { data: updates = [] } = useExtensionUpdates()
   const [activeTab, setActiveTab] = useState<TabType>('skills')
   const [loading, setLoading] = useState(true)
@@ -86,9 +88,9 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
       setError(null)
 
       const [registryData, installedData, urlsData] = await Promise.all([
-        window.electronAPI?.extensionsFetchRegistry?.(forceRefresh),
-        window.electronAPI?.extensionsGetInstalled?.(),
-        window.electronAPI?.extensionsGetCustomUrls?.()
+        api.extensionsFetchRegistry?.(forceRefresh),
+        api.extensionsGetInstalled?.(),
+        api.extensionsGetCustomUrls?.()
       ])
 
       setRegistry({
@@ -146,9 +148,9 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
     try {
       let result
       if (ext.type === 'skill' || ext.type === 'agent') {
-        result = await window.electronAPI?.extensionsInstallSkill?.(ext, 'global')
+        result = await api.extensionsInstallSkill?.(ext, 'global')
       } else {
-        result = await window.electronAPI?.extensionsInstallMcp?.(ext)
+        result = await api.extensionsInstallMcp?.(ext)
       }
 
       if (!result?.success) {
@@ -167,7 +169,7 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
   const handleRemove = async (extId: string) => {
     setRemoving(extId)
     try {
-      const result = await window.electronAPI?.extensionsRemove?.(extId)
+      const result = await api.extensionsRemove?.(extId)
       if (result && !result.success) {
         setError(result.error || 'Removal failed')
       } else {
@@ -184,14 +186,14 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
   const handleToggle = async (extId: string, enabled: boolean) => {
     try {
       if (enabled) {
-        await window.electronAPI?.extensionsEnableForProject?.(extId, projectPath)
+        await api.extensionsEnableForProject?.(extId, projectPath)
       } else {
-        await window.electronAPI?.extensionsDisableForProject?.(extId, projectPath)
+        await api.extensionsDisableForProject?.(extId, projectPath)
       }
       
       const ext = installed.find(e => e.id === extId)
       if (ext?.type === 'mcp') {
-        await window.electronAPI?.mcpLoadConfig?.()
+        await api.mcpLoadConfig?.()
       }
 
       await loadData()
@@ -203,7 +205,7 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
   // Remove custom URL
   const handleRemoveCustomUrl = async (url: string) => {
     try {
-      await window.electronAPI?.extensionsRemoveCustomUrl?.(url)
+      await api.extensionsRemoveCustomUrl?.(url)
       await loadData()
     } catch (e: any) {
       setError(e.message || 'Failed to remove custom URL')
@@ -223,21 +225,21 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
       setInstalling('custom-url')
       
       // Fetch info
-      const extInfo = await window.electronAPI?.extensionsFetchFromUrl?.(url)
+      const extInfo = await api.extensionsFetchFromUrl?.(url)
       if (!extInfo) {
         setError('Could not fetch extension info from URL')
         return
       }
 
       // Install
-      const result = await window.electronAPI?.extensionsInstallSkill?.(extInfo, 'global')
+      const result = await api.extensionsInstallSkill?.(extInfo, 'global')
       if (!result?.success) {
         setError(result?.error || 'Installation failed')
         return
       }
 
       // Save URL
-      await window.electronAPI?.extensionsAddCustomUrl?.(url)
+      await api.extensionsAddCustomUrl?.(url)
       setCustomUrl('')
       await loadData()
     } catch (e: any) {
@@ -253,7 +255,7 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
     setToolLoading(true)
     setTools([])
     try {
-      const result = await window.electronAPI?.mcpListTools?.(ext.id)
+      const result = await api.mcpListTools?.(ext.id)
       setTools(result?.tools || [])
     } catch (e: any) {
       setError(e.message || 'Failed to list tools')
@@ -268,7 +270,7 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
     setToolLoading(true)
     setToolResult(null)
     try {
-      const result = await window.electronAPI?.mcpCallTool?.(browsingTools.id, executingTool.name, toolArgs)
+      const result = await api.mcpCallTool?.(browsingTools.id, executingTool.name, toolArgs)
       setToolResult(result)
     } catch (e: any) {
       setError(e.message || 'Tool execution failed')
@@ -338,7 +340,7 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
                 className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-white transition-colors"
                 onClick={(e) => {
                   e.preventDefault()
-                  window.electronAPI?.openExternal?.(ext.repo!)
+                  api.openExternal?.(ext.repo!)
                 }}
               >
                 <ExternalLink className="w-3 h-3" />
@@ -597,10 +599,10 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
                     const textarea = document.getElementById('mcp-config-textarea') as HTMLTextAreaElement
                     try {
                       const config = JSON.parse(textarea.value || '{}')
-                      await window.electronAPI?.extensionsSetConfig?.(configuring.id, config)
+                      await api.extensionsSetConfig?.(configuring.id, config)
                       
                       if (configuring.type === 'mcp') {
-                        await window.electronAPI?.mcpLoadConfig?.()
+                        await api.mcpLoadConfig?.()
                       }
 
                       setConfiguring(null)

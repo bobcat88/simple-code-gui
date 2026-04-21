@@ -223,14 +223,12 @@ export function ConnectionScreen({ onConnected, savedConfig }: ConnectionScreenP
   const handleScan = useCallback((connection: ParsedConnectionUrl) => {
     console.log('[ConnectionScreen] QR Scanned:', {
       host: connection.host,
-      hosts: connection.hosts,
       port: connection.port,
       tokenLength: connection.token?.length
     })
 
     handleConnect({
       host: connection.host,
-      hosts: connection.hosts,
       port: connection.port,
       token: connection.token
     })

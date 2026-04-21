@@ -208,7 +208,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
           </div>
 
           <div className="pt-4 border-t border-white/5">
-            <McpPanel projectPath={beadsProjectPath} />
+            <McpPanel projectPath={beadsProjectPath} api={api} />
           </div>
         </div>
       </div>
@@ -726,6 +726,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
           projectPath={extensionBrowserModal.project.path}
           projectName={extensionBrowserModal.project.name}
           onClose={() => setExtensionBrowserModal(null)}
+          api={api}
         />
       )}
 

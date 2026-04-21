@@ -1,0 +1,2 @@
+src/renderer/components/ActivityFeed.tsx(26,12): error TS2304: Cannot find name 'Activity'.
+src/renderer/components/settings/McpSettings.tsx(54,12): error TS2741: Property 'api' is missing in type '{ projectPath: string | null; }' but required in type 'McpPanelProps'.

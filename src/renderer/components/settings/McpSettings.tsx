@@ -2,14 +2,16 @@ import React from 'react'
 import { McpPanel } from '../McpPanel'
 import { BeadsPanel } from '../BeadsPanel'
 import { GSDStatus } from '../GSDStatus'
+import { Api } from '../../api/types.js'
 
 interface McpSettingsProps {
   projectPath: string | null
   focusedTabPtyId: string | null
   onOpenSession: (path: string, sessionId?: string, ptyId?: string, prompt?: string, forceNew?: boolean) => void
+  api: Api
 }
 
-export function McpSettings({ projectPath, focusedTabPtyId, onOpenSession }: McpSettingsProps) {
+export function McpSettings({ projectPath, focusedTabPtyId, onOpenSession, api }: McpSettingsProps) {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <section className="space-y-3">
@@ -26,8 +28,8 @@ export function McpSettings({ projectPath, focusedTabPtyId, onOpenSession }: Mcp
             }}
             onSendToCurrentTab={(prompt) => {
               if (focusedTabPtyId) {
-                window.electronAPI?.writePty(focusedTabPtyId, prompt)
-                setTimeout(() => window.electronAPI?.writePty(focusedTabPtyId, '\r'), 100)
+                api.writePty?.(focusedTabPtyId, prompt)
+                setTimeout(() => api.writePty?.(focusedTabPtyId, '\r'), 100)
               }
             }}
             currentTabPtyId={focusedTabPtyId}
@@ -51,7 +53,7 @@ export function McpSettings({ projectPath, focusedTabPtyId, onOpenSession }: Mcp
           MCP Servers
         </h3>
         <div className="bg-muted/30 rounded-xl border border-border/50">
-          <McpPanel projectPath={projectPath} />
+          <McpPanel projectPath={projectPath} api={api} />
         </div>
       </section>
     </div>

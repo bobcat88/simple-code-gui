@@ -4,12 +4,14 @@ import { useExtensions, InstalledExtension } from '../hooks/useExtensions'
 import { McpConfigEditor } from './McpConfigEditor'
 import { cn } from '../lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
+import { Api } from '../api/types.js'
 
 interface McpPanelProps {
   projectPath: string | null
+  api: Api
 }
 
-export function McpPanel({ projectPath }: McpPanelProps) {
+export function McpPanel({ projectPath, api }: McpPanelProps) {
   const { data: extensions, isLoading } = useExtensions()
   const [editingId, setEditingId] = useState<string | null>(null)
   const queryClient = useQueryClient()
@@ -22,7 +24,7 @@ export function McpPanel({ projectPath }: McpPanelProps) {
 
   const handleSaveConfig = async (id: string, config: any) => {
     try {
-      await window.electronAPI?.extensionsSetConfig?.(id, config)
+      await api.extensionsSetConfig?.(id, config)
       queryClient.invalidateQueries({ queryKey: ['extensions'] })
       setEditingId(null)
     } catch (e) {
@@ -34,9 +36,9 @@ export function McpPanel({ projectPath }: McpPanelProps) {
     if (!projectPath) return
     try {
       if (enabled) {
-        await window.electronAPI?.extensionsEnableForProject?.(id, projectPath)
+        await api.extensionsEnableForProject?.(id, projectPath)
       } else {
-        await window.electronAPI?.extensionsDisableForProject?.(id, projectPath)
+        await api.extensionsDisableForProject?.(id, projectPath)
       }
       queryClient.invalidateQueries({ queryKey: ['extensions'] })
     } catch (e) {

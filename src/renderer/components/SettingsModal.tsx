@@ -382,6 +382,7 @@ export function SettingsModal({
                       projectPath={projectPath}
                       focusedTabPtyId={focusedTabPtyId}
                       onOpenSession={onOpenSession}
+                      api={api}
                     />
                 </div>
               )}
