@@ -187,6 +187,7 @@ export class TauriBackend implements ExtendedApi {
   async extensionsFetchFromUrl(url: string): Promise<any | null> { return await tauriIpc.extensionsFetchFromUrl(url); }
   async extensionsAddCustomUrl(url: string): Promise<void> { await tauriIpc.extensionsAddCustomUrl(url); }
   async extensionsSetConfig(id: string, config: any): Promise<void> { await tauriIpc.extensionsSetConfig(id, config); }
+  async extensionsCheckUpdates(): Promise<any[]> { return await tauriIpc.extensionsCheckUpdates(); }
   
   // MCP Bridge
   async mcpListTools(serverName: string): Promise<any> { return await tauriIpc.mcpListTools(serverName); }
@@ -297,5 +298,10 @@ export class TauriBackend implements ExtendedApi {
 
   async getPendingApprovals(cwd: string): Promise<ApprovalRequest[]> {
     return await tauriIpc.getPendingApprovals(cwd);
+  }
+
+  // Diagnostics
+  async diagnosticsGenerateBundle(): Promise<any> {
+    return await tauriIpc.diagnosticsGenerateBundle();
   }
 }

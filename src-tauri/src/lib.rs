@@ -16,6 +16,7 @@ mod jobs_manager;
 mod activity_manager;
 mod agent_manager;
 mod health_manager;
+mod diagnostic_manager;
 
 use pty_manager::PtyManager;
 use std::sync::Arc;
@@ -410,6 +411,9 @@ pub fn run() {
                 let health_manager = Arc::new(health_manager::HealthManager::new(Arc::clone(&db_arc)));
                 health_manager::HealthManager::setup_panic_hook(app_handle.clone());
 
+                // Initialize Diagnostic Manager
+                let diagnostic_manager = Arc::new(diagnostic_manager::DiagnosticManager::new(Arc::clone(&db_arc)));
+
                 app_handle.manage(db_arc);
                 app_handle.manage(settings_manager);
                 app_handle.manage(workspace_manager);
@@ -419,6 +423,7 @@ pub fn run() {
                 app_handle.manage(activity_manager);
                 app_handle.manage(agent_manager);
                 app_handle.manage(health_manager);
+                app_handle.manage(diagnostic_manager);
             });
 
             let pty_manager = PtyManager::new();
@@ -508,6 +513,7 @@ pub fn run() {
             extension_manager::extensions_add_custom_url,
             extension_manager::extensions_remove_custom_url,
             extension_manager::extensions_set_config,
+            extension_manager::extensions_check_updates,
             mcp_list_tools,
             mcp_call_tool,
             mcp_list_resources,
@@ -546,6 +552,7 @@ pub fn run() {
             agent_manager::agent_update_status,
             health_manager::health_get_status,
             health_manager::health_log_check,
+            diagnostic_manager::diagnostics_generate_bundle,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

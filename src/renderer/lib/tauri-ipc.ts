@@ -74,6 +74,8 @@ export const tauriIpc = {
     invoke<void>('extensions_remove_custom_url', { url }),
   extensionsSetConfig: (id: string, config: any) =>
     invoke<void>('extensions_set_config', { id, config }),
+  extensionsCheckUpdates: () =>
+    invoke<any[]>('extensions_check_updates'),
 
   // MCP Bridge
   mcpListTools: (serverName: string) =>
@@ -197,4 +199,6 @@ export const tauriIpc = {
     invoke<any>('health_get_status'),
   healthLogCheck: (checkType: string, status: string, details?: string) =>
     invoke<void>('health_log_check', { checkType, status, details }),
+  diagnosticsGenerateBundle: () =>
+    invoke<any>('diagnostics_generate_bundle'),
 };

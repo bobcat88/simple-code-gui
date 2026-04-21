@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   Play
 } from 'lucide-react'
+import { useExtensionUpdates } from '../hooks/useExtensions'
 import { cn } from '../lib/utils'
 
 interface Extension {
@@ -24,6 +25,7 @@ interface Extension {
   name: string
   description: string
   type: 'skill' | 'mcp' | 'agent'
+  version?: string
   repo?: string
   npm?: string
   commands?: string[]
@@ -33,6 +35,7 @@ interface Extension {
 
 interface InstalledExtension extends Extension {
   installedAt: number
+  version?: string
   enabled: boolean
   scope: 'global' | 'project'
   projectPath?: string
@@ -48,6 +51,7 @@ interface ExtensionBrowserProps {
 type TabType = 'skills' | 'mcps' | 'agents'
 
 export function ExtensionBrowser({ projectPath, projectName, onClose }: ExtensionBrowserProps) {
+  const { data: updates = [] } = useExtensionUpdates()
   const [activeTab, setActiveTab] = useState<TabType>('skills')
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -279,6 +283,7 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
     const isInst = !!installedExt
     const enabled = isEnabledForProject(ext.id)
     const isOps = installing === ext.id || removing === ext.id
+    const hasUpdate = updates.find(u => u.id === ext.id)
 
     return (
       <div key={ext.id} className={cn("extension-item flex items-start gap-4", isOps && "opacity-60")}>
@@ -297,8 +302,22 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
           <div className="flex items-center gap-2">
             <span className="extension-name">{ext.name}</span>
             {isInst && <CheckCircle2 className="w-3.5 h-3.5 text-primary" />}
+            {hasUpdate && (
+              <span className="px-1.5 py-0.5 rounded-full bg-primary/20 text-[10px] text-primary font-bold border border-primary/30 flex items-center gap-1 animate-pulse">
+                <RefreshCw className="w-2.5 h-2.5" />
+                Update Available
+              </span>
+            )}
           </div>
           <div className="extension-description">{ext.description}</div>
+          {isInst && installedExt.version && (
+            <div className="text-[10px] text-muted-foreground mt-1 flex items-center gap-2">
+              <span>Version {installedExt.version}</span>
+              {hasUpdate && (
+                <span className="text-primary">→ {hasUpdate.latestVersion}</span>
+              )}
+            </div>
+          )}
           
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
             {ext.commands && ext.commands.length > 0 && (

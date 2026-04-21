@@ -245,6 +245,14 @@ export interface ApiOpenSessionEvent {
 
 export type ApiOpenSessionCallback = (event: ApiOpenSessionEvent) => void
 
+export interface UpdateNotice {
+  id: string
+  currentVersion: string
+  latestVersion: string
+  name: string
+  type: string
+}
+
 /**
  * Core API interface for the renderer
  */
@@ -271,6 +279,7 @@ export interface Api {
   extensionsFetchFromUrl?: (url: string) => Promise<any | null>
   extensionsAddCustomUrl?: (url: string) => Promise<void>
   extensionsSetConfig?: (id: string, config: any) => Promise<void>
+  extensionsCheckUpdates?: () => Promise<UpdateNotice[]>
   mcpListTools?: (serverName: string) => Promise<any>
   mcpCallTool?: (serverName: string, toolName: string, args: any) => Promise<any>
   mcpListResources?: (serverName: string) => Promise<any>
@@ -511,7 +520,10 @@ export interface ExtendedApi extends Api {
   onApprovalRequest: (callback: (request: ApprovalRequest) => void) => Unsubscribe,
   onApprovalResolved: (callback: (actionId: string) => void) => Unsubscribe,
   respondToApproval: (response: ApprovalResponse) => Promise<{ success: boolean }>,
-  getPendingApprovals: (cwd: string) => Promise<ApprovalRequest[]>
+  getPendingApprovals: (cwd: string) => Promise<ApprovalRequest[]>,
+
+  // Diagnostics
+  diagnosticsGenerateBundle: () => Promise<DiagnosticResult>
 }
 
 // ============================================================================
@@ -645,6 +657,11 @@ export interface ProjectIntelligence {
     processes: number
     stale: boolean
   }
+}
+
+export interface DiagnosticResult {
+  bundle_path: string
+  created_at: string
 }
 
 // ============================================================================

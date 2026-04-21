@@ -16,6 +16,7 @@ pub struct Extension {
     pub commands: Option<Vec<String>>,
     pub tags: Option<Vec<String>>,
     pub config_schema: Option<serde_json::Value>,
+    pub version: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -28,6 +29,7 @@ pub struct InstalledExtension {
     pub scope: String, // "global" or "project"
     pub project_path: Option<String>,
     pub config: Option<serde_json::Value>,
+    pub version: Option<String>, // The currently installed version
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -77,6 +79,7 @@ fn get_builtin_registry() -> Registry {
                 commands: Some(vec!["/gsd:plan".to_string(), "/gsd:execute".to_string(), "/gsd:status".to_string(), "/gsd:map-codebase".to_string()]),
                 tags: Some(vec!["workflow".to_string(), "autonomous".to_string(), "planning".to_string(), "tasks".to_string()]),
                 config_schema: None,
+                version: Some("1.5.0".to_string()),
             }
         ],
         mcps: vec![
@@ -92,6 +95,7 @@ fn get_builtin_registry() -> Registry {
                 config_schema: Some(serde_json::json!({
                     "roots": { "type": "array", "items": { "type": "string" }, "description": "Allowed directories" }
                 })),
+                version: Some("1.0.0".to_string()),
             }
         ],
         agents: vec![],
@@ -277,6 +281,7 @@ pub async fn extensions_install_skill(extension: Extension, scope: String) -> Re
     let new_ext = InstalledExtension {
         extension,
         installed_at: now,
+        version: None,
         enabled: true,
         scope,
         project_path: None,
@@ -438,6 +443,7 @@ pub async fn extensions_fetch_from_url(url: String) -> Result<Option<Extension>,
                             name: repo.clone(),
                             description: format!("Extension from {}", url),
                             r#type: "skill".to_string(),
+                            version: None,
                             repo: Some(url.clone()),
                             npm: None,
                             commands: None,
@@ -484,6 +490,7 @@ pub async fn extensions_fetch_from_url(url: String) -> Result<Option<Extension>,
         name: repo.clone(),
         description: format!("Extension from {}", url),
         r#type: "skill".to_string(),
+        version: None,
         repo: Some(url),
         npm: None,
         commands: None,
@@ -503,4 +510,46 @@ pub async fn extensions_set_config(id: String, config: serde_json::Value) -> Res
         fs::write(path, json).map_err(|e| e.to_string())?;
     }
     Ok(())
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateNotice {
+    pub id: String,
+    pub current_version: String,
+    pub latest_version: String,
+    pub name: String,
+    pub r#type: String,
+}
+
+#[tauri::command]
+pub async fn extensions_check_updates() -> Result<Vec<UpdateNotice>, String> {
+    let installed = extensions_get_installed().await?;
+    let registry = extensions_fetch_registry(false).await?;
+    
+    let mut notices = Vec::new();
+    
+    // Combine all registry extensions into a map for easy lookup
+    let mut registry_map = std::collections::HashMap::new();
+    for ext in registry.skills.iter().chain(registry.mcps.iter()).chain(registry.agents.iter()) {
+        registry_map.insert(ext.id.clone(), ext);
+    }
+    
+    for inst in installed {
+        if let Some(reg_ext) = registry_map.get(&inst.extension.id) {
+            if let (Some(inst_ver), Some(reg_ver)) = (&inst.version, &reg_ext.version) {
+                if inst_ver != reg_ver {
+                    notices.push(UpdateNotice {
+                        id: inst.extension.id.clone(),
+                        current_version: inst_ver.clone(),
+                        latest_version: reg_ver.clone(),
+                        name: inst.extension.name.clone(),
+                        r#type: inst.extension.r#type.clone(),
+                    });
+                }
+            }
+        }
+    }
+    
+    Ok(notices)
 }
