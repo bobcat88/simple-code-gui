@@ -1313,7 +1313,7 @@ workspaces:
       last_active_at: 2026-04-21T22:01:03.872Z
       last_reconciled_at: 2026-04-21T22:01:24.059Z
       created_at: 2026-04-21T22:00:52.827Z
-      updated_at: 2026-04-21T22:01:24.059Z
+      updated_at: 2026-04-21T22:01:25.698Z
     workspace_id: dispatch-workspace-01KPS0GE3XDTDGATRJTWYREYXC
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
