@@ -60,38 +60,6 @@
   notes_count: 1
   todos_count: 0
   created_at: 2026-04-20T17:02:10.505Z
-- _ulid: 01KPNXFBYF1VYFFB68N3WSPF7F
-  slugs:
-    - task-gsd-execution-engine
-  title: "Implement: GSD Execution Engine"
-  type: task
-  spec_ref: "@gsd-engine"
-  status: blocked
-  blocked_by:
-    - 'Agent pr-reviewer failed 3 consecutive times: Executable not found in $PATH: "droid"'
-  depends_on: []
-  priority: 3
-  tags: []
-  created_at: 2026-04-20T17:02:12.431Z
-  started_at: 2026-04-20T21:43:08.507Z
-  submitted_at: 2026-04-20T21:43:11.143Z
-  notes:
-    - _ulid: 01KPPDKHSASXWQN381RVFCYPPV
-      content: '[AGENT-FAIL] Invocation failed: Executable not found in $PATH: "droid"'
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T21:44:06.698Z
-    - _ulid: 01KPPDKQZ0X5DYK4JXS9V5RRTN
-      content: '[AGENT-FAIL] Invocation failed: Executable not found in $PATH: "droid"'
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T21:44:13.024Z
-    - _ulid: 01KPPDKY9AZNGVQ8JW6E1QCNBG
-      content: '[AGENT-FAIL] Invocation failed: Executable not found in $PATH: "droid"'
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-20T21:44:19.498Z
-  automation: eligible
 - _ulid: 01KPNXFCN02DFXBTRJK5DV9RTY
   slugs:
     - task-phase-based-decomposition
