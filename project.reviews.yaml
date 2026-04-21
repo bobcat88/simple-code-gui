@@ -12,9 +12,25 @@ reviews:
         payload:
           to: draft
         timestamp: 2026-04-21T19:30:11.522Z
+      - _ulid: 01KPRRBHP3VTS6A2THYV2DP8SG
+        actor: Johan.P
+        event_type: verdict_submitted
+        payload:
+          applies_to_version:
+            type: entity_version
+            content_hash: ""
+          decision: approve
+        timestamp: 2026-04-21T19:30:27.651Z
+      - _ulid: 01KPRRBHP3G84VR4BCV73BH6G5
+        actor: Johan.P
+        event_type: lifecycle_change
+        payload:
+          from: draft
+          to: closed
+        timestamp: 2026-04-21T19:30:27.652Z
     examined_commit: null
     external_links: []
-    lifecycle_state: draft
+    lifecycle_state: closed
     related_refs: []
     subject:
       type: task
@@ -22,7 +38,14 @@ reviews:
       ref: "@task-project-quick-switcher"
       shadow_commit: ""
     threads: []
-    verdicts: []
+    verdicts:
+      - applies_to_version:
+          type: entity_version
+          content_hash: ""
+        decision: approve
+        reviewer: Johan.P
+        role: reviewer
+        created_at: 2026-04-21T19:30:27.651Z
     created_at: 2026-04-21T19:30:11.522Z
-    updated_at: null
+    updated_at: 2026-04-21T19:30:27.651Z
     notes: []
