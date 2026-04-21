@@ -671,13 +671,13 @@ workspaces:
       remote_ref: null
       source: provisioned
     canonical_branch: dispatch/task/task-project-quick-switcher/01kpnxfs
-    canonical_branch_head: 357251d27c9ea24eb1d14ab7dfa4e4180775289f
+    canonical_branch_head: 3dbc42b0fd2492d744373b5b530e8ac457490eb9
     cleanup:
       status: not_scheduled
       detail: null
       eligible: false
       reason: null
-      updated_at: 2026-04-21T12:57:09.509Z
+      updated_at: 2026-04-21T13:19:09.615Z
     health:
       status: stale
       issues:
@@ -687,7 +687,7 @@ workspaces:
             is missing or no longer registered.
           suggestion: Re-provision the worker worktree from the recorded canonical branch.
       summary: Workspace registry record is stale and needs reconciliation.
-      updated_at: 2026-04-21T12:57:09.509Z
+      updated_at: 2026-04-21T13:19:09.615Z
     integration:
       status: pending
       detail: null
@@ -695,7 +695,7 @@ workspaces:
       publication_mode: pull_request
       target_branch: main
       target_commit: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
-      updated_at: 2026-04-21T12:57:09.509Z
+      updated_at: 2026-04-21T13:19:09.615Z
     lifecycle_state: stale
     resolved_base_branch: main
     task_ref: "@01KPNXFSKSCJADKNJGETRD4KG0"
@@ -703,9 +703,9 @@ workspaces:
     timestamps:
       closed_at: null
       last_active_at: 2026-04-21T06:50:12.898Z
-      last_reconciled_at: 2026-04-21T12:57:09.509Z
+      last_reconciled_at: 2026-04-21T13:19:09.615Z
       created_at: 2026-04-21T06:50:10.981Z
-      updated_at: 2026-04-21T12:57:09.509Z
+      updated_at: 2026-04-21T13:19:09.615Z
     workspace_id: dispatch-workspace-01KPNXFSKSCJADKNJGETRD4KG0
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
