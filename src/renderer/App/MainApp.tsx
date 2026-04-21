@@ -114,7 +114,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
     toggleViewMode
   } = useViewState()
 
-  const { intelligence, loading: intelligenceLoading, refresh: refreshIntelligence } = useProjectIntelligence(
+  const { intelligence, capabilityScan, loading: intelligenceLoading, refresh: refreshIntelligence } = useProjectIntelligence(
     api as any,
     activeTab?.projectPath || null
   )
@@ -479,6 +479,8 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
               {!intelligenceCollapsed && (
                 <IntelligenceSidebar
                   intelligence={intelligence}
+                  capabilityScan={capabilityScan}
+                  api={api as any}
                   loading={intelligenceLoading}
                   onClose={() => setIntelligenceCollapsed(true)}
                   onRefresh={refreshIntelligence}

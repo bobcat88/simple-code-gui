@@ -14,10 +14,12 @@ import {
   AlertTriangle
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
-import type { ProjectIntelligence } from '../../api/types'
+import type { ProjectIntelligence, ProjectCapabilityScan, InitializationProposal, ProposalOperation, ExtendedApi } from '../../api/types'
 
 interface IntelligenceSidebarProps {
   intelligence: ProjectIntelligence | null
+  capabilityScan: ProjectCapabilityScan | null
+  api: ExtendedApi
   loading: boolean
   onClose: () => void
   onRefresh: () => void
@@ -27,6 +29,8 @@ interface IntelligenceSidebarProps {
 
 export function IntelligenceSidebar({ 
   intelligence, 
+  capabilityScan,
+  api,
   loading, 
   onClose, 
   onRefresh,
@@ -34,6 +38,11 @@ export function IntelligenceSidebar({
   width 
 }: IntelligenceSidebarProps) {
   const [isResizing, setIsResizing] = React.useState(false)
+  const [showWizard, setShowWizard] = React.useState(false)
+  const [selectedPreset, setSelectedPreset] = React.useState<string>('Standard')
+  const [proposal, setProposal] = React.useState<InitializationProposal | null>(null)
+  const [applying, setApplying] = React.useState(false)
+  const [applyResult, setApplyResult] = React.useState<string[] | null>(null)
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -123,6 +132,135 @@ export function IntelligenceSidebar({
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
+        {/* Nerve Center Commander (Project Initialization) */}
+        <section className="bg-indigo-500/5 rounded-xl border border-indigo-500/10 p-3 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck size={14} className="text-indigo-400" />
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/70">Nerve Center</h3>
+            </div>
+            {capabilityScan && (
+              <span className={cn(
+                "px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-tight",
+                capabilityScan.initializationState === 'FullyInitialized' ? "bg-emerald-500/20 text-emerald-400" :
+                capabilityScan.initializationState === 'MissingContracts' ? "bg-amber-500/20 text-amber-400" :
+                "bg-red-500/20 text-red-400"
+              )}>
+                {capabilityScan.initializationState.replace(/([A-Z])/g, ' $1').trim()}
+              </span>
+            )}
+          </div>
+
+          {capabilityScan?.initializationState !== 'FullyInitialized' && !showWizard && (
+            <button 
+              onClick={() => setShowWizard(true)}
+              className="w-full py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-xs font-semibold shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center gap-2"
+            >
+              <RefreshCw size={14} />
+              Initialize Project
+            </button>
+          )}
+
+          {showWizard && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center gap-1.5 p-1 bg-black/20 rounded-lg">
+                {['Minimal', 'Standard', 'Full', 'Guarded'].map((preset) => (
+                  <button
+                    key={preset}
+                    onClick={() => setSelectedPreset(preset)}
+                    className={cn(
+                      "flex-1 py-1 rounded-md text-[10px] font-bold transition-all",
+                      selectedPreset === preset 
+                        ? "bg-white/10 text-white shadow-sm" 
+                        : "text-white/30 hover:text-white/60 hover:bg-white/5"
+                    )}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                disabled={loading || applying}
+                onClick={async () => {
+                  if (!capabilityScan) return
+                  try {
+                    setApplying(true)
+                    const p = await api.projectGenerateProposal(
+                      capabilityScan, 
+                      selectedPreset, 
+                      "Project", // Should get real name
+                      "beads"
+                    )
+                    setProposal(p)
+                  } catch (e) {
+                    console.error(e)
+                  } finally {
+                    setApplying(false)
+                  }
+                }}
+                className="w-full py-2 border border-white/10 hover:bg-white/5 text-white/80 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2"
+              >
+                {applying ? <RefreshCw size={14} className="animate-spin" /> : <Wand2 size={14} />}
+                Generate Proposal
+              </button>
+
+              {proposal && (
+                <div className="space-y-3 pt-2">
+                  <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1.5 pr-1">
+                    {proposal.operations.map((op, i) => (
+                      <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-black/20 border border-white/5">
+                        <OperationIcon kind={op.kind} />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[10px] font-bold text-white/90 truncate">{op.path || op.command}</div>
+                          <div className="text-[9px] text-white/40 leading-tight">{op.reason}</div>
+                        </div>
+                        <RiskBadge risk={op.risk} />
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    disabled={applying}
+                    onClick={async () => {
+                      if (!proposal) return
+                      const confirmApply = confirm('Are you sure you want to apply this initialization? This will create or modify files in your repository.')
+                      if (!confirmApply) return
+
+                      try {
+                        setApplying(true)
+                        const results = await api.projectApplyProposal(proposal)
+                        setApplyResult(results)
+                        setShowWizard(false)
+                        setProposal(null)
+                        onRefresh()
+                      } catch (e) {
+                        console.error(e)
+                      } finally {
+                        setApplying(false)
+                      }
+                    }}
+                    className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+                  >
+                    {applying ? <RefreshCw size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                    Apply Initialization
+                  </button>
+                </div>
+              )}
+              
+              <button 
+                onClick={() => {
+                  setShowWizard(false)
+                  setProposal(null)
+                }}
+                className="w-full text-[10px] text-white/30 hover:text-white/60 transition-colors py-1"
+              >
+                Cancel Wizard
+              </button>
+            </div>
+          )}
+        </section>
+
         {/* Repo Health Score */}
         <section>
           <div className="flex items-center justify-between mb-3">
@@ -304,3 +442,31 @@ function StatCard({ label, value }: { label: string; value: number }) {
     </div>
   )
 }
+
+function OperationIcon({ kind }: { kind: string }) {
+  switch (kind) {
+    case 'create_file': return <FileCode size={12} className="text-emerald-400 mt-0.5" />
+    case 'modify_file': return <RefreshCw size={12} className="text-amber-400 mt-0.5" />
+    case 'run_command': return <Activity size={12} className="text-indigo-400 mt-0.5" />
+    default: return <Box size={12} className="text-white/40 mt-0.5" />
+  }
+}
+
+function RiskBadge({ risk }: { risk: string }) {
+  const colors = {
+    low: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    medium: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    high: "bg-rose-500/10 text-rose-400 border-rose-500/20"
+  }
+  return (
+    <span className={cn(
+      "px-1.5 py-0.5 rounded border text-[8px] font-bold uppercase tracking-tighter",
+      colors[risk as keyof typeof colors] || colors.low
+    )}>
+      {risk}
+    </span>
+  )
+}
+
+// Add these to imports at the top
+import { Wand2 } from 'lucide-react'

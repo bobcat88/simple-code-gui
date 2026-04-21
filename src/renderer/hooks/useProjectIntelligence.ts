@@ -1,22 +1,30 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { ProjectIntelligence, ExtendedApi } from '../api/types'
+import type { ProjectIntelligence, ExtendedApi, ProjectCapabilityScan } from '../api/types'
 
 export function useProjectIntelligence(api: ExtendedApi, projectPath: string | null) {
   const [intelligence, setIntelligence] = useState<ProjectIntelligence | null>(null)
+  const [capabilityScan, setCapabilityScan] = useState<ProjectCapabilityScan | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const fetchIntelligence = useCallback(async () => {
     if (!projectPath) {
       setIntelligence(null)
+      setCapabilityScan(null)
       return
     }
 
     setLoading(true)
     setError(null)
     try {
-      const result = await api.scanProjectIntelligence(projectPath)
-      setIntelligence(result)
+      // Parallel fetch for intelligence and capability scan
+      const [intelResult, scanResult] = await Promise.all([
+        api.scanProjectIntelligence(projectPath),
+        api.projectScan(projectPath, { includeCliHealth: true, includeGitHealth: true })
+      ])
+      
+      setIntelligence(intelResult)
+      setCapabilityScan(scanResult)
     } catch (err) {
       console.error('Failed to fetch project intelligence:', err)
       setError(err instanceof Error ? err.message : String(err))
@@ -33,5 +41,5 @@ export function useProjectIntelligence(api: ExtendedApi, projectPath: string | n
     return () => clearInterval(interval)
   }, [fetchIntelligence])
 
-  return { intelligence, loading, error, refresh: fetchIntelligence }
+  return { intelligence, capabilityScan, loading, error, refresh: fetchIntelligence }
 }
