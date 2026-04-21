@@ -139,7 +139,7 @@ features:
     description: Enhanced project switcher and home screen with usage summaries and alerts.
     status:
       maturity: draft
-      implementation: in_progress
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
