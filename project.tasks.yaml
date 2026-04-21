@@ -358,7 +358,7 @@
   title: "Implement: Approval Workflow UI"
   type: task
   spec_ref: "@01KPNWYD38HED3GG5Y9BMWS814"
-  status: in_progress
+  status: pending_review
   blocked_by: []
   depends_on:
     - "@task-advanced-orchestration-ui"
@@ -368,6 +368,7 @@
   todos_count: 0
   created_at: 2026-04-20T17:02:23.294Z
   started_at: 2026-04-21T06:27:09.577Z
+  submitted_at: 2026-04-21T19:04:11.881Z
   automation: eligible
 - _ulid: 01KPNXFQ614D8VM70HTCK0TTKJ
   slugs:
