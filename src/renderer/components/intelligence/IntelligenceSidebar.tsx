@@ -44,6 +44,7 @@ export function IntelligenceSidebar({
   const [applying, setApplying] = React.useState(false)
   const [applyResult, setApplyResult] = React.useState<string[] | null>(null)
   const [progress, setProgress] = React.useState<ProposalProgress | null>(null)
+  const healthScore = Math.round(capabilityScan?.projectHealthScore ?? 0)
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -141,14 +142,24 @@ export function IntelligenceSidebar({
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/70">Nerve Center</h3>
             </div>
             {capabilityScan && (
-              <span className={cn(
-                "px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-tight",
-                capabilityScan.initializationState === 'FullyInitialized' ? "bg-emerald-500/20 text-emerald-400" :
-                capabilityScan.initializationState === 'MissingContracts' ? "bg-amber-500/20 text-amber-400" :
-                "bg-red-500/20 text-red-400"
-              )}>
-                {capabilityScan.initializationState.replace(/([A-Z])/g, ' $1').trim()}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={cn(
+                  "px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-tight",
+                  capabilityScan.initializationState === 'FullyInitialized' ? "bg-emerald-500/20 text-emerald-400" :
+                  capabilityScan.initializationState === 'MissingContracts' ? "bg-amber-500/20 text-amber-400" :
+                  "bg-red-500/20 text-red-400"
+                )}>
+                  {capabilityScan.initializationState.replace(/([A-Z])/g, ' $1').trim()}
+                </span>
+                <span className={cn(
+                  "px-2 py-0.5 rounded text-[9px] font-bold tabular-nums shadow-sm",
+                  healthScore > 80 ? "bg-emerald-500/10 text-emerald-300/80" :
+                  healthScore > 50 ? "bg-amber-500/10 text-amber-300/80" :
+                  "bg-red-500/10 text-red-300/80"
+                )}>
+                  {healthScore}%
+                </span>
+              </div>
             )}
           </div>
 
@@ -493,12 +504,13 @@ export function IntelligenceSidebar({
         </section>
       </div>
 
-      {/* Footer / Summary */}
       <div className="p-4 border-t border-white/10 bg-black/20 text-[10px] text-white/40 flex items-center justify-between">
-        <span>Last scan: {new Date().toLocaleTimeString()}</span>
+        <span>
+          Last scan: {capabilityScan ? new Date(capabilityScan.scannedAt).toLocaleTimeString() : new Date().toLocaleTimeString()}
+        </span>
         <div className="flex items-center gap-1.5 text-emerald-400/80">
           <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-          Ready
+          {capabilityScan ? `${capabilityScan.totalFileCount} files | ${capabilityScan.scanDurationMs}ms` : 'Ready'}
         </div>
       </div>
     </div>

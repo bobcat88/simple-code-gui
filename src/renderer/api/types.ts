@@ -614,6 +614,9 @@ export interface ProjectCapabilityScan {
   warnings: ScanWarning[]
   blockers: ScanBlocker[]
   upgradeInputs: UpgradeProposalInput
+  totalFileCount: number
+  scanDurationMs: number
+  projectHealthScore: number
 }
 
 export interface ProposalOperation {

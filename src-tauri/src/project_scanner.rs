@@ -59,7 +59,7 @@ pub enum SourceSystem {
     User,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum CapabilityKind {
     TaskBackend,
@@ -74,7 +74,7 @@ pub enum CapabilityKind {
     ProjectContract,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum CapabilityMode {
     Full,
@@ -85,7 +85,7 @@ pub enum CapabilityMode {
     Unknown,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum HealthStatus {
     Healthy,
@@ -94,7 +94,7 @@ pub enum HealthStatus {
     Unknown,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum WarningSeverity {
     Info,
@@ -189,8 +189,9 @@ pub struct ProjectCapabilityScan {
     pub warnings: Vec<ScanWarning>,
     pub blockers: Vec<ScanBlocker>,
     pub upgrade_inputs: UpgradeProposalInput,
-    pub total_file_count: u32, // Added for performance metrics
-    pub scan_duration_ms: u64, // Added for SLA verification
+    pub total_file_count: u32,
+    pub scan_duration_ms: u64,
+    pub project_health_score: f32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -393,6 +394,8 @@ pub fn scan_project(root_path: &str, options: &ScanOptions) -> ProjectCapability
         rollback_notes: vec!["Created files can be safely deleted to rollback.".into()],
     };
 
+    let project_health_score = calculate_project_health(&capabilities);
+
     ProjectCapabilityScan {
         root_path: root_path.to_string(),
         scanned_at: Utc::now().to_rfc3339(),
@@ -404,7 +407,17 @@ pub fn scan_project(root_path: &str, options: &ScanOptions) -> ProjectCapability
         upgrade_inputs,
         total_file_count: total_file_count as u32,
         scan_duration_ms: start_time.elapsed().as_millis() as u64,
+        project_health_score,
     }
+}
+
+fn calculate_project_health(capabilities: &[CapabilityScanResult]) -> f32 {
+    if capabilities.is_empty() { return 0.0; }
+    let total_score: f32 = capabilities
+        .iter()
+        .map(|capability| capability.health_score.clamp(0.0, 1.0))
+        .sum();
+    (total_score / capabilities.len() as f32) * 100.0
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
