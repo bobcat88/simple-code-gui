@@ -154,7 +154,7 @@ features:
         description: Global hotkey or UI element to jump between recent workspaces.
         status:
           maturity: draft
-          implementation: in_progress
+          implementation: implemented
         depends_on: []
         implements: []
         relates_to: []
