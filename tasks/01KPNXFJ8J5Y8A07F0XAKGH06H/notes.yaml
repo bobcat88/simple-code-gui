@@ -1,9 +1,0 @@
-notes:
-  - _ulid: 01KPNXFJ8J3WH2TGJR2RGYNB90
-    content: |-
-      Implementation notes (auto-generated from spec):
-
-      SQLite-backed logging of all token transactions for historical analysis.
-    supersedes: null
-    author: Johan.P
-    created_at: 2026-04-20T17:02:18.898Z

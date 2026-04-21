@@ -120,41 +120,6 @@
   notes_count: 1
   todos_count: 0
   created_at: 2026-04-20T17:02:15.025Z
-- _ulid: 01KPNXFHMWXF1679QRZEKF8T33
-  slugs:
-    - task-savings-telemetry-rtk-mcp
-  title: "Implement: Savings Telemetry (RTK/MCP)"
-  type: task
-  spec_ref: "@01KPNWTRXKAQ76CQYFP8CA18X9"
-  status: completed
-  blocked_by: []
-  depends_on:
-    - "@task-token-economics-telemetry"
-  priority: 3
-  tags: []
-  notes_count: 1
-  todos_count: 0
-  created_at: 2026-04-20T17:02:18.268Z
-  started_at: 2026-04-20T22:11:34.504Z
-  submitted_at: 2026-04-20T22:13:16.689Z
-  completed_at: 2026-04-20T22:13:18.651Z
-- _ulid: 01KPNXFJ8J5Y8A07F0XAKGH06H
-  slugs:
-    - task-token-burn-history
-  title: "Implement: Token Burn History"
-  type: task
-  spec_ref: "@01KPNWTTH2GSHV3Q4W2W7F7KV8"
-  status: pending_review
-  blocked_by: []
-  depends_on:
-    - "@task-token-economics-telemetry"
-  priority: 3
-  tags: []
-  notes_count: 1
-  todos_count: 0
-  created_at: 2026-04-20T17:02:18.898Z
-  started_at: 2026-04-20T22:13:24.026Z
-  submitted_at: 2026-04-20T22:19:03.630Z
 - _ulid: 01KPNXFJWFFFH5361QM99H9ZKY
   slugs:
     - task-budget-rate-limits
