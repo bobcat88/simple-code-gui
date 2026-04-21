@@ -1,7 +1,7 @@
 import React from 'react'
 import { Project, useWorkspaceStore } from '../../stores/workspace.js'
 import { Api } from '../../api/types.js'
-import { Settings, LayoutGrid, Terminal, Plus, FolderPlus, FolderSearch, Zap, ChevronRight, Cpu, MessageSquare } from 'lucide-react'
+import { Settings, LayoutGrid, Terminal, Plus, FolderPlus, FolderSearch, Zap, ChevronRight, Cpu, MessageSquare, Activity } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { BeadsPanel } from '../BeadsPanel.js'
 import { GSDStatus } from '../GSDStatus.js'
@@ -10,6 +10,9 @@ import { ClaudeMdEditor } from '../ClaudeMdEditor.js'
 import { McpPanel } from '../McpPanel.js'
 import { McpBrowser } from '../mcp/McpBrowser.js'
 import { TaskAssignmentView } from '../orchestration/TaskAssignmentView.js'
+import { ActivityFeed } from '../ActivityFeed'
+import { AgentBoard } from '../AgentBoard'
+import { HealthDashboard } from '../HealthDashboard'
 import {
   getCategoryGradient,
   ProjectItem,
@@ -300,6 +303,37 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
               />
             </div>
           </div>
+        </div>
+      </div>
+    )
+  } else if (activeSection === 'observability') {
+    return (
+      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-border/50 font-bold flex items-center gap-2 bg-white/5">
+          <Activity size={18} className="text-primary" />
+          <span className="tracking-tight text-white/90">Observability</span>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
+          <section className="space-y-3">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">System Health</h4>
+            <div className="p-1 rounded-2xl bg-white/5 border border-white/5 overflow-hidden">
+              <HealthDashboard />
+            </div>
+          </section>
+
+          <section className="space-y-3 pt-4 border-t border-white/5">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Agent Board</h4>
+            <div className="p-1 rounded-2xl bg-white/5 border border-white/5 overflow-hidden">
+              <AgentBoard />
+            </div>
+          </section>
+          
+          <section className="space-y-3 pt-4 border-t border-white/5 h-[400px] flex flex-col">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Activity Feed</h4>
+            <div className="flex-1 rounded-2xl bg-white/5 border border-white/5 overflow-hidden">
+              <ActivityFeed />
+            </div>
+          </section>
         </div>
       </div>
     )

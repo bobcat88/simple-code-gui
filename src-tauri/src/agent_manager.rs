@@ -8,6 +8,10 @@ pub struct Agent {
     pub name: String,
     pub role: String,
     pub status: String,
+    pub model: Option<String>,
+    pub provider: Option<String>,
+    pub burn_rate: Option<f64>,
+    pub quality_score: Option<f64>,
     pub last_active: Option<String>,
 }
 
@@ -22,12 +26,17 @@ impl AgentManager {
 
     pub async fn register(&self, agent: Agent) -> Result<(), String> {
         sqlx::query(
-            "INSERT OR REPLACE INTO agents (id, name, role, status, last_active) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)"
+            "INSERT OR REPLACE INTO agents (id, name, role, status, model, provider, burn_rate, quality_score, last_active) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)"
         )
         .bind(&agent.id)
         .bind(&agent.name)
         .bind(&agent.role)
         .bind(&agent.status)
+        .bind(&agent.model)
+        .bind(&agent.provider)
+        .bind(agent.burn_rate.unwrap_or(0.0))
+        .bind(agent.quality_score.unwrap_or(0.0))
         .execute(&self.db.pool)
         .await
         .map_err(|e| e.to_string())?;
@@ -36,8 +45,8 @@ impl AgentManager {
     }
 
     pub async fn list(&self) -> Result<Vec<Agent>, String> {
-        let rows = sqlx::query_as::<_, (String, String, String, String, String)>(
-            "SELECT id, name, role, status, last_active FROM agents ORDER BY last_active DESC"
+        let rows = sqlx::query_as::<_, (String, String, String, String, Option<String>, Option<String>, f64, f64, String)>(
+            "SELECT id, name, role, status, model, provider, burn_rate, quality_score, last_active FROM agents ORDER BY last_active DESC"
         )
         .fetch_all(&self.db.pool)
         .await
@@ -48,7 +57,11 @@ impl AgentManager {
             name: r.1,
             role: r.2,
             status: r.3,
-            last_active: Some(r.4),
+            model: r.4,
+            provider: r.5,
+            burn_rate: Some(r.6),
+            quality_score: Some(r.7),
+            last_active: Some(r.8),
         }).collect())
     }
 

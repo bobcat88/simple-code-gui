@@ -49,6 +49,33 @@ function createPtyOperations(api: UseTerminalSetupOptions['api']): PtyOperations
         return window.electronAPI?.onPtyExit(id, callback)
       }
     },
+    onPtyTitle: (id: string, callback: (title: string) => void) => {
+      if (api) {
+        return api.onPtyTitle?.(id, callback)
+      } else {
+        return window.electronAPI?.onPtyTitle?.((ptyId: string, title: string) => {
+          if (ptyId === id) callback(title)
+        })
+      }
+    },
+    onPtyPath: (id: string, callback: (path: string) => void) => {
+      if (api) {
+        return api.onPtyPath?.(id, callback)
+      } else {
+        return window.electronAPI?.onPtyPath?.((ptyId: string, path: string) => {
+          if (ptyId === id) callback(path)
+        })
+      }
+    },
+    onPtyPid: (id: string, callback: (pid: string) => void) => {
+      if (api) {
+        return api.onPtyPid?.(id, callback)
+      } else {
+        return window.electronAPI?.onPtyPid?.((ptyId: string, pid: string) => {
+          if (ptyId === id) callback(pid)
+        })
+      }
+    },
   }
 }
 
@@ -129,7 +156,13 @@ export function useTerminalSetup(options: UseTerminalSetupOptions): UseTerminalS
     // PTY exit handling
     cleanupExit = ptyOperations.onPtyExit(ptyId, (code) => {
       handlePtyExit(code, state.terminal, ptyId, state)
+      options.onSessionEnded?.()
     })
+
+    // PTY title/path/pid handling
+    const cleanupTitle = ptyOperations.onPtyTitle?.(ptyId, (title) => options.onTerminalTitle?.(title))
+    const cleanupPath = ptyOperations.onPtyPath?.(ptyId, (path) => options.onTerminalPath?.(path))
+    const cleanupPid = ptyOperations.onPtyPid?.(ptyId, (pid) => options.onProcessId?.(pid))
 
     // Try to initialize terminal immediately, or poll until ready
     if (!tryInit()) {
@@ -163,6 +196,9 @@ export function useTerminalSetup(options: UseTerminalSetupOptions): UseTerminalS
       if (handleThemeUpdate) {
         window.removeEventListener('terminal-theme-update', handleThemeUpdate)
       }
+      cleanupTitle?.()
+      cleanupPath?.()
+      cleanupPid?.()
       cleanupTerminal(containerRef, state, initCheckInterval, null, cleanupData, cleanupExit)
       setIsReady(false)
     }

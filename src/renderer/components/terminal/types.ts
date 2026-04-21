@@ -21,6 +21,11 @@ export interface TerminalProps {
   isMobile?: boolean  // Whether running on mobile (for mobile-specific UI)
   onOpenFileBrowser?: () => void  // Callback to open file browser (mobile only)
   isTiled?: boolean  // Whether rendering in a tiled layout (removes large paddings)
+  onTerminalTitle?: (title: string) => void
+  onTerminalPath?: (path: string) => void
+  onProcessId?: (pid: string) => void
+  onSessionEnded?: () => void
+  terminalSettings?: any
 }
 
 // Auto work options passed from menu

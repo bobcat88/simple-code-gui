@@ -45,14 +45,13 @@ export function useTokenMeter({ ptyId, api, projectPath }: UseTokenMeterOptions)
         
         // Log to database
         if ((api as ExtendedApi)?.logTokenEvent) {
-          (api as ExtendedApi).logTokenEvent({
-            projectId: projectPath,
-            model: 'claude-3-5-sonnet', // Defaulting to Claude for now
+          (api as ExtendedApi).logTokenEvent(
+            projectPath || null,
             inputTokens,
             outputTokens,
             savedTokens,
-            costEst
-          }).catch(err => console.error('Failed to log token event:', err))
+            'claude-3-5-sonnet'
+          ).catch(err => console.error('Failed to log token event:', err))
         }
       }
     }

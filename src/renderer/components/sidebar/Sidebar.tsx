@@ -21,7 +21,7 @@ export function Sidebar({
   onOpenSession,
   onSwitchToTab,
   onOpenSettings,
-  onOpenMakeProject,
+  onOpenProjectWizard,
   onUpdateProject,
   onCloseProjectTabs,
   width,

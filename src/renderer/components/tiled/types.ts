@@ -16,14 +16,21 @@ export interface TiledTerminalViewProps {
   projects: Project[]
   theme: Theme
   focusedTabId?: string | null
+  activeTabId?: string | null // Alias for compatibility
+  onSetActiveTab?: (id: string) => void // Alias for compatibility
   onCloseTab: (id: string) => void
   onRenameTab: (id: string, title: string) => void
   onFocusTab: (id: string) => void
+  onUpdateTabTitle?: (id: string, title: string) => void
+  onUpdateTabPath?: (id: string, path: string) => void
+  onUpdateTabPid?: (id: string, pid: string) => void
+  onTerminalExit?: (id: string) => void
   tileTree: TileNode | null
   onTreeChange: (tree: TileNode | null) => void
   onOpenSessionAtPosition?: (projectPath: string, dropZone: DropZone | null, containerSize: { width: number, height: number }, currentTree?: TileNode | null) => void
   onAddTab?: (projectPath: string, tileId: string) => void
   onUndoCloseTab?: () => void
+  terminalSettings?: any
   api?: Api
 }
 

@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState, useMemo, useCallback } from 'react'
+import React, { createContext, useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import type { VoiceContextValue } from './types.js'
 import { useTTSHandlers } from './ttsHandlers.js'
 import { useSTTHandlers } from './sttHandlers.js'

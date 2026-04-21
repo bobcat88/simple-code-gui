@@ -26,6 +26,24 @@ export interface AppSettings {
   autoAcceptTools?: string[]
   permissionMode?: string
   backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
+  voiceOutputEnabled?: boolean
+  voiceSilenceThreshold?: number
+  voiceVolume?: number
+  voiceSpeed?: number
+  voiceSkipOnNew?: boolean
+  voicePushToTalk?: boolean
+  voiceAutoListen?: boolean
+  terminal?: {
+    fontSize: number
+    fontFamily: string
+    cursorStyle: 'block' | 'underline' | 'bar'
+    cursorBlink: boolean
+    theme: string
+    opacity: number
+    lineHeight: number
+    letterSpacing: number
+    padding: number
+  }
 }
 
 interface UseSettingsReturn {

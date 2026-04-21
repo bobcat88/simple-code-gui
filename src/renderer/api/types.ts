@@ -60,9 +60,21 @@ export interface Settings {
   voiceSkipOnNew?: boolean
   voiceSilenceThreshold?: number
   voicePushToTalk?: boolean
+  voiceAutoListen?: boolean
   autoAcceptTools?: string[]
   permissionMode?: string
   backend?: BackendSelection
+  terminal?: {
+    fontSize: number
+    fontFamily: string
+    cursorStyle: 'block' | 'underline' | 'bar'
+    cursorBlink: boolean
+    theme: string
+    opacity: number
+    lineHeight: number
+    letterSpacing: number
+    padding: number
+  }
 }
 
 /**

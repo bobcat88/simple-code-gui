@@ -6,7 +6,8 @@ import {
   LayoutGrid,
   MessageSquare,
   Cpu,
-  Zap
+  Zap,
+  Activity
 } from 'lucide-react'
 import { cn } from '../lib/utils'
 
@@ -29,6 +30,7 @@ export function IconBar({
     { id: 'projects', icon: LayoutGrid, label: 'Workspace' },
     { id: 'terminal', icon: MessageSquare, label: 'Threads' },
     { id: 'orchestration', icon: Zap, label: 'Automations' },
+    { id: 'observability', icon: Activity, label: 'Observability' },
     { id: 'plugins', icon: Cpu, label: 'Tools' },
   ]
 

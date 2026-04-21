@@ -15,6 +15,7 @@ import { cn } from '../lib/utils'
 import { SessionSwitcher } from './SessionSwitcher'
 import { SavingsHud } from './SavingsHud'
 import { JobHUD } from './telemetry/JobHUD'
+import { HealthHUD } from './telemetry/HealthHUD'
 
 interface HeaderProps {
   activeTab: OpenTab | null
@@ -59,6 +60,7 @@ export function Header({
       <div className="flex-1 flex justify-center gap-4" data-tauri-drag-region>
         <SavingsHud api={api} className="animate-in fade-in slide-in-from-top-2 duration-700" />
         <JobHUD api={api} className="animate-in fade-in slide-in-from-top-2 duration-1000" />
+        <HealthHUD className="animate-in fade-in slide-in-from-top-2 duration-1200" />
       </div>
 
       <div className="flex items-center gap-2 shrink-0">

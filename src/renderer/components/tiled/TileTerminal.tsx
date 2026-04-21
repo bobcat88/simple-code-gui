@@ -32,8 +32,13 @@ interface TileTerminalProps {
   onCloseTab: (id: string) => void
   onRenameTab: (id: string, title: string) => void
   onFocusTab: (id: string) => void
+  onUpdateTabTitle?: (id: string, title: string) => void
+  onUpdateTabPath?: (id: string, path: string) => void
+  onUpdateTabPid?: (id: string, pid: string) => void
+  onTerminalExit?: (id: string) => void
   onSwitchSubTab: (leafId: string, tabId: string) => void
   onAddTab?: (projectPath: string, tileId: string) => void
+  terminalSettings?: any
   onDragStart: (e: React.DragEvent, tileId: string) => void
   onSubTabDragStart: (e: React.DragEvent, tabId: string, tileId: string) => void
   onDragEnd: () => void
@@ -69,8 +74,13 @@ export function TileTerminal({
   onCloseTab,
   onRenameTab,
   onFocusTab,
+  onUpdateTabTitle,
+  onUpdateTabPath,
+  onUpdateTabPid,
+  onTerminalExit,
   onSwitchSubTab,
   onAddTab,
+  terminalSettings,
   onDragStart,
   onSubTabDragStart,
   onDragEnd,
@@ -323,6 +333,11 @@ export function TileTerminal({
                 isActive={tab.id === activeSubTabId}
                 theme={theme}
                 onFocus={() => onFocusTab(tab.id)}
+                onTerminalTitle={(title: string) => onUpdateTabTitle?.(tab.id, title)}
+                onTerminalPath={(path: string) => onUpdateTabPath?.(tab.id, path)}
+                onProcessId={(pid: string) => onUpdateTabPid?.(tab.id, pid)}
+                onSessionEnded={() => onTerminalExit?.(tab.id)}
+                terminalSettings={terminalSettings}
                 projectPath={tab.projectPath}
                 backend={tab.backend}
                 api={api}

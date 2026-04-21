@@ -178,6 +178,22 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
     updateTab(id, { title, customTitle: true })
   }, [updateTab])
 
+  const updateTabTitle = useCallback((id: string, title: string) => {
+    updateTab(id, { title })
+  }, [updateTab])
+
+  const updateTabPath = useCallback((id: string, path: string) => {
+    updateTab(id, { projectPath: path })
+  }, [updateTab])
+
+  const updateTabPid = useCallback((id: string, ptyId: string) => {
+    updateTab(id, { ptyId })
+  }, [updateTab])
+
+  const handleTerminalExit = useCallback((id: string) => {
+    removeTab(id)
+  }, [removeTab])
+
   // App-specific state
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const [mobileConnectOpen, setMobileConnectOpen] = useState(false)
@@ -411,12 +427,13 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
                             <ErrorBoundary componentName={`Terminal (${tab.title || tab.id})`}>
                               <Terminal
                                 ptyId={tab.id}
-                                onTerminalTitle={(title) => updateTabTitle(tab.id, title)}
-                                onTerminalPath={(path) => updateTabPath(tab.id, path)}
-                                onProcessId={(pid) => updateTabPid(tab.id, pid)}
+                                onTerminalTitle={(title: string) => updateTabTitle(tab.id, title)}
+                                onTerminalPath={(path: string) => updateTabPath(tab.id, path)}
+                                onProcessId={(pid: string) => updateTabPid(tab.id, pid)}
                                 onSessionEnded={() => handleTerminalExit(tab.id)}
-                                active={tab.id === activeTabId}
-                                terminalSettings={settings.terminal}
+                                isActive={tab.id === activeTabId}
+                                theme={currentTheme}
+                                terminalSettings={settings?.terminal}
                                 api={api}
                               />
                             </ErrorBoundary>
@@ -427,6 +444,8 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
                       <div className="flex-1 overflow-hidden">
                         <TiledTerminalView
                           tabs={openTabs}
+                          projects={projects}
+                          theme={currentTheme}
                           activeTabId={activeTabId}
                           onSetActiveTab={setActiveTab}
                           onCloseTab={handleCloseTab}
@@ -434,7 +453,11 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
                           onUpdateTabPath={updateTabPath}
                           onUpdateTabPid={updateTabPid}
                           onTerminalExit={handleTerminalExit}
-                          terminalSettings={settings.terminal}
+                          onRenameTab={updateTabTitle}
+                          onFocusTab={setActiveTab}
+                          tileTree={tileTree}
+                          onTreeChange={setTileTree}
+                          terminalSettings={settings?.terminal}
                           api={api}
                         />
                       </div>

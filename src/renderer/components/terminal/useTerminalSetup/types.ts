@@ -14,6 +14,10 @@ export interface UseTerminalSetupOptions {
   onSummaryChunk: (cleanChunk: string) => void
   onAutoWorkMarker: (cleanChunk: string) => void
   onTokenChunk: (cleanChunk: string) => void
+  onTerminalTitle?: (title: string) => void
+  onTerminalPath?: (path: string) => void
+  onProcessId?: (pid: string) => void
+  onSessionEnded?: () => void
   prePopulateSpokenContent: (chunks: string[]) => void
   resetTTSState: () => void
 }
@@ -33,6 +37,9 @@ export interface PtyOperations {
   resizePty: (id: string, cols: number, rows: number) => void
   onPtyData: (id: string, callback: (data: string) => void) => (() => void) | undefined
   onPtyExit: (id: string, callback: (code: number) => void) => (() => void) | undefined
+  onPtyTitle?: (id: string, callback: (title: string) => void) => (() => void) | undefined
+  onPtyPath?: (id: string, callback: (path: string) => void) => (() => void) | undefined
+  onPtyPid?: (id: string, callback: (pid: string) => void) => (() => void) | undefined
 }
 
 export interface TerminalRefs {

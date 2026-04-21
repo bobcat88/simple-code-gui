@@ -4,6 +4,7 @@ import { FloatingInput } from '../FloatingInput.js'
 import { AutoWorkOptions } from '../TerminalMenu.js'
 import { CustomCommandModal } from '../CustomCommandModal.js'
 import { resolveBackendCommand } from '../../utils/backendCommands.js'
+import { cn } from '../../lib/utils'
 import type { TerminalProps } from './types.js'
 import { ExtendedApi } from '../../api/types.js'
 import { useTerminalSetup } from './useTerminalSetup.js'
@@ -20,7 +21,23 @@ export { clearTerminalBuffer, cleanupOrphanedBuffers }
  * Terminal component that wraps xterm.js with PTY integration.
  * Supports TTS, auto work loop, summary capture, and backend-specific commands.
  */
-export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend, api, isMobile, onOpenFileBrowser, isTiled }: TerminalProps): React.ReactElement {
+export function Terminal({ 
+  ptyId, 
+  isActive, 
+  theme, 
+  onFocus, 
+  projectPath, 
+  backend, 
+  api, 
+  isMobile, 
+  onOpenFileBrowser, 
+  isTiled,
+  onTerminalTitle,
+  onTerminalPath,
+  onProcessId,
+  onSessionEnded,
+  terminalSettings
+}: TerminalProps): React.ReactElement {
   // Custom command modal state
   const [showCustomCommandModal, setShowCustomCommandModal] = useState(false)
   const [autoAccept, setAutoAccept] = useState(false)
@@ -145,6 +162,10 @@ export function Terminal({ ptyId, isActive, theme, onFocus, projectPath, backend
     onSummaryChunk: processSummaryChunk,
     onAutoWorkMarker: handleAutoWorkMarker,
     onTokenChunk: processTokenChunk,
+    onTerminalTitle,
+    onTerminalPath,
+    onProcessId,
+    onSessionEnded,
     prePopulateSpokenContent,
     resetTTSState,
   })

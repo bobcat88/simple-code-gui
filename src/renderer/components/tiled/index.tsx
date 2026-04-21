@@ -36,16 +36,25 @@ export function TiledTerminalView({
   projects,
   theme,
   focusedTabId,
+  activeTabId,
+  onSetActiveTab,
   onCloseTab,
   onRenameTab,
   onFocusTab,
+  onUpdateTabTitle,
+  onUpdateTabPath,
+  onUpdateTabPid,
+  onTerminalExit,
   tileTree,
   onTreeChange,
   onOpenSessionAtPosition,
   onAddTab,
   onUndoCloseTab,
+  terminalSettings,
   api
 }: TiledTerminalViewProps): React.ReactElement | null {
+  const effectiveFocusedTabId = focusedTabId || activeTabId
+  const effectiveOnFocusTab = onFocusTab || onSetActiveTab
   const containerRef = useRef<HTMLDivElement>(null)
   const containerSizeRef = useRef({ width: 1920, height: 1080 })
   const [viewportSize, setViewportSize] = useState({ width: 1920, height: 1080 })
@@ -617,9 +626,14 @@ export function TiledTerminalView({
               clientToCanvasPercent={clientToCanvasPercent}
               onCloseTab={onCloseTab}
               onRenameTab={onRenameTab}
-              onFocusTab={onFocusTab}
+              onFocusTab={effectiveOnFocusTab || (() => {})}
+              onUpdateTabTitle={onUpdateTabTitle}
+              onUpdateTabPath={onUpdateTabPath}
+              onUpdateTabPid={onUpdateTabPid}
+              onTerminalExit={onTerminalExit}
               onSwitchSubTab={handleSwitchSubTab}
               onAddTab={onAddTab}
+              terminalSettings={terminalSettings}
               onDragStart={handleDragStart}
               onSubTabDragStart={handleSubTabDragStart}
               onDragEnd={handleDragEnd}

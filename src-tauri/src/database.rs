@@ -136,12 +136,22 @@ impl DatabaseManager {
                 name TEXT NOT NULL,
                 role TEXT NOT NULL,
                 status TEXT NOT NULL,
+                model TEXT,
+                provider TEXT,
+                burn_rate REAL DEFAULT 0.0,
+                quality_score REAL DEFAULT 0.0,
                 last_active DATETIME DEFAULT CURRENT_TIMESTAMP
             )"
         )
         .execute(&self.pool)
         .await
         .map_err(|e| e.to_string())?;
+
+        // Migration for existing databases
+        let _ = sqlx::query("ALTER TABLE agents ADD COLUMN model TEXT").execute(&self.pool).await;
+        let _ = sqlx::query("ALTER TABLE agents ADD COLUMN provider TEXT").execute(&self.pool).await;
+        let _ = sqlx::query("ALTER TABLE agents ADD COLUMN burn_rate REAL DEFAULT 0.0").execute(&self.pool).await;
+        let _ = sqlx::query("ALTER TABLE agents ADD COLUMN quality_score REAL DEFAULT 0.0").execute(&self.pool).await;
 
         // Health Logs Table
         sqlx::query(

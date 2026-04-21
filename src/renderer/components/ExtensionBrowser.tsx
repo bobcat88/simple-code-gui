@@ -164,7 +164,7 @@ export function ExtensionBrowser({ projectPath, projectName, onClose }: Extensio
     setRemoving(extId)
     try {
       const result = await window.electronAPI?.extensionsRemove?.(extId)
-      if (!result?.success) {
+      if (result && !result.success) {
         setError(result.error || 'Removal failed')
       } else {
         await loadData()

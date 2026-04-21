@@ -163,4 +163,38 @@ export const tauriIpc = {
     invoke<any>('voice_speak', { text, voice, speed }),
   voiceStop: () =>
     invoke<void>('voice_stop'),
+
+  // Background Jobs
+  jobsCreate: (jobType: string, payload: any) =>
+    invoke<string>('jobs_create', { job_type: jobType, payload }),
+  jobsGet: (id: string) =>
+    invoke<any>('jobs_get', { id }),
+  jobsList: (limit?: number) =>
+    invoke<any[]>('jobs_list', { limit }),
+  onJobProgress: (callback: (data: { id: string, progress: number, message: string }) => void) =>
+    listen<{ id: string, progress: number, message: string }>('job-progress', (event) => callback(event.payload)),
+  onJobStatusChanged: (callback: (id: string) => void) =>
+    listen<string>('job-status-changed', (event) => callback(event.payload)),
+
+  // Activity Feed
+  activityGetRecent: (limit?: number) =>
+    invoke<any[]>('activity_get_recent', { limit }),
+  activityLogInfo: (source: string, message: string, metadata?: string) =>
+    invoke<void>('activity_log_info', { source, message, metadata }),
+  onActivityEvent: (callback: (event: any) => void) =>
+    listen<any>('activity-event', (event) => callback(event.payload)),
+
+  // Agents
+  agentRegister: (agent: any) =>
+    invoke<void>('agent_register', { agent }),
+  agentList: () =>
+    invoke<any[]>('agent_list'),
+  agentUpdateStatus: (id: string, status: string) =>
+    invoke<void>('agent_update_status', { id, status }),
+
+  // Health & Diagnostics
+  healthGetStatus: () =>
+    invoke<any>('health_get_status'),
+  healthLogCheck: (checkType: string, status: string, details?: string) =>
+    invoke<void>('health_log_check', { checkType, status, details }),
 };

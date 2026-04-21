@@ -22,7 +22,7 @@ export function McpPanel({ projectPath }: McpPanelProps) {
 
   const handleSaveConfig = async (id: string, config: any) => {
     try {
-      await window.electronAPI?.extensionsSetConfig(id, config)
+      await window.electronAPI?.extensionsSetConfig?.(id, config)
       queryClient.invalidateQueries({ queryKey: ['extensions'] })
       setEditingId(null)
     } catch (e) {

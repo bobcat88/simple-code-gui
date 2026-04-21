@@ -1,0 +1,5 @@
+src/renderer/components/ConnectionScreen/ConnectionScreen.tsx(226,25): error TS2551: Property 'hosts' does not exist on type 'ParsedConnectionUrl'. Did you mean 'host'?
+src/renderer/components/ConnectionScreen/ConnectionScreen.tsx(233,25): error TS2551: Property 'hosts' does not exist on type 'ParsedConnectionUrl'. Did you mean 'host'?
+src/renderer/components/ExtensionBrowser.tsx(168,18): error TS18048: 'result' is possibly 'undefined'.
+src/renderer/components/HostQRDisplay.tsx(2,27): error TS2307: Cannot find module 'qrcode.react' or its corresponding type declarations.
+src/renderer/components/McpPanel.tsx(25,13): error TS2722: Cannot invoke an object which is possibly 'undefined'.
