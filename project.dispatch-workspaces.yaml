@@ -792,7 +792,7 @@ workspaces:
         head: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
         last_seen_at: 2026-04-21T21:59:58.739Z
         path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-session-discovery-01kps0gd
-  - active_role: null
+  - active_role: worker
     base_branch_point: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
     bootstrap:
       status: succeeded
@@ -839,7 +839,7 @@ workspaces:
       status: healthy
       issues: []
       summary: Workspace record matches current git branch and worktree state.
-      updated_at: 2026-04-21T22:00:10.433Z
+      updated_at: 2026-04-21T22:00:12.138Z
     integration:
       status: pending
       detail: null
@@ -848,16 +848,16 @@ workspaces:
       target_branch: main
       target_commit: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
       updated_at: 2026-04-21T22:00:10.433Z
-    lifecycle_state: ready
+    lifecycle_state: active
     resolved_base_branch: main
     task_ref: "@01KPS0GDQXR8JD6QA2MGT2KD9S"
     task_slug: task-live-token-cost-hud
     timestamps:
       closed_at: null
-      last_active_at: 2026-04-21T21:59:58.682Z
-      last_reconciled_at: 2026-04-21T22:00:10.433Z
+      last_active_at: 2026-04-21T22:00:12.138Z
+      last_reconciled_at: 2026-04-21T22:00:12.138Z
       created_at: 2026-04-21T21:53:15.522Z
-      updated_at: 2026-04-21T22:00:11.295Z
+      updated_at: 2026-04-21T22:00:12.138Z
     workspace_id: dispatch-workspace-01KPS0GDQXR8JD6QA2MGT2KD9S
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
