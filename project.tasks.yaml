@@ -218,6 +218,19 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-21T22:15:44.065Z
+    - _ulid: 01KPS2N9DMQ208HVZEQ83Y0HJN
+      content: "Worker B implemented token burn history: added token_transactions SQLite schema/indexes
+        plus Rust insert/query helpers and get_token_history command; updated Tauri renderer API
+        bridge and token meter to log session/project/backend/input/output/cost transactions; added
+        TokenBurnHistory UI in Automations with totals, daily bars, project/backend breakdowns,
+        filters, and session rows; added AC-annotated Rust and Vitest coverage. Verification: cargo
+        test database::tests passed (2 tests); bun run test
+        src/renderer/components/orchestration/TokenBurnHistory.test.tsx passed (1 test); bun run
+        build completed successfully and produced the deb bundle. Note: did not submit/complete,
+        commit, or push."
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-21T22:30:32.628Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GDVZNW3C7K4XM86WS21M
