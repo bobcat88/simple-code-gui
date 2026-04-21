@@ -152,6 +152,9 @@ features:
         title: Project Quick-Switcher
         type: requirement
         description: Global hotkey or UI element to jump between recent workspaces.
+        status:
+          maturity: draft
+          implementation: in_progress
         depends_on: []
         implements: []
         relates_to: []
