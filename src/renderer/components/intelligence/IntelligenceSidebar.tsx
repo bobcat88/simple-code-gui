@@ -14,7 +14,7 @@ import {
   AlertTriangle
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
-import type { ProjectIntelligence, ProjectCapabilityScan, InitializationProposal, ProposalOperation, ExtendedApi } from '../../api/types'
+import type { ProjectIntelligence, ProjectCapabilityScan, InitializationProposal, ProposalOperation, ExtendedApi, ProposalProgress } from '../../api/types'
 
 interface IntelligenceSidebarProps {
   intelligence: ProjectIntelligence | null
@@ -43,6 +43,7 @@ export function IntelligenceSidebar({
   const [proposal, setProposal] = React.useState<InitializationProposal | null>(null)
   const [applying, setApplying] = React.useState(false)
   const [applyResult, setApplyResult] = React.useState<string[] | null>(null)
+  const [progress, setProgress] = React.useState<ProposalProgress | null>(null)
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -207,44 +208,134 @@ export function IntelligenceSidebar({
 
               {proposal && (
                 <div className="space-y-3 pt-2">
-                  <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1.5 pr-1">
-                    {proposal.operations.map((op, i) => (
-                      <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-black/20 border border-white/5">
-                        <OperationIcon kind={op.kind} />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[10px] font-bold text-white/90 truncate">{op.path || op.command}</div>
-                          <div className="text-[9px] text-white/40 leading-tight">{op.reason}</div>
-                        </div>
-                        <RiskBadge risk={op.risk} />
+                  {progress ? (
+                    <div className="space-y-2 p-3 bg-black/40 rounded-xl border border-white/10 animate-in fade-in zoom-in-95 duration-300">
+                      <div className="flex items-center justify-between">
+                        <span className={cn(
+                          "text-[10px] font-bold",
+                          progress.status === 'completed' ? "text-emerald-400" : progress.status === 'failed' ? "text-red-400" : "text-white/60"
+                        )}>
+                          {progress.status === 'completed' ? 'Initialization Successful' : progress.status === 'failed' ? 'Initialization Failed' : 'Applying Changes...'}
+                        </span>
+                        <span className="text-[10px] font-mono text-white/40">
+                          {progress.completedOperations} / {progress.totalOperations}
+                        </span>
                       </div>
-                    ))}
-                  </div>
+                      
+                      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                        <div 
+                          className={cn(
+                            "h-full transition-all duration-500",
+                            progress.status === 'failed' ? "bg-red-500" : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                          )}
+                          style={{ width: `${progress.totalOperations > 0 ? (progress.completedOperations / progress.totalOperations) * 100 : 0}%` }}
+                        />
+                      </div>
+                      
+                      <div className="text-[9px] text-white/80 line-clamp-1 italic">
+                        {progress.message}
+                      </div>
+                      
+                      {progress.error && (
+                        <div className="mt-2 p-2 bg-red-500/10 border border-red-500/20 rounded text-[9px] text-red-300 break-all font-mono">
+                          {progress.error}
+                        </div>
+                      )}
+                      
+                      {progress.status === 'completed' && (
+                        <div className="flex gap-2 mt-2">
+                          <button 
+                            onClick={() => {
+                              setProgress(null)
+                              setShowWizard(false)
+                              setProposal(null)
+                            }}
+                            className="flex-1 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded text-[10px] font-bold transition-all border border-emerald-500/20"
+                          >
+                            Finish
+                          </button>
+                        </div>
+                      )}
 
-                  <button
-                    disabled={applying}
-                    onClick={async () => {
-                      if (!proposal) return
-                      const confirmApply = confirm('Are you sure you want to apply this initialization? This will create or modify files in your repository.')
-                      if (!confirmApply) return
+                      {progress.status === 'failed' && (
+                        <button 
+                          onClick={() => {
+                            setProgress(null)
+                            setApplying(false)
+                          }}
+                          className="w-full mt-2 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded text-[10px] font-bold transition-all border border-red-500/20"
+                        >
+                          Retry / Back
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1.5 pr-1">
+                        {proposal.operations.map((op, i) => (
+                          <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-black/20 border border-white/5">
+                            <OperationIcon kind={op.kind} />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[10px] font-bold text-white/90 truncate">{op.path || op.command}</div>
+                              <div className="text-[9px] text-white/40 leading-tight">{op.reason}</div>
+                            </div>
+                            <RiskBadge risk={op.risk} />
+                          </div>
+                        ))}
+                      </div>
 
-                      try {
-                        setApplying(true)
-                        const results = await api.projectApplyProposal(proposal)
-                        setApplyResult(results)
-                        setShowWizard(false)
-                        setProposal(null)
-                        onRefresh()
-                      } catch (e) {
-                        console.error(e)
-                      } finally {
-                        setApplying(false)
-                      }
-                    }}
-                    className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
-                  >
-                    {applying ? <RefreshCw size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-                    Apply Initialization
-                  </button>
+                      <button
+                        disabled={applying}
+                        onClick={async () => {
+                          if (!proposal) return
+                          const confirmApply = confirm('Are you sure you want to apply this initialization? This will create or modify files in your repository.')
+                          if (!confirmApply) return
+
+                          try {
+                            setApplying(true)
+                            setProgress({
+                              proposalId: proposal.id,
+                              totalOperations: proposal.operations.length,
+                              completedOperations: 0,
+                              currentOperationId: 'starting',
+                              currentOperationName: 'Initializing...',
+                              status: 'running',
+                              message: 'Starting project initialization...'
+                            })
+
+                            const unsubscribe = api.onProjectInitializationProgress?.((p) => {
+                              setProgress(p)
+                            })
+
+                            const results = await api.projectApplyProposal(proposal)
+                            
+                            if (unsubscribe) unsubscribe()
+                            
+                            setApplyResult(results)
+                            onRefresh()
+                          } catch (e) {
+                            console.error(e)
+                            setProgress(prev => prev ? { ...prev, status: 'failed', error: String(e) } : {
+                              proposalId: proposal.id,
+                              totalOperations: proposal.operations.length,
+                              completedOperations: 0,
+                              currentOperationId: 'error',
+                              currentOperationName: 'Error',
+                              status: 'failed',
+                              message: 'An unexpected error occurred',
+                              error: String(e)
+                            })
+                          } finally {
+                            setApplying(false)
+                          }
+                        }}
+                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+                      >
+                        {applying ? <RefreshCw size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                        Apply Initialization
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
               

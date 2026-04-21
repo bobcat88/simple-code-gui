@@ -550,6 +550,19 @@ pub struct InitializationProposal {
     pub blockers: Vec<ScanBlocker>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProposalProgress {
+    pub proposal_id: String,
+    pub total_operations: usize,
+    pub completed_operations: usize,
+    pub current_operation_id: String,
+    pub current_operation_name: String,
+    pub status: String, // "running", "completed", "failed"
+    pub message: String,
+    pub error: Option<String>,
+}
+
 pub fn generate_proposal(
     scan: &ProjectCapabilityScan,
     preset: &ProposalPreset,
@@ -804,9 +817,11 @@ mcp = {}
 }
 
 /// Apply a proposal: execute file creates, directory creates, and commands.
-pub fn apply_proposal(proposal: &InitializationProposal) -> Result<Vec<String>, String> {
+pub fn apply_proposal(app: &tauri::AppHandle, proposal: &InitializationProposal) -> Result<Vec<String>, String> {
+    use tauri::Emitter;
     let root = Path::new(&proposal.root_path);
     let mut applied = Vec::new();
+    let total = proposal.operations.len();
 
     // Ensure root exists
     if !root.exists() {
@@ -814,7 +829,28 @@ pub fn apply_proposal(proposal: &InitializationProposal) -> Result<Vec<String>, 
         applied.push(format!("Created root directory: {}", proposal.root_path));
     }
 
-    for op in &proposal.operations {
+    for (index, op) in proposal.operations.iter().enumerate() {
+        let op_name = match op.kind {
+            OperationKind::CreateDirectory => format!("Creating directory: {}", op.path.as_deref().unwrap_or("")),
+            OperationKind::CreateFile => format!("Creating file: {}", op.path.as_deref().unwrap_or("")),
+            OperationKind::RunCommand => format!("Running command: {}", op.command.as_deref().unwrap_or("")),
+            OperationKind::ModifyFile => format!("Modifying file: {}", op.path.as_deref().unwrap_or("")),
+            OperationKind::Preserve => format!("Preserving: {}", op.path.as_deref().unwrap_or("")),
+            OperationKind::Skip => format!("Skipping: {}", op.path.as_deref().unwrap_or("")),
+        };
+
+        let progress = ProposalProgress {
+            proposal_id: proposal.id.clone(),
+            total_operations: total,
+            completed_operations: index,
+            current_operation_id: op.id.clone(),
+            current_operation_name: op_name.clone(),
+            status: "running".into(),
+            message: format!("Step {}/{}: {}", index + 1, total, op_name),
+            error: None,
+        };
+        let _ = app.emit("project-initialization-progress", progress);
+
         match op.kind {
             OperationKind::CreateDirectory => {
                 if let Some(ref path) = op.path {
@@ -857,7 +893,19 @@ pub fn apply_proposal(proposal: &InitializationProposal) -> Result<Vec<String>, 
                         applied.push(format!("Ran command: {}", cmd));
                     } else {
                         let stderr = String::from_utf8_lossy(&output.stderr);
-                        applied.push(format!("Command '{}' failed: {}", cmd, stderr.trim()));
+                        let err_msg = format!("Command '{}' failed: {}", cmd, stderr.trim());
+                        applied.push(err_msg.clone());
+                        
+                        let _ = app.emit("project-initialization-progress", ProposalProgress {
+                            proposal_id: proposal.id.clone(),
+                            total_operations: total,
+                            completed_operations: index,
+                            current_operation_id: op.id.clone(),
+                            current_operation_name: op_name.clone(),
+                            status: "failed".into(),
+                            message: err_msg,
+                            error: Some(stderr.to_string()),
+                        });
                     }
                 }
             }
@@ -866,7 +914,6 @@ pub fn apply_proposal(proposal: &InitializationProposal) -> Result<Vec<String>, 
                     let full = root.join(path);
                     if full.exists() {
                         if let Some(ref content) = op.preview {
-                            // Basic append for now, but in a real scenario this might be smarter
                             let mut existing = std::fs::read_to_string(&full)
                                 .map_err(|e| format!("Failed to read {}: {}", path, e))?;
                             if !existing.contains(content) {
@@ -889,6 +936,19 @@ pub fn apply_proposal(proposal: &InitializationProposal) -> Result<Vec<String>, 
             }
         }
     }
+
+    // Final "completed" event
+    let _ = app.emit("project-initialization-progress", ProposalProgress {
+        proposal_id: proposal.id.clone(),
+        total_operations: total,
+        completed_operations: total,
+        current_operation_id: "final".into(),
+        current_operation_name: "Initialization Complete".into(),
+        status: "completed".into(),
+        message: "Project successfully initialized".into(),
+        error: None,
+    });
+
     Ok(applied)
 }
 
@@ -909,8 +969,11 @@ pub async fn project_generate_proposal(
 }
 
 #[tauri::command]
-pub async fn project_apply_proposal(proposal: InitializationProposal) -> Result<Vec<String>, String> {
-    apply_proposal(&proposal)
+pub async fn project_apply_proposal(
+    app: tauri::AppHandle,
+    proposal: InitializationProposal
+) -> Result<Vec<String>, String> {
+    apply_proposal(&app, &proposal)
 }
 
 fn preset_to_str(preset: &ProposalPreset) -> &str {

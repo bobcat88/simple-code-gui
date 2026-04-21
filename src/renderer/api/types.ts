@@ -456,6 +456,11 @@ export interface Api {
   onApprovalResolved?: (callback: (actionId: string) => void) => Unsubscribe
   respondToApproval?: (response: ApprovalResponse) => Promise<{ success: boolean }>
   getPendingApprovals?: (cwd: string) => Promise<ApprovalRequest[]>
+
+  // ==========================================================================
+  // Project Initialization
+  // ==========================================================================
+  onProjectInitializationProgress?: (callback: (progress: ProposalProgress) => void) => Unsubscribe
 }
 
 // ============================================================================
@@ -521,6 +526,9 @@ export interface ExtendedApi extends Api {
   onApprovalResolved: (callback: (actionId: string) => void) => Unsubscribe,
   respondToApproval: (response: ApprovalResponse) => Promise<{ success: boolean }>,
   getPendingApprovals: (cwd: string) => Promise<ApprovalRequest[]>,
+
+  // Project Initialization
+  onProjectInitializationProgress: (callback: (progress: ProposalProgress) => void) => Unsubscribe,
 
   // Diagnostics
   diagnosticsGenerateBundle: () => Promise<DiagnosticResult>
@@ -629,6 +637,17 @@ export interface InitializationProposal {
   operations: ProposalOperation[]
   warnings: ScanWarning[]
   blockers: ScanBlocker[]
+}
+
+export interface ProposalProgress {
+  proposalId: string
+  totalOperations: number
+  completedOperations: number
+  currentOperationId: string
+  currentOperationName: string
+  status: 'running' | 'completed' | 'failed'
+  message: string
+  error?: string
 }
 
 export interface ProjectIntelligence {

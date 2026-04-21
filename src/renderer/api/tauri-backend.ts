@@ -259,6 +259,12 @@ export class TauriBackend implements ExtendedApi {
     return await tauriIpc.scanProjectIntelligence(path);
   }
 
+  onProjectInitializationProgress(callback: (progress: any) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onProjectInitializationProgress(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
   // Orchestration (Beads/Kspec)
   async kspec_dispatch_status(cwd: string): Promise<any> {
     return await tauriIpc.kspecDispatchStatus(cwd);

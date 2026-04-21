@@ -128,6 +128,9 @@ export const tauriIpc = {
   scanProjectIntelligence: (path: string) =>
     invoke<any>('scan_project_intelligence', { cwd: path }),
 
+  onProjectInitializationProgress: (callback: (progress: any) => void): Promise<UnlistenFn> =>
+    listen<any>('project-initialization-progress', (event) => callback(event.payload)),
+
   // Orchestration (Beads/Kspec)
   kspecDispatchStatus: (cwd: string) =>
     invoke<any>('kspec_dispatch_status', { cwd }),
