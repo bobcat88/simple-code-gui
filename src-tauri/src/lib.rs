@@ -9,6 +9,9 @@ mod workspace_manager;
 mod session_manager;
 mod extension_manager;
 mod database;
+mod ai_runtime;
+mod gsd_engine;
+mod rtk_manager;
 
 use pty_manager::PtyManager;
 use std::sync::Arc;
@@ -369,9 +372,27 @@ pub fn run() {
                 let settings_manager = SettingsManager::new(&app_handle, Arc::clone(&db_arc)).await;
                 let workspace_manager = WorkspaceManager::new(&app_handle, Arc::clone(&db_arc)).await;
 
+                // Initialize AI Runtime
+                let ai_runtime = Arc::new(ai_runtime::RuntimeManager::new());
+                
+                // Register providers (for now with placeholder keys or env vars)
+                if let Ok(key) = std::env::var("ANTHROPIC_API_KEY") {
+                    ai_runtime.register_provider(Box::new(ai_runtime::providers::claude::ClaudeProvider::new(key))).await;
+                }
+                if let Ok(key) = std::env::var("GOOGLE_API_KEY") {
+                    ai_runtime.register_provider(Box::new(ai_runtime::providers::gemini::GeminiProvider::new(key))).await;
+                }
+                // Ollama is usually local
+                ai_runtime.register_provider(Box::new(ai_runtime::providers::ollama::OllamaProvider::new(None))).await;
+
+                // Initialize GSD Engine
+                let gsd_engine = Arc::new(gsd_engine::GsdEngine::new(Arc::clone(&db_arc)));
+
                 app_handle.manage(db_arc);
                 app_handle.manage(settings_manager);
                 app_handle.manage(workspace_manager);
+                app_handle.manage(ai_runtime);
+                app_handle.manage(gsd_engine);
             });
 
             let pty_manager = PtyManager::new();
@@ -477,6 +498,17 @@ pub fn run() {
             voice_install_voice,
             voice_get_installed,
             scan_project_intelligence,
+            ai_runtime::ai_completion,
+            ai_runtime::ai_list_models,
+            ai_runtime::ai_list_providers,
+            ai_runtime::ai_save_key,
+            gsd_engine::gsd_create_plan,
+            gsd_engine::gsd_add_phase,
+            gsd_engine::gsd_add_step,
+            gsd_engine::gsd_execute_plan,
+            rtk_manager::rtk_check,
+            rtk_manager::rtk_get_stats,
+            rtk_manager::rtk_get_history,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

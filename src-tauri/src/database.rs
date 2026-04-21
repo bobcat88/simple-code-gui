@@ -84,6 +84,18 @@ impl DatabaseManager {
         .await
         .map_err(|e| e.to_string())?;
 
+        // API Keys Table
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS api_keys (
+                provider TEXT PRIMARY KEY,
+                key TEXT NOT NULL,
+                base_url TEXT
+            )"
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
         Ok(())
     }
 }
