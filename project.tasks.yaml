@@ -29,18 +29,16 @@
   spec_ref: "@session-discovery"
   meta_ref: null
   plan_ref: null
-  status: blocked
-  blocked_by:
-    - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
-      4am (Europe/Paris)"
+  status: pending
+  blocked_by: []
   depends_on: []
   context: []
   priority: 3
   tags: []
   vcs_refs: []
-  session_id: 01KPS0H0NNVPZH5SN4W84SQMW4
+  session_id: null
   created_at: 2026-04-21T21:52:55.989Z
-  started_at: 2026-04-21T21:53:31.742Z
+  started_at: null
   notes:
     - _ulid: 01KPS0KSNP8W26PDGWH224EE1P
       content: |-
@@ -70,6 +68,11 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-21T22:00:27.012Z
+    - _ulid: 01KPS1T5MYENTXRBYFVYNE72MF
+      content: Reset from blocked to pending
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-21T22:15:44.030Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GDQXR8JD6QA2MGT2KD9S
@@ -138,18 +141,16 @@
   spec_ref: "@01KPNWTT"
   meta_ref: null
   plan_ref: null
-  status: blocked
-  blocked_by:
-    - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
-      4am (Europe/Paris)"
+  status: pending
+  blocked_by: []
   depends_on: []
   context: []
   priority: 3
   tags: []
   vcs_refs: []
-  session_id: 01KPS0H6SZ4D4VSG1SA131J3JM
+  session_id: null
   created_at: 2026-04-21T21:52:56.128Z
-  started_at: 2026-04-21T21:53:36.081Z
+  started_at: null
   notes:
     - _ulid: 01KPS0RM6BEATY5623SE41V881
       content: >-
@@ -193,6 +194,11 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-21T22:00:31.549Z
+    - _ulid: 01KPS1T5P0FJ8KKE7CMVX2BPT9
+      content: Reset from blocked to pending
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-21T22:15:44.065Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GDVZNW3C7K4XM86WS21M
@@ -320,10 +326,8 @@
   spec_ref: "@ai-runtime"
   meta_ref: null
   plan_ref: null
-  status: blocked
-  blocked_by:
-    - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
-      4am (Europe/Paris)"
+  status: pending
+  blocked_by: []
   depends_on: []
   context: []
   priority: 3
@@ -349,6 +353,11 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-21T22:02:03.442Z
+    - _ulid: 01KPS1T5QM2FS433E1VZY7B4AQ
+      content: Reset from blocked to pending
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-21T22:15:44.117Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GE3XDTDGATRJTWYREYXC
