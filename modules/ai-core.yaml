@@ -232,6 +232,11 @@ features:
         relates_to: []
         tests: []
         traits: []
+        acceptance_criteria:
+          - given: The application starts
+            id: ac-1
+            then: A SQLite database is created/opened at the user data directory with a token_transactions table
+            when: The token burn history module initializes
         tags: []
         created: 2026-04-20T16:50:59.235Z
         notes: []
