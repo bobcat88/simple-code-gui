@@ -5,7 +5,7 @@ title: "Implement: Project Quick-Switcher"
 type: task
 spec_ref: "@01KPNWYGEC5WX1JKYWJ2WF0YB0"
 derivation: auto
-status: in_progress
+status: pending_review
 blocked_by: []
 depends_on:
   - "@task-advanced-workspace-control"
@@ -13,6 +13,14 @@ context: []
 priority: 3
 tags: []
 vcs_refs: []
+submission_linkage:
+  review_url: null
+  branch: dispatch/task/task-project-quick-switcher/01kpnxfs
+  captured_at: 2026-04-21T18:34:18.224Z
+  commit: ab30b530ed0693f1519121da53f013f9a9446389
+  remote: origin
+  remote_url: https://github.com/bobcat88/simple-code-gui
+  upstream_ref: refs/heads/dispatch/task/task-project-quick-switcher/01kpnxfs
 session_id: 01KPQCTT3CPB8BJVBSA4D3TPW7
 history:
   - author: Johan.P
@@ -35,7 +43,28 @@ history:
         previous: null
     command: task-start
     timestamp: 2026-04-21T06:50:21.111Z
+  - author: Johan.P
+    changes:
+      status:
+        new: pending_review
+        previous: in_progress
+      submission_linkage:
+        new:
+          review_url: null
+          branch: dispatch/task/task-project-quick-switcher/01kpnxfs
+          captured_at: 2026-04-21T18:34:18.224Z
+          commit: ab30b530ed0693f1519121da53f013f9a9446389
+          remote: origin
+          remote_url: https://github.com/bobcat88/simple-code-gui
+          upstream_ref: refs/heads/dispatch/task/task-project-quick-switcher/01kpnxfs
+        previous: null
+      submitted_at:
+        new: 2026-04-21T18:34:18.232Z
+        previous: null
+    command: task-submit
+    timestamp: 2026-04-21T18:34:18.232Z
 created_at: 2026-04-20T17:02:26.425Z
 started_at: 2026-04-21T06:50:21.111Z
+submitted_at: 2026-04-21T18:34:18.232Z
 todos: []
 automation: eligible
