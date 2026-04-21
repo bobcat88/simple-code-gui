@@ -123,4 +123,18 @@ export const tauriIpc = {
 
   scanProjectIntelligence: (path: string) =>
     invoke<any>('scan_project_intelligence', { cwd: path }),
+
+  // Orchestration (Beads/Kspec)
+  kspecDispatchStatus: (cwd: string) =>
+    invoke<any>('kspec_dispatch_status', { cwd }),
+  kspecDispatchStart: (cwd: string) =>
+    invoke<{ success: boolean; error?: string }>('kspec_dispatch_start', { cwd }),
+  kspecDispatchStop: (cwd: string) =>
+    invoke<{ success: boolean; error?: string }>('kspec_dispatch_stop', { cwd }),
+  beadsList: (cwd: string) =>
+    invoke<any>('beads_list', { cwd }),
+  beadsStart: (cwd: string, taskId: string) =>
+    invoke<any>('beads_start', { cwd, task_id: taskId }),
+  beadsComplete: (cwd: string, taskId: string) =>
+    invoke<any>('beads_complete', { cwd, task_id: taskId }),
 };

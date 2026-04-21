@@ -19,7 +19,8 @@ import {
   useWorkspaceLoader,
   useSessionPolling,
   useApiListeners,
-  useProjectHandlers
+  useProjectHandlers,
+  useJobPolling
 } from '../hooks'
 import type { Api } from '../api'
 import { InstallationPrompt } from './InstallationPrompt'
@@ -128,6 +129,9 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
 
   // Session polling hook
   useSessionPolling({ api, openTabs, updateTab })
+  
+  // Job polling hook
+  useJobPolling(api)
 
   // API listeners hook
   useApiListeners({

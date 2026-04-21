@@ -415,8 +415,16 @@ export interface ExtendedApi extends Api {
   // Project Initialization Wizard
   projectScan: (path: string, options?: ScanOptions) => Promise<ProjectCapabilityScan>
   projectGenerateProposal: (scan: ProjectCapabilityScan, preset: string, projectName: string, taskBackend: string) => Promise<InitializationProposal>
-  projectApplyProposal: (proposal: InitializationProposal) => Promise<string[]>
-  scanProjectIntelligence: (path: string) => Promise<ProjectIntelligence>
+  projectApplyProposal: (proposal: InitializationProposal) => Promise<string[]>,
+  scanProjectIntelligence: (path: string) => Promise<ProjectIntelligence>,
+
+  // Orchestration (Beads/Kspec)
+  kspec_dispatch_status: (cwd: string) => Promise<any>,
+  kspec_dispatch_start: (cwd: string) => Promise<{ success: boolean; error?: string }>,
+  kspec_dispatch_stop: (cwd: string) => Promise<{ success: boolean; error?: string }>,
+  beads_list: (cwd: string) => Promise<any>,
+  beads_start: (cwd: string, task_id: string) => Promise<any>,
+  beads_complete: (cwd: string, task_id: string) => Promise<any>
 }
 
 // ============================================================================

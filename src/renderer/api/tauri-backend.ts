@@ -248,4 +248,24 @@ export class TauriBackend implements ExtendedApi {
   async scanProjectIntelligence(path: string): Promise<any> {
     return await tauriIpc.scanProjectIntelligence(path);
   }
+
+  // Orchestration (Beads/Kspec)
+  async kspec_dispatch_status(cwd: string): Promise<any> {
+    return await tauriIpc.kspecDispatchStatus(cwd);
+  }
+  async kspec_dispatch_start(cwd: string): Promise<{ success: boolean; error?: string }> {
+    return await tauriIpc.kspecDispatchStart(cwd);
+  }
+  async kspec_dispatch_stop(cwd: string): Promise<{ success: boolean; error?: string }> {
+    return await tauriIpc.kspecDispatchStop(cwd);
+  }
+  async beads_list(cwd: string): Promise<any> {
+    return await tauriIpc.beadsList(cwd);
+  }
+  async beads_start(cwd: string, task_id: string): Promise<any> {
+    return await tauriIpc.beadsStart(cwd, task_id);
+  }
+  async beads_complete(cwd: string, task_id: string): Promise<any> {
+    return await tauriIpc.beadsComplete(cwd, task_id);
+  }
 }
