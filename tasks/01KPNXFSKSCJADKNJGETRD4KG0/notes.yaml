@@ -7,3 +7,10 @@ notes:
     supersedes: null
     author: Johan.P
     created_at: 2026-04-20T17:02:26.425Z
+  - _ulid: 01KPQD1DPB1BDCV66QR2YW0GW0
+    content: "Approach: Add lastAccessedAt to Project type, create ProjectQuickSwitcher component
+      (Ctrl+Tab hotkey), track recency on session open. Reusing existing Spotlight glass-panel
+      styling. No router changes needed - state-based navigation already in place."
+    supersedes: null
+    author: "@claude"
+    created_at: 2026-04-21T06:53:27.115Z
