@@ -5,8 +5,9 @@ title: "Implement: Advanced Workspace Control"
 type: task
 spec_ref: "@workspace-control"
 derivation: auto
-status: pending_review
+status: completed
 blocked_by: []
+closed_reason: Implemented in previous commits.
 depends_on: []
 context: []
 priority: 3
@@ -51,7 +52,21 @@ history:
         previous: null
     command: task-submit
     timestamp: 2026-04-20T22:31:11.834Z
+  - author: Johan.P
+    changes:
+      status:
+        new: completed
+        previous: pending_review
+      closed_reason:
+        new: Implemented in previous commits.
+        previous: null
+      completed_at:
+        new: 2026-04-21T06:26:31.560Z
+        previous: null
+    command: task-complete
+    timestamp: 2026-04-21T06:26:31.569Z
 created_at: 2026-04-20T17:02:25.813Z
 started_at: 2026-04-20T22:25:51.726Z
 submitted_at: 2026-04-20T22:31:11.834Z
+completed_at: 2026-04-21T06:26:31.560Z
 todos: []
