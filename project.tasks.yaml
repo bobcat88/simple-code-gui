@@ -108,7 +108,31 @@
   session_id: 01KPS0H6SZ4D4VSG1SA131J3JM
   created_at: 2026-04-21T21:52:56.128Z
   started_at: 2026-04-21T21:53:36.081Z
-  notes: []
+  notes:
+    - _ulid: 01KPS0RM6BEATY5623SE41V881
+      content: >-
+        Approach: 
+
+        1. Create SQLite-backed token-burn-db.ts in src/main/ using better-sqlite3 (already a dep)
+
+        2. Create IPC handlers for logging and querying token history
+
+        3. Wire preload bridge for renderer access
+
+        4. Create TokenBurnHistory React component with table view and aggregation
+
+        5. Integrate into OrchestrationPanel
+
+
+        Key patterns: follow session-discovery.ts for SQLite usage, orchestration-handlers.ts for
+        IPC pattern, OrchestrationPanel.tsx for UI integration.
+
+
+        Test plan: 4 ACs × 1+ test each covering DB init, record insertion, query/filtering, and UI
+        rendering.
+      supersedes: null
+      author: "@claude"
+      created_at: 2026-04-21T21:57:24.812Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GDVZNW3C7K4XM86WS21M
