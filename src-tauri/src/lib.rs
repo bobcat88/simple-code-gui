@@ -12,9 +12,14 @@ mod database;
 mod ai_runtime;
 mod gsd_engine;
 mod rtk_manager;
+mod jobs_manager;
+mod activity_manager;
+mod agent_manager;
+mod health_manager;
 
 use pty_manager::PtyManager;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 use std::thread;
 use settings_manager::{SettingsManager, AppSettings};
 use workspace_manager::{WorkspaceManager, Workspace};
@@ -388,11 +393,32 @@ pub fn run() {
                 // Initialize GSD Engine
                 let gsd_engine = Arc::new(gsd_engine::GsdEngine::new(Arc::clone(&db_arc)));
 
+                // Initialize Activity Manager
+                let activity_manager = Arc::new(activity_manager::ActivityManager::new(Arc::clone(&db_arc)));
+
+                // Initialize Jobs Manager
+                let jobs_manager = Arc::new(Mutex::new(jobs_manager::JobsManager::new(
+                    app_handle.clone(), 
+                    Arc::clone(&db_arc),
+                    Arc::clone(&activity_manager)
+                )));
+
+                // Initialize Agent Manager
+                let agent_manager = Arc::new(agent_manager::AgentManager::new(Arc::clone(&db_arc)));
+
+                // Initialize Health Manager
+                let health_manager = Arc::new(health_manager::HealthManager::new(Arc::clone(&db_arc)));
+                health_manager::HealthManager::setup_panic_hook(app_handle.clone());
+
                 app_handle.manage(db_arc);
                 app_handle.manage(settings_manager);
                 app_handle.manage(workspace_manager);
                 app_handle.manage(ai_runtime);
                 app_handle.manage(gsd_engine);
+                app_handle.manage(jobs_manager);
+                app_handle.manage(activity_manager);
+                app_handle.manage(agent_manager);
+                app_handle.manage(health_manager);
             });
 
             let pty_manager = PtyManager::new();
@@ -509,6 +535,16 @@ pub fn run() {
             rtk_manager::rtk_check,
             rtk_manager::rtk_get_stats,
             rtk_manager::rtk_get_history,
+            jobs_manager::jobs_create,
+            jobs_manager::jobs_get,
+            jobs_manager::jobs_list,
+            activity_manager::activity_get_recent,
+            activity_manager::activity_log_info,
+            agent_manager::agent_register,
+            agent_manager::agent_list,
+            agent_manager::agent_update_status,
+            health_manager::health_get_status,
+            health_manager::health_log_check,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

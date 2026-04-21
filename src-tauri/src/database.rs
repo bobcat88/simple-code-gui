@@ -96,6 +96,67 @@ impl DatabaseManager {
         .await
         .map_err(|e| e.to_string())?;
 
+        // Background Jobs Table
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS background_jobs (
+                id TEXT PRIMARY KEY,
+                job_type TEXT NOT NULL,
+                payload TEXT NOT NULL,
+                status TEXT NOT NULL,
+                progress REAL DEFAULT 0.0,
+                result TEXT,
+                error TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )"
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        // Activity Log Table
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS activity_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_type TEXT NOT NULL,
+                source TEXT NOT NULL,
+                message TEXT NOT NULL,
+                metadata TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )"
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        // Agents Table
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS agents (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                role TEXT NOT NULL,
+                status TEXT NOT NULL,
+                last_active DATETIME DEFAULT CURRENT_TIMESTAMP
+            )"
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        // Health Logs Table
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS health_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                check_type TEXT NOT NULL,
+                status TEXT NOT NULL,
+                details TEXT
+            )"
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
         Ok(())
     }
 }

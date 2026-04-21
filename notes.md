@@ -375,17 +375,18 @@ If you want, I can turn this into a **full technical spec with folder structure,
 - **Phase 1: Rust Foundation**: Tauri shell, SQLite persistence, and multi-terminal IPC bridge.
 - **Phase 2: Modern UI/UX**: Glassmorphism shell, Tiled terminal view, and density-optimized layouts.
 - **Phase 3: Multi-provider runtime**: Provider abstraction and native adapters (Claude/Gemini/Ollama).
+- **Phase 4: Initialization & Upgrade**: Integrated Wizard for project setup and capability discovery.
+- **Phase 5: Spec/Task System**: Deepening the Beads integration for richer AC/Trait tracking, and Background Job System for long-running operations.
 - **Phase 6: GSD Execution Layer**: Phase-based decomposition, executor loop, and atomic commit pipeline.
 - **Phase 7: Token Savings Telemetry**: RTK integration for token savings tracking and dashboard metrics.
-- **Phase 4: Initialization & Upgrade**: Integrated Wizard for project setup and capability discovery.
-- **Phase 5: Spec/Task System**: Deepening the Beads integration for richer AC/Trait tracking.
 - **Phase 8: GitNexus Intelligence**: Full sidebar integration with repo health, stack detection, and architectural graph metadata.
 - **Phase 9: Voice and TTS**: Push-to-Talk workflow with Piper/Whisper integration.
 - **Phase 10: Updater**: Auto-update service for application binaries and dependencies.
+- **Phase 11: Activity Feed**: Workspace-wide event stream for observability (Backend Ready).
+- **Phase 12: Crash Reporting**: Native crash handler and diagnostic bundle generator (Backend Ready).
 
 ### 🚧 In Progress / Next
-- **Phase 11: Activity Feed**: Workspace-wide event stream for observability.
-- **Phase 12: Crash Reporting**: Native crash handler and diagnostic bundle generator.
+- **Phase 13: Frontend Integration**: Connecting the UI components (Activity Feed, Job Monitor, Health Dashboard, Agent Board) to the Rust backend.
 
 ### 📍 Current Milestone
 **Intelligence & Observability Gate**: The app now provides a high-fidelity view of the repository's health and architecture, enabling agents to operate with context-awareness.

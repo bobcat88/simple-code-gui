@@ -47,4 +47,5 @@ tar = "0.4.45"
 flate2 = "1.1.9"
 zip = "4.2.0"
 async-trait = "0.1"
+sysinfo = "0.29"
 
