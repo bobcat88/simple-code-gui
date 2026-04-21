@@ -20,3 +20,9 @@ notes:
     supersedes: null
     author: Johan.P
     created_at: 2026-04-21T06:55:15.159Z
+  - _ulid: 01KPQD5AYHDFWY15TDGQE53G40
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 1pm
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T06:55:35.378Z
