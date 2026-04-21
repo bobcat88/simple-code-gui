@@ -24,6 +24,7 @@ export interface Project {
   backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
   categoryId?: string
   order?: number
+  lastAccessedAt?: number
 }
 
 export interface OpenTab {
@@ -60,6 +61,7 @@ interface WorkspaceState {
   reorderCategories: (ids: string[]) => void
   moveProjectToCategory: (projectPath: string, categoryId: string | null) => void
   reorderProjects: (categoryId: string | null, projectPaths: string[]) => void
+  touchProject: (path: string) => void
 }
 
 const generateCategoryId = (): string =>
@@ -199,6 +201,15 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         }
         return p
       })
+    })
+  },
+
+  touchProject: (path) => {
+    const { projects } = get()
+    set({
+      projects: projects.map((p) =>
+        p.path === path ? { ...p, lastAccessedAt: Date.now() } : p
+      )
     })
   }
 }))

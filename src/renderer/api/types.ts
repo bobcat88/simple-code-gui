@@ -153,6 +153,66 @@ export interface VoiceSettings {
 }
 
 // ============================================================================
+// Orchestration & Approval Types
+// ============================================================================
+
+export type ApprovalCategory = 'file_change' | 'command' | 'config_change' | 'destructive' | 'external'
+export type RiskLevel = 'low' | 'medium' | 'high' | 'critical'
+
+export interface FileDiff {
+  path: string
+  hunks: Array<{
+    oldStart: number
+    newStart: number
+    lines: string[]
+  }>
+  isNew?: boolean
+  isDeleted?: boolean
+}
+
+export interface ApprovalRequest {
+  id: string
+  agentId: string
+  agentName: string
+  category: ApprovalCategory
+  risk: RiskLevel
+  title: string
+  description: string
+  fileDiffs?: FileDiff[]
+  command?: string
+  affectedPaths?: string[]
+  reversible: boolean
+  timestamp: number
+  expiresAt?: number
+}
+
+export interface ApprovalResponse {
+  actionId: string
+  decision: 'approved' | 'rejected' | 'modified'
+  comment?: string
+  conditions?: string[]
+}
+
+export interface AgentAction {
+  id: string
+  agentId: string
+  agentName: string
+  type: 'thought' | 'command' | 'file_change' | 'approval_request' | 'error' | 'success'
+  message: string
+  timestamp: number
+  metadata?: Record<string, unknown>
+}
+
+export interface AgentStatus {
+  id: string
+  name: string
+  role?: string
+  status: 'idle' | 'busy' | 'blocked' | 'error'
+  currentTask?: string
+  progress?: number
+}
+
+// ============================================================================
 // API Interface
 // ============================================================================
 
@@ -366,6 +426,15 @@ export interface Api {
    * @returns Connection info or undefined if not applicable
    */
   getConnectionInfo?: () => { host: string; port: number; token: string }
+
+  // ==========================================================================
+  // Approval Workflow
+  // ==========================================================================
+
+  onApprovalRequest?: (callback: (request: ApprovalRequest) => void) => Unsubscribe
+  onApprovalResolved?: (callback: (actionId: string) => void) => Unsubscribe
+  respondToApproval?: (response: ApprovalResponse) => Promise<{ success: boolean }>
+  getPendingApprovals?: (cwd: string) => Promise<ApprovalRequest[]>
 }
 
 // ============================================================================
@@ -424,7 +493,13 @@ export interface ExtendedApi extends Api {
   kspec_dispatch_stop: (cwd: string) => Promise<{ success: boolean; error?: string }>,
   beads_list: (cwd: string) => Promise<any>,
   beads_start: (cwd: string, task_id: string) => Promise<any>,
-  beads_complete: (cwd: string, task_id: string) => Promise<any>
+  beads_complete: (cwd: string, task_id: string) => Promise<any>,
+
+  // Approval Workflow
+  onApprovalRequest: (callback: (request: ApprovalRequest) => void) => Unsubscribe,
+  onApprovalResolved: (callback: (actionId: string) => void) => Unsubscribe,
+  respondToApproval: (response: ApprovalResponse) => Promise<{ success: boolean }>,
+  getPendingApprovals: (cwd: string) => Promise<ApprovalRequest[]>
 }
 
 // ============================================================================

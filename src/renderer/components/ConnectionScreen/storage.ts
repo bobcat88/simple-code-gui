@@ -1,16 +1,15 @@
 /**
- * Host storage utilities using Capacitor Preferences
+ * Host storage utilities using localStorage (standard web API)
  */
 
-import { Preferences } from '@capacitor/preferences'
 import type { SavedHost } from './types.js'
 
-const HOSTS_STORAGE_KEY = 'claude-terminal-saved-hosts'
+const HOSTS_STORAGE_KEY = 'simple-code-gui-saved-hosts'
 
 export async function loadSavedHostsAsync(): Promise<SavedHost[]> {
   try {
-    const { value } = await Preferences.get({ key: HOSTS_STORAGE_KEY })
-    console.log('[ConnectionScreen] Loading saved hosts from Preferences:', value)
+    const value = localStorage.getItem(HOSTS_STORAGE_KEY)
+    console.log('[ConnectionScreen] Loading saved hosts from localStorage:', value)
     if (!value) return []
     const hosts = JSON.parse(value) as SavedHost[]
     console.log('[ConnectionScreen] Parsed saved hosts:', hosts.length, 'hosts')
@@ -23,8 +22,8 @@ export async function loadSavedHostsAsync(): Promise<SavedHost[]> {
 
 export async function saveSavedHostsAsync(hosts: SavedHost[]): Promise<void> {
   try {
-    console.log('[ConnectionScreen] Saving', hosts.length, 'hosts to Preferences')
-    await Preferences.set({ key: HOSTS_STORAGE_KEY, value: JSON.stringify(hosts) })
+    console.log('[ConnectionScreen] Saving', hosts.length, 'hosts to localStorage')
+    localStorage.setItem(HOSTS_STORAGE_KEY, JSON.stringify(hosts))
     console.log('[ConnectionScreen] Saved successfully')
   } catch (e) {
     console.error('[ConnectionScreen] Error saving hosts:', e)

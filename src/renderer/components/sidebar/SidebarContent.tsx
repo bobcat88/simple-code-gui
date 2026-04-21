@@ -9,6 +9,7 @@ import { ExtensionBrowser } from '../ExtensionBrowser.js'
 import { ClaudeMdEditor } from '../ClaudeMdEditor.js'
 import { McpPanel } from '../McpPanel.js'
 import { McpBrowser } from '../mcp/McpBrowser.js'
+import { TaskAssignmentView } from '../orchestration/TaskAssignmentView.js'
 import {
   getCategoryGradient,
   ProjectItem,
@@ -287,6 +288,15 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
                   }
                 }}
                 currentTabPtyId={focusedTabPtyId}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-4 border-t border-white/5">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Agent Assignments</h4>
+            <div className="p-2 rounded-2xl bg-white/5 border border-white/5">
+              <TaskAssignmentView
+                onOpenSession={beadsProjectPath ? () => onOpenSession(beadsProjectPath) : undefined}
               />
             </div>
           </div>

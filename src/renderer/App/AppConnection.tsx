@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { ConnectionScreen } from '../components/ConnectionScreen'
 import { MainApp } from './MainApp'
 import type { Api, HttpBackend } from '../api'
-import { isElectronEnvironment, isTauriEnvironment, initializeApi } from '../api'
+import { isTauriEnvironment, initializeApi } from '../api'
 
 // Check if running in Capacitor native app
 export function isCapacitorApp(): boolean {
@@ -17,10 +17,9 @@ function isValidPort(port: number): boolean {
 }
 
 export function AppConnection(): React.ReactElement | null {
-  // Check if we're running in Electron, Tauri or browser/Capacitor
-  const isElectron = isElectronEnvironment()
+  // Check if we're running in Tauri or browser/Capacitor
   const isTauri = isTauriEnvironment()
-  const isDesktop = isElectron || isTauri
+  const isDesktop = isTauri
   const isCapacitor = isCapacitorApp()
 
   // Add mobile class to body for CSS targeting
@@ -48,7 +47,6 @@ export function AppConnection(): React.ReactElement | null {
     console.log('[App] Disconnecting...')
     // Only clear the active connection, keep saved hosts for easy reconnect
     localStorage.removeItem('claude-terminal-connection')
-    // Don't clear saved hosts: localStorage.removeItem('claude-terminal-saved-hosts')
     // Set flag to prevent auto-reconnect (cleared on next app launch)
     sessionStorage.setItem('claude-terminal-manual-disconnect', 'true')
     setApiState(null)
@@ -56,9 +54,8 @@ export function AppConnection(): React.ReactElement | null {
   }, [])
 
   // Try to restore saved connection on mount (browser/Capacitor only)
-  // Also check for token in URL query string (from server redirect)
   useEffect(() => {
-    if (isElectron || isConnected) return
+    if (isConnected) return
 
     // Check for token in URL (from server redirect)
     const urlParams = new URLSearchParams(window.location.search)
@@ -69,19 +66,14 @@ export function AppConnection(): React.ReactElement | null {
       const host = window.location.hostname
       const port = parseInt(window.location.port) || 38470
 
-      // Validate port before saving
       if (!isValidPort(port)) {
         console.error('[App] Invalid port from URL:', port)
         return
       }
 
-      // Save to localStorage so future reloads work
       const config = { host, port, token: urlToken }
       localStorage.setItem('claude-terminal-connection', JSON.stringify(config))
-
-      // Clear token from URL for cleaner appearance
       window.history.replaceState({}, document.title, window.location.pathname)
-
       console.log('[App] Connecting with URL token:', { host, port, tokenLength: urlToken.length })
     }
 
@@ -89,32 +81,25 @@ export function AppConnection(): React.ReactElement | null {
       const saved = localStorage.getItem('claude-terminal-connection')
       if (saved) {
         const config = JSON.parse(saved)
-        // Validate port from saved config
         if (config.host && config.token && isValidPort(config.port)) {
-          // We have valid saved config, the ConnectionScreen will auto-connect
+          // Valid saved config
         } else if (config.port && !isValidPort(config.port)) {
-          console.error('[App] Invalid port in saved config:', config.port, '- clearing')
           localStorage.removeItem('claude-terminal-connection')
         }
       }
     } catch (e) {
-      // Invalid saved config, ignore
+      // Ignore
     }
-  }, [isElectron, isConnected])
+  }, [isConnected])
 
-  // Show connection screen if not connected (browser/Capacitor mode)
   if (!isConnected || !api) {
-    // Try to get saved config for auto-connect
     let savedConfig: { host: string; port: number; token: string } | null = null
     try {
       const saved = localStorage.getItem('claude-terminal-connection')
       if (saved) {
         const parsed = JSON.parse(saved)
-        // Only use config if port is valid
         if (parsed && isValidPort(parsed.port)) {
           savedConfig = parsed
-        } else if (parsed?.port) {
-          console.error('[App] Discarding saved config with invalid port:', parsed.port)
         }
       }
     } catch {
@@ -125,5 +110,5 @@ export function AppConnection(): React.ReactElement | null {
   }
 
   // Render the main app with the connected API
-  return <MainApp api={api} isElectron={isElectron} isTauri={isTauri} onDisconnect={handleDisconnect} />
+  return <MainApp api={api} isElectron={false} isTauri={isTauri} onDisconnect={handleDisconnect} />
 }

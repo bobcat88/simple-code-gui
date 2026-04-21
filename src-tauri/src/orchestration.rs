@@ -13,10 +13,80 @@ pub struct BeadTask {
     pub priority: Option<i32>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct FileDiffHunk {
+    pub old_start: u32,
+    pub new_start: u32,
+    pub lines: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct FileDiff {
+    pub path: String,
+    pub hunks: Vec<FileDiffHunk>,
+    #[serde(default)]
+    pub is_new: bool,
+    #[serde(default)]
+    pub is_deleted: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum ApprovalCategory {
+    FileChange,
+    Command,
+    ConfigChange,
+    Destructive,
+    External,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum RiskLevel {
+    Low,
+    Medium,
+    High,
+    Critical,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ApprovalRequest {
+    pub id: String,
+    pub agent_id: String,
+    pub agent_name: String,
+    pub category: ApprovalCategory,
+    pub risk: RiskLevel,
+    pub title: String,
+    pub description: String,
+    pub file_diffs: Option<Vec<FileDiff>>,
+    pub command: Option<String>,
+    pub affected_paths: Option<Vec<String>>,
+    pub reversible: bool,
+    pub timestamp: u64,
+    pub expires_at: Option<u64>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum ApprovalDecision {
+    Approved,
+    Rejected,
+    Modified,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ApprovalResponse {
+    pub action_id: String,
+    pub decision: ApprovalDecision,
+    pub comment: Option<String>,
+    pub conditions: Option<Vec<String>>,
+}
+
 #[derive(Default)]
 pub struct OrchestrationState {
     pub watched_projects: Mutex<HashMap<String, tauri::async_runtime::JoinHandle<()>>>,
     pub watched_kspec_projects: Mutex<HashMap<String, tauri::async_runtime::JoinHandle<()>>>,
+    pub pending_approvals: Mutex<Vec<ApprovalRequest>>,
 }
 
 #[tauri::command]
@@ -577,6 +647,62 @@ pub async fn kspec_unwatch(
         handle.abort();
     }
     Ok(())
+}
+
+// ============================================================================
+// Approval Workflow Commands
+// ============================================================================
+
+#[tauri::command]
+pub async fn get_pending_approvals(
+    state: State<'_, OrchestrationState>,
+    _cwd: String,
+) -> Result<Vec<ApprovalRequest>, String> {
+    let approvals = state.pending_approvals.lock();
+    Ok(approvals.clone())
+}
+
+#[tauri::command]
+pub async fn respond_to_approval(
+    app: AppHandle,
+    state: State<'_, OrchestrationState>,
+    response: ApprovalResponse,
+) -> Result<serde_json::Value, String> {
+    let mut approvals = state.pending_approvals.lock();
+    let existed = approvals.iter().any(|a| a.id == response.action_id);
+
+    if !existed {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": "Approval request not found or already resolved"
+        }));
+    }
+
+    approvals.retain(|a| a.id != response.action_id);
+
+    let _ = app.emit("approval-resolved", &response.action_id);
+
+    Ok(serde_json::json!({
+        "success": true,
+        "decision": serde_json::to_value(&response.decision).unwrap_or_default()
+    }))
+}
+
+/// Called internally (or via IPC from agents) to submit an approval request
+#[tauri::command]
+pub async fn submit_approval_request(
+    app: AppHandle,
+    state: State<'_, OrchestrationState>,
+    request: ApprovalRequest,
+) -> Result<serde_json::Value, String> {
+    {
+        let mut approvals = state.pending_approvals.lock();
+        approvals.push(request.clone());
+    }
+
+    let _ = app.emit("approval-request", &request);
+
+    Ok(serde_json::json!({ "success": true, "id": request.id }))
 }
 
 #[tauri::command]

@@ -405,40 +405,13 @@ export class HttpApiClient {
 // Factory Functions
 // =============================================================================
 
-/**
- * Check if running in Electron environment with electronAPI available
- */
-export function isElectronEnvironment(): boolean {
-  return typeof window !== 'undefined' && 'electronAPI' in window
-}
-
-/**
- * Get the electronAPI if available
- */
-export function getElectronAPI(): unknown | null {
-  if (isElectronEnvironment()) {
-    return (window as unknown as Record<string, unknown>).electronAPI
-  }
-  return null
-}
-
 // Singleton HTTP client instance
 let httpClientInstance: HttpApiClient | null = null
 
 /**
- * Create or get an API client
- *
- * - If running in Electron, returns electronAPI
- * - If hostConfig is provided, creates/returns HttpApiClient
- * - Returns null if neither is available
+ * Create or get an API client (HTTP-based)
  */
-export function createApiClient(hostConfig?: HostConfig): HttpApiClient | unknown | null {
-  // Check for Electron first
-  const electronAPI = getElectronAPI()
-  if (electronAPI && !hostConfig) {
-    return electronAPI
-  }
-
+export function createApiClient(hostConfig?: HostConfig): HttpApiClient | null {
   // Create HTTP client if config provided
   if (hostConfig) {
     httpClientInstance = new HttpApiClient(hostConfig)
@@ -446,21 +419,13 @@ export function createApiClient(hostConfig?: HostConfig): HttpApiClient | unknow
   }
 
   // Return existing HTTP client if available
-  if (httpClientInstance) {
-    return httpClientInstance
-  }
-
-  return null
+  return httpClientInstance
 }
 
 /**
  * Get the current API client instance
  */
-export function getApiClient(): HttpApiClient | unknown | null {
-  const electronAPI = getElectronAPI()
-  if (electronAPI) {
-    return electronAPI
-  }
+export function getApiClient(): HttpApiClient | null {
   return httpClientInstance
 }
 
@@ -470,3 +435,8 @@ export function getApiClient(): HttpApiClient | unknown | null {
 export function setHttpClient(client: HttpApiClient | null): void {
   httpClientInstance = client
 }
+
+export function getElectronAPI(): null {
+  return null
+}
+

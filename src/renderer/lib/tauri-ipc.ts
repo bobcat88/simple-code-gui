@@ -137,4 +137,14 @@ export const tauriIpc = {
     invoke<any>('beads_start', { cwd, task_id: taskId }),
   beadsComplete: (cwd: string, taskId: string) =>
     invoke<any>('beads_complete', { cwd, task_id: taskId }),
+
+  // Approval Workflow
+  onApprovalRequest: (callback: (request: any) => void): Promise<UnlistenFn> =>
+    listen('approval-request', (event: any) => callback(event.payload)),
+  onApprovalResolved: (callback: (actionId: string) => void): Promise<UnlistenFn> =>
+    listen('approval-resolved', (event: any) => callback(event.payload)),
+  respondToApproval: (response: any) =>
+    invoke<{ success: boolean }>('respond_to_approval', { response }),
+  getPendingApprovals: (cwd: string) =>
+    invoke<any[]>('get_pending_approvals', { cwd }),
 };

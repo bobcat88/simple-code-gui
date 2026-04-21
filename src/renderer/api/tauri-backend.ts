@@ -12,7 +12,9 @@ import {
   PtyRecreatedCallback,
   ApiOpenSessionCallback,
   Unsubscribe,
-  BackendId
+  BackendId,
+  ApprovalRequest,
+  ApprovalResponse
 } from './types'
 import { tauriIpc } from '../lib/tauri-ipc'
 import { check } from '@tauri-apps/plugin-updater'
@@ -267,5 +269,26 @@ export class TauriBackend implements ExtendedApi {
   }
   async beads_complete(cwd: string, task_id: string): Promise<any> {
     return await tauriIpc.beadsComplete(cwd, task_id);
+  }
+
+  // Approval Workflow
+  onApprovalRequest(callback: (request: ApprovalRequest) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onApprovalRequest(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  onApprovalResolved(callback: (actionId: string) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onApprovalResolved(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  async respondToApproval(response: ApprovalResponse): Promise<{ success: boolean }> {
+    return await tauriIpc.respondToApproval(response);
+  }
+
+  async getPendingApprovals(cwd: string): Promise<ApprovalRequest[]> {
+    return await tauriIpc.getPendingApprovals(cwd);
   }
 }

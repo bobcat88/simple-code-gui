@@ -6,7 +6,6 @@
  */
 
 import { Api } from './types'
-import { ElectronBackend, isElectronAvailable } from './electron-backend'
 import { HttpBackend } from './http-backend'
 import { TauriBackend } from './tauri-backend'
 
@@ -23,12 +22,7 @@ export function isTauriEnvironment(): boolean {
 
 let apiInstance: Api | null = null
 
-/**
- * Check if running in Electron environment with electronAPI available
- */
-export function isElectronEnvironment(): boolean {
-  return isElectronAvailable()
-}
+
 
 /**
  * Get the current API instance (may be null if not initialized)
@@ -45,12 +39,10 @@ export function getApi(): Api | null {
 export function initializeApi(config?: { host: string; port: number; token: string }): Api {
   if (isTauriEnvironment()) {
     apiInstance = new TauriBackend()
-  } else if (isElectronEnvironment()) {
-    apiInstance = new ElectronBackend()
   } else if (config) {
     apiInstance = new HttpBackend(config)
   } else {
-    throw new Error('HTTP backend requires connection config')
+    throw new Error('Running in unknown environment. Tauri or HTTP config required.')
   }
   return apiInstance
 }
@@ -91,7 +83,6 @@ export type {
   ApiContext
 } from './types'
 
-export { ElectronBackend, isElectronAvailable, getElectronBackend } from './electron-backend'
 export { HttpBackend, createHttpBackend } from './http-backend'
 
 // =============================================================================
