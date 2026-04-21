@@ -5,7 +5,7 @@ title: "Implement: Live Token/Cost HUD"
 type: task
 spec_ref: "@01KPNWTQ5WY2JVHCYXXKDFCKQ6"
 derivation: auto
-status: in_progress
+status: pending_review
 blocked_by: []
 depends_on:
   - "@task-token-economics-telemetry"
@@ -13,7 +13,37 @@ context: []
 priority: 3
 tags: []
 vcs_refs: []
+submission_linkage:
+  review_url: null
+  branch: dispatch/task/task-advanced-workspace-control/01kpnxfs
+  captured_at: 2026-04-21T06:22:05.093Z
+  commit: c2bf679edc833aa7444734de16f179d53f527b91
+  remote: origin
+  remote_url: https://github.com/bobcat88/simple-code-gui
+  upstream_ref: refs/heads/dispatch/task/task-advanced-workspace-control/01kpnxfs
+history:
+  - author: Johan.P
+    changes:
+      status:
+        new: pending_review
+        previous: in_progress
+      submission_linkage:
+        new:
+          review_url: null
+          branch: dispatch/task/task-advanced-workspace-control/01kpnxfs
+          captured_at: 2026-04-21T06:22:05.093Z
+          commit: c2bf679edc833aa7444734de16f179d53f527b91
+          remote: origin
+          remote_url: https://github.com/bobcat88/simple-code-gui
+          upstream_ref: refs/heads/dispatch/task/task-advanced-workspace-control/01kpnxfs
+        previous: null
+      submitted_at:
+        new: 2026-04-21T06:22:05.100Z
+        previous: null
+    command: task-submit
+    timestamp: 2026-04-21T06:22:05.100Z
 created_at: 2026-04-20T17:02:17.617Z
 started_at: 2026-04-20T17:02:57.895Z
+submitted_at: 2026-04-21T06:22:05.100Z
 todos: []
 automation: eligible
