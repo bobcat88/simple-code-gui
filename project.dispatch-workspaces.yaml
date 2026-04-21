@@ -910,12 +910,12 @@ workspaces:
       detail: null
       eligible: false
       reason: null
-      updated_at: 2026-04-21T21:59:53.551Z
+      updated_at: 2026-04-21T22:00:01.353Z
     health:
       status: healthy
       issues: []
       summary: Workspace record matches current git branch and worktree state.
-      updated_at: 2026-04-21T21:59:53.551Z
+      updated_at: 2026-04-21T22:00:01.353Z
     integration:
       status: pending
       detail: null
@@ -923,7 +923,7 @@ workspaces:
       publication_mode: pull_request
       target_branch: main
       target_commit: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
-      updated_at: 2026-04-21T21:59:53.551Z
+      updated_at: 2026-04-21T22:00:01.353Z
     lifecycle_state: ready
     resolved_base_branch: main
     task_ref: "@01KPS0GDT09WMT9BNDYXWZFWP3"
@@ -931,9 +931,9 @@ workspaces:
     timestamps:
       closed_at: null
       last_active_at: 2026-04-21T21:53:21.759Z
-      last_reconciled_at: 2026-04-21T21:59:53.551Z
+      last_reconciled_at: 2026-04-21T22:00:01.353Z
       created_at: 2026-04-21T21:53:18.598Z
-      updated_at: 2026-04-21T21:59:53.551Z
+      updated_at: 2026-04-21T22:00:01.353Z
     workspace_id: dispatch-workspace-01KPS0GDT09WMT9BNDYXWZFWP3
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
@@ -942,5 +942,5 @@ workspaces:
         branch_mode: branch
         branch_ref: dispatch/task/task-token-burn-history/01kps0gd
         head: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
-        last_seen_at: 2026-04-21T21:53:18.598Z
+        last_seen_at: 2026-04-21T22:00:01.353Z
         path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-token-burn-history-01kps0gd
