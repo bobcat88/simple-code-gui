@@ -1,16 +1,22 @@
-# Initialization And Upgrade Flow Design
+# Initialization & Upgrade Flow
 
-Status: design baseline for `simple-code-gui-dgl`
+> **Status**: In Design
+> **Author**: Antigravity
+> **Last Updated**: 2026-04-21
+> **Implements Pillar**: Safety & Determinism, Multi-Provider Orchestration
 
-This document defines the new-project initialization and existing-project upgrade
-proposal flow. It builds on:
+## Overview
 
-- `docs/spec-driven-development-contract.md`
-- `docs/project-capability-scanner-design.md`
+The Initialization & Upgrade system is the "Transition Engine" of Simple Code GUI. It manages the metamorphosis of a raw directory into a fully managed, spec-driven repository. By enforcing a **Proposal-First** execution loop, it ensures that no changes occur without user visibility, while providing deterministic paths for greenfield development and legacy repository onboarding.
 
-The flow must be proposal-first. It may inspect a project, generate a plan, and
-show exact operations, but it must not mutate a repository until the user
-explicitly applies an approved proposal.
+### Player Fantasy: "The Guided Architect"
+The user feels like a master architect who is being presented with a high-fidelity blueprint for their project. They can inspect every proposed bolt and beam (files/configs), swap out "materials" (presets), and hit a single button to build the structure with full confidence in a perfect rollback if a conflict arises.
+
+## Metagame & Aesthetics
+
+- **Blueprint Visualization**: The proposal review screen should look like a technical blueprint, using thin mono-space fonts, schematic-style icons for file types, and a clear split-pane view (Existing vs. Proposed).
+- **Tactile Feedback**: Each operation in the apply sequence should have a "satisfying" completion state—checkmarks, subtle green glows, and a smooth progress bar.
+- **Risk Color Coding**: Operations are color-coded by their risk profile (Blue=Low, Amber=Medium, Red=High), ensuring high-impact changes are visually distinct.
 
 ## Goals
 
@@ -32,9 +38,24 @@ explicitly applies an approved proposal.
 - Do not rewrite existing `AGENTS.md`, `CLAUDE.md`, or `ai.md` without an
   explicit diff and approval.
 
-## Flow Overview
+## Formulas
 
-The same proposal engine serves both entry points:
+The transition engine uses the following deterministic models to evaluate a proposal:
+
+- **Approval Score**: A weighted metric (0-1.0) indicating the stability of the proposal.
+  - `ApprovalScore = 1.0 - (BlockerCount * 0.5) - (HighRiskCount * 0.1)`.
+  - A score `< 0.5` disables the "Apply" button entirely.
+- **Rollback Confidence**: Percentage of operations that can be automatically undone.
+  - `RollbackConfidence = (Count(AutomaticRollbackSteps) / TotalSteps) * 100`.
+- **Risk Profile**: The aggregate risk of the initialization.
+  - `RiskProfile = Sum(Operation.RiskWeight)` where `Low=1`, `Medium=3`, `High=10`.
+  - Aggregate profiles above 20 require a "Dangerous Operation" checkbox confirmation.
+
+## Edge Cases
+
+- **Root Read-Only**: If the repository root is read-only (e.g., restricted permissions), the app must detect this during the "Preview" phase and suggest a manual initialization or provide a shell script for the user to run.
+- **Partial Initialization**: If a previous attempt was interrupted (e.g., app crash), the engine must detect the `.simplecode/temp_proposal` directory and offer to "Resume from Last Step" or "Cleanup and Restart".
+- **Branch Switch during Proposal**: If the user switches Git branches between the time the proposal was generated and the "Apply" click, the engine must force a re-scan and proposal regeneration to prevent applying outdated changes to the wrong branch state.
 
 1. Select or create project root.
 2. Run read-only capability scan.
@@ -530,6 +551,15 @@ If a step fails:
 - show completed operations
 - show rollback options
 - keep logs as artifacts
+
+## Tuning Knobs
+
+| Knob | Data Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `autoApprovalThreshold` | float | 0.8 | Operations with a score above this threshold (Low risk, no existing file collision) are pre-checked in the UI. |
+| `backupRetention` | int | 3 | Number of previous initialization attempts to preserve in `.simplecode/backups/`. |
+| `dryRunOnly` | bool | false | If true, clicking "Apply" will only simulate the filesystem calls and log them to the console/artifact. |
+| `transactionalApply` | bool | true | When true, the engine attempts to use a filesystem transaction or atomic renames for multi-file writes. |
 
 ## UI Requirements
 

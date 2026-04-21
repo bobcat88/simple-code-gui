@@ -49,6 +49,18 @@ bd close <id>         # Complete work
 - If push fails, resolve and retry until it succeeds
 <!-- END BEADS INTEGRATION -->
 
+## Technology Stack
+- **Engine**: Tauri 2.10.3
+- **Frontend Framework**: Vite 5.4 / React 18.3
+- **Backend Framework**: Rust (Tauri native)
+- **Languages**: TypeScript (Frontend), Rust (Backend)
+- **Styling**: Tailwind CSS 4.2
+- **Testing**: Vitest 4.0
+
+## Engine Version Reference
+@docs/engine-reference/tauri/VERSION.md
+
+
 
 ## Build & Test
 
