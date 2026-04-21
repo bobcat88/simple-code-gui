@@ -269,8 +269,10 @@
   spec_ref: "@01KPNWYK"
   meta_ref: null
   plan_ref: null
-  status: pending
-  blocked_by: []
+  status: blocked
+  blocked_by:
+    - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
+      4am (Europe/Paris)"
   depends_on: []
   context: []
   priority: 3
