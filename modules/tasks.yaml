@@ -163,6 +163,9 @@ features:
         title: Task Assignment View
         type: requirement
         description: Management view for assigning agents to specific repositories or tasks.
+        status:
+          maturity: draft
+          implementation: in_progress
         depends_on: []
         implements: []
         relates_to: []
