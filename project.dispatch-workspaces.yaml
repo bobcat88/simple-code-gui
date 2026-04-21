@@ -944,7 +944,7 @@ workspaces:
         head: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
         last_seen_at: 2026-04-21T22:00:23.090Z
         path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-token-burn-history-01kps0gd
-  - active_role: worker
+  - active_role: null
     base_branch_point: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
     bootstrap:
       status: succeeded
@@ -986,12 +986,12 @@ workspaces:
       detail: null
       eligible: false
       reason: null
-      updated_at: 2026-04-21T22:01:06.670Z
+      updated_at: 2026-04-21T22:01:21.304Z
     health:
       status: healthy
       issues: []
       summary: Workspace record matches current git branch and worktree state.
-      updated_at: 2026-04-21T22:01:13.970Z
+      updated_at: 2026-04-21T22:01:21.304Z
     integration:
       status: pending
       detail: null
@@ -999,17 +999,17 @@ workspaces:
       publication_mode: pull_request
       target_branch: main
       target_commit: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
-      updated_at: 2026-04-21T22:01:06.670Z
-    lifecycle_state: active
+      updated_at: 2026-04-21T22:01:21.304Z
+    lifecycle_state: ready
     resolved_base_branch: main
     task_ref: "@01KPS0GDVZNW3C7K4XM86WS21M"
     task_slug: task-approval-workflow-ui
     timestamps:
       closed_at: null
       last_active_at: 2026-04-21T22:01:13.970Z
-      last_reconciled_at: 2026-04-21T22:01:13.970Z
+      last_reconciled_at: 2026-04-21T22:01:21.304Z
       created_at: 2026-04-21T22:00:24.808Z
-      updated_at: 2026-04-21T22:01:13.970Z
+      updated_at: 2026-04-21T22:01:21.304Z
     workspace_id: dispatch-workspace-01KPS0GDVZNW3C7K4XM86WS21M
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
