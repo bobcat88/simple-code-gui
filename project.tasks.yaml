@@ -266,6 +266,12 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-21T22:01:25.993Z
+    - _ulid: 01KPS10VJTYP9V8SPY5BYCRW0M
+      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
+        (Europe/Paris)"
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-21T22:01:54.522Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GDZYYGBH0AEJ2PDN6YBC
