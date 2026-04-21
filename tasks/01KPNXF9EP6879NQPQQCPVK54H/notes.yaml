@@ -1,9 +1,0 @@
-notes:
-  - _ulid: 01KPNXF9EPTC4KA3QKJDMDJ6NE
-    content: |-
-      Implementation notes (auto-generated from spec):
-
-      System for selecting models based on task type (planning, patching, summarization).
-    supersedes: null
-    author: Johan.P
-    created_at: 2026-04-20T17:02:09.878Z
