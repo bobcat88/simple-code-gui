@@ -671,23 +671,18 @@ workspaces:
       remote_ref: null
       source: provisioned
     canonical_branch: dispatch/task/task-project-quick-switcher/01kpnxfs
-    canonical_branch_head: 421b4fe7d72bbafd9db1e3c55b50225738c0222d
+    canonical_branch_head: f3f443a77c83a83f591fe2f7304729625bed9c8a
     cleanup:
       status: not_scheduled
       detail: null
       eligible: false
       reason: null
-      updated_at: 2026-04-21T06:53:10.521Z
+      updated_at: 2026-04-21T06:55:10.952Z
     health:
-      status: stale
-      issues:
-        - code: missing_worker_worktree
-          message: Worker worktree
-            "/home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-project-quick-switcher-01kpnxfs"
-            is missing or no longer registered.
-          suggestion: Re-provision the worker worktree from the recorded canonical branch.
-      summary: Workspace registry record is stale and needs reconciliation.
-      updated_at: 2026-04-21T06:53:10.521Z
+      status: healthy
+      issues: []
+      summary: Workspace record matches current git branch and worktree state.
+      updated_at: 2026-04-21T06:55:10.952Z
     integration:
       status: pending
       detail: null
@@ -695,17 +690,17 @@ workspaces:
       publication_mode: pull_request
       target_branch: main
       target_commit: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
-      updated_at: 2026-04-21T06:53:10.521Z
-    lifecycle_state: stale
+      updated_at: 2026-04-21T06:55:10.952Z
+    lifecycle_state: active
     resolved_base_branch: main
     task_ref: "@01KPNXFSKSCJADKNJGETRD4KG0"
     task_slug: task-project-quick-switcher
     timestamps:
       closed_at: null
       last_active_at: 2026-04-21T06:50:12.898Z
-      last_reconciled_at: 2026-04-21T06:53:10.521Z
+      last_reconciled_at: 2026-04-21T06:55:10.952Z
       created_at: 2026-04-21T06:50:10.981Z
-      updated_at: 2026-04-21T06:53:10.521Z
+      updated_at: 2026-04-21T06:55:10.952Z
     workspace_id: dispatch-workspace-01KPNXFSKSCJADKNJGETRD4KG0
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
