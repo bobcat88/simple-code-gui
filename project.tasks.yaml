@@ -18,3 +18,170 @@
   submitted_at: 2026-04-21T18:34:18.232Z
   completed_at: 2026-04-21T19:30:44.846Z
   automation: eligible
+- _ulid: 01KPS0GDNN25JVHFVY8JJE5743
+  slugs:
+    - task-session-discovery
+  title: "Implement: Session Discovery"
+  type: task
+  description: "Implement and verify the Session Discovery feature from @session-discovery: discover
+    previous sessions from Claude, OpenCode, and other supported backends so users can resume work
+    reliably."
+  spec_ref: "@session-discovery"
+  meta_ref: null
+  plan_ref: null
+  status: pending
+  blocked_by: []
+  depends_on: []
+  context: []
+  priority: 3
+  tags: []
+  vcs_refs: []
+  created_at: 2026-04-21T21:52:55.989Z
+  notes: []
+  todos: []
+  automation: eligible
+- _ulid: 01KPS0GDQXR8JD6QA2MGT2KD9S
+  slugs:
+    - task-live-token-cost-hud
+  title: "Implement: Live Token/Cost HUD"
+  type: task
+  description: "Implement and verify @01KPNWTQ: real-time UI showing current session token burn, cost,
+    and budget status."
+  spec_ref: "@01KPNWTQ"
+  meta_ref: null
+  plan_ref: null
+  status: pending
+  blocked_by: []
+  depends_on: []
+  context: []
+  priority: 3
+  tags: []
+  vcs_refs: []
+  created_at: 2026-04-21T21:52:56.061Z
+  notes: []
+  todos: []
+  automation: eligible
+- _ulid: 01KPS0GDT09WMT9BNDYXWZFWP3
+  slugs:
+    - task-token-burn-history
+  title: "Implement: Token Burn History"
+  type: task
+  description: "Implement and verify @01KPNWTT: SQLite-backed logging and historical analysis of token
+    transactions."
+  spec_ref: "@01KPNWTT"
+  meta_ref: null
+  plan_ref: null
+  status: pending
+  blocked_by: []
+  depends_on: []
+  context: []
+  priority: 3
+  tags: []
+  vcs_refs: []
+  created_at: 2026-04-21T21:52:56.128Z
+  notes: []
+  todos: []
+  automation: eligible
+- _ulid: 01KPS0GDVZNW3C7K4XM86WS21M
+  slugs:
+    - task-approval-workflow-ui
+  title: "Implement: Approval Workflow UI"
+  type: task
+  description: "Implement and verify @01KPNWYD: interactive prompts for user review and approval of
+    proposed agent modifications."
+  spec_ref: "@01KPNWYD"
+  meta_ref: null
+  plan_ref: null
+  status: pending
+  blocked_by: []
+  depends_on: []
+  context: []
+  priority: 3
+  tags: []
+  vcs_refs: []
+  created_at: 2026-04-21T21:52:56.191Z
+  notes: []
+  todos: []
+  automation: eligible
+- _ulid: 01KPS0GDXXW4KHZYJHV81QX9R0
+  slugs:
+    - task-task-assignment-view
+  title: "Implement: Task Assignment View"
+  type: task
+  description: "Implement and verify @01KPNWYE: management view for assigning agents to repositories or tasks."
+  spec_ref: "@01KPNWYE"
+  meta_ref: null
+  plan_ref: null
+  status: pending
+  blocked_by: []
+  depends_on: []
+  context: []
+  priority: 3
+  tags: []
+  vcs_refs: []
+  created_at: 2026-04-21T21:52:56.253Z
+  notes: []
+  todos: []
+  automation: eligible
+- _ulid: 01KPS0GDZYYGBH0AEJ2PDN6YBC
+  slugs:
+    - task-app-plugin-health-dashboard
+  title: "Implement: App & Plugin Health Dashboard"
+  type: task
+  description: "Implement and verify @01KPNWYK: status monitoring for core services and installed MCP/plugins."
+  spec_ref: "@01KPNWYK"
+  meta_ref: null
+  plan_ref: null
+  status: pending
+  blocked_by: []
+  depends_on: []
+  context: []
+  priority: 3
+  tags: []
+  vcs_refs: []
+  created_at: 2026-04-21T21:52:56.318Z
+  notes: []
+  todos: []
+  automation: eligible
+- _ulid: 01KPS0GE1Y0DMY1MKT77AASR4Z
+  slugs:
+    - task-multi-provider-ai-runtime
+  title: "Implement: Multi-Provider AI Runtime"
+  type: task
+  description: "Implement and verify @ai-runtime: abstraction layer and routing for Claude, OpenAI,
+    Gemini, and Ollama providers."
+  spec_ref: "@ai-runtime"
+  meta_ref: null
+  plan_ref: null
+  status: pending
+  blocked_by: []
+  depends_on: []
+  context: []
+  priority: 3
+  tags: []
+  vcs_refs: []
+  created_at: 2026-04-21T21:52:56.382Z
+  notes: []
+  todos: []
+  automation: eligible
+- _ulid: 01KPS0GE3XDTDGATRJTWYREYXC
+  slugs:
+    - task-gsd-execution-engine
+  title: "Implement: GSD Execution Engine"
+  type: task
+  description: "Implement and verify @gsd-engine: phase-based agent execution engine with verifier
+    loops and wave-based orchestration."
+  spec_ref: "@gsd-engine"
+  meta_ref: null
+  plan_ref: null
+  status: pending
+  blocked_by: []
+  depends_on: []
+  context: []
+  priority: 3
+  tags: []
+  vcs_refs: []
+  created_at: 2026-04-21T21:52:56.445Z
+  notes: []
+  todos: []
+  automation: eligible
