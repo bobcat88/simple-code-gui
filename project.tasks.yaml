@@ -409,8 +409,9 @@
   title: "Implement: Project Quick-Switcher"
   type: task
   spec_ref: "@01KPNWYGEC5WX1JKYWJ2WF0YB0"
-  status: pending_review
-  blocked_by: []
+  status: blocked
+  blocked_by:
+    - 'Agent pr-reviewer failed 3 consecutive times: Executable not found in $PATH: "droid"'
   depends_on:
     - "@task-advanced-workspace-control"
   priority: 3
