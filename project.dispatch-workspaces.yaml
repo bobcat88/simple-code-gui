@@ -677,17 +677,12 @@ workspaces:
       detail: null
       eligible: false
       reason: null
-      updated_at: 2026-04-21T18:25:10.095Z
+      updated_at: 2026-04-21T19:01:11.155Z
     health:
-      status: stale
-      issues:
-        - code: missing_worker_worktree
-          message: Worker worktree
-            "/home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-project-quick-switcher-01kpnxfs"
-            is missing or no longer registered.
-          suggestion: Re-provision the worker worktree from the recorded canonical branch.
-      summary: Workspace registry record is stale and needs reconciliation.
-      updated_at: 2026-04-21T18:25:10.095Z
+      status: healthy
+      issues: []
+      summary: Workspace record matches current git branch and worktree state.
+      updated_at: 2026-04-21T19:01:11.155Z
     integration:
       status: pending
       detail: null
@@ -695,24 +690,29 @@ workspaces:
       publication_mode: pull_request
       target_branch: main
       target_commit: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
-      updated_at: 2026-04-21T18:25:10.095Z
-    lifecycle_state: stale
+      updated_at: 2026-04-21T19:01:11.155Z
+    lifecycle_state: integrating
     resolved_base_branch: main
     task_ref: "@01KPNXFSKSCJADKNJGETRD4KG0"
     task_slug: task-project-quick-switcher
     timestamps:
       closed_at: null
       last_active_at: 2026-04-21T06:50:12.898Z
-      last_reconciled_at: 2026-04-21T18:25:10.095Z
+      last_reconciled_at: 2026-04-21T19:01:11.155Z
       created_at: 2026-04-21T06:50:10.981Z
-      updated_at: 2026-04-21T18:25:10.095Z
+      updated_at: 2026-04-21T19:01:11.155Z
     workspace_id: dispatch-workspace-01KPNXFSKSCJADKNJGETRD4KG0
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
-      reviewer: null
+      reviewer:
+        branch_mode: detached
+        branch_ref: null
+        head: ab30b530ed0693f1519121da53f013f9a9446389
+        last_seen_at: 2026-04-21T19:01:11.155Z
+        path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-project-quick-switcher-01kpnxfs-review
       worker:
         branch_mode: branch
         branch_ref: dispatch/task/task-project-quick-switcher/01kpnxfs
-        head: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
-        last_seen_at: 2026-04-21T06:50:10.981Z
+        head: ab30b530ed0693f1519121da53f013f9a9446389
+        last_seen_at: 2026-04-21T19:01:11.155Z
         path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-project-quick-switcher-01kpnxfs
