@@ -167,7 +167,7 @@ features:
         description: Dashboard view of total token usage and activity across all projects.
         status:
           maturity: draft
-          implementation: in_progress
+          implementation: implemented
         depends_on: []
         implements: []
         relates_to: []
