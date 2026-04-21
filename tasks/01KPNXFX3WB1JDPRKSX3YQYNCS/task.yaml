@@ -5,8 +5,9 @@ title: "Implement: Background Jobs Visibility"
 type: task
 spec_ref: "@01KPNWYNG72RVJCSF9M81S3P4G"
 derivation: auto
-status: pending_review
+status: completed
 blocked_by: []
+closed_reason: Implemented JobHUD, useJobStore, and useJobPolling. Build verified.
 depends_on:
   - "@task-system-operational-telemetry"
 context: []
@@ -42,8 +43,22 @@ history:
         previous: null
     command: task-submit
     timestamp: 2026-04-21T06:25:42.524Z
+  - author: Johan.P
+    changes:
+      status:
+        new: completed
+        previous: pending_review
+      closed_reason:
+        new: Implemented JobHUD, useJobStore, and useJobPolling. Build verified.
+        previous: null
+      completed_at:
+        new: 2026-04-21T06:25:48.590Z
+        previous: null
+    command: task-complete
+    timestamp: 2026-04-21T06:25:48.598Z
 created_at: 2026-04-20T17:02:30.012Z
 started_at: 2026-04-20T17:03:00.414Z
 submitted_at: 2026-04-21T06:25:42.524Z
+completed_at: 2026-04-21T06:25:48.590Z
 todos: []
 automation: eligible
