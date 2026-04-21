@@ -1096,7 +1096,7 @@ workspaces:
         head: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
         last_seen_at: 2026-04-21T22:01:15.008Z
         path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-task-assignment-view-01kps0gd
-  - active_role: worker
+  - active_role: null
     base_branch_point: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
     bootstrap:
       status: succeeded
@@ -1138,12 +1138,12 @@ workspaces:
       detail: null
       eligible: false
       reason: null
-      updated_at: 2026-04-21T22:01:16.949Z
+      updated_at: 2026-04-21T22:01:32.050Z
     health:
       status: healthy
       issues: []
       summary: Workspace record matches current git branch and worktree state.
-      updated_at: 2026-04-21T22:01:16.949Z
+      updated_at: 2026-04-21T22:01:32.050Z
     integration:
       status: pending
       detail: null
@@ -1151,17 +1151,17 @@ workspaces:
       publication_mode: pull_request
       target_branch: main
       target_commit: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
-      updated_at: 2026-04-21T22:01:16.949Z
-    lifecycle_state: active
+      updated_at: 2026-04-21T22:01:32.050Z
+    lifecycle_state: ready
     resolved_base_branch: main
     task_ref: "@01KPS0GDZYYGBH0AEJ2PDN6YBC"
     task_slug: task-app-plugin-health-dashboard
     timestamps:
       closed_at: null
       last_active_at: 2026-04-21T22:01:06.587Z
-      last_reconciled_at: 2026-04-21T22:01:16.949Z
+      last_reconciled_at: 2026-04-21T22:01:32.050Z
       created_at: 2026-04-21T22:00:40.470Z
-      updated_at: 2026-04-21T22:01:16.949Z
+      updated_at: 2026-04-21T22:01:32.050Z
     workspace_id: dispatch-workspace-01KPS0GDZYYGBH0AEJ2PDN6YBC
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
@@ -1170,7 +1170,7 @@ workspaces:
         branch_mode: branch
         branch_ref: dispatch/task/task-app-plugin-health-dashboard/01kps0gd
         head: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
-        last_seen_at: 2026-04-21T22:01:03.935Z
+        last_seen_at: 2026-04-21T22:01:32.050Z
         path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-app-plugin-health-dashboard-01kps0gd
   - active_role: null
     base_branch_point: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
