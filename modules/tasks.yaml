@@ -147,6 +147,9 @@ features:
         title: Approval Workflow UI
         type: requirement
         description: Interactive prompts for user review of proposed agent modifications.
+        status:
+          maturity: draft
+          implementation: in_progress
         depends_on: []
         implements: []
         relates_to: []
