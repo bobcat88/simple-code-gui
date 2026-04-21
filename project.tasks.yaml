@@ -317,23 +317,6 @@
   started_at: 2026-04-20T21:47:40.487Z
   completed_at: 2026-04-20T21:47:40.487Z
   automation: eligible
-- _ulid: 01KPNXFN9BXSATN38W1MHCH332
-  slugs:
-    - task-real-time-activity-feed
-  title: "Implement: Real-time Activity Feed"
-  type: task
-  spec_ref: "@01KPNWY9P99S2EB736NTXXJM4V"
-  status: completed
-  blocked_by: []
-  depends_on:
-    - "@task-advanced-orchestration-ui"
-  priority: 3
-  tags: []
-  notes_count: 2
-  todos_count: 0
-  created_at: 2026-04-20T17:02:21.995Z
-  started_at: 2026-04-20T21:50:26.730Z
-  completed_at: 2026-04-20T21:51:37.631Z
 - _ulid: 01KPNXFNX6HA0YE4WBYD7H4ZEC
   slugs:
     - task-agent-status-cards
