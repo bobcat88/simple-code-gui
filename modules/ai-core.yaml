@@ -247,6 +247,11 @@ features:
             then: Aggregated and per-session token data is returned with filtering by date range, project, and
               backend
             when: The renderer requests history via IPC
+          - given: The renderer has received token history data
+            id: ac-4
+            then: A historical view shows token usage over time with charts, totals, and breakdown by
+              project/backend
+            when: The Token Burn History UI component renders
         tags: []
         created: 2026-04-20T16:50:59.235Z
         notes: []
