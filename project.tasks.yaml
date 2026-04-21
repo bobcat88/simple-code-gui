@@ -60,6 +60,7 @@
   notes_count: 1
   todos_count: 0
   created_at: 2026-04-20T17:02:09.233Z
+  automation: eligible
 - _ulid: 01KPNXF9EP6879NQPQQCPVK54H
   slugs:
     - task-model-routing-policies
@@ -75,6 +76,7 @@
   notes_count: 1
   todos_count: 0
   created_at: 2026-04-20T17:02:09.878Z
+  automation: eligible
 - _ulid: 01KPNXFA29G7E6Q0SQQV0AZ366
   slugs:
     - task-named-model-plans
@@ -416,6 +418,7 @@
   notes_count: 1
   todos_count: 0
   created_at: 2026-04-20T17:02:26.425Z
+  automation: eligible
 - _ulid: 01KPNXFT782364MJ1445F7BFF7
   slugs:
     - task-home-usage-summary
