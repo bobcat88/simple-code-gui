@@ -4,7 +4,7 @@ use chrono::Utc;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum ProjectInitializationState {
     NotInitialized,
@@ -14,7 +14,7 @@ pub enum ProjectInitializationState {
     ConflictingInitialization,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum MarkerKind {
     File,
@@ -25,7 +25,7 @@ pub enum MarkerKind {
     Generated,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum MarkerStatus {
     Present,
@@ -35,7 +35,7 @@ pub enum MarkerStatus {
     Unknown,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum Confidence {
     Low,
@@ -43,7 +43,7 @@ pub enum Confidence {
     High,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum SourceSystem {
     SimpleCodeGui,
@@ -110,6 +110,8 @@ pub struct DetectedMarker {
     pub source_system: SourceSystem,
     pub confidence: Confidence,
     pub status: MarkerStatus,
+    pub mtime: Option<u64>,
+    pub checksum: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -123,6 +125,7 @@ pub struct CapabilityScanResult {
     pub enabled: bool,
     pub mode: CapabilityMode,
     pub health: HealthStatus,
+    pub health_score: f32, // Added health score (0.0-1.0)
     pub version: Option<String>,
     pub marker_ids: Vec<String>,
 }
@@ -148,7 +151,7 @@ pub struct ScanBlocker {
     pub recommended_action: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum ProposalPreset {
     Minimal,
@@ -166,6 +169,8 @@ pub struct UpgradeProposalInput {
     pub can_propose_standard: bool,
     pub can_propose_full: bool,
     pub recommended_preset: ProposalPreset,
+    pub approval_score: f32, // Added formula result
+    pub risk_profile: u32,    // Added formula result
     pub create_candidates: Vec<String>,
     pub modify_candidates: Vec<String>,
     pub preserve_candidates: Vec<String>,
@@ -184,6 +189,8 @@ pub struct ProjectCapabilityScan {
     pub warnings: Vec<ScanWarning>,
     pub blockers: Vec<ScanBlocker>,
     pub upgrade_inputs: UpgradeProposalInput,
+    pub total_file_count: u32, // Added for performance metrics
+    pub scan_duration_ms: u64, // Added for SLA verification
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -196,39 +203,26 @@ pub struct ScanOptions {
 
 // ─── Scanner ─────────────────────────────────────────────────────────────────
 
-pub fn scan_project(root_path: &str, _options: &ScanOptions) -> ProjectCapabilityScan {
+// ─── Scanner ─────────────────────────────────────────────────────────────────
+
+pub fn scan_project(root_path: &str, options: &ScanOptions) -> ProjectCapabilityScan {
+    let start_time = std::time::Instant::now();
     let root = Path::new(root_path);
     let mut markers = Vec::new();
     let mut capabilities = Vec::new();
     let mut warnings = Vec::new();
     let mut blockers = Vec::new();
+    let mut total_file_count = 0;
 
-    // ── Detect markers ──
-    detect_marker(&root, &mut markers, "simplecode_manifest", ".simplecode/manifest.toml", MarkerKind::File, SourceSystem::SimpleCodeGui);
-    detect_marker(&root, &mut markers, "simplecode_profile", ".simplecode/project-profile.json", MarkerKind::File, SourceSystem::SimpleCodeGui);
-    detect_marker(&root, &mut markers, "ai_contract", "ai.md", MarkerKind::File, SourceSystem::SimpleCodeGui);
-    detect_marker(&root, &mut markers, "agents_contract", "AGENTS.md", MarkerKind::File, SourceSystem::SimpleCodeGui);
-    detect_marker(&root, &mut markers, "claude_contract", "CLAUDE.md", MarkerKind::File, SourceSystem::Provider);
-    detect_marker(&root, &mut markers, "claude_contract_dir", ".claude/CLAUDE.md", MarkerKind::File, SourceSystem::Provider);
-    detect_marker(&root, &mut markers, "claude_settings", ".claude/settings.json", MarkerKind::File, SourceSystem::Provider);
-    detect_marker(&root, &mut markers, "kspec_worktree", ".kspec", MarkerKind::Directory, SourceSystem::Kspec);
-    detect_marker(&root, &mut markers, "kspec_agents_generated", "kspec-agents.md", MarkerKind::Generated, SourceSystem::Kspec);
-    detect_marker(&root, &mut markers, "beads_dir", ".beads", MarkerKind::Directory, SourceSystem::Beads);
-    detect_marker(&root, &mut markers, "gitnexus_store", ".gitnexus", MarkerKind::Directory, SourceSystem::Gitnexus);
-    detect_marker(&root, &mut markers, "gitnexus_index", ".gitnexus/meta.json", MarkerKind::File, SourceSystem::Gitnexus);
-    detect_marker(&root, &mut markers, "rtk_config", ".rtk", MarkerKind::Directory, SourceSystem::Rtk);
-    detect_marker(&root, &mut markers, "rtk_rules", ".agents/rules/antigravity-rtk-rules.md", MarkerKind::File, SourceSystem::Rtk);
-    detect_marker(&root, &mut markers, "gsd_project", "PROJECT.md", MarkerKind::File, SourceSystem::Gsd);
-    detect_marker(&root, &mut markers, "gsd_roadmap", "ROADMAP.md", MarkerKind::File, SourceSystem::Gsd);
-    detect_marker(&root, &mut markers, "planning_dir", ".planning", MarkerKind::Directory, SourceSystem::Gsd);
-    detect_marker(&root, &mut markers, "mcp_project_config", ".mcp", MarkerKind::Directory, SourceSystem::Mcp);
-    detect_marker(&root, &mut markers, "mcp_claude_config", ".claude/mcp_config.json", MarkerKind::File, SourceSystem::Mcp);
-    detect_marker(&root, &mut markers, "codex_config", ".codex", MarkerKind::Directory, SourceSystem::Provider);
-    detect_marker(&root, &mut markers, "git_repo", ".git", MarkerKind::Directory, SourceSystem::Git);
-    detect_marker(&root, &mut markers, "package_json", "package.json", MarkerKind::File, SourceSystem::User);
-    detect_marker(&root, &mut markers, "cargo_manifest", "Cargo.toml", MarkerKind::File, SourceSystem::User);
-    detect_marker(&root, &mut markers, "cargo_manifest_tauri", "src-tauri/Cargo.toml", MarkerKind::File, SourceSystem::User);
-    detect_marker(&root, &mut markers, "env_file", ".env", MarkerKind::File, SourceSystem::User);
+    let max_depth = options.max_depth.unwrap_or(3);
+
+    // ── Recursive Marker Detection ──
+    walk_and_detect(&root, &root, 0, max_depth, &mut markers, &mut total_file_count);
+
+    // ── CLI Health Checks ──
+    if options.include_cli_health.unwrap_or(true) {
+        check_cli_health(&mut markers);
+    }
 
     // ── Build capabilities ──
     let has = |id: &str| marker_present(&markers, id);
@@ -243,55 +237,32 @@ pub fn scan_project(root_path: &str, _options: &ScanOptions) -> ProjectCapabilit
         enabled: has("simplecode_manifest"),
         mode: if has("simplecode_manifest") && has("ai_contract") { CapabilityMode::Full } else if has("simplecode_manifest") { CapabilityMode::Partial } else { CapabilityMode::Disabled },
         health: if has("simplecode_manifest") { HealthStatus::Healthy } else { HealthStatus::Unknown },
+        health_score: if has("simplecode_manifest") { 1.0 } else { 0.0 },
         version: None,
         marker_ids: vec!["simplecode_manifest".into(), "simplecode_profile".into(), "ai_contract".into()],
     });
 
-    // Agent instructions
-    capabilities.push(CapabilityScanResult {
-        id: "agents_instructions".into(),
-        kind: CapabilityKind::ProjectContract,
-        source_system: SourceSystem::SimpleCodeGui,
-        installed: has("agents_contract"),
-        initialized: has("agents_contract"),
-        enabled: has("agents_contract"),
-        mode: if has("agents_contract") { CapabilityMode::Full } else { CapabilityMode::Disabled },
-        health: if has("agents_contract") { HealthStatus::Healthy } else { HealthStatus::Unknown },
-        version: None,
-        marker_ids: vec!["agents_contract".into()],
-    });
-
-    // Claude instructions
-    capabilities.push(CapabilityScanResult {
-        id: "claude_instructions".into(),
-        kind: CapabilityKind::ProjectContract,
-        source_system: SourceSystem::Provider,
-        installed: has("claude_contract") || has("claude_contract_dir"),
-        initialized: has("claude_contract") || has("claude_contract_dir"),
-        enabled: has("claude_contract") || has("claude_contract_dir"),
-        mode: if has("claude_contract") || has("claude_contract_dir") { CapabilityMode::Full } else { CapabilityMode::Disabled },
-        health: HealthStatus::Unknown,
-        version: None,
-        marker_ids: vec!["claude_contract".into(), "claude_contract_dir".into()],
-    });
-
     // Beads
+    let beads_present = has("beads_dir");
+    let beads_cli_present = has("beads_cli");
     capabilities.push(CapabilityScanResult {
         id: "beads_task_backend".into(),
         kind: CapabilityKind::TaskBackend,
         source_system: SourceSystem::Beads,
-        installed: has("beads_dir"),
-        initialized: has("beads_dir"),
-        enabled: has("beads_dir"),
-        mode: if has("beads_dir") { CapabilityMode::Full } else { CapabilityMode::Disabled },
-        health: if has("beads_dir") { HealthStatus::Healthy } else { HealthStatus::Unknown },
+        installed: beads_present,
+        initialized: beads_present,
+        enabled: beads_present,
+        mode: if beads_present && beads_cli_present { CapabilityMode::Full } else if beads_present { CapabilityMode::Degraded } else { CapabilityMode::Disabled },
+        health: if beads_present && beads_cli_present { HealthStatus::Healthy } else if beads_present { HealthStatus::Warning } else { HealthStatus::Unknown },
+        health_score: if beads_present && beads_cli_present { 1.0 } else if beads_present { 0.5 } else { 0.0 },
         version: None,
-        marker_ids: vec!["beads_dir".into()],
+        marker_ids: vec!["beads_dir".into(), "beads_cli".into()],
     });
 
     // KSpec
     let kspec_has_worktree = has("kspec_worktree");
     let kspec_has_generated = has("kspec_agents_generated");
+    let kspec_cli_present = has("kspec_cli");
     capabilities.push(CapabilityScanResult {
         id: "kspec_spec_backend".into(),
         kind: CapabilityKind::SpecBackend,
@@ -299,29 +270,16 @@ pub fn scan_project(root_path: &str, _options: &ScanOptions) -> ProjectCapabilit
         installed: kspec_has_worktree || kspec_has_generated,
         initialized: kspec_has_worktree,
         enabled: kspec_has_worktree,
-        mode: if kspec_has_worktree { CapabilityMode::Full } else if kspec_has_generated { CapabilityMode::InstructionOnly } else { CapabilityMode::Disabled },
-        health: if kspec_has_worktree { HealthStatus::Healthy } else if kspec_has_generated { HealthStatus::Warning } else { HealthStatus::Unknown },
+        mode: if kspec_has_worktree && kspec_cli_present { CapabilityMode::Full } else if kspec_has_worktree { CapabilityMode::Degraded } else if kspec_has_generated { CapabilityMode::InstructionOnly } else { CapabilityMode::Disabled },
+        health: if kspec_has_worktree && kspec_cli_present { HealthStatus::Healthy } else if kspec_has_worktree || kspec_has_generated { HealthStatus::Warning } else { HealthStatus::Unknown },
+        health_score: if kspec_has_worktree && kspec_cli_present { 1.0 } else if kspec_has_worktree { 0.7 } else if kspec_has_generated { 0.3 } else { 0.0 },
         version: None,
-        marker_ids: vec!["kspec_worktree".into(), "kspec_agents_generated".into()],
-    });
-
-    // GSD
-    let gsd_installed = has("gsd_project") || has("planning_dir");
-    capabilities.push(CapabilityScanResult {
-        id: "gsd_execution_workflow".into(),
-        kind: CapabilityKind::ExecutionWorkflow,
-        source_system: SourceSystem::Gsd,
-        installed: gsd_installed,
-        initialized: gsd_installed,
-        enabled: gsd_installed,
-        mode: if gsd_installed { CapabilityMode::Full } else { CapabilityMode::Disabled },
-        health: if gsd_installed { HealthStatus::Healthy } else { HealthStatus::Unknown },
-        version: None,
-        marker_ids: vec!["gsd_project".into(), "planning_dir".into()],
+        marker_ids: vec!["kspec_worktree".into(), "kspec_agents_generated".into(), "kspec_cli".into()],
     });
 
     // RTK
     let rtk_installed = has("rtk_config") || has("rtk_rules");
+    let rtk_cli_present = has("rtk_cli");
     capabilities.push(CapabilityScanResult {
         id: "rtk_token_optimizer".into(),
         kind: CapabilityKind::TokenOptimizer,
@@ -329,53 +287,11 @@ pub fn scan_project(root_path: &str, _options: &ScanOptions) -> ProjectCapabilit
         installed: rtk_installed,
         initialized: has("rtk_config"),
         enabled: rtk_installed,
-        mode: if has("rtk_config") { CapabilityMode::Full } else if has("rtk_rules") { CapabilityMode::InstructionOnly } else { CapabilityMode::Disabled },
-        health: if rtk_installed { HealthStatus::Healthy } else { HealthStatus::Unknown },
+        mode: if has("rtk_config") && rtk_cli_present { CapabilityMode::Full } else if has("rtk_rules") { CapabilityMode::InstructionOnly } else { CapabilityMode::Disabled },
+        health: if rtk_installed && rtk_cli_present { HealthStatus::Healthy } else if rtk_installed { HealthStatus::Warning } else { HealthStatus::Unknown },
+        health_score: if rtk_installed && rtk_cli_present { 1.0 } else if rtk_installed { 0.5 } else { 0.0 },
         version: None,
-        marker_ids: vec!["rtk_config".into(), "rtk_rules".into()],
-    });
-
-    // GitNexus
-    capabilities.push(CapabilityScanResult {
-        id: "gitnexus_repo_intelligence".into(),
-        kind: CapabilityKind::RepoIntelligence,
-        source_system: SourceSystem::Gitnexus,
-        installed: has("gitnexus_store"),
-        initialized: has("gitnexus_index"),
-        enabled: has("gitnexus_index"),
-        mode: if has("gitnexus_index") { CapabilityMode::Full } else if has("gitnexus_store") { CapabilityMode::Partial } else { CapabilityMode::Disabled },
-        health: if has("gitnexus_index") { HealthStatus::Healthy } else { HealthStatus::Unknown },
-        version: None,
-        marker_ids: vec!["gitnexus_store".into(), "gitnexus_index".into()],
-    });
-
-    // MCP
-    let mcp_installed = has("mcp_project_config") || has("mcp_claude_config");
-    capabilities.push(CapabilityScanResult {
-        id: "mcp_bridge".into(),
-        kind: CapabilityKind::McpServer,
-        source_system: SourceSystem::Mcp,
-        installed: mcp_installed,
-        initialized: mcp_installed,
-        enabled: mcp_installed,
-        mode: if mcp_installed { CapabilityMode::Full } else { CapabilityMode::Disabled },
-        health: if mcp_installed { HealthStatus::Healthy } else { HealthStatus::Unknown },
-        version: None,
-        marker_ids: vec!["mcp_project_config".into(), "mcp_claude_config".into()],
-    });
-
-    // Git
-    capabilities.push(CapabilityScanResult {
-        id: "git_repository".into(),
-        kind: CapabilityKind::ProjectContract,
-        source_system: SourceSystem::Git,
-        installed: has("git_repo"),
-        initialized: has("git_repo"),
-        enabled: has("git_repo"),
-        mode: if has("git_repo") { CapabilityMode::Full } else { CapabilityMode::Disabled },
-        health: if has("git_repo") { HealthStatus::Healthy } else { HealthStatus::Unknown },
-        version: None,
-        marker_ids: vec!["git_repo".into()],
+        marker_ids: vec!["rtk_config".into(), "rtk_rules".into(), "rtk_cli".into()],
     });
 
     // ── Generate warnings ──
@@ -390,39 +306,6 @@ pub fn scan_project(root_path: &str, _options: &ScanOptions) -> ProjectCapabilit
         });
     }
 
-    if has("beads_dir") && !kspec_has_worktree {
-        warnings.push(ScanWarning {
-            id: "beads_without_spec_backend".into(),
-            severity: WarningSeverity::Info,
-            title: "Beads without spec backend".into(),
-            detail: "Beads task backend exists without a spec backend. Consider adding KSpec for spec-driven workflow.".into(),
-            marker_ids: vec!["beads_dir".into()],
-            capability_ids: vec!["beads_task_backend".into()],
-        });
-    }
-
-    if (has("claude_contract") || has("claude_contract_dir")) && !has("agents_contract") {
-        warnings.push(ScanWarning {
-            id: "claude_contract_without_agents_contract".into(),
-            severity: WarningSeverity::Info,
-            title: "CLAUDE.md without AGENTS.md".into(),
-            detail: "Claude instructions exist but no AGENTS.md. Consider adding AGENTS.md for multi-provider support.".into(),
-            marker_ids: vec!["claude_contract".into()],
-            capability_ids: vec!["claude_instructions".into()],
-        });
-    }
-
-    if has("rtk_rules") && !has("rtk_config") {
-        warnings.push(ScanWarning {
-            id: "rtk_rules_without_rtk_config".into(),
-            severity: WarningSeverity::Info,
-            title: "RTK rules without config".into(),
-            detail: "RTK agent rules exist but .rtk/ config directory is missing.".into(),
-            marker_ids: vec!["rtk_rules".into()],
-            capability_ids: vec!["rtk_token_optimizer".into()],
-        });
-    }
-
     // ── Check for blockers ──
     if !root.exists() {
         blockers.push(ScanBlocker {
@@ -434,26 +317,13 @@ pub fn scan_project(root_path: &str, _options: &ScanOptions) -> ProjectCapabilit
         });
     }
 
-    if has("simplecode_manifest") {
-        let manifest_path = root.join(".simplecode/manifest.toml");
-        if manifest_path.exists() && std::fs::read_to_string(&manifest_path).is_err() {
-            blockers.push(ScanBlocker {
-                id: "manifest_unreadable".into(),
-                title: "Manifest unreadable".into(),
-                detail: "Cannot read .simplecode/manifest.toml".into(),
-                marker_ids: vec!["simplecode_manifest".into()],
-                recommended_action: "Check file permissions on .simplecode/manifest.toml".into(),
-            });
-        }
-    }
-
     // ── Classify initialization state ──
     let has_simplecode = has("simplecode_manifest");
     let has_ai = has("ai_contract");
     let has_agents = has("agents_contract");
     let has_task_or_spec = has("beads_dir") || kspec_has_worktree;
     let has_third_party = has("claude_contract") || has("claude_contract_dir") || has("codex_config")
-        || kspec_has_worktree || has("beads_dir") || gsd_installed;
+        || kspec_has_worktree || has("beads_dir") || has("planning_dir");
 
     let initialization_state = if !blockers.is_empty() {
         ProjectInitializationState::ConflictingInitialization
@@ -466,6 +336,16 @@ pub fn scan_project(root_path: &str, _options: &ScanOptions) -> ProjectCapabilit
     } else {
         ProjectInitializationState::NotInitialized
     };
+
+    // ── Formula Engine ──
+    let blocker_count = blockers.len() as f32;
+    let warning_count = warnings.len() as f32;
+    let approval_score = (1.0 - (blocker_count * 0.5) - (warning_count * 0.05)).max(0.0);
+    
+    let mut risk_profile = 0;
+    if !has_simplecode { risk_profile += 5; }
+    if initialization_state == ProjectInitializationState::ConflictingInitialization { risk_profile += 10; }
+    if !has("git_repo") { risk_profile += 3; }
 
     // ── Build upgrade proposal inputs ──
     let can_propose_minimal = blockers.is_empty();
@@ -496,16 +376,16 @@ pub fn scan_project(root_path: &str, _options: &ScanOptions) -> ProjectCapabilit
 
     if has_ai { modify_candidates.push("ai.md".into()); }
     if has_agents { preserve_candidates.push("AGENTS.md".into()); }
-    if has("claude_contract") || has("claude_contract_dir") { preserve_candidates.push("CLAUDE.md".into()); }
     if has("beads_dir") { preserve_candidates.push(".beads/".into()); migration_sources.push(SourceSystem::Beads); }
     if kspec_has_worktree { preserve_candidates.push(".kspec/".into()); migration_sources.push(SourceSystem::Kspec); }
-    if gsd_installed { preserve_candidates.push(".planning/".into()); migration_sources.push(SourceSystem::Gsd); }
 
     let upgrade_inputs = UpgradeProposalInput {
         can_propose_minimal,
         can_propose_standard,
         can_propose_full,
         recommended_preset,
+        approval_score,
+        risk_profile,
         create_candidates,
         modify_candidates,
         preserve_candidates,
@@ -522,38 +402,100 @@ pub fn scan_project(root_path: &str, _options: &ScanOptions) -> ProjectCapabilit
         warnings,
         blockers,
         upgrade_inputs,
+        total_file_count: total_file_count as u32,
+        scan_duration_ms: start_time.elapsed().as_millis() as u64,
     }
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-fn detect_marker(
+fn walk_and_detect(
     root: &Path,
+    current: &Path,
+    depth: u32,
+    max_depth: u32,
+    markers: &mut Vec<DetectedMarker>,
+    file_count: &mut usize,
+) {
+    if depth > max_depth { return; }
+
+    if let Ok(entries) = std::fs::read_dir(current) {
+        for entry in entries.flatten() {
+            *file_count += 1;
+            let path = entry.path();
+            let rel_path = path.strip_prefix(root).unwrap_or(&path);
+            let rel_str = rel_path.to_string_lossy();
+
+            // Marker Detection
+            match rel_str.as_ref() {
+                ".simplecode/manifest.toml" => add_marker(markers, "simplecode_manifest", &path, &rel_str, MarkerKind::File, SourceSystem::SimpleCodeGui),
+                ".simplecode/project-profile.json" => add_marker(markers, "simplecode_profile", &path, &rel_str, MarkerKind::File, SourceSystem::SimpleCodeGui),
+                "ai.md" => add_marker(markers, "ai_contract", &path, &rel_str, MarkerKind::File, SourceSystem::SimpleCodeGui),
+                "AGENTS.md" => add_marker(markers, "agents_contract", &path, &rel_str, MarkerKind::File, SourceSystem::SimpleCodeGui),
+                "CLAUDE.md" | ".claude/CLAUDE.md" => add_marker(markers, "claude_contract", &path, &rel_str, MarkerKind::File, SourceSystem::Provider),
+                ".kspec" => add_marker(markers, "kspec_worktree", &path, &rel_str, MarkerKind::Directory, SourceSystem::Kspec),
+                "kspec-agents.md" => add_marker(markers, "kspec_agents_generated", &path, &rel_str, MarkerKind::Generated, SourceSystem::Kspec),
+                ".beads" => add_marker(markers, "beads_dir", &path, &rel_str, MarkerKind::Directory, SourceSystem::Beads),
+                ".git" => add_marker(markers, "git_repo", &path, &rel_str, MarkerKind::Directory, SourceSystem::Git),
+                ".planning" => add_marker(markers, "planning_dir", &path, &rel_str, MarkerKind::Directory, SourceSystem::Gsd),
+                ".rtk" => add_marker(markers, "rtk_config", &path, &rel_str, MarkerKind::Directory, SourceSystem::Rtk),
+                _ => {}
+            }
+
+            if path.is_dir() && !rel_str.starts_with('.') {
+                walk_and_detect(root, &path, depth + 1, max_depth, markers, file_count);
+            }
+        }
+    }
+}
+
+fn add_marker(
     markers: &mut Vec<DetectedMarker>,
     id: &str,
+    full_path: &Path,
     rel_path: &str,
     kind: MarkerKind,
     source_system: SourceSystem,
 ) {
-    let full_path = root.join(rel_path);
-    let (status, confidence) = if full_path.exists() {
-        if full_path.is_dir() || std::fs::metadata(&full_path).is_ok() {
-            (MarkerStatus::Present, Confidence::High)
-        } else {
-            (MarkerStatus::Unreadable, Confidence::Medium)
-        }
-    } else {
-        (MarkerStatus::Missing, Confidence::High)
-    };
-
+    let mtime = std::fs::metadata(full_path).ok().and_then(|m| m.modified().ok()).and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map(|d| d.as_secs());
+    
     markers.push(DetectedMarker {
         id: id.to_string(),
         kind,
         path: Some(rel_path.to_string()),
         source_system,
-        confidence,
-        status,
+        confidence: Confidence::High,
+        status: MarkerStatus::Present,
+        mtime,
+        checksum: None, // Checksum calculation deferred for performance
     });
+}
+
+fn check_cli_health(markers: &mut Vec<DetectedMarker>) {
+    let clis = [
+        ("bd", "beads_cli", SourceSystem::Beads),
+        ("kspec", "kspec_cli", SourceSystem::Kspec),
+        ("rtk", "rtk_cli", SourceSystem::Rtk),
+        ("git", "git_cli", SourceSystem::Git),
+    ];
+
+    for (bin, id, system) in clis {
+        let status = if std::process::Command::new(bin).arg("--version").output().is_ok() {
+            MarkerStatus::Present
+        } else {
+            MarkerStatus::Missing
+        };
+        markers.push(DetectedMarker {
+            id: id.to_string(),
+            kind: MarkerKind::Command,
+            path: None,
+            source_system: system,
+            confidence: Confidence::High,
+            status,
+            mtime: None,
+            checksum: None,
+        });
+    }
 }
 
 fn marker_present(markers: &[DetectedMarker], id: &str) -> bool {
@@ -616,7 +558,6 @@ pub fn generate_proposal(
     enabled_capability_ids: Option<Vec<String>>,
 ) -> InitializationProposal {
     let mut operations = Vec::new();
-
     let now = Utc::now().to_rfc3339();
     let proposal_id = uuid::Uuid::new_v4().to_string();
 
@@ -624,12 +565,15 @@ pub fn generate_proposal(
         if let Some(ref ids) = enabled_capability_ids {
             ids.contains(&cap_id.to_string())
         } else {
-            true // Default to true if not specified (legacy behavior)
+            true
         }
     };
 
-    // Create .simplecode directory
-    if !marker_present(&scan.markers, "simplecode_manifest") {
+    // ── Pre-Calculated Risk & Approval ──
+    let requires_manual_review = scan.upgrade_inputs.approval_score < 0.8 || *preset == ProposalPreset::ManualReview || *preset == ProposalPreset::Guarded;
+
+    // ── 1. Root & Registration ──
+    if !marker_present(&scan.markers, "simplecode_manifest") && is_enabled("simplecode_project_contract") {
         operations.push(ProposalOperation {
             id: "create_simplecode_dir".into(),
             kind: OperationKind::CreateDirectory,
@@ -657,7 +601,7 @@ kspec = {}
 gsd = false
 rtk = false
 gitnexus = false
-mcp = false
+mcp = {}
 "#,
             proposal_id,
             scan.root_path,
@@ -667,23 +611,23 @@ mcp = false
             if task_backend == "kspec" { "kspec" } else { "none" },
             task_backend == "beads",
             task_backend == "kspec",
+            *preset != ProposalPreset::LocalFirst,
         );
 
-        if is_enabled("simplecode_project_contract") {
-            operations.push(ProposalOperation {
-                id: "create_manifest".into(),
-                kind: OperationKind::CreateFile,
-                path: Some(".simplecode/manifest.toml".into()),
-                command: None,
-                source_system: SourceSystem::SimpleCodeGui,
-                reason: "Machine-readable project initialization record".into(),
-                preview: Some(manifest_content),
-                risk: OperationRisk::Low,
-                requires_approval: false,
-            });
+        operations.push(ProposalOperation {
+            id: "create_manifest".into(),
+            kind: OperationKind::CreateFile,
+            path: Some(".simplecode/manifest.toml".into()),
+            command: None,
+            source_system: SourceSystem::SimpleCodeGui,
+            reason: "Machine-readable project initialization record".into(),
+            preview: Some(manifest_content),
+            risk: OperationRisk::Low,
+            requires_approval: false,
+        });
 
-            let profile_content = format!(
-                r#"{{
+        let profile_content = format!(
+            r#"{{
   "version": 1,
   "projectId": "{}",
   "displayName": "{}",
@@ -692,27 +636,27 @@ mcp = false
   "createdAt": "{}",
   "updatedAt": "{}"
 }}"#,
-                proposal_id, project_name, now, now
-            );
+            proposal_id, project_name, now, now
+        );
 
-            operations.push(ProposalOperation {
-                id: "create_profile".into(),
-                kind: OperationKind::CreateFile,
-                path: Some(".simplecode/project-profile.json".into()),
-                command: None,
-                source_system: SourceSystem::SimpleCodeGui,
-                reason: "App-owned UI projection and defaults".into(),
-                preview: Some(profile_content),
-                risk: OperationRisk::Low,
-                requires_approval: false,
-            });
-        }
+        operations.push(ProposalOperation {
+            id: "create_profile".into(),
+            kind: OperationKind::CreateFile,
+            path: Some(".simplecode/project-profile.json".into()),
+            command: None,
+            source_system: SourceSystem::SimpleCodeGui,
+            reason: "App-owned UI projection and defaults".into(),
+            preview: Some(profile_content),
+            risk: OperationRisk::Low,
+            requires_approval: false,
+        });
     }
 
-    // ai.md for standard+ presets
-    if !matches!(preset, ProposalPreset::Minimal | ProposalPreset::Guarded) && !marker_present(&scan.markers, "ai_contract") && is_enabled("simplecode_project_contract") {
-        let ai_content = format!(
-            r#"# {} — AI Contract
+    // ── 2. AI & Agent Contracts (Standard+) ──
+    if !matches!(preset, ProposalPreset::Minimal) {
+        if !marker_present(&scan.markers, "ai_contract") && is_enabled("simplecode_project_contract") {
+            let ai_content = format!(
+                r#"# {} — AI Contract
 
 ## Project Intent
 <!-- Describe what this project does and its goals -->
@@ -730,54 +674,55 @@ mcp = false
 - Destructive operations require confirmation
 - File mutations require review
 "#,
-            project_name, task_backend
-        );
+                project_name, task_backend
+            );
 
-        operations.push(ProposalOperation {
-            id: "create_ai_contract".into(),
-            kind: OperationKind::CreateFile,
-            path: Some("ai.md".into()),
-            command: None,
-            source_system: SourceSystem::SimpleCodeGui,
-            reason: "Human-readable local AI contract".into(),
-            preview: Some(ai_content),
-            risk: OperationRisk::Low,
-            requires_approval: false,
-        });
+            operations.push(ProposalOperation {
+                id: "create_ai_contract".into(),
+                kind: OperationKind::CreateFile,
+                path: Some("ai.md".into()),
+                command: None,
+                source_system: SourceSystem::SimpleCodeGui,
+                reason: "Human-readable local AI contract".into(),
+                preview: Some(ai_content),
+                risk: OperationRisk::Low,
+                requires_approval: false,
+            });
+        }
+
+        if !marker_present(&scan.markers, "agents_contract") {
+            operations.push(ProposalOperation {
+                id: "create_agents".into(),
+                kind: OperationKind::CreateFile,
+                path: Some("AGENTS.md".into()),
+                command: None,
+                source_system: SourceSystem::SimpleCodeGui,
+                reason: "Agent-facing workflow instructions".into(),
+                preview: Some(format!("# {} — Agent Instructions\n\n## Workflow\n\nRefer to project-specific tooling and task backend for workflow details.\n", project_name)),
+                risk: OperationRisk::Low,
+                requires_approval: false,
+            });
+        }
     }
 
-    // AGENTS.md for standard+ presets
-    if !matches!(preset, ProposalPreset::Minimal) && !marker_present(&scan.markers, "agents_contract") && is_enabled("agents_instructions") {
-        operations.push(ProposalOperation {
-            id: "create_agents".into(),
-            kind: OperationKind::CreateFile,
-            path: Some("AGENTS.md".into()),
-            command: None,
-            source_system: SourceSystem::SimpleCodeGui,
-            reason: "Agent-facing workflow instructions".into(),
-            preview: Some(format!("# {} — Agent Instructions\n\n## Workflow\n\nRefer to project-specific tooling and task backend for workflow details.\n", project_name)),
-            risk: OperationRisk::Low,
-            requires_approval: false,
-        });
-    }
+    // ── 3. Tooling Initialization (Standard/Full) ──
+    if matches!(preset, ProposalPreset::Standard | ProposalPreset::FullSpecDriven | ProposalPreset::Guarded) {
+        // Git
+        if !marker_present(&scan.markers, "git_repo") {
+            operations.push(ProposalOperation {
+                id: "git_init".into(),
+                kind: OperationKind::RunCommand,
+                path: None,
+                command: Some("git init".into()),
+                source_system: SourceSystem::Git,
+                reason: "Initialize git repository".into(),
+                preview: None,
+                risk: OperationRisk::Low,
+                requires_approval: requires_manual_review,
+            });
+        }
 
-    // Git init for new projects
-    if !marker_present(&scan.markers, "git_repo") {
-        operations.push(ProposalOperation {
-            id: "git_init".into(),
-            kind: OperationKind::RunCommand,
-            path: None,
-            command: Some("git init".into()),
-            source_system: SourceSystem::Git,
-            reason: "Initialize git repository".into(),
-            preview: None,
-            risk: OperationRisk::Low,
-            requires_approval: false,
-        });
-    }
-
-    // Task backend init for standard/full presets
-    if matches!(preset, ProposalPreset::Standard | ProposalPreset::FullSpecDriven) {
+        // Task Backend
         if task_backend == "kspec" && !marker_present(&scan.markers, "kspec_worktree") && is_enabled("kspec_spec_backend") {
             operations.push(ProposalOperation {
                 id: "kspec_init".into(),
@@ -803,9 +748,24 @@ mcp = false
                 requires_approval: true,
             });
         }
+
+        // RTK
+        if *preset == ProposalPreset::FullSpecDriven && !marker_present(&scan.markers, "rtk_config") {
+             operations.push(ProposalOperation {
+                id: "rtk_gain".into(),
+                kind: OperationKind::RunCommand,
+                path: None,
+                command: Some("rtk gain".into()),
+                source_system: SourceSystem::Rtk,
+                reason: "Initialize RTK token optimizer".into(),
+                preview: None,
+                risk: OperationRisk::Low,
+                requires_approval: true,
+            });
+        }
     }
 
-    // Preserve existing files
+    // ── 4. Preservations ──
     for preserve in &scan.upgrade_inputs.preserve_candidates {
         operations.push(ProposalOperation {
             id: format!("preserve_{}", preserve.replace('/', "_").replace('.', "")),
@@ -813,7 +773,7 @@ mcp = false
             path: Some(preserve.clone()),
             command: None,
             source_system: SourceSystem::User,
-            reason: format!("Existing {} preserved — not modified by initialization", preserve),
+            reason: format!("Existing {} preserved", preserve),
             preview: None,
             risk: OperationRisk::Low,
             requires_approval: false,
@@ -821,12 +781,14 @@ mcp = false
     }
 
     let summary = format!(
-        "{} initialization with {} preset: {} files to create, {} commands to run, {} items preserved",
+        "{} initialization ({}): {} creates, {} commands, {} preserved. Risk Profile: {}. Approval Score: {:.2}",
         project_name,
         preset_to_str(preset),
         operations.iter().filter(|o| matches!(o.kind, OperationKind::CreateFile | OperationKind::CreateDirectory)).count(),
         operations.iter().filter(|o| matches!(o.kind, OperationKind::RunCommand)).count(),
         operations.iter().filter(|o| matches!(o.kind, OperationKind::Preserve)).count(),
+        scan.upgrade_inputs.risk_profile,
+        scan.upgrade_inputs.approval_score,
     );
 
     InitializationProposal {
