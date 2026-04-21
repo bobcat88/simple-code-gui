@@ -5,7 +5,7 @@ title: "Implement: Background Jobs Visibility"
 type: task
 spec_ref: "@01KPNWYNG72RVJCSF9M81S3P4G"
 derivation: auto
-status: in_progress
+status: pending_review
 blocked_by: []
 depends_on:
   - "@task-system-operational-telemetry"
@@ -13,7 +13,37 @@ context: []
 priority: 3
 tags: []
 vcs_refs: []
+submission_linkage:
+  review_url: null
+  branch: dispatch/task/task-advanced-workspace-control/01kpnxfs
+  captured_at: 2026-04-21T06:25:42.518Z
+  commit: c2bf679edc833aa7444734de16f179d53f527b91
+  remote: origin
+  remote_url: https://github.com/bobcat88/simple-code-gui
+  upstream_ref: refs/heads/dispatch/task/task-advanced-workspace-control/01kpnxfs
+history:
+  - author: Johan.P
+    changes:
+      status:
+        new: pending_review
+        previous: in_progress
+      submission_linkage:
+        new:
+          review_url: null
+          branch: dispatch/task/task-advanced-workspace-control/01kpnxfs
+          captured_at: 2026-04-21T06:25:42.518Z
+          commit: c2bf679edc833aa7444734de16f179d53f527b91
+          remote: origin
+          remote_url: https://github.com/bobcat88/simple-code-gui
+          upstream_ref: refs/heads/dispatch/task/task-advanced-workspace-control/01kpnxfs
+        previous: null
+      submitted_at:
+        new: 2026-04-21T06:25:42.524Z
+        previous: null
+    command: task-submit
+    timestamp: 2026-04-21T06:25:42.524Z
 created_at: 2026-04-20T17:02:30.012Z
 started_at: 2026-04-20T17:03:00.414Z
+submitted_at: 2026-04-21T06:25:42.524Z
 todos: []
 automation: eligible
