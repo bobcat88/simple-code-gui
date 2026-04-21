@@ -1020,7 +1020,7 @@ workspaces:
         head: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
         last_seen_at: 2026-04-21T22:01:34.786Z
         path: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees/task-approval-workflow-ui-01kps0gd
-  - active_role: null
+  - active_role: worker
     base_branch_point: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
     bootstrap:
       status: succeeded
@@ -1067,7 +1067,7 @@ workspaces:
       status: healthy
       issues: []
       summary: Workspace record matches current git branch and worktree state.
-      updated_at: 2026-04-21T22:01:44.526Z
+      updated_at: 2026-04-21T22:01:47.165Z
     integration:
       status: pending
       detail: null
@@ -1076,16 +1076,16 @@ workspaces:
       target_branch: main
       target_commit: f0774d5a478bb6f5680a3dd9eec747867cff3ba4
       updated_at: 2026-04-21T22:01:44.526Z
-    lifecycle_state: ready
+    lifecycle_state: active
     resolved_base_branch: main
     task_ref: "@01KPS0GDXXW4KHZYJHV81QX9R0"
     task_slug: task-task-assignment-view
     timestamps:
       closed_at: null
-      last_active_at: 2026-04-21T22:01:18.769Z
-      last_reconciled_at: 2026-04-21T22:01:44.526Z
+      last_active_at: 2026-04-21T22:01:47.165Z
+      last_reconciled_at: 2026-04-21T22:01:47.165Z
       created_at: 2026-04-21T22:00:38.103Z
-      updated_at: 2026-04-21T22:01:46.231Z
+      updated_at: 2026-04-21T22:01:47.165Z
     workspace_id: dispatch-workspace-01KPS0GDXXW4KHZYJHV81QX9R0
     worktree_root: /home/_johan/Documents/Projects/simple-code-gui/.kspec-worktrees
     worktrees:
