@@ -14,3 +14,9 @@ notes:
     supersedes: null
     author: "@claude"
     created_at: 2026-04-21T06:53:27.115Z
+  - _ulid: 01KPQD4Q6PHS5XRNG4Y7246AFH
+    content: Finalized Tauri backend migration and cleaned up legacy Electron/Capacitor dependencies to
+      ensure a stable native environment for the Quick-Switcher implementation.
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T06:55:15.159Z
