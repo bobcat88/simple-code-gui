@@ -120,24 +120,6 @@
   notes_count: 1
   todos_count: 0
   created_at: 2026-04-20T17:02:15.025Z
-- _ulid: 01KPNXFH0H4KFJFGB30FYVE8KB
-  slugs:
-    - task-live-token-cost-hud
-  title: "Implement: Live Token/Cost HUD"
-  type: task
-  spec_ref: "@01KPNWTQ5WY2JVHCYXXKDFCKQ6"
-  status: pending_review
-  blocked_by: []
-  depends_on:
-    - "@task-token-economics-telemetry"
-  priority: 3
-  tags: []
-  notes_count: 1
-  todos_count: 0
-  created_at: 2026-04-20T17:02:17.617Z
-  started_at: 2026-04-20T17:02:57.895Z
-  submitted_at: 2026-04-21T06:22:05.100Z
-  automation: eligible
 - _ulid: 01KPNXFHMWXF1679QRZEKF8T33
   slugs:
     - task-savings-telemetry-rtk-mcp
