@@ -1,18 +1,3 @@
-- _ulid: 01KPNXFCN02DFXBTRJK5DV9RTY
-  slugs:
-    - task-phase-based-decomposition
-  title: "Implement: Phase-based Decomposition"
-  type: task
-  spec_ref: "@01KPNWTGE0H4SR3YYF0YNTHT2D"
-  status: pending
-  blocked_by: []
-  depends_on:
-    - "@task-gsd-execution-engine"
-  priority: 3
-  tags: []
-  notes_count: 1
-  todos_count: 0
-  created_at: 2026-04-20T17:02:13.152Z
 - _ulid: 01KPNXFD88V5E0D1500S2DTTWD
   slugs:
     - task-wave-based-execution
