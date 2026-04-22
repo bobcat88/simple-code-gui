@@ -1,11 +1,11 @@
-pub mod types;
 pub mod providers;
+pub mod types;
 
-use types::{CompletionRequest, CompletionResponse, ModelInfo, RoutingPolicy, TaskType, ModelTier};
+use crate::database::DatabaseManager;
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use std::collections::HashMap;
-use crate::database::DatabaseManager;
+use types::{CompletionRequest, CompletionResponse, ModelInfo, ModelTier, RoutingPolicy, TaskType};
 
 use async_trait::async_trait;
 
@@ -33,28 +33,40 @@ impl RuntimeManager {
         providers.insert(provider.name().to_string(), provider);
     }
 
-    pub async fn completion(&self, provider_name: &str, request: CompletionRequest) -> Result<CompletionResponse, String> {
+    pub async fn completion(
+        &self,
+        provider_name: &str,
+        request: CompletionRequest,
+    ) -> Result<CompletionResponse, String> {
         let providers = self.providers.lock().await;
-        let provider = providers.get(provider_name).ok_or_else(|| format!("Provider {} not found", provider_name))?;
-        
+        let provider = providers
+            .get(provider_name)
+            .ok_or_else(|| format!("Provider {} not found", provider_name))?;
+
         let mut req = request;
         if req.model.is_none() {
             // Pick first model if none specified
             let models = provider.list_models().await?;
-            req.model = Some(models.first().ok_or("No models available for provider")?.id.clone());
+            req.model = Some(
+                models
+                    .first()
+                    .ok_or("No models available for provider")?
+                    .id
+                    .clone(),
+            );
         }
-        
+
         provider.completion(req).await
     }
 
     pub async fn dispatch(&self, request: CompletionRequest) -> Result<CompletionResponse, String> {
         let routes = self.resolve_routes(&request).await?;
-        
+
         let mut last_error = "No suitable routes found".to_string();
         for (provider_name, model_id) in routes {
             let mut req = request.clone();
             req.model = Some(model_id.clone());
-            
+
             match self.completion(&provider_name, req).await {
                 Ok(resp) => return Ok(resp),
                 Err(e) => {
@@ -63,11 +75,14 @@ impl RuntimeManager {
                 }
             }
         }
-        
+
         Err(format!("Dispatch failed: {}", last_error))
     }
 
-    async fn resolve_routes(&self, request: &CompletionRequest) -> Result<Vec<(String, String)>, String> {
+    async fn resolve_routes(
+        &self,
+        request: &CompletionRequest,
+    ) -> Result<Vec<(String, String)>, String> {
         let providers = self.providers.lock().await;
         let mut all_models = Vec::new();
         for (name, provider) in providers.iter() {
@@ -82,14 +97,18 @@ impl RuntimeManager {
             Some(RoutingPolicy::Direct { provider, model }) => {
                 Ok(vec![(provider.clone(), model.clone())])
             }
-            Some(RoutingPolicy::Tiered { task, allow_fallback }) => {
+            Some(RoutingPolicy::Tiered {
+                task,
+                allow_fallback,
+            }) => {
                 let target_tier = match task {
                     TaskType::Reasoning | TaskType::Coding => ModelTier::Tier1,
                     TaskType::Vision | TaskType::Creative => ModelTier::Tier2,
                     TaskType::Fast => ModelTier::Tier3,
                 };
 
-                let mut routes: Vec<(String, String)> = all_models.iter()
+                let mut routes: Vec<(String, String)> = all_models
+                    .iter()
                     .filter(|(_, m)| m.tier == target_tier)
                     .map(|(p, m)| (p.clone(), m.id.clone()))
                     .collect();
@@ -97,12 +116,15 @@ impl RuntimeManager {
                 if *allow_fallback && routes.is_empty() {
                     // Fallback to Tier1 then Tier2 then Tier3
                     for tier in [ModelTier::Tier1, ModelTier::Tier2, ModelTier::Tier3] {
-                        routes.extend(all_models.iter()
-                            .filter(|(_, m)| m.tier == tier)
-                            .map(|(p, m)| (p.clone(), m.id.clone())));
+                        routes.extend(
+                            all_models
+                                .iter()
+                                .filter(|(_, m)| m.tier == tier)
+                                .map(|(p, m)| (p.clone(), m.id.clone())),
+                        );
                     }
                 }
-                
+
                 if routes.is_empty() {
                     Err("No models found for tiered policy".to_string())
                 } else {
@@ -110,7 +132,9 @@ impl RuntimeManager {
                 }
             }
             Some(RoutingPolicy::CheapFirst) => {
-                all_models.sort_by(|(_, a), (_, b)| a.pricing_input_1m.partial_cmp(&b.pricing_input_1m).unwrap());
+                all_models.sort_by(|(_, a), (_, b)| {
+                    a.pricing_input_1m.partial_cmp(&b.pricing_input_1m).unwrap()
+                });
                 Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
             }
             Some(RoutingPolicy::QualityFirst) | None => {
@@ -123,7 +147,9 @@ impl RuntimeManager {
 
     pub async fn list_models(&self, provider_name: &str) -> Result<Vec<ModelInfo>, String> {
         let providers = self.providers.lock().await;
-        let provider = providers.get(provider_name).ok_or_else(|| format!("Provider {} not found", provider_name))?;
+        let provider = providers
+            .get(provider_name)
+            .ok_or_else(|| format!("Provider {} not found", provider_name))?;
         provider.list_models().await
     }
 
@@ -180,4 +206,137 @@ pub async fn ai_save_key(
         .await
         .map_err(|e| e.to_string())?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use types::{Message, Usage};
+
+    struct MockProvider {
+        name: String,
+        models: Vec<ModelInfo>,
+        fail: bool,
+    }
+
+    #[async_trait]
+    impl AIProvider for MockProvider {
+        fn name(&self) -> &str {
+            &self.name
+        }
+
+        async fn completion(
+            &self,
+            request: CompletionRequest,
+        ) -> Result<CompletionResponse, String> {
+            if self.fail {
+                return Err(format!("{} failed", self.name));
+            }
+
+            Ok(CompletionResponse {
+                id: format!("{}-response", self.name),
+                model: request.model.unwrap_or_else(|| "missing".to_string()),
+                content: self.name.clone(),
+                usage: Some(Usage::default()),
+            })
+        }
+
+        async fn list_models(&self) -> Result<Vec<ModelInfo>, String> {
+            Ok(self.models.clone())
+        }
+
+        async fn check_health(&self) -> bool {
+            !self.fail
+        }
+    }
+
+    fn model(id: &str, tier: ModelTier, input_price: f64) -> ModelInfo {
+        ModelInfo {
+            id: id.to_string(),
+            name: id.to_string(),
+            tier,
+            context_window: 128_000,
+            pricing_input_1m: input_price,
+            pricing_output_1m: input_price * 4.0,
+        }
+    }
+
+    fn request(policy: Option<RoutingPolicy>) -> CompletionRequest {
+        CompletionRequest {
+            messages: vec![Message {
+                role: "user".to_string(),
+                content: "hello".to_string(),
+            }],
+            model: None,
+            policy,
+            temperature: None,
+            max_tokens: None,
+            stream: None,
+        }
+    }
+
+    async fn register_mock(
+        manager: &RuntimeManager,
+        name: &str,
+        models: Vec<ModelInfo>,
+        fail: bool,
+    ) {
+        manager
+            .register_provider(Box::new(MockProvider {
+                name: name.to_string(),
+                models,
+                fail,
+            }))
+            .await;
+    }
+
+    #[tokio::test]
+    async fn dispatch_uses_direct_provider_and_model() {
+        let manager = RuntimeManager::new();
+        register_mock(
+            &manager,
+            "openai",
+            vec![model("gpt-5.4", ModelTier::Tier1, 2.5)],
+            false,
+        )
+        .await;
+
+        let response = manager
+            .dispatch(request(Some(RoutingPolicy::Direct {
+                provider: "openai".to_string(),
+                model: "gpt-5.4".to_string(),
+            })))
+            .await
+            .expect("direct dispatch should succeed");
+
+        assert_eq!(response.model, "gpt-5.4");
+        assert_eq!(response.content, "openai");
+    }
+
+    #[tokio::test]
+    async fn cheap_first_routes_by_input_price() {
+        let manager = RuntimeManager::new();
+        register_mock(
+            &manager,
+            "claude",
+            vec![model("claude-haiku", ModelTier::Tier3, 0.25)],
+            false,
+        )
+        .await;
+        register_mock(
+            &manager,
+            "openai",
+            vec![model("gpt-nano", ModelTier::Tier3, 0.20)],
+            false,
+        )
+        .await;
+
+        let response = manager
+            .dispatch(request(Some(RoutingPolicy::CheapFirst)))
+            .await
+            .expect("cheap first dispatch should succeed");
+
+        assert_eq!(response.content, "openai");
+        assert_eq!(response.model, "gpt-nano");
+    }
 }

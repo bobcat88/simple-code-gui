@@ -10,6 +10,7 @@ import { ClaudeMdEditor } from '../ClaudeMdEditor.js'
 import { McpPanel } from '../McpPanel.js'
 import { McpBrowser } from '../mcp/McpBrowser.js'
 import { TaskAssignmentView } from '../orchestration/TaskAssignmentView.js'
+import { TokenBurnHistory } from '../orchestration/TokenBurnHistory.js'
 import { ActivityFeed } from '../ActivityFeed'
 import { JobMonitor } from '../JobMonitor'
 import { AgentBoard } from '../AgentBoard'
@@ -293,6 +294,13 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
                 }}
                 currentTabPtyId={focusedTabPtyId}
               />
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-4 border-t border-white/5">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Token Burn History</h4>
+            <div className="p-2 rounded-2xl bg-white/5 border border-white/5">
+              <TokenBurnHistory api={api} />
             </div>
           </div>
 

@@ -140,7 +140,8 @@ export function Terminal({
   const { processTokenChunk } = useTokenMeter({
     ptyId,
     api,
-    projectPath: projectPath || undefined
+    projectPath: projectPath || undefined,
+    backend
   })
 
   // Terminal setup hook

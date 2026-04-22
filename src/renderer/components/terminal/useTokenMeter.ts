@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react'
-import type { ExtendedApi } from '../../api/types'
+import type { BackendId, ExtendedApi } from '../../api/types'
 import {
   TOKEN_METRIC_REGEX,
   TOKEN_SAVED_REGEX,
@@ -10,6 +10,7 @@ interface UseTokenMeterOptions {
   ptyId: string
   api: any
   projectPath?: string
+  backend?: 'default' | BackendId
 }
 
 interface UseTokenMeterReturn {
@@ -19,7 +20,7 @@ interface UseTokenMeterReturn {
 /**
  * Hook for capturing token usage metrics from terminal output and logging them to the database.
  */
-export function useTokenMeter({ ptyId, api, projectPath }: UseTokenMeterOptions): UseTokenMeterReturn {
+export function useTokenMeter({ ptyId, api, projectPath, backend }: UseTokenMeterOptions): UseTokenMeterReturn {
   const bufferRef = useRef('')
   const lastLoggedRef = useRef<string | null>(null)
 
@@ -46,11 +47,15 @@ export function useTokenMeter({ ptyId, api, projectPath }: UseTokenMeterOptions)
         // Log to database
         if ((api as ExtendedApi)?.logTokenEvent) {
           (api as ExtendedApi).logTokenEvent(
-            projectPath || null,
-            inputTokens,
-            outputTokens,
-            savedTokens,
-            'claude-3-5-sonnet'
+            {
+              sessionId: ptyId,
+              projectPath: projectPath || 'unknown',
+              backend: !backend || backend === 'default' ? 'claude' : backend,
+              inputTokens,
+              outputTokens,
+              costEstimate: costEst,
+            },
+            savedTokens
           ).catch(err => console.error('Failed to log token event:', err))
         }
       }
@@ -60,7 +65,7 @@ export function useTokenMeter({ ptyId, api, projectPath }: UseTokenMeterOptions)
     if (bufferRef.current.length > 5000) {
       bufferRef.current = bufferRef.current.substring(bufferRef.current.length - 2000)
     }
-  }, [api, projectPath])
+  }, [api, backend, projectPath, ptyId])
 
   return {
     processTokenChunk

@@ -253,6 +253,64 @@ export interface UpdateNotice {
   type: string
 }
 
+export interface TokenTransactionInput {
+  sessionId: string
+  projectPath: string
+  backend: BackendId
+  inputTokens: number
+  outputTokens: number
+  costEstimate: number
+  timestamp?: string
+}
+
+export interface TokenHistoryFilters {
+  startDate?: string
+  endDate?: string
+  projectPath?: string
+  backend?: BackendId
+}
+
+export interface TokenHistoryTotals {
+  inputTokens: number
+  outputTokens: number
+  costEstimate: number
+  transactionCount: number
+}
+
+export interface TokenHistorySession {
+  sessionId: string
+  projectPath: string
+  backend: BackendId
+  inputTokens: number
+  outputTokens: number
+  costEstimate: number
+  firstTimestamp: string
+  lastTimestamp: string
+  transactionCount: number
+}
+
+export interface TokenHistoryBreakdown {
+  key: string
+  inputTokens: number
+  outputTokens: number
+  costEstimate: number
+}
+
+export interface TokenHistoryPoint {
+  date: string
+  inputTokens: number
+  outputTokens: number
+  costEstimate: number
+}
+
+export interface TokenHistoryResponse {
+  totals: TokenHistoryTotals
+  sessions: TokenHistorySession[]
+  projectBreakdown: TokenHistoryBreakdown[]
+  backendBreakdown: TokenHistoryBreakdown[]
+  daily: TokenHistoryPoint[]
+}
+
 /**
  * Core API interface for the renderer
  */
@@ -504,8 +562,9 @@ export interface ExtendedApi extends Api {
   debugLog: (message: string) => void
 
   // Token Metering
-  logTokenEvent: (projectId: string | null, input: number, output: number, saved: number, model: string) => Promise<void>
+  logTokenEvent: (transaction: TokenTransactionInput, savedTokens?: number) => Promise<void>
   getTokenStats: (projectId?: string) => Promise<{ totalInput: number; totalOutput: number; totalSaved: number; totalCost: number }>
+  getTokenHistory: (filters?: TokenHistoryFilters) => Promise<TokenHistoryResponse>
 
   // Project Initialization Wizard
   projectScan: (path: string, options?: ScanOptions) => Promise<ProjectCapabilityScan>

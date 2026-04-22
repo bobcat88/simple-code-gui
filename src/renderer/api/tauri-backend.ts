@@ -14,7 +14,10 @@ import {
   Unsubscribe,
   BackendId,
   ApprovalRequest,
-  ApprovalResponse
+  ApprovalResponse,
+  TokenHistoryFilters,
+  TokenHistoryResponse,
+  TokenTransactionInput
 } from './types'
 import { tauriIpc } from '../lib/tauri-ipc'
 import { check } from '@tauri-apps/plugin-updater'
@@ -234,12 +237,16 @@ export class TauriBackend implements ExtendedApi {
   }
 
   // Token Metering Implementation
-  async logTokenEvent(projectId: string | null, input: number, output: number, saved: number, model: string): Promise<void> {
-    await tauriIpc.logTokenEvent(projectId, input, output, saved, model);
+  async logTokenEvent(transaction: TokenTransactionInput, savedTokens?: number): Promise<void> {
+    await tauriIpc.logTokenEvent(transaction, savedTokens);
   }
 
   async getTokenStats(projectId?: string): Promise<{ totalInput: number; totalOutput: number; totalSaved: number; totalCost: number }> {
     return await tauriIpc.getTokenStats(projectId);
+  }
+
+  async getTokenHistory(filters?: TokenHistoryFilters): Promise<TokenHistoryResponse> {
+    return await tauriIpc.getTokenHistory(filters);
   }
 
   // Project Initialization Wizard

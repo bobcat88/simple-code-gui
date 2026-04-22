@@ -43,9 +43,12 @@ tts = "0.26"
 walkdir = "2"
 reqwest = { version = "0.12", features = ["json", "blocking"] }
 sqlx = { version = "0.8", features = [ "runtime-tokio", "sqlite", "macros" ] }
+rusqlite = "0.32"
 tar = "0.4.45"
 flate2 = "1.1.9"
 zip = "4.2.0"
 async-trait = "0.1"
 sysinfo = "0.29"
 
+[dev-dependencies]
+tempfile = "3"

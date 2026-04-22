@@ -110,11 +110,14 @@ export const tauriIpc = {
   windowIsMaximized: () =>
     invoke<boolean>('window_is_maximized'),
     
-  logTokenEvent: (projectId: string | null, input: number, output: number, saved: number, model: string) =>
-    invoke<void>('log_token_event', { projectId, input, output, saved, model }),
+  logTokenEvent: (transaction: any, savedTokens?: number) =>
+    invoke<void>('log_token_event', { transaction, saved_tokens: savedTokens }),
 
   getTokenStats: (projectId?: string) =>
     invoke<any>('get_token_stats', { projectId }),
+
+  getTokenHistory: (filters?: any) =>
+    invoke<any>('get_token_history', { filters }),
 
   projectScan: (path: string, options: any) =>
     invoke<any>('project_scan', { path, options }),
