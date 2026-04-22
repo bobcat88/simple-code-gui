@@ -29,8 +29,10 @@
   spec_ref: "@session-discovery"
   meta_ref: null
   plan_ref: null
-  status: pending_review
+  status: completed
   blocked_by: []
+  closed_reason: "Integrated first Codex batch; validation passed: session_manager tests, database
+    tests, TokenBurnHistory Vitest, cargo test --lib, git diff --check, bun run build."
   depends_on: []
   context: []
   priority: 3
@@ -48,6 +50,7 @@
   created_at: 2026-04-21T21:52:55.989Z
   started_at: 2026-04-21T22:15:45.973Z
   submitted_at: 2026-04-22T05:59:32.758Z
+  completed_at: 2026-04-22T05:59:43.129Z
   notes:
     - _ulid: 01KPS0KSNP8W26PDGWH224EE1P
       content: |-
