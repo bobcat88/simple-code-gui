@@ -165,7 +165,7 @@ features:
         description: Management view for assigning agents to specific repositories or tasks.
         status:
           maturity: draft
-          implementation: in_progress
+          implementation: implemented
         depends_on: []
         implements: []
         relates_to: []
