@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { tauriIpc } from '../lib/tauri-ipc';
+import type { InstalledExtension } from './useExtensions';
 
 export interface HealthStatus {
   cpu_usage: number;
@@ -7,6 +8,13 @@ export interface HealthStatus {
   total_memory: number;
   threads: number;
   status: string;
+  services: Array<{
+    id: string;
+    name: string;
+    status: string;
+    detail: string;
+  }>;
+  installed_extensions: InstalledExtension[];
 }
 
 export function useHealthStatus() {

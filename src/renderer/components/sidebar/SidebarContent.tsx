@@ -324,7 +324,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
           <section className="space-y-3">
-            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">System Health</h4>
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">App & Plugin Health</h4>
             <div className="p-1 rounded-2xl bg-white/5 border border-white/5 overflow-hidden">
               <HealthDashboard />
             </div>

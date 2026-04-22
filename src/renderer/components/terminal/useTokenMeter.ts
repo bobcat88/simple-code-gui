@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { BackendId, ExtendedApi } from '../../api/types'
 import {
   TOKEN_METRIC_REGEX,
@@ -13,8 +13,29 @@ interface UseTokenMeterOptions {
   backend?: 'default' | BackendId
 }
 
+export interface TokenSessionMetrics {
+  inputTokens: number
+  outputTokens: number
+  savedTokens: number
+  costEstimate: number
+  eventCount: number
+  lastUpdatedAt: number | null
+}
+
 interface UseTokenMeterReturn {
   processTokenChunk: (cleanChunk: string) => void
+  snapshot: TokenSessionMetrics
+}
+
+function createEmptySnapshot(): TokenSessionMetrics {
+  return {
+    inputTokens: 0,
+    outputTokens: 0,
+    savedTokens: 0,
+    costEstimate: 0,
+    eventCount: 0,
+    lastUpdatedAt: null,
+  }
 }
 
 /**
@@ -23,6 +44,13 @@ interface UseTokenMeterReturn {
 export function useTokenMeter({ ptyId, api, projectPath, backend }: UseTokenMeterOptions): UseTokenMeterReturn {
   const bufferRef = useRef('')
   const lastLoggedRef = useRef<string | null>(null)
+  const [snapshot, setSnapshot] = useState<TokenSessionMetrics>(createEmptySnapshot())
+
+  useEffect(() => {
+    bufferRef.current = ''
+    lastLoggedRef.current = null
+    setSnapshot(createEmptySnapshot())
+  }, [ptyId])
 
   const processTokenChunk = useCallback((cleanChunk: string) => {
     bufferRef.current += cleanChunk
@@ -43,6 +71,14 @@ export function useTokenMeter({ ptyId, api, projectPath, backend }: UseTokenMete
       
       if (lastLoggedRef.current !== logKey) {
         lastLoggedRef.current = logKey
+        setSnapshot(previous => ({
+          inputTokens: previous.inputTokens + inputTokens,
+          outputTokens: previous.outputTokens + outputTokens,
+          savedTokens: previous.savedTokens + savedTokens,
+          costEstimate: previous.costEstimate + costEst,
+          eventCount: previous.eventCount + 1,
+          lastUpdatedAt: Date.now(),
+        }))
         
         // Log to database
         if ((api as ExtendedApi)?.logTokenEvent) {
@@ -68,6 +104,7 @@ export function useTokenMeter({ ptyId, api, projectPath, backend }: UseTokenMete
   }, [api, backend, projectPath, ptyId])
 
   return {
-    processTokenChunk
+    processTokenChunk,
+    snapshot,
   }
 }

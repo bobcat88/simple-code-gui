@@ -12,8 +12,10 @@ export function HealthHUD({ className }: HealthHUDProps) {
 
   if (loading || !status) return null;
 
+  const normalizedStatus = status.status.toLowerCase();
   const cpuColor = status.cpu_usage > 80 ? 'text-rose-400' : status.cpu_usage > 50 ? 'text-amber-400' : 'text-indigo-400';
   const memColor = (status.memory_usage / status.total_memory) > 0.8 ? 'text-rose-400' : (status.memory_usage / status.total_memory) > 0.5 ? 'text-amber-400' : 'text-indigo-400';
+  const healthColor = normalizedStatus === 'healthy' ? 'text-emerald-400' : normalizedStatus === 'warning' ? 'text-amber-400' : 'text-rose-400';
 
   return (
     <div 
@@ -23,8 +25,8 @@ export function HealthHUD({ className }: HealthHUDProps) {
       )}
     >
       <div className="flex items-center gap-1.5" title="System Health Status">
-        <HeartPulse size={12} className="text-emerald-400" />
-        <span className="text-white/60">Healthy</span>
+        <HeartPulse size={12} className={healthColor} />
+        <span className="text-white/60">{status.status}</span>
       </div>
 
       <div className="w-[1px] h-3 bg-white/10" />

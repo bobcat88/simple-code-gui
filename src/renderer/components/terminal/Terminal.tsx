@@ -12,6 +12,7 @@ import { useTTS } from './useTTS.js'
 import { useAutoWork } from './useAutoWork.js'
 import { useSummaryCapture } from './useSummaryCapture.js'
 import { useTokenMeter } from './useTokenMeter.js'
+import { TokenBudgetHud } from './TokenBudgetHud.js'
 import { clearTerminalBuffer, cleanupOrphanedBuffers, formatPathsForBackend } from './utils.js'
 
 // Re-export buffer utilities for external use
@@ -137,7 +138,7 @@ export function Terminal({
   })
 
   // Token meter hook
-  const { processTokenChunk } = useTokenMeter({
+  const { processTokenChunk, snapshot: tokenSnapshot } = useTokenMeter({
     ptyId,
     api,
     projectPath: projectPath || undefined,
@@ -404,6 +405,12 @@ export function Terminal({
   return (
     <div className="terminal-content-wrapper flex flex-col h-full overflow-hidden bg-background">
       <div className="flex-1 overflow-hidden relative">
+        <div className="pointer-events-none absolute right-4 top-4 z-20 flex max-w-[calc(100%-2rem)] justify-end">
+          <TokenBudgetHud
+            snapshot={tokenSnapshot}
+            className={cn(!isActive && 'opacity-50')}
+          />
+        </div>
         <div className={cn(
           "h-full",
           isTiled ? "p-2" : "max-w-5xl mx-auto px-4 md:px-8 py-4 pb-32"
