@@ -182,6 +182,13 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-22T06:07:11.709Z
+    - _ulid: 01KPSX3XXSFKZ6Y9ZGS3VSFAGX
+      content: "Integrated Codex worker output into main worktree. Added live terminal token/cost HUD
+        backed by useTokenMeter session snapshot and focused tests. Checks passed:
+        TokenBudgetHud/useTokenMeter Vitest, cargo test --lib, git diff --check, bun run build."
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-22T06:12:55.354Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GDT09WMT9BNDYXWZFWP3
@@ -415,6 +422,14 @@
       supersedes: null
       author: "@claude"
       created_at: 2026-04-22T06:09:15Z
+    - _ulid: 01KPSX3XXY7Z7WW7SNWK0HVK0Z
+      content: "Integrated Codex worker output into main worktree. Added health status service/plugin
+        snapshots, dashboard rows, real HealthHUD aggregate status, and focused tests. Checks
+        passed: cargo test health_manager --lib, HealthDashboard Vitest, cargo test --lib, git diff
+        --check, bun run build."
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-22T06:12:55.358Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GE1Y0DMY1MKT77AASR4Z
@@ -565,5 +580,12 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-22T06:10:17.747Z
+    - _ulid: 01KPSX3XX6AHFNG6EBSJAAK5DV
+      content: "Integrated Codex worker output into main worktree. Verified phase/wave execution, verifier
+        retries, execution events, and focused unit coverage. Checks passed: cargo test gsd_engine
+        --lib, cargo test --lib, git diff --check, bun run build."
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-22T06:12:55.334Z
   todos: []
   automation: eligible
