@@ -22,7 +22,7 @@ features:
     description: Abstraction layer and routing for Claude, OpenAI, Gemini, and Ollama providers.
     status:
       maturity: draft
-      implementation: in_progress
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
