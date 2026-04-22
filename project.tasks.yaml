@@ -123,18 +123,16 @@
   spec_ref: "@01KPNWTQ"
   meta_ref: null
   plan_ref: null
-  status: blocked
-  blocked_by:
-    - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
-      4am (Europe/Paris)"
+  status: pending
+  blocked_by: []
   depends_on: []
   context: []
   priority: 3
   tags: []
   vcs_refs: []
-  session_id: 01KPS0H3M7MT5JYMVQJWYADNX8
+  session_id: null
   created_at: 2026-04-21T21:52:56.061Z
-  started_at: 2026-04-21T21:53:40.379Z
+  started_at: null
   notes:
     - _ulid: 01KPS0NWHWXKZETC3P0DMQ5DE8
       content: |-
@@ -167,6 +165,11 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-21T22:00:17.752Z
+    - _ulid: 01KPSWE681K037PFJWJV8J2RSZ
+      content: Reset from blocked to pending
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-22T06:01:02.977Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GDT09WMT9BNDYXWZFWP3
@@ -362,10 +365,8 @@
   spec_ref: "@01KPNWYK"
   meta_ref: null
   plan_ref: null
-  status: blocked
-  blocked_by:
-    - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
-      4am (Europe/Paris)"
+  status: pending
+  blocked_by: []
   depends_on: []
   context: []
   priority: 3
@@ -385,6 +386,11 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-21T22:01:40.223Z
+    - _ulid: 01KPSWE6A4TYV876GS4QXRP42P
+      content: Reset from blocked to pending
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-22T06:01:03.044Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GE1Y0DMY1MKT77AASR4Z
@@ -481,10 +487,8 @@
   spec_ref: "@gsd-engine"
   meta_ref: null
   plan_ref: null
-  status: blocked
-  blocked_by:
-    - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
-      4am (Europe/Paris)"
+  status: pending
+  blocked_by: []
   depends_on: []
   context: []
   priority: 3
@@ -510,5 +514,10 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-21T22:02:09.711Z
+    - _ulid: 01KPSWE66C9M2D2E6CS75V7ZT3
+      content: Reset from blocked to pending
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-22T06:01:02.924Z
   todos: []
   automation: eligible
