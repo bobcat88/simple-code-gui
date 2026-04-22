@@ -114,7 +114,7 @@ features:
         description: Status monitoring for core services and installed MCP/Plugins.
         status:
           maturity: draft
-          implementation: in_progress
+          implementation: implemented
         depends_on: []
         implements: []
         relates_to: []
