@@ -29,16 +29,25 @@
   spec_ref: "@session-discovery"
   meta_ref: null
   plan_ref: null
-  status: in_progress
+  status: pending_review
   blocked_by: []
   depends_on: []
   context: []
   priority: 3
   tags: []
   vcs_refs: []
+  submission_linkage:
+    review_url: null
+    branch: rust-revamp
+    captured_at: 2026-04-22T05:59:32.751Z
+    commit: 08e5412e935656acbbbcce287d840cb155f16c9a
+    remote: origin
+    remote_url: https://github.com/bobcat88/simple-code-gui
+    upstream_ref: refs/heads/rust-revamp
   session_id: null
   created_at: 2026-04-21T21:52:55.989Z
   started_at: 2026-04-21T22:15:45.973Z
+  submitted_at: 2026-04-22T05:59:32.758Z
   notes:
     - _ulid: 01KPS0KSNP8W26PDGWH224EE1P
       content: |-
@@ -167,16 +176,25 @@
   spec_ref: "@01KPNWTT"
   meta_ref: null
   plan_ref: null
-  status: in_progress
+  status: pending_review
   blocked_by: []
   depends_on: []
   context: []
   priority: 3
   tags: []
   vcs_refs: []
+  submission_linkage:
+    review_url: null
+    branch: rust-revamp
+    captured_at: 2026-04-22T05:59:32.756Z
+    commit: 08e5412e935656acbbbcce287d840cb155f16c9a
+    remote: origin
+    remote_url: https://github.com/bobcat88/simple-code-gui
+    upstream_ref: refs/heads/rust-revamp
   session_id: null
   created_at: 2026-04-21T21:52:56.128Z
   started_at: 2026-04-21T22:15:45.575Z
+  submitted_at: 2026-04-22T05:59:32.813Z
   notes:
     - _ulid: 01KPS0RM6BEATY5623SE41V881
       content: >-
@@ -373,15 +391,24 @@
   spec_ref: "@ai-runtime"
   meta_ref: null
   plan_ref: null
-  status: in_progress
+  status: pending_review
   blocked_by: []
   depends_on: []
   context: []
   priority: 3
   tags: []
   vcs_refs: []
+  submission_linkage:
+    review_url: null
+    branch: rust-revamp
+    captured_at: 2026-04-22T05:59:32.776Z
+    commit: 08e5412e935656acbbbcce287d840cb155f16c9a
+    remote: origin
+    remote_url: https://github.com/bobcat88/simple-code-gui
+    upstream_ref: refs/heads/rust-revamp
   created_at: 2026-04-21T21:52:56.382Z
   started_at: 2026-04-21T22:15:46.469Z
+  submitted_at: 2026-04-22T05:59:32.782Z
   notes:
     - _ulid: 01KPS0Z5RJD363ZQYWBGFPFRF1
       content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
