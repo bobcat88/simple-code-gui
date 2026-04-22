@@ -92,7 +92,7 @@ features:
     description: Phase-based agent execution engine with verifier loops and wave-based orchestration.
     status:
       maturity: draft
-      implementation: in_progress
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
