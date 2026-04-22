@@ -1,6 +1,6 @@
 import React from 'react'
 import { Project, useWorkspaceStore } from '../../stores/workspace.js'
-import { Api } from '../../api/types.js'
+import { Api, type ApprovalRequest } from '../../api/types.js'
 import { Settings, LayoutGrid, Terminal, Plus, FolderPlus, FolderSearch, Zap, ChevronRight, Cpu, MessageSquare, Activity } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { BeadsPanel } from '../BeadsPanel.js'
@@ -9,6 +9,7 @@ import { ExtensionBrowser } from '../ExtensionBrowser.js'
 import { ClaudeMdEditor } from '../ClaudeMdEditor.js'
 import { McpPanel } from '../McpPanel.js'
 import { McpBrowser } from '../mcp/McpBrowser.js'
+import { ApprovalWorkflow } from '../orchestration/ApprovalWorkflow.js'
 import { TaskAssignmentView } from '../orchestration/TaskAssignmentView.js'
 import { TokenBurnHistory } from '../orchestration/TokenBurnHistory.js'
 import { ActivityFeed } from '../ActivityFeed'
@@ -50,6 +51,25 @@ export interface SidebarContentProps {
 
 import { useUpdater } from '../../hooks/useUpdater.js'
 
+function normalizeApprovalRequest(raw: ApprovalRequest | Record<string, unknown>): ApprovalRequest {
+  const value = raw as ApprovalRequest & Record<string, unknown>
+  return {
+    id: String(value.id ?? ''),
+    agentId: String(value.agentId ?? value.agent_id ?? ''),
+    agentName: String(value.agentName ?? value.agent_name ?? 'Agent'),
+    category: (value.category ?? 'file_change') as ApprovalRequest['category'],
+    risk: (value.risk ?? 'medium') as ApprovalRequest['risk'],
+    title: String(value.title ?? 'Approval request'),
+    description: String(value.description ?? ''),
+    fileDiffs: (value.fileDiffs ?? value.file_diffs) as ApprovalRequest['fileDiffs'],
+    command: value.command as string | undefined,
+    affectedPaths: (value.affectedPaths ?? value.affected_paths) as ApprovalRequest['affectedPaths'],
+    reversible: Boolean(value.reversible),
+    timestamp: Number(value.timestamp ?? Date.now()),
+    expiresAt: value.expiresAt ?? value.expires_at ? Number(value.expiresAt ?? value.expires_at) : undefined,
+  }
+}
+
 export function SidebarContent(props: SidebarContentProps): React.ReactElement {
   const {
     state,
@@ -69,6 +89,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
   } = props
 
   const { appVersion, updateStatus, checkForUpdate, downloadUpdate, installUpdate } = useUpdater()
+  const [approvalRequests, setApprovalRequests] = React.useState<ApprovalRequest[]>([])
 
   const {
     // Voice options
@@ -134,6 +155,65 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     mcpBrowserOpen,
     setMcpBrowserOpen,
   } = state
+
+  React.useEffect(() => {
+    let cancelled = false
+
+    async function loadApprovals() {
+      if (!api.getPendingApprovals || !beadsProjectPath) {
+        setApprovalRequests([])
+        return
+      }
+
+      try {
+        const pending = await api.getPendingApprovals(beadsProjectPath)
+        if (!cancelled) {
+          setApprovalRequests(pending.map(normalizeApprovalRequest))
+        }
+      } catch {
+        if (!cancelled) {
+          setApprovalRequests([])
+        }
+      }
+    }
+
+    void loadApprovals()
+
+    const unsubscribeRequest = api.onApprovalRequest?.((request) => {
+      const normalized = normalizeApprovalRequest(request)
+      setApprovalRequests((current) => [
+        normalized,
+        ...current.filter((item) => item.id !== normalized.id),
+      ])
+    })
+    const unsubscribeResolved = api.onApprovalResolved?.((actionId) => {
+      setApprovalRequests((current) => current.filter((item) => item.id !== actionId))
+    })
+
+    return () => {
+      cancelled = true
+      unsubscribeRequest?.()
+      unsubscribeResolved?.()
+    }
+  }, [api, beadsProjectPath])
+
+  const respondToApproval = React.useCallback(
+    async (
+      request: ApprovalRequest,
+      decision: 'approved' | 'rejected' | 'modified',
+      note: string,
+      conditions?: string[]
+    ) => {
+      await api.respondToApproval?.({
+        actionId: request.id,
+        decision,
+        comment: note || undefined,
+        conditions,
+      })
+      setApprovalRequests((current) => current.filter((item) => item.id !== request.id))
+    },
+    [api]
+  )
 
   const {
     handleAddCategory,
@@ -309,6 +389,18 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
             <div className="p-2 rounded-2xl bg-white/5 border border-white/5">
               <TaskAssignmentView
                 onOpenSession={beadsProjectPath ? () => onOpenSession(beadsProjectPath) : undefined}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-4 border-t border-white/5">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Approval Workflow</h4>
+            <div className="h-[520px] p-2 rounded-2xl bg-white/5 border border-white/5 overflow-hidden">
+              <ApprovalWorkflow
+                requests={approvalRequests}
+                onApprove={(request, note) => respondToApproval(request, 'approved', note)}
+                onReject={(request, note) => respondToApproval(request, 'rejected', note)}
+                onRequestChanges={(request, note, conditions) => respondToApproval(request, 'modified', note, conditions)}
               />
             </div>
           </div>
