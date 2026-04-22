@@ -92,6 +92,13 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-21T22:27:08.295Z
+    - _ulid: 01KPSWB3TSD7H9D20G869CZC7W
+      content: Integrated Codex worker output into main worktree. Verified Claude JSONL discovery,
+        OpenCode SQLite discovery, backend dispatch, corrupt/missing data tolerance via cargo test
+        session_manager --lib. Full cargo test --lib and bun run build passed.
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-22T05:59:22.202Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GDQXR8JD6QA2MGT2KD9S
@@ -231,6 +238,14 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-21T22:30:32.628Z
+    - _ulid: 01KPSWB3TPQFXBXT6QGDCTQMX6
+      content: "Integrated Codex worker output into main worktree. Verified SQLite token transaction
+        insert/query helpers, renderer TokenBurnHistory component, Tauri API bridge, token meter
+        logging. Checks passed: cargo test database::tests --lib, TokenBurnHistory Vitest, cargo
+        test --lib, bun run build."
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-22T05:59:22.198Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GDVZNW3C7K4XM86WS21M
@@ -411,6 +426,13 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-21T22:26:33.701Z
+    - _ulid: 01KPSWB3VVEC00K1XBY9D44BJ4
+      content: "Integrated Codex worker output into main worktree. Added OpenAI provider registration and
+        routing coverage; corrected model metadata against official OpenAI docs to
+        gpt-5.2/gpt-5-mini/gpt-5-nano. Checks passed: cargo test --lib, bun run build."
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-22T05:59:22.235Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GE3XDTDGATRJTWYREYXC
