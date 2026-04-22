@@ -404,6 +404,17 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-22T06:01:03.044Z
+    - _ulid: 01KPNWYKZAPPHEATH0001ABCDE
+      content: |-
+        Implemented the App & Plugin Health Dashboard by expanding health_get_status to return
+        core service snapshots (database, extension store, MCP config) plus installed extension
+        inventory, then rendering the service and extension state in the sidebar observability
+        panel. HealthHUD now reflects the aggregate status string instead of hardcoding Healthy.
+        Verification: cargo test health_manager --lib (3 passed), bunx vitest run
+        src/renderer/components/HealthDashboard.test.tsx (1 passed), bun run build (passed).
+      supersedes: null
+      author: "@claude"
+      created_at: 2026-04-22T06:09:15Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GE1Y0DMY1MKT77AASR4Z
@@ -546,5 +557,13 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-22T06:07:27.892Z
+    - _ulid: 01KPSWZ40J4BPCP2JTZ5P5CQ3K
+      content: "Repo build verification passed: bun run build completed successfully and produced
+        src-tauri/target/release/bundle/deb/simple-code-gui_0.1.0_amd64.deb. The earlier cargo test
+        failure is still isolated to the pre-existing health_manager Send issue, not the GSD engine
+        patch."
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-22T06:10:17.747Z
   todos: []
   automation: eligible
