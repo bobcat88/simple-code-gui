@@ -194,7 +194,7 @@ features:
         description: Real-time UI component showing current session burn and budget status.
         status:
           maturity: draft
-          implementation: in_progress
+          implementation: implemented
         depends_on: []
         implements: []
         relates_to: []
