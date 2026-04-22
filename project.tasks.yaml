@@ -11,7 +11,7 @@
   priority: 3
   tags: []
   review_ref: "@01KPRRB1Y266W9ARVWMWGQ5AX9"
-  notes_count: 4
+  notes_count: 5
   todos_count: 0
   created_at: 2026-04-20T17:02:26.425Z
   started_at: 2026-04-21T06:50:21.111Z
@@ -350,6 +350,23 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-22T06:14:00.626Z
+    - _ulid: 01KQ0Y8D0N2Q6V9FJ2W8E7M1ZP
+      content: Added src/renderer/components/orchestration/ApprovalWorkflow.tsx with a split queue +
+        detail review UI, explicit approve/reject/request-changes actions, diff rendering, and
+        per-request notes/conditions. Added focused Vitest coverage for rendering, selection,
+        decision callbacks, request-change parsing, and empty state. Verified with focused
+        ApprovalWorkflow test and bun run build.
+      supersedes: null
+      author: Codex
+      created_at: 2026-04-22T06:20:08.000Z
+    - _ulid: 01KPSXTW7A1S1EXQ1SZ6ZHW3HM
+      content: "Integrated Codex worker output into main worktree and wired ApprovalWorkflow into
+        Automations sidebar using getPendingApprovals, approval request/resolved events, and
+        respondToApproval. Checks passed: ApprovalWorkflow Vitest, TaskAssignmentView Vitest, git
+        diff --check, bun run build."
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-22T06:25:27.274Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GDXXW4KHZYJHV81QX9R0
@@ -394,6 +411,22 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-22T06:14:00.683Z
+    - _ulid: 01KQ0000000000000000000000
+      content: Reworked TaskAssignmentView to show repository assignment rows plus active task session
+        rows, with agent switcher, open-session affordance, assignment/status chips, and summary
+        counts. Verified with `bun run test --
+        src/renderer/components/orchestration/TaskAssignmentView.test.tsx` and `bun run build`.
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-22T06:17:47.144Z
+    - _ulid: 01KPSXTW775X26XRA02F4YP3VP
+      content: "Integrated Codex worker output into main worktree. TaskAssignmentView now shows repository
+        assignment rows, active task-session rows, agent reassignment, status chips, and resume/open
+        actions. Checks passed: TaskAssignmentView Vitest, ApprovalWorkflow Vitest, git diff
+        --check, bun run build."
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-22T06:25:27.272Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GDZYYGBH0AEJ2PDN6YBC
