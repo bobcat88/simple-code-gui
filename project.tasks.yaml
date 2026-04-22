@@ -317,15 +317,24 @@
   spec_ref: "@01KPNWYD"
   meta_ref: null
   plan_ref: null
-  status: in_progress
+  status: pending_review
   blocked_by: []
   depends_on: []
   context: []
   priority: 3
   tags: []
   vcs_refs: []
+  submission_linkage:
+    review_url: null
+    branch: rust-revamp
+    captured_at: 2026-04-22T06:25:39.294Z
+    commit: 4f2ef4995cec057ae5ee73c26fc1a7905e6f3b4a
+    remote: origin
+    remote_url: https://github.com/bobcat88/simple-code-gui
+    upstream_ref: refs/heads/rust-revamp
   created_at: 2026-04-21T21:52:56.191Z
   started_at: 2026-04-22T06:14:02.710Z
+  submitted_at: 2026-04-22T06:25:39.302Z
   notes:
     - _ulid: 01KPS0YPCAMC3XA45XCYHZBSNF
       content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
@@ -378,15 +387,24 @@
   spec_ref: "@01KPNWYE"
   meta_ref: null
   plan_ref: null
-  status: in_progress
+  status: pending_review
   blocked_by: []
   depends_on: []
   context: []
   priority: 3
   tags: []
   vcs_refs: []
+  submission_linkage:
+    review_url: null
+    branch: rust-revamp
+    captured_at: 2026-04-22T06:25:39.314Z
+    commit: 4f2ef4995cec057ae5ee73c26fc1a7905e6f3b4a
+    remote: origin
+    remote_url: https://github.com/bobcat88/simple-code-gui
+    upstream_ref: refs/heads/rust-revamp
   created_at: 2026-04-21T21:52:56.253Z
   started_at: 2026-04-22T06:14:02.397Z
+  submitted_at: 2026-04-22T06:25:39.379Z
   notes:
     - _ulid: 01KPS0YRX348XKV3RAES77PAYK
       content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
