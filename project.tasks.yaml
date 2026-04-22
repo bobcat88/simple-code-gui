@@ -317,10 +317,8 @@
   spec_ref: "@01KPNWYD"
   meta_ref: null
   plan_ref: null
-  status: blocked
-  blocked_by:
-    - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
-      4am (Europe/Paris)"
+  status: pending
+  blocked_by: []
   depends_on: []
   context: []
   priority: 3
@@ -346,6 +344,11 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-21T22:01:49.787Z
+    - _ulid: 01KPSX5XNJX0H5BZJPFWEVBNSD
+      content: Reset from blocked to pending
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-22T06:14:00.626Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GDXXW4KHZYJHV81QX9R0
@@ -357,10 +360,8 @@
   spec_ref: "@01KPNWYE"
   meta_ref: null
   plan_ref: null
-  status: blocked
-  blocked_by:
-    - "Agent task-worker failed 3 consecutive times: Internal error: You've hit your limit · resets
-      4am (Europe/Paris)"
+  status: pending
+  blocked_by: []
   depends_on: []
   context: []
   priority: 3
@@ -386,6 +387,11 @@
       supersedes: null
       author: Johan.P
       created_at: 2026-04-21T22:01:54.522Z
+    - _ulid: 01KPSX5XQBSE5YH9JAAZ26CF30
+      content: Reset from blocked to pending
+      supersedes: null
+      author: Johan.P
+      created_at: 2026-04-22T06:14:00.683Z
   todos: []
   automation: eligible
 - _ulid: 01KPS0GDZYYGBH0AEJ2PDN6YBC
