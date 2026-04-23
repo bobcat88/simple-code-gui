@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tauri::{AppHandle, Manager, Emitter};
+use tauri::{AppHandle, Emitter};
 use crate::database::DatabaseManager;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

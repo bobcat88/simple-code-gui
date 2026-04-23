@@ -3,8 +3,7 @@ use std::sync::Arc;
 use std::fs;
 use std::path::PathBuf;
 use crate::database::DatabaseManager;
-use crate::settings_manager::SettingsManager;
-use crate::workspace_manager::WorkspaceManager;
+
 use tauri::AppHandle;
 use tauri::Manager;
 use zip::write::FileOptions;

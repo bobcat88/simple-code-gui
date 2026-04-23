@@ -83,14 +83,14 @@ pub(crate) fn verification_outcome(description: &str, attempts: u32) -> bool {
 
 #[derive(Clone)]
 pub struct Executor {
-    pub ai: Arc<RuntimeManager>,
-    pub db: Arc<DatabaseManager>,
+    pub _ai: Arc<RuntimeManager>,
+    pub _db: Arc<DatabaseManager>,
     pub app: AppHandle,
 }
 
 impl Executor {
     pub fn new(ai: Arc<RuntimeManager>, db: Arc<DatabaseManager>, app: AppHandle) -> Self {
-        Self { ai, db, app }
+        Self { _ai: ai, _db: db, app }
     }
 
     fn emit_execution_event(

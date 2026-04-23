@@ -40,7 +40,7 @@ impl HealthManager {
         }
     }
 
-    pub fn setup_panic_hook(app_handle: AppHandle) {
+    pub fn setup_panic_hook(_app_handle: AppHandle) {
         panic::set_hook(Box::new(move |panic_info| {
             let message = if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
                 s.to_string()

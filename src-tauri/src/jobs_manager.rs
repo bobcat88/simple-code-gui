@@ -28,7 +28,7 @@ pub struct BackgroundJob {
 
 pub struct JobsManager {
     db: Arc<DatabaseManager>,
-    activity: Arc<ActivityManager>,
+    _activity: Arc<ActivityManager>,
     sender: mpsc::Sender<String>, // Channel to notify worker of new jobs
 }
 
@@ -96,7 +96,7 @@ impl JobsManager {
 
         Self {
             db,
-            activity,
+            _activity: activity,
             sender: tx,
         }
     }
