@@ -447,6 +447,11 @@ pub fn run() {
                 let ai_runtime = Arc::new(ai_runtime::RuntimeManager::new());
                 ai_runtime.set_settings_manager(Arc::clone(&settings_manager)).await;
                 ai_runtime.set_database_manager(Arc::clone(&db_arc)).await;
+
+                // Initialize Agent Manager
+                let agent_manager = Arc::new(agent_manager::AgentManager::new(Arc::clone(&db_arc)));
+                ai_runtime.set_agent_manager(Arc::clone(&agent_manager)).await;
+
                 let _ = ai_runtime.sync_settings().await;
 
                 // Register providers from env if database/settings don't have them
@@ -492,9 +497,6 @@ pub fn run() {
                     Arc::clone(&db_arc),
                     Arc::clone(&activity_manager),
                 )));
-
-                // Initialize Agent Manager
-                let agent_manager = Arc::new(agent_manager::AgentManager::new(Arc::clone(&db_arc)));
 
                 // Initialize Health Manager
                 let health_manager =

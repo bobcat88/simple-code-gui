@@ -21,6 +21,7 @@ pub struct RuntimeManager {
     providers: Arc<Mutex<HashMap<String, Box<dyn AIProvider>>>>,
     settings: Arc<Mutex<Option<Arc<crate::settings_manager::SettingsManager>>>>,
     db: Arc<Mutex<Option<Arc<DatabaseManager>>>>,
+    agents: Arc<Mutex<Option<Arc<crate::agent_manager::AgentManager>>>>,
 }
 
 impl RuntimeManager {
@@ -29,6 +30,7 @@ impl RuntimeManager {
             providers: Arc::new(Mutex::new(HashMap::new())),
             settings: Arc::new(Mutex::new(None)),
             db: Arc::new(Mutex::new(None)),
+            agents: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -40,6 +42,11 @@ impl RuntimeManager {
     pub async fn set_database_manager(&self, manager: Arc<DatabaseManager>) {
         let mut db = self.db.lock().await;
         *db = Some(manager);
+    }
+
+    pub async fn set_agent_manager(&self, manager: Arc<crate::agent_manager::AgentManager>) {
+        let mut agents = self.agents.lock().await;
+        *agents = Some(manager);
     }
 
     pub async fn register_provider(&self, provider: Box<dyn AIProvider>) {
@@ -233,12 +240,84 @@ impl RuntimeManager {
             }
             Some(RoutingPolicy::QualityFirst) => {
                 // Default to quality first (Tier1 > Tier2 > Tier3)
-                all_models.sort_by(|(_, a), (_, b)| a.tier.partial_cmp(&b.tier).unwrap());
+                // WITHIN tiers, sort by quality_score from agent metrics
+                let agents_lock = self.agents.lock().await;
+                let mut model_metrics = HashMap::new();
+
+                if let Some(agent_manager) = &*agents_lock {
+                    if let Ok(agents) = agent_manager.list().await {
+                        for agent in agents {
+                            if let (Some(prov), Some(mod_id)) = (agent.provider, agent.model) {
+                                let entry = model_metrics.entry((prov, mod_id)).or_insert((0.0, 0));
+                                entry.0 += agent.quality_score.unwrap_or(0.0);
+                                entry.1 += 1;
+                            }
+                        }
+                    }
+                }
+
+                all_models.sort_by(|(p_a, m_a), (p_b, m_b)| {
+                    // 1. Tier (Tier1 > Tier2 > Tier3)
+                    let tier_cmp = m_a.tier.partial_cmp(&m_b.tier).unwrap();
+                    if tier_cmp != std::cmp::Ordering::Equal {
+                        return tier_cmp;
+                    }
+
+                    // 2. Quality Score (Higher is better)
+                    let metrics_a = model_metrics.get(&(p_a.clone(), m_a.id.clone()));
+                    let metrics_b = model_metrics.get(&(p_b.clone(), m_b.id.clone()));
+
+                    let s_a = metrics_a.map(|m| m.0 / m.1 as f64).unwrap_or(0.0);
+                    let s_b = metrics_b.map(|m| m.0 / m.1 as f64).unwrap_or(0.0);
+
+                    s_b.partial_cmp(&s_a).unwrap()
+                });
                 Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
             }
             Some(RoutingPolicy::LatencyFirst) => {
                 // Heuristic: Tier3 is fastest, then Tier2, then Tier1
-                all_models.sort_by(|(_, a), (_, b)| b.tier.partial_cmp(&a.tier).unwrap());
+                // WITHIN tiers, we sort by agent metrics (lowest queue, highest burn rate)
+                let agents_lock = self.agents.lock().await;
+                let mut model_metrics = HashMap::new();
+
+                if let Some(agent_manager) = &*agents_lock {
+                    if let Ok(agents) = agent_manager.list().await {
+                        for agent in agents {
+                            if let (Some(prov), Some(mod_id)) = (agent.provider, agent.model) {
+                                let entry = model_metrics.entry((prov, mod_id)).or_insert((0, 0.0, 0));
+                                entry.0 += agent.queue_size.unwrap_or(0);
+                                entry.1 += agent.burn_rate.unwrap_or(0.0);
+                                entry.2 += 1;
+                            }
+                        }
+                    }
+                }
+
+                all_models.sort_by(|(p_a, m_a), (p_b, m_b)| {
+                    // 1. Tier (Tier3 > Tier2 > Tier1)
+                    let tier_cmp = m_b.tier.partial_cmp(&m_a.tier).unwrap();
+                    if tier_cmp != std::cmp::Ordering::Equal {
+                        return tier_cmp;
+                    }
+
+                    // 2. Queue Size (Lower is better)
+                    let metrics_a = model_metrics.get(&(p_a.clone(), m_a.id.clone()));
+                    let metrics_b = model_metrics.get(&(p_b.clone(), m_b.id.clone()));
+
+                    let q_a = metrics_a.map(|m| m.0 as f64 / m.2 as f64).unwrap_or(0.0);
+                    let q_b = metrics_b.map(|m| m.0 as f64 / m.2 as f64).unwrap_or(0.0);
+
+                    let q_cmp = q_a.partial_cmp(&q_b).unwrap();
+                    if q_cmp != std::cmp::Ordering::Equal {
+                        return q_cmp;
+                    }
+
+                    // 3. Burn Rate (Higher is better)
+                    let b_a = metrics_a.map(|m| m.1 / m.2 as f64).unwrap_or(0.0);
+                    let b_b = metrics_b.map(|m| m.1 / m.2 as f64).unwrap_or(0.0);
+
+                    b_b.partial_cmp(&b_a).unwrap()
+                });
                 Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
             }
             Some(RoutingPolicy::Agent { role }) => {
@@ -299,17 +378,64 @@ impl RuntimeManager {
                         "cheap" => Some(RoutingPolicy::CheapFirst),
                         "latency" => Some(RoutingPolicy::LatencyFirst),
                         "auto" => {
-                            // If truly "auto", try active plan
-                            let active_plan_id = &settings.ai_runtime.active_plan_id;
-                            if let Some(plan) = settings.ai_runtime.plans.iter().find(|p| p.id == *active_plan_id) {
-                                let model_id = &plan.planner_model;
-                                for (prov_name, provider) in providers.iter() {
-                                    if let Ok(models) = provider.list_models().await {
-                                        if models.iter().any(|m| m.id == *model_id) {
-                                            return Ok(vec![(prov_name.clone(), model_id.clone())]);
+                            // Intelligent Auto: Pick best tier, but load balance within it
+                            let mut target_models = all_models.clone();
+                            
+                            // Sort by Tier (Quality) first
+                            target_models.sort_by(|(_, a), (_, b)| a.tier.partial_cmp(&b.tier).unwrap());
+                            
+                            if let Some((_, first_m)) = target_models.first() {
+                                let best_tier = first_m.tier;
+                                let mut best_tier_models: Vec<(String, ModelInfo)> = target_models.into_iter()
+                                    .filter(|(_, m)| m.tier == best_tier)
+                                    .collect();
+
+                                // Now load balance within the best tier using metrics
+                                let agents_lock = self.agents.lock().await;
+                                let mut model_metrics = HashMap::new();
+
+                                if let Some(agent_manager) = &*agents_lock {
+                                    if let Ok(agents) = agent_manager.list().await {
+                                        for agent in agents {
+                                            if let (Some(prov), Some(mod_id)) = (agent.provider, agent.model) {
+                                                let entry = model_metrics.entry((prov, mod_id)).or_insert((0, 0.0, 0, 0.0));
+                                                entry.0 += agent.queue_size.unwrap_or(0);
+                                                entry.1 += agent.burn_rate.unwrap_or(0.0);
+                                                entry.2 += 1;
+                                                entry.3 += agent.quality_score.unwrap_or(0.0);
+                                            }
                                         }
                                     }
                                 }
+
+                                best_tier_models.sort_by(|(p_a, m_a), (p_b, m_b)| {
+                                    let metrics_a = model_metrics.get(&(p_a.clone(), m_a.id.clone()));
+                                    let metrics_b = model_metrics.get(&(p_b.clone(), m_b.id.clone()));
+
+                                    // 1. Quality Score (Higher is better)
+                                    let s_a = metrics_a.map(|m| m.3 / m.2 as f64).unwrap_or(0.0);
+                                    let s_b = metrics_b.map(|m| m.3 / m.2 as f64).unwrap_or(0.0);
+                                    let s_cmp = s_b.partial_cmp(&s_a).unwrap();
+                                    if s_cmp != std::cmp::Ordering::Equal {
+                                        return s_cmp;
+                                    }
+
+                                    // 2. Queue Size (Lower is better)
+                                    let q_a = metrics_a.map(|m| m.0 as f64 / m.2 as f64).unwrap_or(0.0);
+                                    let q_b = metrics_b.map(|m| m.0 as f64 / m.2 as f64).unwrap_or(0.0);
+
+                                    let q_cmp = q_a.partial_cmp(&q_b).unwrap();
+                                    if q_cmp != std::cmp::Ordering::Equal {
+                                        return q_cmp;
+                                    }
+
+                                    // 3. Burn Rate (Higher is better)
+                                    let b_a = metrics_a.map(|m| m.1 / m.2 as f64).unwrap_or(0.0);
+                                    let b_b = metrics_b.map(|m| m.1 / m.2 as f64).unwrap_or(0.0);
+                                    b_b.partial_cmp(&b_a).unwrap()
+                                });
+
+                                return Ok(best_tier_models.into_iter().map(|(p, m)| (p, m.id)).collect());
                             }
                             None
                         }
