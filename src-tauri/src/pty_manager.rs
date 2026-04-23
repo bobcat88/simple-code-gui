@@ -31,8 +31,13 @@ struct Session {
     pair: PtyPair,
     child: Box<dyn Child + Send + Sync>,
     backend: String,
+    cwd: String,
+    args: Vec<String>,
+    rows: u16,
+    cols: u16,
     output_buffer: Arc<Mutex<OutputBuffer>>,
     writer: Box<dyn Write + Send>,
+    resize_handle: Option<tokio::task::JoinHandle<()>>,
 }
 
 impl OutputBuffer {
@@ -213,12 +218,68 @@ impl PtyManager {
             pair,
             child,
             backend,
+            cwd,
+            args,
+            rows,
+            cols,
             output_buffer,
             writer,
+            resize_handle: None,
         };
 
         self.sessions.lock().insert(id.clone(), session);
         Ok(id)
+    }
+
+    pub fn set_backend(
+        &self,
+        app: AppHandle,
+        id: &str,
+        new_backend: String,
+    ) -> Result<(), String> {
+        let mut sessions = self.sessions.lock();
+        let session = sessions.get_mut(id).ok_or_else(|| "Session not found".to_string())?;
+
+        // Kill existing child
+        let _ = session.child.kill();
+
+        // Prepare new command
+        let portable_dirs = self.portable_bin_dirs.lock().clone();
+        let exe = find_executable(&new_backend, &portable_dirs);
+        
+        let mut cmd = CommandBuilder::new(exe);
+        cmd.cwd(session.cwd.clone());
+        
+        // Map arguments based on backend (simplified logic from spawn)
+        let mut new_args = Vec::new();
+        if new_backend == "claude" {
+            new_args.push("code".to_string());
+        }
+        cmd.args(new_args.clone());
+        
+        let enhanced_path = crate::platform::get_enhanced_path(&portable_dirs);
+        cmd.env("PATH", &enhanced_path);
+        if crate::platform::is_windows() {
+            cmd.env("Path", &enhanced_path);
+        }
+        cmd.env("SIMPLE_CODE_GUI", "1");
+
+        // Spawn new child in the SAME PTY pair
+        let child = session.pair.slave.spawn_command(cmd).map_err(|e| e.to_string())?;
+        
+        // Update session
+        session.child = child;
+        session.backend = new_backend.clone();
+        session.args = new_args;
+
+        // Emit recreation event
+        let _ = app.emit("pty-recreated", serde_json::json!({
+            "oldId": id,
+            "newId": id,
+            "backend": new_backend
+        }));
+
+        Ok(())
     }
 
     pub fn write(&self, id: &str, data: &str) -> Result<(), String> {
@@ -231,14 +292,48 @@ impl PtyManager {
     }
 
     pub fn resize(&self, id: &str, cols: u16, rows: u16) -> Result<(), String> {
-        let sessions = self.sessions.lock();
-        if let Some(session) = sessions.get(id) {
-            session.pair.master.resize(PtySize {
-                rows,
-                cols,
-                pixel_width: 0,
-                pixel_height: 0,
-            }).map_err(|e| e.to_string())?;
+        let mut sessions = self.sessions.lock();
+        if let Some(session) = sessions.get_mut(id) {
+            // Cancel existing resize task if any
+            if let Some(handle) = session.resize_handle.take() {
+                handle.abort();
+            }
+
+            // Update session dimensions
+            session.cols = cols;
+            session.rows = rows;
+
+            // Ink-based backends (like claude) need debouncing to avoid crashes
+            if session.backend == "claude" {
+                let id_clone = id.to_string();
+                let sessions_clone = Arc::clone(&self.sessions);
+                
+                let handle = tokio::spawn(async move {
+                    // 1.5s debounce as per implementation plan
+                    tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
+                    
+                    let mut sessions = sessions_clone.lock();
+                    if let Some(session) = sessions.get_mut(&id_clone) {
+                        println!("[PTY] Applying debounced resize for {}: {}x{}", id_clone, session.cols, session.rows);
+                        let _ = session.pair.master.resize(PtySize {
+                            rows: session.rows,
+                            cols: session.cols,
+                            pixel_width: 0,
+                            pixel_height: 0,
+                        });
+                        session.resize_handle = None;
+                    }
+                });
+                session.resize_handle = Some(handle);
+            } else {
+                // Immediate resize for other backends
+                session.pair.master.resize(PtySize {
+                    rows,
+                    cols,
+                    pixel_width: 0,
+                    pixel_height: 0,
+                }).map_err(|e| e.to_string())?;
+            }
         }
         Ok(())
     }

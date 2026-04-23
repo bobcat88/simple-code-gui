@@ -2,14 +2,9 @@ import { useEffect, useCallback } from 'react'
 import { Project } from '../../stores/workspace.js'
 import { useSwipeGesture } from '../../hooks/useSwipeGesture.js'
 import { SidebarState } from './useSidebarState.js'
+import { useApi } from '../../contexts/ApiContext'
+import type { ExtendedApi } from '../../api/types'
 
-// Use type assertion for extended electronAPI methods not in the base type
-const electronAPI = window.electronAPI as (typeof window.electronAPI) & {
-  apiStatus?: (projectPath: string) => Promise<{ running: boolean; port?: number }>
-  beadsCheck?: (cwd: string) => Promise<{ installed: boolean; initialized: boolean }>
-  beadsList?: (cwd: string) => Promise<{ success: boolean; tasks?: Array<{ status: string }>; error?: string }>
-  isDebugMode?: () => Promise<boolean>
-}
 
 export interface UseSidebarEffectsParams {
   state: SidebarState
@@ -35,6 +30,7 @@ export function useSidebarEffects(params: UseSidebarEffectsParams): void {
     focusedProjectPath,
     setIsDebugMode,
   } = state
+  const api = useApi() as ExtendedApi
 
   // Swipe to close on mobile (swipe left to close drawer)
   useSwipeGesture(sidebarRef, {
@@ -91,23 +87,23 @@ export function useSidebarEffects(params: UseSidebarEffectsParams): void {
 
   // Fetch API status when context menu opens
   useEffect(() => {
-    if (contextMenu && electronAPI?.apiStatus) {
-      electronAPI.apiStatus(contextMenu.project.path).then((status) => {
+    if (contextMenu && api?.apiStatus) {
+      api.apiStatus(contextMenu.project.path).then((status) => {
         setApiStatus((prev) => ({ ...prev, [contextMenu.project.path]: status }))
       })
     }
-  }, [contextMenu, setApiStatus])
+  }, [contextMenu, setApiStatus, api])
 
   // Fetch task counts for all projects
   useEffect(() => {
     async function fetchTaskCounts(): Promise<void> {
-      if (!electronAPI?.beadsCheck) return
+      if (!api?.beadsCheck) return
       const counts: Record<string, { open: number; inProgress: number }> = {}
       for (const project of projects) {
         try {
-          const status = await electronAPI.beadsCheck(project.path)
-          if (status.installed && status.initialized && electronAPI.beadsList) {
-            const result = await electronAPI.beadsList(project.path)
+          const status = await api.beadsCheck(project.path)
+          if (status.installed && status.initialized && api.beadsList) {
+            const result = await api.beadsList(project.path)
             if (result.success && result.tasks) {
               const tasks = result.tasks as Array<{ status: string }>
               const open = tasks.filter((t) => t.status === 'open').length
@@ -124,21 +120,21 @@ export function useSidebarEffects(params: UseSidebarEffectsParams): void {
     fetchTaskCounts()
     const interval = setInterval(fetchTaskCounts, 30000)
     return () => clearInterval(interval)
-  }, [projects, setTaskCounts])
+  }, [projects, setTaskCounts, api])
 
   // Fetch API status for focused project
   useEffect(() => {
-    if (focusedProjectPath && electronAPI?.apiStatus) {
-      electronAPI.apiStatus(focusedProjectPath).then((status) => {
+    if (focusedProjectPath && api?.apiStatus) {
+      api.apiStatus(focusedProjectPath).then((status) => {
         setApiStatus((prev) => ({ ...prev, [focusedProjectPath]: status }))
       })
     }
-  }, [focusedProjectPath, setApiStatus])
+  }, [focusedProjectPath, setApiStatus, api])
 
   // Check debug mode on mount
   useEffect(() => {
-    electronAPI?.isDebugMode?.()?.then(setIsDebugMode)
-  }, [setIsDebugMode])
+    api?.isDebugMode?.()?.then(setIsDebugMode)
+  }, [setIsDebugMode, api])
 
   // Export handleMouseDown for use in the component
   return

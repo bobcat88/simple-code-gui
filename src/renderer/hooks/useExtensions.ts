@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useApi } from '../contexts/ApiContext'
 
 export interface Extension {
   id: string
@@ -23,20 +24,22 @@ export interface InstalledExtension extends Extension {
 }
 
 export function useExtensions() {
+  const api = useApi()
   return useQuery<InstalledExtension[]>({
     queryKey: ['extensions'],
     queryFn: async () => {
-      const exts = await window.electronAPI?.extensionsGetInstalled?.()
+      const exts = await api.extensionsGetInstalled?.()
       return (exts || []) as unknown as InstalledExtension[]
     },
     refetchInterval: 30000, // Refresh every 30 seconds
   })
 }
 export function useExtensionUpdates() {
+  const api = useApi()
   return useQuery({
     queryKey: ['extension-updates'],
     queryFn: async () => {
-      const updates = await window.electronAPI?.extensionsCheckUpdates?.()
+      const updates = await api.extensionsCheckUpdates?.()
       return updates || []
     },
     refetchInterval: 300000, // Refresh every 5 minutes

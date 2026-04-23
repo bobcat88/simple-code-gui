@@ -1,4 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
+import { useApi } from '../../contexts/ApiContext'
+import type { ExtendedApi } from '../../api/types'
 import {
   SUMMARY_EXTRACT_REGEX,
   SUMMARY_MARKER_DISPLAY_REGEX,
@@ -29,6 +31,7 @@ export function useSummaryCapture({
   autoWorkWithSummary,
   buildAutoWorkPrompt,
 }: UseSummaryCaptureOptions): UseSummaryCaptureReturn {
+  const api = useApi() as ExtendedApi
   const summaryBufferRef = useRef('')
   const capturingSummaryRef = useRef(false)
   const [pendingSummary, setPendingSummary] = useState<string | null>(null)
@@ -38,8 +41,8 @@ export function useSummaryCapture({
     summaryBufferRef.current = ''
     capturingSummaryRef.current = true
     console.log('[Summary] Capture enabled for ptyId:', ptyId)
-    window.electronAPI?.writePty(ptyId, 'Summarize this session for context recovery. Wrap output in markers: three equals, SUMMARY_START, three equals at start. Three equals, SUMMARY_END, three equals at end.\r')
-  }, [ptyId])
+    api?.writePty(ptyId, 'Summarize this session for context recovery. Wrap output in markers: three equals, SUMMARY_START, three equals at start. Three equals, SUMMARY_END, three equals at end.\r')
+  }, [ptyId, api])
 
   // Process chunk for summary markers
   const processSummaryChunk = useCallback((cleanChunk: string) => {
@@ -81,27 +84,27 @@ export function useSummaryCapture({
 
     setTimeout(() => {
       console.log('[Summary] Pasting summary:', summaryToSend.substring(0, 50) + '...')
-      window.electronAPI?.writePty(ptyId, summaryToSend)
+      api?.writePty(ptyId, summaryToSend)
       // Small delay before Enter to ensure prompt is fully written
       setTimeout(() => {
-        window.electronAPI?.writePty(ptyId, '\r')
+        api?.writePty(ptyId, '\r')
       }, 100)
 
       if (shouldContinueAutoWork) {
         setTimeout(() => {
           console.log('[AutoWork+Summary] Sending work prompt after summary')
           const autoworkPrompt = buildAutoWorkPrompt()
-          window.electronAPI?.writePty(ptyId, autoworkPrompt)
+          api?.writePty(ptyId, autoworkPrompt)
           // Small delay before Enter to ensure prompt is fully written
           setTimeout(() => {
-            window.electronAPI?.writePty(ptyId, '\r')
+            api?.writePty(ptyId, '\r')
           }, 100)
         }, 2000)
       }
     }, clearDelay)
 
     setPendingSummary(null)
-  }, [pendingSummary, ptyId, sendBackendCommand, autoWorkWithSummary, buildAutoWorkPrompt])
+  }, [pendingSummary, ptyId, sendBackendCommand, autoWorkWithSummary, buildAutoWorkPrompt, api])
 
   return {
     processSummaryChunk,

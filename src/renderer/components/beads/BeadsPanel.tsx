@@ -12,6 +12,8 @@ import { useBeadsState } from './useBeadsState.js'
 import { useBeadsTasks } from './useBeadsTasks.js'
 import { useBeadsDetail } from './useBeadsDetail.js'
 import { useBeadsResize } from './useBeadsResize.js'
+import { useApi } from '../../contexts/ApiContext'
+import { ExtendedApi } from '../../api/types'
 
 const BACKEND_LABELS = {
   beads: 'Beads',
@@ -36,6 +38,7 @@ export function BeadsPanel({
   onSendToCurrentTab,
   currentTabPtyId
 }: BeadsPanelProps): React.ReactElement {
+  const api = useApi() as ExtendedApi
   // State management (includes backend detection)
   const {
     beadsState,
@@ -81,20 +84,20 @@ export function BeadsPanel({
   // Check dispatch status on mount and when backend changes
   useEffect(() => {
     if (backendKind !== 'kspec' || !projectPath) return
-    window.electronAPI?.kspecDispatchStatus?.(projectPath).then((result: any) => {
+    api.kspecDispatchStatus?.(projectPath).then((result: any) => {
       setDispatchRunning(!!result?.running)
     }).catch(() => {})
-  }, [backendKind, projectPath])
+  }, [backendKind, projectPath, api])
 
   const handleToggleDispatch = useCallback(async () => {
     if (!projectPath || dispatchToggling) return
     setDispatchToggling(true)
     try {
       if (dispatchRunning) {
-        const result = await window.electronAPI?.kspecDispatchStop?.(projectPath)
+        const result = await api.kspecDispatchStop?.(projectPath)
         if (result?.success) setDispatchRunning(false)
       } else {
-        const result = await window.electronAPI?.kspecDispatchStart?.(projectPath)
+        const result = await api.kspecDispatchStart?.(projectPath)
         if (result?.success) setDispatchRunning(true)
         else setError(result?.error || 'Failed to start dispatch')
       }
@@ -103,7 +106,7 @@ export function BeadsPanel({
     } finally {
       setDispatchToggling(false)
     }
-  }, [projectPath, dispatchRunning, dispatchToggling, setError])
+  }, [projectPath, dispatchRunning, dispatchToggling, setError, api])
 
   // Browser modal state
   const [showBrowser, setShowBrowser] = useState(false)

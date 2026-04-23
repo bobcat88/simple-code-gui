@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
+import { useApi } from '../contexts/ApiContext'
+import type { ExtendedApi } from '../api/types'
 
 interface HostQRDisplayProps {
   port: number
@@ -87,7 +89,10 @@ export function HostQRDisplay({
   const [token, setToken] = useState<string>('')
   const [localIPs, setLocalIPs] = useState<string[]>(['Detecting...'])
   const [serverPort, setServerPort] = useState<number>(38470)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
+  const api = useApi() as ExtendedApi
   // v2 security fields
   const [fingerprint, setFingerprint] = useState<string>('')
   const [formattedFingerprint, setFormattedFingerprint] = useState<string>('')
@@ -96,44 +101,47 @@ export function HostQRDisplay({
   const [timeRemaining, setTimeRemaining] = useState<string>('')
   const nonceTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  const setConnectionInfo = (info: any) => {
+    setToken(info.token)
+    setLocalIPs(info.ips.length > 0 ? info.ips : ['localhost'])
+    setServerPort(info.port)
+    setFingerprint(info.fingerprint)
+    setFormattedFingerprint(info.formattedFingerprint)
+    setQrData(info.qrData)
+    setNonceExpires(info.nonceExpires)
+  }
+
   // Refresh QR code with new nonce
   const refreshQRCode = useCallback(async () => {
-    if (window.electronAPI?.mobileGetConnectionInfo) {
+    if (api?.mobileGetConnectionInfo) {
       try {
-        const info = await window.electronAPI?.mobileGetConnectionInfo()
-        setToken(info.token)
-        setLocalIPs(info.ips.length > 0 ? info.ips : ['localhost'])
-        setServerPort(info.port)
-        setFingerprint(info.fingerprint)
-        setFormattedFingerprint(info.formattedFingerprint)
-        setQrData(info.qrData)
-        setNonceExpires(info.nonceExpires)
+        const info = await api.mobileGetConnectionInfo()
+        if (info) setConnectionInfo(info)
       } catch (e) {
         console.error('Failed to get mobile connection info:', e)
       }
     }
-  }, [])
+  }, [api])
 
   // Get connection info from mobile server on mount
   useEffect(() => {
-    const loadConnectionInfo = async () => {
-      if (window.electronAPI?.mobileGetConnectionInfo) {
+    const fetchInfo = async () => {
+      if (api?.mobileGetConnectionInfo) {
+        setLoading(true)
         try {
-          const info = await window.electronAPI?.mobileGetConnectionInfo()
-          setToken(info.token)
-          setLocalIPs(info.ips.length > 0 ? info.ips : ['localhost'])
-          setServerPort(info.port)
-          setFingerprint(info.fingerprint)
-          setFormattedFingerprint(info.formattedFingerprint)
-          setQrData(info.qrData)
-          setNonceExpires(info.nonceExpires)
-        } catch (e) {
-          console.error('Failed to get mobile connection info:', e)
+          const info = await api.mobileGetConnectionInfo()
+          if (info) {
+            setConnectionInfo(info)
+          }
+        } catch (err) {
+          setError(err instanceof Error ? err.message : String(err))
           // Fallback to local discovery
           getLocalIPs().then((ips) => {
             setLocalIPs(ips)
           })
           setToken(generateToken())
+        } finally {
+          setLoading(false)
         }
       } else {
         // Not in Electron, use local discovery
@@ -143,8 +151,8 @@ export function HostQRDisplay({
         setToken(generateToken())
       }
     }
-    loadConnectionInfo()
-  }, [])
+    fetchInfo()
+  }, [api])
 
   // Update time remaining countdown
   useEffect(() => {
@@ -187,18 +195,19 @@ export function HostQRDisplay({
   const connectionUrl = `claude-terminal://${localIPs[0] || 'localhost'}:${serverPort}?token=${token}`
 
   // Regenerate token via server (also refreshes nonce)
-  const handleRegenerateToken = useCallback(async () => {
-    if (window.electronAPI?.mobileRegenerateToken) {
+  const handleRegenerate = async () => {
+    if (api?.mobileRegenerateToken) {
+      setLoading(true)
       try {
-        const info = await window.electronAPI?.mobileRegenerateToken()
-        setToken(info.token)
-        setFingerprint(info.fingerprint)
-        setFormattedFingerprint(info.formattedFingerprint)
-        setQrData(info.qrData)
-        setNonceExpires(info.nonceExpires)
+        const info = await api.mobileRegenerateToken()
+        if (info) {
+          setConnectionInfo(info)
+        }
         setCopied(false)
-      } catch (e) {
-        console.error('Failed to regenerate token:', e)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err))
+      } finally {
+        setLoading(false)
       }
     } else {
       const newToken = generateToken()

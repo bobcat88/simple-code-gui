@@ -39,8 +39,8 @@ export function McpSettings({ projectPath, focusedTabPtyId, onOpenSession, api }
               projectPath={projectPath}
               onCommand={(cmd) => {
                 if (focusedTabPtyId) {
-                  window.electronAPI?.writePty(focusedTabPtyId, cmd)
-                  setTimeout(() => window.electronAPI?.writePty(focusedTabPtyId, '\r'), 100)
+                  api.writePty?.(focusedTabPtyId, cmd)
+                  setTimeout(() => api.writePty?.(focusedTabPtyId, '\r'), 100)
                 }
               }}
             />

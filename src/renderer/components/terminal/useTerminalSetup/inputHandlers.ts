@@ -111,6 +111,7 @@ export function createKeyEventHandler(
   terminal: XTerm,
   writePty: (id: string, data: string) => void,
   ptyId: string,
+  api: any,
   backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider',
   currentLineInputRef?: MutableRefObject<string>
 ): (event: KeyboardEvent) => boolean {
@@ -133,7 +134,7 @@ export function createKeyEventHandler(
 
     if (event.ctrlKey && (event.key === 'V' || event.key === 'v')) {
       event.preventDefault()
-      handlePaste(terminal, ptyId, backend, currentLineInputRef)
+      handlePaste(terminal, ptyId, api, backend, currentLineInputRef)
       return false
     }
 

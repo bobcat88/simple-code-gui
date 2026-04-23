@@ -46,7 +46,7 @@ export const SidebarActions = React.memo(function SidebarActions({
       {isDebugMode && (
         <button
           className="p-2 rounded-xl bg-muted/30 text-muted-foreground hover:bg-muted/50 border border-transparent transition-all"
-          onClick={() => api?.refresh?.() || window.electronAPI?.refresh?.()}
+          onClick={() => api?.refresh?.()}
           tabIndex={0}
           title="Refresh (Debug Mode)"
         >

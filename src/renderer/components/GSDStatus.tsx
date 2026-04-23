@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { gsdStatusCache } from '../utils/lruCache'
+import { useApi } from '../contexts/ApiContext'
 
 interface GSDProgress {
   initialized: boolean
@@ -20,6 +21,7 @@ interface GSDStatusProps {
 }
 
 export function GSDStatus({ projectPath, onCommand }: GSDStatusProps) {
+  const api = useApi()
   const [gsdInstalled, setGsdInstalled] = useState(false)
   const [progress, setProgress] = useState<GSDProgress | null>(null)
   const [loading, setLoading] = useState(false)
@@ -45,7 +47,7 @@ export function GSDStatus({ projectPath, onCommand }: GSDStatusProps) {
 
     try {
       // Check if GSD is installed globally
-      const gsdCheck = await window.electronAPI?.gsdCheck()
+      const gsdCheck = await api.gsdCheck()
 
       if (currentProjectRef.current !== loadingForProject) return
 
@@ -57,7 +59,7 @@ export function GSDStatus({ projectPath, onCommand }: GSDStatusProps) {
       }
 
       // Get project progress
-      const result = await window.electronAPI?.gsdGetProgress(loadingForProject)
+      const result = await api.gsdGetProgress(loadingForProject)
 
       if (currentProjectRef.current !== loadingForProject) return
 
@@ -76,7 +78,7 @@ export function GSDStatus({ projectPath, onCommand }: GSDStatusProps) {
         setLoading(false)
       }
     }
-  }, [projectPath])
+  }, [projectPath, api])
 
   useEffect(() => {
     currentProjectRef.current = projectPath
@@ -110,7 +112,7 @@ export function GSDStatus({ projectPath, onCommand }: GSDStatusProps) {
     setInstallError(null)
 
     try {
-      const result = await window.electronAPI?.gsdInstall()
+      const result = await api.gsdInstall()
       if (result.success) {
         setGsdInstalled(true)
         loadStatus(false)

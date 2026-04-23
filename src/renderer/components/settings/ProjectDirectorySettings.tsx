@@ -1,13 +1,17 @@
 import React from 'react'
+import { useApi } from '../../contexts/ApiContext'
+import type { ExtendedApi } from '../../api/types'
 
 interface ProjectDirectorySettingsProps {
-  defaultProjectDir: string
+  value: string
   onChange: (dir: string) => void
 }
 
-export function ProjectDirectorySettings({ defaultProjectDir, onChange }: ProjectDirectorySettingsProps): React.ReactElement {
+export function ProjectDirectorySettings({ value, onChange }: ProjectDirectorySettingsProps): React.ReactElement {
+  const api = useApi() as ExtendedApi
+
   async function handleSelectDirectory(): Promise<void> {
-    const dir = await window.electronAPI?.selectDirectory()
+    const dir = await api?.selectDirectory()
     if (dir) {
       onChange(dir)
     }

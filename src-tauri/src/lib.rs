@@ -128,6 +128,16 @@ async fn kill_session(state: State<'_, Arc<PtyManager>>, id: String) -> Result<(
     Ok(())
 }
 
+#[tauri::command]
+async fn set_pty_backend(
+    state: State<'_, Arc<PtyManager>>,
+    app: AppHandle,
+    id: String,
+    backend: String,
+) -> Result<(), String> {
+    state.set_backend(app, &id, backend)
+}
+
 // Settings Commands
 #[tauri::command]
 async fn get_settings(state: State<'_, SettingsManager>) -> Result<AppSettings, String> {
@@ -325,6 +335,29 @@ async fn window_is_maximized(window: tauri::Window) -> Result<bool, String> {
 }
 
 #[tauri::command]
+async fn claude_md_read(project_path: String) -> Result<serde_json::Value, String> {
+    let path = std::path::Path::new(&project_path).join(".claude").join("CLAUDE.md");
+    if !path.exists() {
+        return Ok(serde_json::json!({ "success": true, "exists": false }));
+    }
+
+    let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    Ok(serde_json::json!({ "success": true, "exists": true, "content": content }))
+}
+
+#[tauri::command]
+async fn claude_md_save(project_path: String, content: String) -> Result<serde_json::Value, String> {
+    let claude_dir = std::path::Path::new(&project_path).join(".claude");
+    if !claude_dir.exists() {
+        std::fs::create_dir_all(&claude_dir).map_err(|e| e.to_string())?;
+    }
+
+    let path = claude_dir.join("CLAUDE.md");
+    std::fs::write(&path, content).map_err(|e| e.to_string())?;
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
 fn report_ready() {
     println!("WEBVIEW_READY");
 }
@@ -505,6 +538,7 @@ pub fn run() {
             write_to_pty,
             resize_pty,
             kill_session,
+            set_pty_backend,
             get_settings,
             save_settings,
             get_workspace,
@@ -606,6 +640,8 @@ pub fn run() {
             health_manager::health_get_status,
             health_manager::health_log_check,
             diagnostic_manager::diagnostics_generate_bundle,
+            claude_md_read,
+            claude_md_save,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

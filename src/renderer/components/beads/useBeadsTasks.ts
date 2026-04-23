@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { tasksCache, beadsStatusCache } from '../../utils/lruCache.js'
 import type { UnifiedTask, TaskAdapter, BackendKind, AutomationEligibility, CreateTaskParams } from './adapters/types.js'
 import { detectBackend, getAdapter } from './adapters/detect.js'
+import { useApi } from '../../contexts/ApiContext'
 import type { BeadsState } from './useBeadsState.js'
 
 export interface TaskCrudCallbacks {
@@ -69,6 +70,7 @@ export function useBeadsTasks({
   adapter,
   backendKind
 }: UseBeadsTasksParams): TaskCrudCallbacks & TaskCrudState {
+  const api = useApi()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [newTaskType, setNewTaskType] = useState<string>('task')
@@ -90,20 +92,21 @@ export function useBeadsTasks({
 
     try {
       // Detect backend if we don't have an adapter yet
-      const kind = backendKind !== 'none' ? backendKind : await detectBackend(loadingForProject)
-      const currentAdapter = kind !== 'none' ? getAdapter(kind) : null
+      const kind = backendKind !== 'none' ? backendKind : await detectBackend(loadingForProject, api)
+      const currentAdapter = kind !== 'none' ? getAdapter(kind, api) : null
 
       if (currentProjectRef.current !== loadingForProject) return
 
       if (!currentAdapter) {
-        // On mobile (no electronAPI), we can't install beads — just show not initialized
-        if (!window.electronAPI) {
+        // On mobile (no api functionality for beads), we can't install beads — just show not initialized
+        // Note: checking for native platform methods instead of window.electronAPI
+        if (!api.beadsCheck) {
           setBeadsState({ status: 'not_initialized', initializing: false, availableBackends: ['kspec'] })
           return
         }
 
         // Check if beads is at least installable
-        const beadsStatus = await window.electronAPI.beadsCheck(loadingForProject)
+        const beadsStatus = await api.beadsCheck(loadingForProject)
         if (currentProjectRef.current !== loadingForProject) return
 
         if (!beadsStatus?.installed) {
@@ -139,7 +142,7 @@ export function useBeadsTasks({
         setBeadsState({ status: 'error', error: String(e) })
       }
     }
-  }, [projectPath, setBeadsState, setTasks, currentProjectRef, backendKind])
+  }, [projectPath, setBeadsState, setTasks, currentProjectRef, backendKind, api])
 
   const handleInitBeads = async (): Promise<void> => {
     if (!projectPath) return
@@ -148,7 +151,7 @@ export function useBeadsTasks({
     setBeadsState({ status: 'not_initialized', initializing: true, availableBackends: ['beads'] })
 
     try {
-      const result = await window.electronAPI?.beadsInit(projectPath)
+      const result = await api.beadsInit(projectPath)
       if (result?.success) {
         loadTasks()
       } else {
@@ -166,10 +169,10 @@ export function useBeadsTasks({
     setBeadsState({ status: 'not_initialized', initializing: true, availableBackends: ['kspec'] })
 
     try {
-      const result = await window.electronAPI?.kspecInit?.(projectPath)
+      const result = await api.kspecInit?.(projectPath)
       if (result?.success) {
         // Ensure daemon is running
-        await window.electronAPI?.kspecEnsureDaemon?.(projectPath)
+        await api.kspecEnsureDaemon?.(projectPath)
         loadTasks()
       } else {
         setBeadsState({ status: 'error', error: result?.error || 'Failed to initialize kspec' })
@@ -185,9 +188,9 @@ export function useBeadsTasks({
 
     try {
       // Check if kspec CLI is installed, install if not
-      const cliCheck = await window.electronAPI?.kspecCheckCli?.()
+      const cliCheck = await api.kspecCheckCli?.()
       if (!cliCheck?.installed) {
-        const installResult = await window.electronAPI?.kspecInstallCli?.()
+        const installResult = await api.kspecInstallCli?.()
         if (!installResult?.success) {
           setError(installResult?.error || 'Failed to install kspec CLI')
           setUpgrading(false)
@@ -196,7 +199,7 @@ export function useBeadsTasks({
       }
 
       // Run migration: reads beads tasks, inits kspec, creates tasks, removes .beads/
-      const result = await window.electronAPI?.kspecMigrateFromBeads?.(projectPath)
+      const result = await api.kspecMigrateFromBeads?.(projectPath)
       if (!result?.success) {
         setError(result?.error || 'Migration failed')
         setUpgrading(false)
@@ -204,7 +207,7 @@ export function useBeadsTasks({
       }
 
       // Ensure daemon is running
-      await window.electronAPI?.kspecEnsureDaemon?.(projectPath)
+      await api.kspecEnsureDaemon?.(projectPath)
 
       // Clear caches and reload — backend has changed from beads to kspec
       tasksCache.delete(projectPath)
@@ -221,7 +224,7 @@ export function useBeadsTasks({
     setBeadsState({ status: 'not_installed', installing: 'beads', needsPython: false, installError: null, installStatus: null })
 
     try {
-      const result = await window.electronAPI?.beadsInstall()
+      const result = await api.beadsInstall()
       if (result?.success) {
         loadTasks()
       } else if (result?.needsPython) {
@@ -240,7 +243,7 @@ export function useBeadsTasks({
     setBeadsState({ status: 'not_installed', installing: 'python', needsPython: true, installError: null, installStatus: 'Downloading Python...' })
 
     try {
-      const result = await window.electronAPI?.pythonInstall()
+      const result = await api.pythonInstall()
       if (result?.success) {
         setBeadsState({ status: 'not_installed', installing: null, needsPython: false, installError: null, installStatus: null })
         handleInstallBeads()

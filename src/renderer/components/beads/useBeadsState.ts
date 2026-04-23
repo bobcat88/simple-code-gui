@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { tasksCache, beadsStatusCache } from '../../utils/lruCache.js'
 import type { UnifiedTask } from './adapters/types.js'
 import type { BackendKind, TaskAdapter } from './adapters/types.js'
-import { detectBackend, getAdapter, beadsAdapter, kspecAdapter } from './adapters/detect.js'
+import { detectBackend, getAdapter } from './adapters/detect.js'
+import { useApi } from '../../contexts/ApiContext'
 
 // Discriminated union for panel state
 export type BeadsState =
@@ -25,6 +26,7 @@ export interface BeadsStateResult {
 }
 
 export function useBeadsState(projectPath: string | null): BeadsStateResult {
+  const api = useApi()
   const [beadsState, setBeadsState] = useState<BeadsState>({ status: 'loading' })
   const [tasks, setTasks] = useState<UnifiedTask[]>([])
   const [backendKind, setBackendKind] = useState<BackendKind>('none')
@@ -37,7 +39,7 @@ export function useBeadsState(projectPath: string | null): BeadsStateResult {
 
   // Handle install progress events
   useEffect(() => {
-    const cleanup = window.electronAPI?.onInstallProgress?.((data: any) => {
+    const cleanup = api.onInstallProgress?.((data: any) => {
       if (data.type === 'python') {
         const percent = data.percent !== undefined ? ` (${data.percent}%)` : ''
         setBeadsState((prev) => {
@@ -47,7 +49,7 @@ export function useBeadsState(projectPath: string | null): BeadsStateResult {
       }
     })
     return cleanup
-  }, [])
+  }, [api])
 
   // Detect backend on project change
   useEffect(() => {
@@ -72,7 +74,7 @@ export function useBeadsState(projectPath: string | null): BeadsStateResult {
       }
 
       // Detect backend
-      detectBackend(projectPath).then(kind => {
+      detectBackend(projectPath, api).then(kind => {
         if (currentProjectRef.current !== projectPath) return
         setBackendKind(kind)
       })
@@ -81,9 +83,9 @@ export function useBeadsState(projectPath: string | null): BeadsStateResult {
       setBackendKind('none')
       setBeadsState({ status: 'loading' })
     }
-  }, [projectPath])
+  }, [projectPath, api])
 
-  const adapter = getAdapter(backendKind)
+  const adapter = getAdapter(backendKind, api)
 
   return {
     beadsState,

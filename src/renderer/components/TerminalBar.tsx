@@ -10,6 +10,7 @@ import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from
 import ReactDOM from 'react-dom'
 import { getCommandMenuItems } from '../utils/backendCommands'
 import { AutoWorkOptions } from './TerminalMenu'
+import { useApi } from '../contexts/ApiContext.js'
 
 interface TerminalBarProps {
   ptyId: string
@@ -69,6 +70,7 @@ export function TerminalBar({
 }: TerminalBarProps): React.ReactElement {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, visible: false })
+  const api = useApi()
   const barRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -83,7 +85,7 @@ export function TerminalBar({
       setAutoAccept(false)
       return
     }
-    window.electronAPI?.getAutoAcceptStatus?.(ptyId)?.then((enabled: boolean) => {
+    api.getAutoAcceptStatus(ptyId).then((enabled: boolean) => {
       setAutoAccept(enabled)
     })
   }, [ptyId])
@@ -91,8 +93,8 @@ export function TerminalBar({
   const handleToggleAutoAccept = useCallback(() => {
     const newState = !autoAccept
     setAutoAccept(newState)
-    window.electronAPI?.setAutoAccept?.(ptyId, newState)
-  }, [autoAccept, ptyId])
+    api.setAutoAccept(ptyId, newState)
+  }, [autoAccept, ptyId, api])
 
   // Auto work options state
   const [autoWorkOptions, setAutoWorkOptions] = useState<AutoWorkOptions>(() => {

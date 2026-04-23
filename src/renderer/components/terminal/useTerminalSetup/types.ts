@@ -8,7 +8,7 @@ export interface UseTerminalSetupOptions {
   ptyId: string
   theme: Theme
   backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
-  api?: Api  // API abstraction (uses window.electronAPI if not provided)
+  api?: Api  // API abstraction for PTY operations (consumed from ApiContext if not provided)
   onTTSChunk: (cleanChunk: string) => void
   onUserInput: (data: string) => void
   onSummaryChunk: (cleanChunk: string) => void
@@ -40,6 +40,7 @@ export interface PtyOperations {
   onPtyTitle?: (id: string, callback: (title: string) => void) => (() => void) | undefined
   onPtyPath?: (id: string, callback: (path: string) => void) => (() => void) | undefined
   onPtyPid?: (id: string, callback: (pid: string) => void) => (() => void) | undefined
+  onPtyRecreated?: (callback: (data: { oldId: string; newId: string; backend: any }) => void) => (() => void) | undefined
 }
 
 export interface TerminalRefs {

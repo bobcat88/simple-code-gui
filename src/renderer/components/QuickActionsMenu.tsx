@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import ReactDOM from 'react-dom'
+import { useApi } from '../contexts/ApiContext'
 
 // Type guard for checking if event target is a valid Node for contains() check
 function isEventTargetNode(target: EventTarget | null): target is Node {
@@ -19,6 +20,7 @@ interface QuickActionsMenuProps {
 }
 
 export function QuickActionsMenu({ projectPath, ptyId, onOpenExtensions }: QuickActionsMenuProps) {
+  const api = useApi()
   const [isOpen, setIsOpen] = useState(false)
   const [commands, setCommands] = useState<Command[]>([])
   const [loading, setLoading] = useState(false)
@@ -29,7 +31,7 @@ export function QuickActionsMenu({ projectPath, ptyId, onOpenExtensions }: Quick
   useEffect(() => {
     if (isOpen && projectPath) {
       setLoading(true)
-      window.electronAPI?.extensionsGetCommands(projectPath)
+      api.extensionsGetCommands(projectPath)
         .then((cmds: Command[]) => {
           setCommands(cmds || [])
         })
@@ -40,7 +42,7 @@ export function QuickActionsMenu({ projectPath, ptyId, onOpenExtensions }: Quick
           setLoading(false)
         })
     }
-  }, [isOpen, projectPath])
+  }, [isOpen, projectPath, api])
 
   // Close on click outside
   useEffect(() => {
@@ -73,9 +75,9 @@ export function QuickActionsMenu({ projectPath, ptyId, onOpenExtensions }: Quick
     if (!ptyId) return
 
     // Write the command to the PTY
-    window.electronAPI?.writePty(ptyId, cmd + '\n')
+    api.writePty(ptyId, cmd + '\n')
     setIsOpen(false)
-  }, [ptyId])
+  }, [ptyId, api])
 
   // Calculate menu position
   const getMenuPosition = () => {

@@ -145,12 +145,16 @@ function loadWebGLAddon(
 /**
  * Loads the web links addon for clickable URLs.
  */
-function loadWebLinksAddon(terminal: XTerm, state: InitState): void {
+function loadWebLinksAddon(
+  terminal: XTerm,
+  state: InitState,
+  api: UseTerminalSetupOptions['api']
+): void {
   import('@xterm/addon-web-links').then(({ WebLinksAddon }) => {
     if (state.disposed) return
     try {
       const webLinksAddon = new WebLinksAddon((_event, uri) => {
-        window.electronAPI?.openExternal?.(uri) ?? window.open(uri, '_blank')
+        api?.openExternal?.(uri) ?? window.open(uri, '_blank')
       })
       terminal.loadAddon(webLinksAddon)
       console.log('Terminal links: enabled (clickable URLs)')
@@ -204,15 +208,15 @@ function setupEventHandlers(
   // The onScroll handler is kept only for debug logging.
   state.cleanupScroll = terminal.onScroll(() => {
     const snap = scrollSnapshot(terminal)
-    scrollDebug('onScroll:info', { ...snap, userScrolledUp: userScrolledUpRef.current, writingData: state.writingData })
+    scrollDebug('onScroll:info', { ...snap, userScrolledUp: userScrolledUpRef.current, writingData: state.writingData }, options.api)
   })
 
   // Context menu handler
-  const contextmenuHandler = createContextMenuHandler(terminal, ptyId, options.backend, currentLineInputRef)
+  const contextmenuHandler = createContextMenuHandler(terminal, ptyId, options.api, options.backend, currentLineInputRef)
   container.addEventListener('contextmenu', contextmenuHandler)
 
   // Middle-click paste
-  const auxclickHandler = createAuxClickHandler(terminal, ptyId, options.backend, currentLineInputRef)
+  const auxclickHandler = createAuxClickHandler(terminal, ptyId, options.api, options.backend, currentLineInputRef)
   container.addEventListener('auxclick', auxclickHandler)
 
   // Auto-scroll on mousedown
@@ -266,6 +270,7 @@ function setupEventHandlers(
     terminal,
     ptyOperations.writePty,
     ptyId,
+    options.api,
     options.backend,
     currentLineInputRef
   )
@@ -322,7 +327,7 @@ function postOpenSetup(
       for (const chunk of buffer) {
         terminal.write(chunk)
       }
-      scrollDebug('bufferReplay:scrollToBottom', scrollSnapshot(terminal))
+      scrollDebug('bufferReplay:scrollToBottom', scrollSnapshot(terminal), options.api)
       terminal.scrollToBottom()
     })
   }
@@ -334,7 +339,7 @@ function postOpenSetup(
       terminal.write(data)
     }
     state.pendingWrites.length = 0
-    scrollDebug('pendingFlush:scrollToBottom', scrollSnapshot(terminal))
+    scrollDebug('pendingFlush:scrollToBottom', scrollSnapshot(terminal), options.api)
     terminal.scrollToBottom()
   }
 
@@ -506,7 +511,7 @@ export function initTerminal(
     fitAddonRef.current = newFitAddon
 
     // Load web links addon
-    loadWebLinksAddon(newTerminal, state)
+    loadWebLinksAddon(newTerminal, state, options.api)
 
     // Continue with post-open setup
     postOpenSetup(
@@ -590,7 +595,7 @@ export function handlePtyData(
     // When user is scrolled up, restore their relative scroll position
     if (userScrolledUpRef.current && preWriteSnap.baseY > 50 && postWriteSnap.baseY < preWriteSnap.baseY * 0.5) {
       // Buffer was cleared and is being rebuilt. Schedule a restore after redraw settles.
-      scrollDebug('write:SCREEN_CLEAR_DETECTED', { before: preWriteSnap, after: postWriteSnap })
+      scrollDebug('write:SCREEN_CLEAR_DETECTED', { before: preWriteSnap, after: postWriteSnap }, options.api)
       if (!state.scrollRestorePending) {
         state.scrollRestorePending = true
         state.scrollRestoreTarget = preWriteSnap.viewportY
@@ -602,7 +607,7 @@ export function handlePtyData(
             const currentSnap = scrollSnapshot(terminal)
             // Restore to same absolute line, clamped to new buffer size
             const newPos = Math.min(state.scrollRestoreTarget, Math.max(0, currentSnap.baseY - terminal.rows))
-            scrollDebug('write:RESTORING_SCROLL', { newPos, currentSnap, originalTarget: state.scrollRestoreTarget, originalBaseY: state.scrollRestoreBaseY })
+            scrollDebug('write:RESTORING_SCROLL', { newPos, currentSnap, originalTarget: state.scrollRestoreTarget, originalBaseY: state.scrollRestoreBaseY }, options.api)
             terminal.scrollToLine(newPos)
           }
         }, 100)
@@ -610,7 +615,7 @@ export function handlePtyData(
     }
 
     if (preWriteSnap.viewportY !== postWriteSnap.viewportY) {
-      scrollDebug('write:scrollMoved', { before: preWriteSnap, after: postWriteSnap, userScrolledUp: userScrolledUpRef.current })
+      scrollDebug('write:scrollMoved', { before: preWriteSnap, after: postWriteSnap, userScrolledUp: userScrolledUpRef.current }, options.api)
     }
   })
 
@@ -626,12 +631,12 @@ export function handlePtyData(
         terminal.scrollToBottom()
         const afterSnap = scrollSnapshot(terminal)
         if (beforeSnap.viewportY !== afterSnap.viewportY) {
-          scrollDebug('debounce:scrollToBottom', { before: beforeSnap, after: afterSnap })
+          scrollDebug('debounce:scrollToBottom', { before: beforeSnap, after: afterSnap }, options.api)
         }
       }
     }, 32)
   } else {
-    scrollDebug('ptyData:skippedScroll', { userScrolledUp: true, ...preWriteSnap, dataLen: displayData.length })
+    scrollDebug('ptyData:skippedScroll', { userScrolledUp: true, ...preWriteSnap, dataLen: displayData.length }, options.api)
   }
 
   if (state.firstData) {

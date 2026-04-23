@@ -1,4 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react'
+import { useApi } from '../../contexts/ApiContext'
+import type { ExtendedApi } from '../../api/types'
 import { getSampleUrl } from '../../utils/voiceUtils'
 import type { VoiceSettings, XttsSettings } from './settingsTypes'
 
@@ -60,6 +62,7 @@ export function VoiceOutputSettings({
   tadaHfAuthenticated,
   onTadaHfLogin,
 }: VoiceOutputSettingsProps): React.ReactElement {
+  const api = useApi() as ExtendedApi
   const previewAudioRef = useRef<HTMLAudioElement | null>(null)
   const [hfToken, setHfToken] = useState('')
   const [hfLoginLoading, setHfLoginLoading] = useState(false)
@@ -97,7 +100,7 @@ export function VoiceOutputSettings({
     if (source === 'tada') {
       onPreviewStateChange({ playingPreview: null, previewLoading: voiceKey })
       try {
-        const result = await window.electronAPI?.tadaSpeak?.(
+        const result = await api?.tadaSpeak?.(
           'Hello! This is a preview of my voice.'
         )
         if (result?.success && result.audioData) {
@@ -129,7 +132,7 @@ export function VoiceOutputSettings({
     if (source === 'xtts') {
       onPreviewStateChange({ playingPreview: null, previewLoading: voiceKey })
       try {
-        const result = await window.electronAPI?.xttsSpeak?.(
+        const result = await api?.xttsSpeak?.(
           'Hello! This is a preview of my voice.',
           voiceKey,
           'en'
@@ -184,16 +187,16 @@ export function VoiceOutputSettings({
       // Temporarily set the voice, speak, then restore
       const originalVoice = voice.selectedVoice
       const originalEngine = voice.selectedEngine
-      await window.electronAPI?.voiceApplySettings?.({
+      await api?.voiceApplySettings?.({
         ttsVoice: voiceKey,
         ttsEngine: 'piper',
         ttsSpeed: 1.0
       })
-      const result = await window.electronAPI?.voiceSpeak?.(
+      const result = await api?.voiceSpeak?.(
         'Hello! This is a preview of my voice.'
       )
       // Restore original settings
-      await window.electronAPI?.voiceApplySettings?.({
+      await api?.voiceApplySettings?.({
         ttsVoice: originalVoice,
         ttsEngine: originalEngine,
         ttsSpeed: voice.ttsSpeed

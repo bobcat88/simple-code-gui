@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useVoice } from '../contexts/VoiceContext'
+import { useApi } from '../contexts/ApiContext'
 import { Mic, MicOff, Volume2, Search, Activity, Loader2 } from 'lucide-react'
 import { cn } from '../lib/utils'
 
@@ -14,6 +15,7 @@ export function VoiceControls({
   onTranscription,
   isVertical = false
 }: VoiceControlsProps) {
+  const api = useApi()
   const {
     // Voice Output
     voiceOutputEnabled, setVoiceOutputEnabled, isSpeaking, stopSpeaking, volume, speakText,
@@ -49,7 +51,7 @@ export function VoiceControls({
   useEffect(() => {
     checkInstallation()
 
-    const cleanup = window.electronAPI?.onInstallProgress?.((data: any) => {
+    const unsubscribe = api.onInstallProgress?.((data: any) => {
       console.log('Voice install progress:', data)
       if (data.status === 'downloading' || data.status === 'extracting') {
         setInstallProgress(data.percent || 0)
@@ -60,8 +62,10 @@ export function VoiceControls({
         checkInstallation()
       }
     })
-    return cleanup
-  }, [])
+    return () => {
+      if (unsubscribe) unsubscribe()
+    }
+  }, [api])
 
   // Show level meter while recording
   useEffect(() => {
@@ -76,7 +80,7 @@ export function VoiceControls({
 
   const checkInstallation = async () => {
     try {
-      const ttsStatus = await window.electronAPI?.voiceCheckTTS?.()
+      const ttsStatus = await api.voiceCheckTTS?.()
       setTtsInstalled(ttsStatus?.installed ?? false)
     } catch (e) {
       // Voice features not available
@@ -112,9 +116,9 @@ export function VoiceControls({
     if (!ttsInstalled) {
       setInstallingTTS(true)
       try {
-        const result = await window.electronAPI?.voiceInstallPiper?.()
+        const result = await api.voiceInstallPiper?.()
         if (result?.success) {
-          await window.electronAPI?.voiceInstallVoice?.('en_US-libritts_r-medium')
+          await api.voiceInstallVoice?.('en_US-libritts_r-medium')
         }
         await checkInstallation()
       } catch (e) {

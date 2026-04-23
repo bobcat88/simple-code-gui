@@ -1,7 +1,7 @@
 /**
  * Beads Adapter
  *
- * Wraps existing window.electronAPI.beads* calls into the TaskAdapter interface.
+ * Wraps existing beads* calls into the TaskAdapter interface.
  * This is a thin shim — all logic stays in the existing IPC handlers.
  */
 
@@ -67,8 +67,10 @@ function toUnified(raw: Record<string, unknown>): UnifiedTask {
 export class BeadsAdapter implements TaskAdapter {
   readonly kind = 'beads' as const
 
+  constructor(private api: Api) {}
+
   async check(cwd: string): Promise<BackendStatus> {
-    const status = await window.electronAPI?.beadsCheck(cwd)
+    const status = await this.api.beadsCheck(cwd)
     if (!status) {
       return { kind: 'beads', installed: false, initialized: false }
     }
@@ -80,24 +82,24 @@ export class BeadsAdapter implements TaskAdapter {
   }
 
   async init(cwd: string): Promise<{ success: boolean; error?: string }> {
-    const result = await window.electronAPI?.beadsInit(cwd)
+    const result = await this.api.beadsInit(cwd)
     return { success: !!result?.success, error: result?.error }
   }
 
   async list(cwd: string): Promise<UnifiedTask[]> {
-    const result = await window.electronAPI?.beadsList(cwd)
+    const result = await this.api.beadsList(cwd)
     if (!result?.success || !result.tasks) return []
     return (result.tasks as Record<string, unknown>[]).map(toUnified)
   }
 
   async show(cwd: string, taskId: string): Promise<UnifiedTask | null> {
-    const result = await window.electronAPI?.beadsShow(cwd, taskId)
+    const result = await this.api.beadsShow(cwd, taskId)
     if (!result?.success || !result.task) return null
     return toUnified(result.task as Record<string, unknown>)
   }
 
   async create(cwd: string, params: CreateTaskParams): Promise<{ success: boolean; error?: string }> {
-    const result = await window.electronAPI?.beadsCreate(
+    const result = await this.api.beadsCreate(
       cwd,
       params.title,
       params.description,
@@ -109,22 +111,22 @@ export class BeadsAdapter implements TaskAdapter {
   }
 
   async start(cwd: string, taskId: string): Promise<{ success: boolean; error?: string }> {
-    const result = await window.electronAPI?.beadsStart(cwd, taskId)
+    const result = await this.api.beadsStart(cwd, taskId)
     return { success: !!result?.success, error: result?.error }
   }
 
   async complete(cwd: string, taskId: string): Promise<{ success: boolean; error?: string }> {
-    const result = await window.electronAPI?.beadsComplete(cwd, taskId)
+    const result = await this.api.beadsComplete(cwd, taskId)
     return { success: !!result?.success, error: result?.error }
   }
 
   async delete(cwd: string, taskId: string): Promise<{ success: boolean; error?: string }> {
-    const result = await window.electronAPI?.beadsDelete(cwd, taskId)
+    const result = await this.api.beadsDelete(cwd, taskId)
     return { success: !!result?.success, error: result?.error }
   }
 
   async update(cwd: string, taskId: string, params: UpdateTaskParams): Promise<{ success: boolean; error?: string }> {
-    const result = await window.electronAPI?.beadsUpdate(
+    const result = await this.api.beadsUpdate(
       cwd, 
       taskId, 
       params.status, 
@@ -148,14 +150,14 @@ export class BeadsAdapter implements TaskAdapter {
   }
 
   watch(cwd: string): void {
-    window.electronAPI?.beadsWatch(cwd)
+    this.api.beadsWatch(cwd)
   }
 
   unwatch(cwd: string): void {
-    window.electronAPI?.beadsUnwatch(cwd)
+    this.api.beadsUnwatch(cwd)
   }
 
   onTasksChanged(callback: (data: { cwd: string }) => void): () => void {
-    return window.electronAPI?.onBeadsTasksChanged(callback) ?? (() => {})
+    return this.api.onBeadsTasksChanged(callback) ?? (() => {})
   }
 }

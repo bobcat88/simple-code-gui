@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react'
 import { Project } from '../../../stores/workspace.js'
 import { ProjectSettingsModalState, InstalledVoice } from '../types.js'
 import { COMMON_TOOLS } from '../constants.js'
+import { useApi } from '../../../contexts/ApiContext'
+import type { ExtendedApi } from '../../../api/types'
 
 interface UseProjectSettingsModalOptions {
   onUpdateProject: (path: string, updates: Partial<Project>) => void
@@ -45,9 +47,10 @@ export function useProjectSettingsModal({
   const [apiStatus, setApiStatus] = useState<
     Record<string, { running: boolean; port?: number }>
   >({})
+  const api = useApi() as ExtendedApi
 
   const handleOpenProjectSettings = useCallback(async (project: Project) => {
-    const settings = await window.electronAPI?.getSettings()
+    const settings = await api?.getSettings()
     setGlobalPermissions({
       tools: settings?.autoAcceptTools || [],
       mode: settings?.permissionMode || 'default',
@@ -55,9 +58,9 @@ export function useProjectSettingsModal({
 
     try {
       const [piperVoices, xttsVoices, voiceSettings] = await Promise.all([
-        (window.electronAPI?.voiceGetInstalled?.() || []) as InstalledVoice[],
-        window.electronAPI?.xttsGetVoices?.() || [],
-        window.electronAPI?.voiceGetSettings?.() || {},
+        (api?.voiceGetInstalled?.() || []) as InstalledVoice[],
+        api?.xttsGetVoices?.() || [],
+        api?.voiceGetSettings?.() || {},
       ])
       const combined: InstalledVoice[] = []
       if (piperVoices) combined.push(...piperVoices)
@@ -114,14 +117,14 @@ export function useProjectSettingsModal({
 
     if (newPort !== oldPort) {
       if (!newPort) {
-        await window.electronAPI?.apiStop?.(projectSettingsModal.project.path)
+        await api?.apiStop?.(projectSettingsModal.project.path)
         setApiStatus((prev) => ({
           ...prev,
           [projectSettingsModal.project.path]: { running: false },
         }))
       } else {
         setProjectSettingsModal({ ...projectSettingsModal, apiStatus: 'checking' })
-        const result = await window.electronAPI?.apiStart?.(
+        const result = await api?.apiStart?.(
           projectSettingsModal.project.path,
           newPort
         )
@@ -172,10 +175,10 @@ export function useProjectSettingsModal({
     async (project: Project) => {
       const status = apiStatus[project.path]
       if (status?.running) {
-        await window.electronAPI?.apiStop?.(project.path)
+        await api?.apiStop?.(project.path)
         setApiStatus((prev) => ({ ...prev, [project.path]: { running: false } }))
       } else if (project.apiPort) {
-        const result = await window.electronAPI?.apiStart?.(project.path, project.apiPort)
+        const result = await api?.apiStart?.(project.path, project.apiPort)
         if (result?.success) {
           setApiStatus((prev) => ({
             ...prev,

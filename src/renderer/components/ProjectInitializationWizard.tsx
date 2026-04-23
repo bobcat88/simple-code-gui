@@ -44,8 +44,7 @@ export function ProjectInitializationWizard({ isOpen, onClose, onProjectCreated,
   }, [wizard.scan])
 
   const handleSelectDirectory = async () => {
-    // @ts-ignore
-    const dir = await window.electronAPI?.selectDirectory()
+    const dir = await api.selectDirectory()
     if (dir) {
       wizard.setPath(dir)
       wizard.startScan(dir)

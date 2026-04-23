@@ -3,6 +3,7 @@ import { ConnectionScreen } from '../components/ConnectionScreen'
 import { MainApp } from './MainApp'
 import type { Api, HttpBackend } from '../api'
 import { isTauriEnvironment, initializeApi } from '../api'
+import { ApiProvider } from '../contexts/ApiContext'
 
 // Check if running in Capacitor native app
 export function isCapacitorApp(): boolean {
@@ -110,5 +111,14 @@ export function AppConnection(): React.ReactElement | null {
   }
 
   // Render the main app with the connected API
-  return <MainApp api={api} isElectron={false} isTauri={isTauri} onDisconnect={handleDisconnect} />
+  return (
+    <ApiProvider
+      api={api}
+      backendType={isTauri ? 'electron' : 'http'}
+      connectionState={isConnected ? 'connected' : 'disconnected'}
+      reconnect={handleDisconnect}
+    >
+      <MainApp api={api} isElectron={false} isTauri={isTauri} onDisconnect={handleDisconnect} />
+    </ApiProvider>
+  )
 }

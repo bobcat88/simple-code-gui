@@ -174,13 +174,19 @@ export function formatPathsForBackend(paths: string[], backend?: 'default' | 'cl
 }
 
 // Custom paste handler for xterm
-export async function handlePaste(term: XTerm, ptyId: string, backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider', currentLineInputRef?: MutableRefObject<string>): Promise<void> {
+export async function handlePaste(
+  term: XTerm,
+  ptyId: string,
+  api: TerminalGlobals['api'],
+  backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider',
+  currentLineInputRef?: MutableRefObject<string>
+): Promise<void> {
   try {
     // Check if clipboard has an image or file
-    const imageResult = await window.electronAPI?.readClipboardImage()
+    const imageResult = await api?.readClipboardImage()
     if (imageResult?.success && imageResult.hasImage && imageResult.path) {
       const formatted = formatPathForBackend(imageResult.path, backend)
-      window.electronAPI?.writePty(ptyId, formatted)
+      api?.writePty(ptyId, formatted)
       if (currentLineInputRef) currentLineInputRef.current += formatted
       return
     }
@@ -197,7 +203,7 @@ export async function handlePaste(term: XTerm, ptyId: string, backend?: 'default
           .join(' ')
       }
       const pasteText = cleanText || text
-      window.electronAPI?.writePty(ptyId, pasteText)
+      api?.writePty(ptyId, pasteText)
       if (currentLineInputRef) currentLineInputRef.current += pasteText
     }
   } catch (e) {
@@ -229,7 +235,7 @@ const SCROLL_DEBUG = true // flip to false to disable
 const scrollLogBuffer: string[] = []
 let scrollLogFlushTimer: ReturnType<typeof setTimeout> | null = null
 
-export function scrollDebug(source: string, details: Record<string, unknown>): void {
+export function scrollDebug(source: string, details: Record<string, unknown>, api?: TerminalGlobals['api']): void {
   if (!SCROLL_DEBUG) return
   const ts = new Date().toISOString().slice(11, 23)
   const line = `[${ts}] ${source}: ${JSON.stringify(details)}`
@@ -237,16 +243,16 @@ export function scrollDebug(source: string, details: Record<string, unknown>): v
   scrollLogBuffer.push(line)
   // Batch flush to file every 500ms
   if (!scrollLogFlushTimer) {
-    scrollLogFlushTimer = setTimeout(flushScrollLog, 500)
+    scrollLogFlushTimer = setTimeout(() => flushScrollLog(api), 500)
   }
 }
 
-function flushScrollLog(): void {
+function flushScrollLog(api?: TerminalGlobals['api']): void {
   scrollLogFlushTimer = null
   if (scrollLogBuffer.length === 0) return
   const chunk = scrollLogBuffer.splice(0).join('\n') + '\n'
   try {
-    window.electronAPI?.scrollDebugLog?.(chunk)
+    api?.scrollDebugLog?.(chunk)
   } catch { /* ignore */ }
 }
 

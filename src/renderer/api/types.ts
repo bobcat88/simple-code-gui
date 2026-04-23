@@ -317,14 +317,28 @@ export interface TokenHistoryResponse {
 export interface Api {
   [key: string]: any;
   // Optional: Desktop-only voice catalog and XTTS management
-  voiceGetInstalled?: () => Promise<Array<{ key: string; displayName: string; source: 'builtin' | 'downloaded' | 'custom'; quality?: string; language?: string }>>
-  xttsGetVoices?: () => Promise<Array<{ id: string; name: string; language: string; createdAt: number }>>
-  voiceGetSettings?: () => Promise<{ ttsVoice?: string; ttsEngine?: string; ttsSpeed?: number; xttsTemperature?: number; xttsTopK?: number; xttsTopP?: number; xttsRepetitionPenalty?: number }>
-  voiceCheckWhisper?: () => Promise<{ installed: boolean; models: string[]; currentModel: string | null }>
   voiceCheckTTS?: () => Promise<{ installed: boolean; engine: string | null; voices: string[]; currentVoice: string | null }>
+  voiceFetchCatalog?: (forceRefresh?: boolean) => Promise<any[]>
+  voiceGetInstalled?: () => Promise<any[]>
+  voiceDownloadFromCatalog?: (voiceKey: string) => Promise<{ success: boolean; error?: string }>
+  voiceImportCustom?: () => Promise<{ success: boolean; error?: string }>
+  voiceOpenCustomFolder?: () => Promise<void>
+  
+  xttsGetVoices?: () => Promise<any[]>
+  xttsGetSampleVoices?: () => Promise<any[]>
+  xttsGetLanguages?: () => Promise<any[]>
+  xttsCheck?: () => Promise<{ installed: boolean; error?: string }>
+  xttsDownloadSampleVoice?: (voiceId: string) => Promise<{ success: boolean; error?: string }>
+  xttsDeleteVoice?: (voiceId: string) => Promise<{ success: boolean; error?: string }>
+  xttsInstall?: () => Promise<{ success: boolean; error?: string }>
+  xttsCreateVoice?: (audioPath: string, name: string, language: string) => Promise<{ success: boolean; error?: string }>
+
+  voiceCheckWhisper?: () => Promise<{ installed: boolean; models: string[]; currentModel: string | null }>
   voiceInstallWhisper?: (model: string) => Promise<{ success: boolean; error?: string }>
+  voiceGetSettings?: () => Promise<{ ttsVoice?: string; ttsEngine?: string; ttsSpeed?: number; xttsTemperature?: number; xttsTopK?: number; xttsTopP?: number; xttsRepetitionPenalty?: number }>
   voiceApplySettings?: (settings: { ttsVoice?: string; ttsEngine?: string; ttsSpeed?: number; xttsTemperature?: number; xttsTopK?: number; xttsTopP?: number; xttsRepetitionPenalty?: number }) => Promise<{ success: boolean }>
   voiceSetVoice?: (voice: string | { voice: string; engine: 'piper' | 'xtts' }) => Promise<{ success: boolean }>
+  
   ttsRemoveInstructions?: (projectPath: string) => Promise<{ success: boolean }>
   extensionsGetInstalled?: () => Promise<Array<{ id: string; name: string; type: string }>>
   extensionsFetchRegistry?: (forceRefresh: boolean) => Promise<any>
@@ -343,6 +357,7 @@ export interface Api {
   mcpListResources?: (serverName: string) => Promise<any>
   mcpReadResource?: (serverName: string, uri: string) => Promise<any>
   mcpLoadConfig?: () => Promise<void>
+  mcpGetServers?: () => Promise<any[]>
 
   // Optional: API server control (desktop only)
   apiStart?: (projectPath: string, port: number) => Promise<{ success: boolean; error?: string }>
@@ -455,6 +470,31 @@ export interface Api {
    */
   onPtyRecreated: (callback: (data: { oldId: string; newId: string; backend: BackendId }) => void) => Unsubscribe
 
+  /**
+   * Subscribe to PTY title changes
+   */
+  onPtyTitle: (id: string, callback: (title: string) => void) => Unsubscribe
+
+  /**
+   * Subscribe to PTY path changes
+   */
+  onPtyPath: (id: string, callback: (path: string) => void) => Unsubscribe
+
+  /**
+   * Subscribe to PTY process ID changes
+   */
+  onPtyPid: (id: string, callback: (pid: string) => void) => Unsubscribe
+
+  /**
+   * Get auto-accept status for a PTY
+   */
+  getAutoAcceptStatus?: (ptyId: string) => Promise<boolean>
+
+  /**
+   * Set auto-accept status for a PTY
+   */
+  setAutoAccept?: (ptyId: string, enabled: boolean) => Promise<void>
+
   // ==========================================================================
   // TTS (Text-to-Speech)
   // ==========================================================================
@@ -534,6 +574,9 @@ export interface ExtendedApi extends Api {
   // Directory and file selection dialogs
   selectDirectory: () => Promise<string | null>
   selectExecutable: () => Promise<string | null>
+  runExecutable?: (executable: string, cwd: string) => Promise<{ success: boolean; error?: string }>
+  getCategoryMetaPath?: (categoryName: string) => Promise<string>
+  getMetaProjectsPath?: () => Promise<string>
 
   // Window controls (Desktop-only)
   windowMinimize: () => void
@@ -576,6 +619,9 @@ export interface ExtendedApi extends Api {
   kspec_dispatch_status: (cwd: string) => Promise<any>,
   kspec_dispatch_start: (cwd: string) => Promise<{ success: boolean; error?: string }>,
   kspec_dispatch_stop: (cwd: string) => Promise<{ success: boolean; error?: string }>,
+  apiStatus?: (projectPath: string) => Promise<{ running: boolean; port?: number }>,
+  beadsCheck?: (cwd: string) => Promise<{ installed: boolean; initialized: boolean }>,
+  beadsList?: (cwd: string) => Promise<{ success: boolean; tasks?: Array<{ status: string }>; error?: string }>,
   beads_list: (cwd: string) => Promise<any>,
   beads_start: (cwd: string, task_id: string) => Promise<any>,
   beads_complete: (cwd: string, task_id: string) => Promise<any>,
@@ -591,6 +637,27 @@ export interface ExtendedApi extends Api {
 
   // Diagnostics
   diagnosticsGenerateBundle: () => Promise<DiagnosticResult>
+
+  // Custom Commands
+  commandsSave?: (path: string, commands: any[]) => Promise<{ success: boolean; error?: string }>
+
+  // Voice (Extended/Desktop)
+  voiceGetInstalled?: () => Promise<any[]>
+  voiceGetSettings?: () => Promise<any>
+  voiceApplySettings?: (settings: any) => Promise<{ success: boolean }>
+  voiceSpeak?: (text: string, voice?: string, speed?: number) => Promise<any>
+  voiceStopSpeaking?: () => Promise<void>
+  voiceStartListening?: () => Promise<void>
+  voiceStopListening?: () => Promise<void>
+  onVoiceTranscription?: (callback: (text: string) => void) => Unsubscribe
+  xttsGetVoices?: () => Promise<any[]>
+
+  // Updater
+  onUpdateProgress?: (callback: (progress: number) => void) => Unsubscribe
+
+  // Mobile/Connection
+  mobileGetConnectionInfo?: () => Promise<{ host: string; port: number; token: string }>
+  mobileRegenerateToken?: () => Promise<{ host: string; port: number; token: string }>
 }
 
 // ============================================================================

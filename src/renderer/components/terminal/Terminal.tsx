@@ -14,6 +14,7 @@ import { useSummaryCapture } from './useSummaryCapture.js'
 import { useTokenMeter } from './useTokenMeter.js'
 import { TokenBudgetHud } from './TokenBudgetHud.js'
 import { clearTerminalBuffer, cleanupOrphanedBuffers, formatPathsForBackend } from './utils.js'
+import { useApi } from '../../contexts/ApiContext'
 
 // Re-export buffer utilities for external use
 export { clearTerminalBuffer, cleanupOrphanedBuffers }
@@ -29,7 +30,7 @@ export function Terminal({
   onFocus, 
   projectPath, 
   backend, 
-  api, 
+  api: propApi, 
   isMobile, 
   onOpenFileBrowser, 
   isTiled,
@@ -39,47 +40,38 @@ export function Terminal({
   onSessionEnded,
   terminalSettings
 }: TerminalProps): React.ReactElement {
+  const contextApi = useApi()
+  const api = propApi || contextApi
   // Custom command modal state
   const [showCustomCommandModal, setShowCustomCommandModal] = useState(false)
   const [autoAccept, setAutoAccept] = useState(false)
 
   // Sync auto-accept state when PTY changes
   useEffect(() => {
-    if (api && (api as any).getAutoAcceptStatus) {
-      (api as any).getAutoAcceptStatus(ptyId).then((enabled: boolean) => {
-        setAutoAccept(enabled)
-      })
-    } else {
-      window.electronAPI?.getAutoAcceptStatus?.(ptyId)?.then((enabled: boolean) => {
+    if (api && api.getAutoAcceptStatus) {
+      api.getAutoAcceptStatus(ptyId).then((enabled: boolean) => {
         setAutoAccept(enabled)
       })
     }
-  }, [ptyId])
+  }, [ptyId, api])
 
   const handleToggleAutoAccept = useCallback(() => {
     const newState = !autoAccept
     setAutoAccept(newState)
-    if (api && (api as any).setAutoAccept) {
-      (api as any).setAutoAccept(ptyId, newState)
-    } else {
-      window.electronAPI?.setAutoAccept?.(ptyId, newState)
+    if (api && api.setAutoAccept) {
+      api.setAutoAccept(ptyId, newState)
     }
-  }, [autoAccept, ptyId])
+  }, [autoAccept, ptyId, api])
 
-  // PTY write helper - uses api if provided, otherwise window.electronAPI
+  // PTY write helper - uses dependency-injected api instance
   const writePty = useCallback((id: string, data: string) => {
-    if (api) {
-      api.writePty(id, data)
-    } else {
-      window.electronAPI?.writePty(id, data)
-    }
+    api?.writePty(id, data)
   }, [api])
 
   // Backend change handler
   const handleBackendChange = useCallback((newBackend: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider') => {
     if (newBackend === 'default') return
     api?.setPtyBackend?.(ptyId, newBackend)
-    window.electronAPI?.setPtyBackend?.(ptyId, newBackend)
   }, [api, ptyId])
 
   // Send backend-specific command
@@ -186,7 +178,6 @@ export function Terminal({
           const dims = fitAddonRef.current.proposeDimensions()
           if (dims && dims.cols > 0 && dims.rows > 0) {
             api?.resizePty(ptyId, dims.cols, dims.rows)
-            window.electronAPI?.resizePty(ptyId, dims.cols, dims.rows)
           }
           if (wasAtBottom) {
             requestAnimationFrame(() => {
@@ -226,7 +217,7 @@ export function Terminal({
     if (files && files.length > 0) {
       for (let i = 0; i < files.length; i++) {
         try {
-          const filePath = (api as ExtendedApi)?.getPathForFile?.(files[i]) || window.electronAPI?.getPathForFile(files[i])
+          const filePath = (api as ExtendedApi)?.getPathForFile?.(files[i])
           if (filePath) {
             paths.push(filePath)
           }
@@ -250,8 +241,7 @@ export function Terminal({
     }
 
     if (paths.length > 0) {
-      if (api) api.writePty(ptyId, formatPathsForBackend(paths, backend))
-      else window.electronAPI?.writePty(ptyId, formatPathsForBackend(paths, backend))
+      api?.writePty(ptyId, formatPathsForBackend(paths, backend))
     }
   }, [ptyId, backend, isTileDrag])
 

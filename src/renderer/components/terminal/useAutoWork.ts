@@ -1,4 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
+import { useApi } from '../../contexts/ApiContext'
+import type { ExtendedApi } from '../../api/types'
 import type { AutoWorkOptions, AutoWorkState } from './types.js'
 
 interface UseAutoWorkOptions {
@@ -30,6 +32,8 @@ export function useAutoWork({
   sendBackendCommand,
   triggerSummarize,
 }: UseAutoWorkOptions): UseAutoWorkReturn {
+  const api = useApi() as ExtendedApi
+
   // Auto work mode refs
   const autoWorkModeRef = useRef(false)
   const autoWorkWithSummaryRef = useRef(false)
@@ -102,15 +106,15 @@ export function useAutoWork({
     setTimeout(() => {
       console.log('[AutoWork] Sending continuation prompt')
       const continuePrompt = buildAutoWorkPrompt()
-      window.electronAPI?.writePty(ptyId, continuePrompt)
+      api?.writePty(ptyId, continuePrompt)
       // Small delay before Enter to ensure prompt is fully written
       setTimeout(() => {
-        window.electronAPI?.writePty(ptyId, '\r')
+        api?.writePty(ptyId, '\r')
       }, 100)
     }, clearDelay)
 
     setPendingAutoWorkContinue(false)
-  }, [pendingAutoWorkContinue, ptyId, sendBackendCommand, buildAutoWorkPrompt])
+  }, [pendingAutoWorkContinue, ptyId, sendBackendCommand, buildAutoWorkPrompt, api])
 
   // Start auto work mode
   const startAutoWork = useCallback((options?: AutoWorkOptions) => {
@@ -127,13 +131,13 @@ export function useAutoWork({
     const clearDelay = didClear ? 2000 : 100
     setTimeout(() => {
       console.log('[AutoWork] Sending initial prompt')
-      window.electronAPI?.writePty(ptyId, buildAutoWorkPrompt())
+      api?.writePty(ptyId, buildAutoWorkPrompt())
       // Small delay before Enter to ensure prompt is fully written
       setTimeout(() => {
-        window.electronAPI?.writePty(ptyId, '\r')
+        api?.writePty(ptyId, '\r')
       }, 100)
     }, clearDelay)
-  }, [ptyId, sendBackendCommand, buildAutoWorkPrompt])
+  }, [ptyId, sendBackendCommand, buildAutoWorkPrompt, api])
 
   // Continue to next task
   const continueAutoWork = useCallback(() => {
@@ -152,10 +156,10 @@ export function useAutoWork({
       const didClear = sendBackendCommand('clear')
       const clearDelay = didClear ? 2000 : 100
       setTimeout(() => {
-        window.electronAPI?.writePty(ptyId, buildAutoWorkPrompt())
+        api?.writePty(ptyId, buildAutoWorkPrompt())
         // Small delay before Enter to ensure prompt is fully written
         setTimeout(() => {
-          window.electronAPI?.writePty(ptyId, '\r')
+          api?.writePty(ptyId, '\r')
         }, 100)
       }, clearDelay)
     }
@@ -171,7 +175,7 @@ export function useAutoWork({
     autoWorkGitCommitRef.current = false
     setAwaitingUserReview(false)
     console.log('[AutoWork] Mode disabled - will stop after current task')
-    window.electronAPI?.writePty(ptyId, 'When you finish the current task, do NOT output the AUTOWORK_CONTINUE marker. Just complete this task and wait for further input.\r')
+    api?.writePty(ptyId, 'When you finish the current task, do NOT output the AUTOWORK_CONTINUE marker. Just complete this task and wait for further input.\r')
   }, [ptyId])
 
   // Cancel auto work immediately
@@ -184,7 +188,7 @@ export function useAutoWork({
     autoWorkGitCommitRef.current = false
     setAwaitingUserReview(false)
     console.log('[AutoWork] Mode disabled by cancel')
-    window.electronAPI?.writePty(ptyId, '\x1b')
+    api?.writePty(ptyId, '\x1b')
   }, [ptyId])
 
   return {

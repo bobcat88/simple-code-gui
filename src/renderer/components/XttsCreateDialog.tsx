@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { AudioCropControls } from './AudioCropControls.js'
 import type { XTTSLanguage } from './VoiceBrowserTypes.js'
+import { useApi } from '../contexts/ApiContext'
 
 interface XttsCreateDialogProps {
   xttsStatus: { installed: boolean; error?: string }
@@ -21,6 +22,7 @@ export function XttsCreateDialog({
   onCreateVoice,
   onError
 }: XttsCreateDialogProps): React.ReactElement {
+  const api = useApi()
   const [createXttsName, setCreateXttsName] = useState('')
   const [createXttsLanguage, setCreateXttsLanguage] = useState('en')
   const [createXttsAudioPath, setCreateXttsAudioPath] = useState('')
@@ -42,14 +44,14 @@ export function XttsCreateDialog({
   }
 
   async function handleSelectAudio(): Promise<void> {
-    const result = await window.electronAPI?.xttsSelectAudio()
+    const result = await api.xttsSelectAudio()
     if (result.success && result.path) {
       setCreateXttsAudioPath(result.path)
     }
   }
 
   async function handleSelectMedia(): Promise<void> {
-    const result = await window.electronAPI?.xttsSelectMediaFile()
+    const result = await api.xttsSelectMediaFile()
     if (result.success && result.path) {
       setMediaPath(result.path)
       setMediaDuration(result.duration || 0)
@@ -69,7 +71,7 @@ export function XttsCreateDialog({
 
     setExtracting(true)
     try {
-      const result = await window.electronAPI?.xttsExtractAudioClip(mediaPath, cropStart, cropEnd)
+      const result = await api.xttsExtractAudioClip(mediaPath, cropStart, cropEnd)
       if (result.success && result.dataUrl) {
         const audio = new Audio(result.dataUrl)
         audio.volume = voiceVolume
@@ -100,7 +102,7 @@ export function XttsCreateDialog({
 
     setExtracting(true)
     try {
-      const result = await window.electronAPI?.xttsExtractAudioClip(mediaPath, cropStart, cropEnd)
+      const result = await api.xttsExtractAudioClip(mediaPath, cropStart, cropEnd)
       if (result.success && result.outputPath) {
         setCreateXttsAudioPath(result.outputPath)
         setMediaPath('')

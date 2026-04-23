@@ -12,69 +12,39 @@ import {
   cleanupTerminal,
 } from './terminalInit.js'
 import { createThemeUpdateHandler } from './eventHandlers.js'
+import { useApi } from '../../../contexts/ApiContext'
 
 // Setup error handler on module load
 setupXtermErrorHandler()
 
 /**
- * Creates PTY operations from the provided API or window.electronAPI.
+ * Creates PTY operations from the provided API.
  */
 function createPtyOperations(api: UseTerminalSetupOptions['api']): PtyOperations {
   return {
     writePty: (id: string, data: string) => {
-      if (api) {
-        api.writePty(id, data)
-      } else {
-        window.electronAPI?.writePty(id, data)
-      }
+      api?.writePty(id, data)
     },
     resizePty: (id: string, cols: number, rows: number) => {
-      if (api) {
-        api.resizePty(id, cols, rows)
-      } else {
-        window.electronAPI?.resizePty(id, cols, rows)
-      }
+      api?.resizePty(id, cols, rows)
     },
     onPtyData: (id: string, callback: (data: string) => void) => {
-      if (api) {
-        return api.onPtyData(id, callback)
-      } else {
-        return window.electronAPI?.onPtyData(id, callback)
-      }
+      return api?.onPtyData(id, callback) || (() => {})
     },
     onPtyExit: (id: string, callback: (code: number) => void) => {
-      if (api) {
-        return api.onPtyExit(id, callback)
-      } else {
-        return window.electronAPI?.onPtyExit(id, callback)
-      }
+      return api?.onPtyExit(id, callback) || (() => {})
     },
     onPtyTitle: (id: string, callback: (title: string) => void) => {
-      if (api) {
-        return api.onPtyTitle?.(id, callback)
-      } else {
-        return window.electronAPI?.onPtyTitle?.((ptyId: string, title: string) => {
-          if (ptyId === id) callback(title)
-        })
-      }
+      return api?.onPtyTitle?.(id, callback) || (() => {})
     },
     onPtyPath: (id: string, callback: (path: string) => void) => {
-      if (api) {
-        return api.onPtyPath?.(id, callback)
-      } else {
-        return window.electronAPI?.onPtyPath?.((ptyId: string, path: string) => {
-          if (ptyId === id) callback(path)
-        })
-      }
+      return api?.onPtyPath?.(id, callback) || (() => {})
     },
     onPtyPid: (id: string, callback: (pid: string) => void) => {
-      if (api) {
-        return api.onPtyPid?.(id, callback)
-      } else {
-        return window.electronAPI?.onPtyPid?.((ptyId: string, pid: string) => {
-          if (ptyId === id) callback(pid)
-        })
-      }
+      return api?.onPtyPid?.(id, callback) || (() => {})
+    },
+    onPtyRecreated: (callback: (data: { oldId: string; newId: string; backend: any }) => void) => {
+      return api?.onPtyRecreated?.(callback) || (() => {})
     },
   }
 }
@@ -84,17 +54,20 @@ function createPtyOperations(api: UseTerminalSetupOptions['api']): PtyOperations
  * Handles terminal creation, PTY communication, WebGL addon, and event handlers.
  */
 export function useTerminalSetup(options: UseTerminalSetupOptions): UseTerminalSetupReturn {
+  const contextApi = useApi()
   const [isReady, setIsReady] = useState(false)
   const {
     ptyId,
     theme,
-    api,
+    api: overrideApi,
     onTTSChunk,
     onSummaryChunk,
     onAutoWorkMarker,
     onTokenChunk,
     resetTTSState,
   } = options
+
+  const api = overrideApi || contextApi
 
   const containerRef = useRef<HTMLDivElement>(null!)
   const terminalRef = useRef<XTerm | null>(null)
@@ -164,6 +137,16 @@ export function useTerminalSetup(options: UseTerminalSetupOptions): UseTerminalS
     const cleanupPath = ptyOperations.onPtyPath?.(ptyId, (path) => options.onTerminalPath?.(path))
     const cleanupPid = ptyOperations.onPtyPid?.(ptyId, (pid) => options.onProcessId?.(pid))
 
+    // Listen for PTY recreation (backend switching)
+    const cleanupRecreated = ptyOperations.onPtyRecreated?.((data) => {
+      if (data.oldId === ptyId && state.terminal) {
+        console.log(`[Terminal] PTY recreated (${data.backend}), clearing terminal`)
+        state.terminal.clear()
+        // Optionally reset TTS state or other session-specific state
+        resetTTSState()
+      }
+    })
+
     // Try to initialize terminal immediately, or poll until ready
     if (!tryInit()) {
       initCheckInterval = setInterval(() => {
@@ -199,6 +182,7 @@ export function useTerminalSetup(options: UseTerminalSetupOptions): UseTerminalS
       cleanupTitle?.()
       cleanupPath?.()
       cleanupPid?.()
+      cleanupRecreated?.()
       cleanupTerminal(containerRef, state, initCheckInterval, null, cleanupData, cleanupExit)
       setIsReady(false)
     }

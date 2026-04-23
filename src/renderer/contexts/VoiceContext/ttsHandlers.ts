@@ -1,5 +1,7 @@
 import { useCallback, useMemo, useRef, useEffect, useState } from 'react'
 import type { ProjectVoiceSettings, TTSRefs } from './types.js'
+import { useApi } from '../ApiContext'
+import type { ExtendedApi } from '../../api/types'
 
 export interface UseTTSHandlersOptions {
   settingsLoaded: boolean
@@ -41,6 +43,7 @@ export function useTTSHandlers({ settingsLoaded }: UseTTSHandlersOptions): UseTT
   const [volume, setVolumeState] = useState(1.0)
   const [speed, setSpeedState] = useState(1.0)
   const [skipOnNew, setSkipOnNewState] = useState(false)
+  const api = useApi() as ExtendedApi
 
   // Refs
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -84,10 +87,10 @@ export function useTTSHandlers({ settingsLoaded }: UseTTSHandlersOptions): UseTT
 
   // Save a single voice setting
   const saveVoiceSetting = useCallback(async (key: string, value: boolean | number) => {
-    if (!settingsLoaded || !window.electronAPI) return
-    const settings = await window.electronAPI?.getSettings()
-    await window.electronAPI?.saveSettings({ ...settings, [key]: value })
-  }, [settingsLoaded])
+    if (!settingsLoaded || !api) return
+    const settings = await api?.getSettings()
+    await api?.saveSettings({ ...settings, [key]: value })
+  }, [settingsLoaded, api])
 
   // Debounced save for slider-based settings (volume, speed) to avoid excessive IPC calls
   const debouncedSaveRef = useRef<{ timer: NodeJS.Timeout | null; pending: Map<string, boolean | number> }>({
@@ -131,9 +134,9 @@ export function useTTSHandlers({ settingsLoaded }: UseTTSHandlersOptions): UseTT
   const setSpeed = useCallback((s: number) => {
     const clamped = Math.max(0.5, Math.min(2.0, s))
     setSpeedState(clamped)
-    window.electronAPI?.voiceApplySettings?.({ ttsSpeed: clamped })
+    api?.voiceApplySettings?.({ ttsSpeed: clamped })
     debouncedSaveVoiceSetting('voiceSpeed', clamped)
-  }, [debouncedSaveVoiceSetting])
+  }, [debouncedSaveVoiceSetting, api])
 
   // Update skipOnNew and save
   const setSkipOnNew = useCallback((skip: boolean) => {
@@ -145,17 +148,17 @@ export function useTTSHandlers({ settingsLoaded }: UseTTSHandlersOptions): UseTT
   const setProjectVoice = useCallback((settings: ProjectVoiceSettings | null) => {
     projectVoiceRef.current = settings
     if (settings?.ttsVoice && settings?.ttsEngine) {
-      window.electronAPI?.voiceApplySettings?.({
+      api?.voiceApplySettings?.({
         ttsVoice: settings.ttsVoice,
         ttsEngine: settings.ttsEngine
       })
     } else if (globalVoiceRef.current) {
-      window.electronAPI?.voiceApplySettings?.({
+      api?.voiceApplySettings?.({
         ttsVoice: globalVoiceRef.current.voice,
         ttsEngine: globalVoiceRef.current.engine as 'piper' | 'xtts'
       })
     }
-  }, [])
+  }, [api])
 
   // Process the speak queue
   const processQueue = useCallback(async () => {
@@ -174,7 +177,7 @@ export function useTTSHandlers({ settingsLoaded }: UseTTSHandlersOptions): UseTT
       if (!text) continue
 
       try {
-        if (!window.electronAPI?.voiceSpeak) {
+        if (!api?.voiceSpeak) {
           continue
         }
         
@@ -182,7 +185,7 @@ export function useTTSHandlers({ settingsLoaded }: UseTTSHandlersOptions): UseTT
         const currentVoice = projectVoiceRef.current?.ttsVoice || globalVoiceRef.current?.voice
         const currentSpeed = speed // state variable
 
-        const result = await window.electronAPI?.voiceSpeak?.(text, currentVoice, currentSpeed)
+        const result = await api?.voiceSpeak?.(text, currentVoice, currentSpeed)
 
         if (processingGenerationRef.current !== myGeneration) {
           return
@@ -285,10 +288,10 @@ export function useTTSHandlers({ settingsLoaded }: UseTTSHandlersOptions): UseTT
       audioRef.current.pause()
       audioRef.current = null
     }
-    window.electronAPI?.voiceStopSpeaking?.()
+    api?.voiceStopSpeaking?.()
     setIsSpeaking(false)
     isProcessingRef.current = false
-  }, [])
+  }, [api])
 
   // Stop speaking when disabled
   useEffect(() => {

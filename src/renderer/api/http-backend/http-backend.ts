@@ -107,12 +107,15 @@ export class HttpBackend implements Api {
 
   // PTY Management
 
-  spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId, rows?: number, cols?: number): Promise<string> {
-    return this.ptyApi.spawnPty(cwd, sessionId, model, backend, rows, cols)
-  }
-
-  killPty(id: string): void {
-    this.ptyApi.killPty(id)
+  spawnPty(
+    cwd: string,
+    backend: BackendId,
+    sessionId?: string,
+    slug?: string,
+    rows?: number,
+    cols?: number
+  ): Promise<string> {
+    return this.ptyApi.spawnPty(cwd, backend, sessionId, slug, rows, cols)
   }
 
   writePty(id: string, data: string): void {
@@ -123,6 +126,10 @@ export class HttpBackend implements Api {
     this.ptyApi.resizePty(id, cols, rows)
   }
 
+  killPty(id: string): void {
+    this.ptyApi.killPty(id)
+  }
+
   onPtyData(id: string, callback: PtyDataCallback): Unsubscribe {
     return this.ptyApi.onPtyData(id, callback)
   }
@@ -131,8 +138,33 @@ export class HttpBackend implements Api {
     return this.ptyApi.onPtyExit(id, callback)
   }
 
+  async setPtyBackend(id: string, backend: BackendId): Promise<void> {
+    // Not yet supported via HTTP
+    console.warn('[HttpBackend] setPtyBackend not supported')
+  }
+
   onPtyRecreated(callback: PtyRecreatedCallback): Unsubscribe {
     return this.ptyApi.onPtyRecreated(callback)
+  }
+
+  onPtyTitle(_id: string, _callback: (title: string) => void): Unsubscribe {
+    return () => {}
+  }
+
+  onPtyPath(_id: string, _callback: (path: string) => void): Unsubscribe {
+    return () => {}
+  }
+
+  onPtyPid(_id: string, _callback: (pid: string) => void): Unsubscribe {
+    return () => {}
+  }
+
+  async getAutoAcceptStatus(_id: string): Promise<boolean> {
+    return false
+  }
+
+  async setAutoAccept(_id: string, _enabled: boolean): Promise<void> {
+    // Not yet supported via HTTP
   }
 
   // Session Management
@@ -232,5 +264,18 @@ export class HttpBackend implements Api {
   disconnect(): void {
     this.wsManager.disconnectAll()
     this.connection.setConnectionState('disconnected')
+  }
+
+  // CLAUDE.md Editor (Stub)
+  async claudeMdRead(_projectPath: string): Promise<{ success: boolean; content?: string; exists?: boolean; error?: string }> {
+    return { success: false, error: 'CLAUDE.md editing not supported via HTTP' }
+  }
+
+  async claudeMdSave(_projectPath: string, _content: string): Promise<{ success: boolean; error?: string }> {
+    return { success: false, error: 'CLAUDE.md editing not supported via HTTP' }
+  }
+
+  async mcpGetServers(): Promise<any[]> {
+    return []
   }
 }

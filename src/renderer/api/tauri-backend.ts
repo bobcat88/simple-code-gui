@@ -54,16 +54,37 @@ export class TauriBackend implements ExtendedApi {
   }
 
   onPtyRecreated(callback: PtyRecreatedCallback): Unsubscribe {
-    // Not implemented in Rust yet
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onPtyRecreated(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  onPtyTitle(_id: string, _callback: (title: string) => void): Unsubscribe {
+    // Not yet implemented in Tauri backend
+    return () => {};
+  }
+
+  onPtyPath(_id: string, _callback: (path: string) => void): Unsubscribe {
+    // Not yet implemented in Tauri backend
+    return () => {};
+  }
+
+  onPtyPid(_id: string, _callback: (pid: string) => void): Unsubscribe {
+    // Not yet implemented in Tauri backend
     return () => {};
   }
 
   async setPtyBackend(id: string, backend: BackendId): Promise<void> {
-    // Not implemented in Rust yet
+    await tauriIpc.setPtyBackend(id, backend);
   }
 
-  setAutoAccept(id: string, enabled: boolean): void {}
-  async getAutoAcceptStatus(id: string): Promise<boolean> { return false; }
+  setAutoAccept(id: string, enabled: boolean): void {
+    tauriIpc.setAutoAccept(id, enabled);
+  }
+
+  async getAutoAcceptStatus(id: string): Promise<boolean> {
+    return await tauriIpc.getAutoAcceptStatus(id);
+  }
 
   // Session Management
   async discoverSessions(projectPath: string, backend?: BackendId): Promise<Session[]> {
@@ -131,7 +152,7 @@ export class TauriBackend implements ExtendedApi {
     }
   }
 
-  // TTS
+  // Voice & TTS
   async ttsInstallInstructions(projectPath: string): Promise<{ success: boolean }> { 
     return await tauriIpc.voiceInstallPiper(); 
   }
@@ -141,6 +162,31 @@ export class TauriBackend implements ExtendedApi {
   async ttsStop(): Promise<{ success: boolean }> { 
     await tauriIpc.voiceStop();
     return { success: true };
+  }
+
+  async voiceCheckTTS(): Promise<any> { return await tauriIpc.voiceCheckTTS(); }
+  async voiceFetchCatalog(forceRefresh?: boolean): Promise<any[]> { return await tauriIpc.voiceFetchCatalog(forceRefresh); }
+  async voiceGetInstalled(): Promise<string[]> { return await tauriIpc.voiceGetInstalled(); }
+  async voiceDownloadFromCatalog(voiceKey: string): Promise<any> { return await tauriIpc.voiceDownloadFromCatalog(voiceKey); }
+  async voiceImportCustom(): Promise<any> { return await tauriIpc.voiceImportCustom(); }
+  async voiceOpenCustomFolder(): Promise<void> { return await tauriIpc.voiceOpenCustomFolder(); }
+  async voiceSaveSettings(settings: any): Promise<void> { return await tauriIpc.voiceSaveSettings(settings); }
+  async voiceInstallPiper(): Promise<any> { return await tauriIpc.voiceInstallPiper(); }
+  async voiceInstallVoice(modelId: string): Promise<any> { return await tauriIpc.voiceInstallVoice(modelId); }
+  
+  async xttsGetVoices(): Promise<any[]> { return await tauriIpc.xttsGetVoices(); }
+  async xttsGetSampleVoices(): Promise<any[]> { return await tauriIpc.xttsGetSampleVoices(); }
+  async xttsGetLanguages(): Promise<any[]> { return await tauriIpc.xttsGetLanguages(); }
+  async xttsCheck(): Promise<any> { return await tauriIpc.xttsCheck(); }
+  async xttsDownloadSampleVoice(voiceId: string): Promise<any> { return await tauriIpc.xttsDownloadSampleVoice(voiceId); }
+  async xttsDeleteVoice(voiceId: string): Promise<any> { return await tauriIpc.xttsDeleteVoice(voiceId); }
+  async xttsInstall(): Promise<any> { return await tauriIpc.xttsInstall(); }
+  async xttsCreateVoice(audioPath: string, name: string, language: string): Promise<any> { return await tauriIpc.xttsCreateVoice(audioPath, name, language); }
+
+  onInstallProgress(callback: (progress: any) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onInstallProgress(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
   }
 
   // Events
@@ -198,6 +244,7 @@ export class TauriBackend implements ExtendedApi {
   async mcpListResources(serverName: string): Promise<any> { return await tauriIpc.mcpListResources(serverName); }
   async mcpReadResource(serverName: string, uri: string): Promise<any> { return await tauriIpc.mcpReadResource(serverName, uri); }
   async mcpLoadConfig(): Promise<void> { await tauriIpc.mcpLoadConfig(); }
+  async mcpGetServers(): Promise<any[]> { return await tauriIpc.mcpGetServers(); }
 
   // Updater Implementation
   async checkForUpdate(): Promise<{ available: boolean; version?: string; body?: string }> {
@@ -273,22 +320,22 @@ export class TauriBackend implements ExtendedApi {
   }
 
   // Orchestration (Beads/Kspec)
-  async kspec_dispatch_status(cwd: string): Promise<any> {
+  async kspecDispatchStatus(cwd: string): Promise<any> {
     return await tauriIpc.kspecDispatchStatus(cwd);
   }
-  async kspec_dispatch_start(cwd: string): Promise<{ success: boolean; error?: string }> {
+  async kspecDispatchStart(cwd: string): Promise<{ success: boolean; error?: string }> {
     return await tauriIpc.kspecDispatchStart(cwd);
   }
-  async kspec_dispatch_stop(cwd: string): Promise<{ success: boolean; error?: string }> {
+  async kspecDispatchStop(cwd: string): Promise<{ success: boolean; error?: string }> {
     return await tauriIpc.kspecDispatchStop(cwd);
   }
-  async beads_list(cwd: string): Promise<any> {
+  async beadsList(cwd: string): Promise<any> {
     return await tauriIpc.beadsList(cwd);
   }
-  async beads_start(cwd: string, task_id: string): Promise<any> {
+  async beadsStart(cwd: string, task_id: string): Promise<any> {
     return await tauriIpc.beadsStart(cwd, task_id);
   }
-  async beads_complete(cwd: string, task_id: string): Promise<any> {
+  async beadsComplete(cwd: string, task_id: string): Promise<any> {
     return await tauriIpc.beadsComplete(cwd, task_id);
   }
 
@@ -313,8 +360,48 @@ export class TauriBackend implements ExtendedApi {
     return await tauriIpc.getPendingApprovals(cwd);
   }
 
-  // Diagnostics
+  // Background Jobs
+  async jobsCreate(jobType: string, payload: any): Promise<string> { return await tauriIpc.jobsCreate(jobType, payload); }
+  async jobsGet(id: string): Promise<any> { return await tauriIpc.jobsGet(id); }
+  async jobsList(limit?: number): Promise<any[]> { return await tauriIpc.jobsList(limit); }
+  onJobProgress(callback: (data: { id: string, progress: number, message: string }) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onJobProgress(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+  onJobStatusChanged(callback: (id: string) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onJobStatusChanged(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  // Activity Feed
+  async activityGetRecent(limit?: number): Promise<any[]> { return await tauriIpc.activityGetRecent(limit); }
+  async activityLogInfo(source: string, message: string, metadata?: string): Promise<void> { return await tauriIpc.activityLogInfo(source, message, metadata); }
+  onActivityEvent(callback: (event: any) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onActivityEvent(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  // Agents
+  async agentRegister(agent: any): Promise<void> { return await tauriIpc.agentRegister(agent); }
+  async agentList(): Promise<any[]> { return await tauriIpc.agentList(); }
+  async agentUpdateStatus(id: string, status: string): Promise<void> { return await tauriIpc.agentUpdateStatus(id, status); }
+
+  // Health & Diagnostics
+  async healthGetStatus(): Promise<any> { return await tauriIpc.healthGetStatus(); }
+  async healthLogCheck(checkType: string, status: string, details?: string): Promise<void> { return await tauriIpc.healthLogCheck(checkType, status, details); }
   async diagnosticsGenerateBundle(): Promise<any> {
     return await tauriIpc.diagnosticsGenerateBundle();
+  }
+
+  // CLAUDE.md Editor
+  async claudeMdRead(projectPath: string): Promise<{ success: boolean; content?: string; exists?: boolean; error?: string }> {
+    return await tauriIpc.claudeMdRead(projectPath);
+  }
+
+  async claudeMdSave(projectPath: string, content: string): Promise<{ success: boolean; error?: string }> {
+    return await tauriIpc.claudeMdSave(projectPath, content);
   }
 }

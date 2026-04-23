@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { useApi } from '../contexts/ApiContext'
+import type { ExtendedApi } from '../api/types'
 
 interface CustomCommandModalProps {
   isOpen: boolean
@@ -11,6 +13,7 @@ type CommandScope = 'project' | 'global'
 export function CustomCommandModal({ isOpen, onClose, projectPath }: CustomCommandModalProps) {
   const [commandName, setCommandName] = useState('')
   const [commandContent, setCommandContent] = useState('')
+  const api = useApi() as ExtendedApi
   const [scope, setScope] = useState<CommandScope>('project')
   const [error, setError] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -52,7 +55,7 @@ export function CustomCommandModal({ isOpen, onClose, projectPath }: CustomComma
     setError('')
 
     try {
-      const result = await window.electronAPI?.commandsSave(
+      const result = await api?.commandsSave?.(
         trimmedName,
         commandContent,
         scope === 'project' ? projectPath! : null

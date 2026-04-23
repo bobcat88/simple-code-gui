@@ -55,6 +55,7 @@ export function createWheelHandler(
 export function createContextMenuHandler(
   terminal: XTerm,
   ptyId: string,
+  api: any, // Use any or proper type from TerminalGlobals
   backend?: BackendType,
   currentLineInputRef?: MutableRefObject<string>
 ): (e: MouseEvent) => void {
@@ -64,7 +65,7 @@ export function createContextMenuHandler(
     if (selection) {
       navigator.clipboard.writeText(selection)
     } else {
-      handlePaste(terminal, ptyId, backend, currentLineInputRef)
+      handlePaste(terminal, ptyId, api, backend, currentLineInputRef)
     }
   }
 }
@@ -75,13 +76,14 @@ export function createContextMenuHandler(
 export function createAuxClickHandler(
   terminal: XTerm,
   ptyId: string,
+  api: any,
   backend?: BackendType,
   currentLineInputRef?: MutableRefObject<string>
 ): (e: MouseEvent) => void {
   return (e: MouseEvent) => {
     if (e.button === 1) {
       e.preventDefault()
-      handlePaste(terminal, ptyId, backend, currentLineInputRef)
+      handlePaste(terminal, ptyId, api, backend, currentLineInputRef)
     }
   }
 }

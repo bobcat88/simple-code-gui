@@ -2,22 +2,25 @@ import React, { createContext, useEffect, useState, useMemo, useCallback, useRef
 import type { VoiceContextValue } from './types.js'
 import { useTTSHandlers } from './ttsHandlers.js'
 import { useSTTHandlers } from './sttHandlers.js'
+import { useApi } from '../ApiContext'
+import type { ExtendedApi } from '../../api/types'
 
 export const VoiceContext = createContext<VoiceContextValue | null>(null)
 
 export function VoiceProvider({ children }: { children: React.ReactNode }): React.ReactElement {
   const [settingsLoaded, setSettingsLoaded] = useState(false)
   const [autoListenEnabled, setAutoListenEnabledState] = useState(false)
+  const api = useApi() as ExtendedApi
 
   // Initialize TTS handlers
   const tts = useTTSHandlers({ settingsLoaded })
 
   // Create save function for STT handlers
   const saveVoiceSetting = useCallback(async (key: string, value: boolean | number | string) => {
-    if (!settingsLoaded || !window.electronAPI) return
-    const settings = await window.electronAPI?.getSettings()
-    await window.electronAPI?.saveSettings({ ...settings, [key]: value })
-  }, [settingsLoaded])
+    if (!settingsLoaded || !api) return
+    const settings = await api?.getSettings()
+    await api?.saveSettings({ ...settings, [key]: value })
+  }, [settingsLoaded, api])
 
   const setAutoListenEnabled = useCallback((enabled: boolean) => {
     setAutoListenEnabledState(enabled)
@@ -97,17 +100,17 @@ export function VoiceProvider({ children }: { children: React.ReactNode }): Reac
 
   // Load settings on mount
   useEffect(() => {
-    if (!window.electronAPI) {
+    if (!api) {
       setSettingsLoaded(true)
       return
     }
-    window.electronAPI?.getSettings().then((settings) => {
+    api?.getSettings().then((settings) => {
       if (settings.voiceOutputEnabled !== undefined) tts.setVoiceOutputEnabledState(settings.voiceOutputEnabled)
       if (settings.voiceSilenceThreshold !== undefined) stt.setSilenceThresholdState(settings.voiceSilenceThreshold)
       if (settings.voiceVolume !== undefined) tts.setVolumeState(settings.voiceVolume)
       if (settings.voiceSpeed !== undefined) {
         tts.setSpeedState(settings.voiceSpeed)
-        window.electronAPI?.voiceApplySettings?.({ ttsSpeed: settings.voiceSpeed })
+        api?.voiceApplySettings?.({ ttsSpeed: settings.voiceSpeed })
       }
       if (settings.voiceSkipOnNew !== undefined) tts.setSkipOnNewState(settings.voiceSkipOnNew)
       if (settings.voicePushToTalk !== undefined) stt.setPushToTalkEnabledState(settings.voicePushToTalk)
@@ -116,7 +119,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }): Reac
     }).catch(() => setSettingsLoaded(true))
 
     // Load global voice settings for project override feature
-    window.electronAPI?.voiceGetSettings?.()?.then((voiceSettings) => {
+    api?.voiceGetSettings?.()?.then((voiceSettings) => {
       if (voiceSettings) {
         tts.refs.globalVoiceRef.current = {
           voice: voiceSettings.ttsVoice || '',

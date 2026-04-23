@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useApi } from '../contexts/ApiContext'
 
 interface ClaudeMdEditorProps {
   isOpen: boolean
@@ -8,6 +9,7 @@ interface ClaudeMdEditorProps {
 }
 
 export function ClaudeMdEditor({ isOpen, onClose, projectPath, projectName }: ClaudeMdEditorProps) {
+  const api = useApi()
   const [content, setContent] = useState('')
   const [originalContent, setOriginalContent] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -25,7 +27,7 @@ export function ClaudeMdEditor({ isOpen, onClose, projectPath, projectName }: Cl
     setIsLoading(true)
     setError('')
     try {
-      const result = await window.electronAPI?.claudeMdRead(projectPath)
+      const result = await api.claudeMdRead(projectPath)
       if (result.success) {
         setContent(result.content || '')
         setOriginalContent(result.content || '')
@@ -44,7 +46,7 @@ export function ClaudeMdEditor({ isOpen, onClose, projectPath, projectName }: Cl
     setIsSaving(true)
     setError('')
     try {
-      const result = await window.electronAPI?.claudeMdSave(projectPath, content)
+      const result = await api.claudeMdSave(projectPath, content)
       if (result.success) {
         setOriginalContent(content)
         setFileExists(true)

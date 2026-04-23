@@ -1,4 +1,6 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState, useEffect } from 'react'
+import { useApi } from '../ApiContext'
+import type { ExtendedApi } from '../../api/types'
 import type { WhisperModelSize, WhisperInstance, WhisperTranscriberConfig, STTRefs } from './types.js'
 import { WHISPER_MODEL_URLS, WHISPER_MODEL_SIZES } from './constants.js'
 
@@ -59,6 +61,7 @@ export function useSTTHandlers({ saveVoiceSetting }: UseSTTHandlersOptions): Use
   const [audioLevel, setAudioLevel] = useState(0)
   const [silenceThreshold, setSilenceThresholdState] = useState(5)
   const [pushToTalkEnabled, setPushToTalkEnabledState] = useState(false)
+  const api = useApi() as ExtendedApi
   const pushToTalkRef = useRef(false)
 
   // Refs

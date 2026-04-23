@@ -5,19 +5,19 @@
  * Prefers kspec if both are present. Falls back to beads. Returns 'none' if neither.
  */
 
+import type { Api } from '../../../api/types.js'
 import type { BackendKind, TaskAdapter } from './types.js'
 import { BeadsAdapter } from './beads-adapter.js'
 import { KspecAdapter } from './kspec-adapter.js'
-
-// Singleton adapters — stateless enough to reuse
-const beadsAdapter = new BeadsAdapter()
-const kspecAdapter = new KspecAdapter()
 
 /**
  * Detect which backend is available for a project directory.
  * Checks filesystem via IPC — does not require daemon to be running.
  */
-export async function detectBackend(cwd: string): Promise<BackendKind> {
+export async function detectBackend(cwd: string, api: Api): Promise<BackendKind> {
+  const kspecAdapter = new KspecAdapter(api)
+  const beadsAdapter = new BeadsAdapter(api)
+
   // Check kspec first (preferred when both exist)
   const kspecStatus = await kspecAdapter.check(cwd)
   if (kspecStatus.initialized) return 'kspec'
@@ -36,10 +36,10 @@ export async function detectBackend(cwd: string): Promise<BackendKind> {
 /**
  * Get the adapter for a given backend kind.
  */
-export function getAdapter(kind: BackendKind): TaskAdapter | null {
+export function getAdapter(kind: BackendKind, api: Api): TaskAdapter | null {
   switch (kind) {
-    case 'beads': return beadsAdapter
-    case 'kspec': return kspecAdapter
+    case 'beads': return new BeadsAdapter(api)
+    case 'kspec': return new KspecAdapter(api)
     default: return null
   }
 }
@@ -48,9 +48,7 @@ export function getAdapter(kind: BackendKind): TaskAdapter | null {
  * Detect backend and return the appropriate adapter.
  * Returns null if no backend is initialized.
  */
-export async function getAdapterForProject(cwd: string): Promise<TaskAdapter | null> {
-  const kind = await detectBackend(cwd)
-  return getAdapter(kind)
+export async function getAdapterForProject(cwd: string, api: Api): Promise<TaskAdapter | null> {
+  const kind = await detectBackend(cwd, api)
+  return getAdapter(kind, api)
 }
-
-export { beadsAdapter, kspecAdapter }

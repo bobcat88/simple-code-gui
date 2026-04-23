@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useApi } from '../contexts/ApiContext'
+import type { ExtendedApi } from '../api/types'
 import { getApi } from '../api'
 
 export type UpdateStatusType = 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'error'
@@ -20,18 +22,17 @@ interface UseUpdaterReturn {
 
 export function useUpdater(): UseUpdaterReturn {
   const [appVersion, setAppVersion] = useState<string>('')
+  const api = useApi() as ExtendedApi
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ status: 'idle' })
 
   // Load app version on mount
   useEffect(() => {
-    const api = getApi()
     if (api && 'getVersion' in api) {
       api.getVersion().then(setAppVersion).catch(console.error)
     }
-  }, [])
+  }, [api])
 
   const checkForUpdate = useCallback(async () => {
-    const api = getApi()
     if (!api || !('checkForUpdate' in api)) return
 
     setUpdateStatus({ status: 'checking' })
@@ -48,10 +49,9 @@ export function useUpdater(): UseUpdaterReturn {
     } catch (e) {
       setUpdateStatus({ status: 'error', error: String(e) })
     }
-  }, [])
+  }, [api])
 
   const downloadUpdate = useCallback(async () => {
-    const api = getApi()
     if (!api || !('downloadUpdate' in api)) return
 
     setUpdateStatus(prev => ({
@@ -73,11 +73,10 @@ export function useUpdater(): UseUpdaterReturn {
   }, [])
 
   const installUpdate = useCallback(() => {
-    const api = getApi()
     if (api && 'installUpdate' in api) {
       api.installUpdate()
     }
-  }, [])
+  }, [api])
 
   return {
     appVersion,

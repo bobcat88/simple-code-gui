@@ -2,14 +2,8 @@ import { useCallback, useRef } from 'react'
 import { Project, useWorkspaceStore } from '../../stores/workspace.js'
 import { SidebarState } from './useSidebarState.js'
 import { SidebarProps } from './types.js'
-
-// Use type assertion for extended electronAPI methods not in the base type
-const electronAPI = window.electronAPI as (typeof window.electronAPI) & {
-  selectExecutable?: () => Promise<string | null>
-  runExecutable?: (executable: string, cwd: string) => Promise<{ success: boolean; error?: string }>
-  getCategoryMetaPath?: (categoryName: string) => Promise<string>
-  getMetaProjectsPath?: () => Promise<string>
-}
+import { useApi } from '../../contexts/ApiContext'
+import { ExtendedApi } from '../../api/types'
 
 export interface SidebarHandlers {
   // Project handlers
@@ -52,6 +46,7 @@ export interface UseSidebarHandlersParams {
 }
 
 export function useSidebarHandlers(params: UseSidebarHandlersParams): SidebarHandlers {
+  const api = useApi() as ExtendedApi
   const { state, onUpdateProject, onOpenSession, isMobile, onMobileClose } = params
   const {
     setContextMenu,
@@ -71,11 +66,11 @@ export function useSidebarHandlers(params: UseSidebarHandlersParams): SidebarHan
   // Project handlers
   const handleSelectExecutable = useCallback(
     async (project: Project) => {
-      const executable = await electronAPI?.selectExecutable?.()
+      const executable = await api.selectExecutable?.()
       if (executable) onUpdateProject(project.path, { executable })
       setContextMenu(null)
     },
-    [onUpdateProject, setContextMenu]
+    [onUpdateProject, setContextMenu, api]
   )
 
   const handleClearExecutable = useCallback(
@@ -83,18 +78,18 @@ export function useSidebarHandlers(params: UseSidebarHandlersParams): SidebarHan
       onUpdateProject(project.path, { executable: undefined })
       setContextMenu(null)
     },
-    [onUpdateProject, setContextMenu]
+    [onUpdateProject, setContextMenu, api]
   )
 
   const handleRunExecutable = useCallback(
     async (project: Project) => {
       if (project.executable) {
-        const result = await electronAPI?.runExecutable?.(project.executable, project.path)
+        const result = await api.runExecutable?.(project.executable, project.path)
         if (result && !result.success) console.error('Failed to run executable:', result.error)
       }
       setContextMenu(null)
     },
-    [setContextMenu]
+    [setContextMenu, api]
   )
 
   // Rename handlers
@@ -142,16 +137,16 @@ export function useSidebarHandlers(params: UseSidebarHandlersParams): SidebarHan
 
   const handleOpenCategoryAsProject = useCallback(
     async (categoryName: string) => {
-      const metaPath = await electronAPI?.getCategoryMetaPath?.(categoryName)
+      const metaPath = await api.getCategoryMetaPath?.(categoryName)
       if (metaPath) onOpenSession(metaPath)
     },
-    [onOpenSession]
+    [onOpenSession, api]
   )
 
   const handleOpenAllProjects = useCallback(async () => {
-    const metaPath = await electronAPI?.getMetaProjectsPath?.()
+    const metaPath = await api.getMetaProjectsPath?.()
     if (metaPath) onOpenSession(metaPath)
-  }, [onOpenSession])
+  }, [onOpenSession, api])
 
   // Category rename cancel ref (same pattern as project rename)
   const categoryRenameCancelledRef = useRef(false)

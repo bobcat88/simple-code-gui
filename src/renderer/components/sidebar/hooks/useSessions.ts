@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Project } from '../../../stores/workspace.js'
+import { useApi } from '../../../contexts/ApiContext'
+import type { ExtendedApi } from '../../../api/types'
 import { OpenTab, ClaudeSession } from '../types.js'
 import type { BackendId } from '../../../api/types'
 
@@ -38,6 +40,7 @@ export function useSessions({
 }: UseSessionsOptions): UseSessionsReturn {
   const [expandedProject, setExpandedProject] = useState<string | null>(null)
   const [sessions, setSessions] = useState<Record<string, ClaudeSession[]>>({})
+  const api = useApi() as ExtendedApi
 
   // Load sessions when a project is expanded
   useEffect(() => {
@@ -48,7 +51,7 @@ export function useSessions({
           const backend = ((project?.backend && project.backend !== 'default')
             ? project.backend
             : 'claude') as BackendId
-          const projectSessions = (await window.electronAPI?.discoverSessions(
+          const projectSessions = (await api?.discoverSessions(
             expandedProject,
             backend
           )) as ClaudeSession[] | undefined
@@ -59,7 +62,7 @@ export function useSessions({
       }
     }
     loadSessions()
-  }, [expandedProject, projects])
+  }, [expandedProject, projects, api])
 
   const toggleProject = useCallback((e: React.MouseEvent, path: string) => {
     e.stopPropagation()
@@ -83,7 +86,7 @@ export function useSessions({
 
       if (!projectSessions) {
         try {
-          projectSessions = ((await window.electronAPI?.discoverSessions(projectPath, backend)) as ClaudeSession[] | undefined) ?? []
+          projectSessions = ((await api?.discoverSessions(projectPath, backend)) as ClaudeSession[] | undefined) ?? []
           setSessions((prev) => ({ ...prev, [projectPath]: projectSessions! }))
         } catch (e) {
           console.error('Failed to discover sessions:', e)

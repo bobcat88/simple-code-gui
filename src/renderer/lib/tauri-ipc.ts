@@ -22,6 +22,9 @@ export const tauriIpc = {
   killSession: (id: string) => 
     invoke<void>('kill_session', { id }),
     
+  setPtyBackend: (id: string, backend: string) => 
+    invoke<void>('set_pty_backend', { id, backend }),
+    
   getSettings: () => 
     invoke<any>('get_settings'),
     
@@ -39,6 +42,9 @@ export const tauriIpc = {
     
   onPtyExit: (id: string, callback: (code: number) => void): Promise<UnlistenFn> => 
     listen<number>(`pty-exit-${id}`, (event) => callback(event.payload)),
+    
+  onPtyRecreated: (callback: (data: { oldId: string, newId: string, backend: string }) => void): Promise<UnlistenFn> => 
+    listen<{ oldId: string, newId: string, backend: string }>('pty-recreated', (event) => callback(event.payload)),
     
   onSettingsChanged: (callback: (settings: any) => void): Promise<UnlistenFn> =>
     listen<any>('settings-changed', (event) => callback(event.payload)),
@@ -88,6 +94,8 @@ export const tauriIpc = {
     invoke<any>('mcp_read_resource', { serverName, uri }),
   mcpLoadConfig: () =>
     invoke<void>('mcp_load_config'),
+  mcpGetServers: () =>
+    invoke<any[]>('get_registered_mcp_servers'),
 
   discoverSessions: (projectPath: string, backend?: string) =>
     invoke<any[]>('discover_sessions', { projectPath, backend }),
@@ -119,6 +127,32 @@ export const tauriIpc = {
   getTokenHistory: (filters?: any) =>
     invoke<any>('get_token_history', { filters }),
 
+  // Voice & XTTS
+  voiceCheckTTS: () => invoke<any>('voice_check_tts'),
+  voiceFetchCatalog: (forceRefresh?: boolean) => invoke<any[]>('voice_fetch_catalog', { forceRefresh }),
+  voiceGetInstalled: () => invoke<string[]>('voice_get_installed'),
+  voiceDownloadFromCatalog: (voiceKey: string) => invoke<any>('voice_download_from_catalog', { voiceKey }),
+  voiceImportCustom: () => invoke<any>('voice_import_custom'),
+  voiceOpenCustomFolder: () => invoke<void>('voice_open_custom_folder'),
+  voiceSaveSettings: (settings: any) => invoke<void>('voice_save_settings', { settings }),
+  voiceSpeak: (text: string, voice?: string, speed?: number) => invoke<any>('voice_speak', { text, voice, speed }),
+  voiceStop: () => invoke<void>('voice_stop'),
+  voiceInstallPiper: () => invoke<any>('voice_install_piper'),
+  voiceInstallVoice: (modelId: string) => invoke<any>('voice_install_voice', { model_id: modelId }),
+  
+  xttsGetVoices: () => invoke<any[]>('xtts_get_voices'),
+  xttsGetSampleVoices: () => invoke<any[]>('xtts_get_sample_voices'),
+  xttsGetLanguages: () => invoke<any[]>('xtts_get_languages'),
+  xttsCheck: () => invoke<any>('xtts_check'),
+  xttsDownloadSampleVoice: (voiceId: string) => invoke<any>('xtts_download_sample_voice', { voiceId }),
+  xttsDeleteVoice: (voiceId: string) => invoke<any>('xtts_delete_voice', { voiceId }),
+  xttsInstall: () => invoke<any>('xtts_install'),
+  xttsCreateVoice: (audioPath: string, name: string, language: string) => invoke<any>('xtts_create_voice', { audioPath, name, language }),
+
+  // Auto-accept
+  getAutoAcceptStatus: (ptyId: string) => invoke<boolean>('get_auto_accept_status', { ptyId }),
+  setAutoAccept: (ptyId: string, enabled: boolean) => invoke<void>('set_auto_accept', { ptyId, enabled }),
+
   projectScan: (path: string, options: any) =>
     invoke<any>('project_scan', { path, options }),
 
@@ -133,6 +167,9 @@ export const tauriIpc = {
 
   onProjectInitializationProgress: (callback: (progress: any) => void): Promise<UnlistenFn> =>
     listen<any>('project-initialization-progress', (event) => callback(event.payload)),
+
+  onInstallProgress: (callback: (progress: any) => void): Promise<UnlistenFn> =>
+    listen<any>('install-progress', (event) => callback(event.payload)),
 
   // Orchestration (Beads/Kspec)
   kspecDispatchStatus: (cwd: string) =>
@@ -157,20 +194,6 @@ export const tauriIpc = {
     invoke<{ success: boolean }>('respond_to_approval', { response }),
   getPendingApprovals: (cwd: string) =>
     invoke<any[]>('get_pending_approvals', { cwd }),
-
-  // Voice
-  voiceCheckTts: () =>
-    invoke<any>('voice_check_tts'),
-  voiceInstallPiper: () =>
-    invoke<any>('voice_install_piper'),
-  voiceInstallVoice: (modelId: string) =>
-    invoke<any>('voice_install_voice', { model_id: modelId }),
-  voiceGetInstalled: () =>
-    invoke<string[]>('voice_get_installed'),
-  voiceSpeak: (text: string, voice?: string, speed?: number) =>
-    invoke<any>('voice_speak', { text, voice, speed }),
-  voiceStop: () =>
-    invoke<void>('voice_stop'),
 
   // Background Jobs
   jobsCreate: (jobType: string, payload: any) =>
@@ -207,4 +230,10 @@ export const tauriIpc = {
     invoke<void>('health_log_check', { checkType, status, details }),
   diagnosticsGenerateBundle: () =>
     invoke<any>('diagnostics_generate_bundle'),
+
+  // CLAUDE.md
+  claudeMdRead: (projectPath: string) =>
+    invoke<{ success: boolean; content?: string; exists?: boolean; error?: string }>('claude_md_read', { projectPath }),
+  claudeMdSave: (projectPath: string, content: string) =>
+    invoke<{ success: boolean; error?: string }>('claude_md_save', { projectPath, content }),
 };

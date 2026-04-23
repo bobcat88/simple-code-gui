@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useApi } from '../contexts/ApiContext'
 
 export interface McpServer {
   name: string
@@ -21,13 +22,14 @@ export interface McpResource {
 }
 
 export function useMcp() {
+  const api = useApi()
   const queryClient = useQueryClient()
 
   const serversQuery = useQuery({
     queryKey: ['mcp-servers'],
     queryFn: async () => {
-      if (window.electronAPI?.mcpGetServers) {
-        return await window.electronAPI.mcpGetServers() as McpServer[]
+      if (api.mcpGetServers) {
+        return await api.mcpGetServers() as McpServer[]
       }
       return []
     }
@@ -35,8 +37,8 @@ export function useMcp() {
 
   const loadConfigMutation = useMutation({
     mutationFn: async () => {
-      if (window.electronAPI?.mcpLoadConfig) {
-        await window.electronAPI.mcpLoadConfig()
+      if (api.mcpLoadConfig) {
+        await api.mcpLoadConfig()
       }
     },
     onSuccess: () => {
@@ -45,31 +47,31 @@ export function useMcp() {
   })
 
   const listTools = async (serverName: string) => {
-    if (window.electronAPI?.mcpListTools) {
-      const res = await window.electronAPI.mcpListTools(serverName)
+    if (api.mcpListTools) {
+      const res = await api.mcpListTools(serverName)
       return (res?.tools || []) as McpTool[]
     }
     return []
   }
 
   const callTool = async (serverName: string, toolName: string, args: any) => {
-    if (window.electronAPI?.mcpCallTool) {
-      return await window.electronAPI.mcpCallTool(serverName, toolName, args)
+    if (api.mcpCallTool) {
+      return await api.mcpCallTool(serverName, toolName, args)
     }
     throw new Error('MCP Call Tool not available')
   }
 
   const listResources = async (serverName: string) => {
-    if (window.electronAPI?.mcpListResources) {
-      const res = await window.electronAPI.mcpListResources(serverName)
+    if (api.mcpListResources) {
+      const res = await api.mcpListResources(serverName)
       return (res?.resources || []) as McpResource[]
     }
     return []
   }
 
   const readResource = async (serverName: string, uri: string) => {
-    if (window.electronAPI?.mcpReadResource) {
-      return await window.electronAPI.mcpReadResource(serverName, uri)
+    if (api.mcpReadResource) {
+      return await api.mcpReadResource(serverName, uri)
     }
     throw new Error('MCP Read Resource not available')
   }

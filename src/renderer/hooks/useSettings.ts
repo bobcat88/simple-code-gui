@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Theme, getThemeById, applyTheme, themes } from '../themes'
+import { useApi } from '../contexts/ApiContext'
 
 export interface TerminalColorsCustomization {
   black?: string
@@ -55,19 +56,16 @@ interface UseSettingsReturn {
 }
 
 export function useSettings(): UseSettingsReturn {
+  const api = useApi()
   const [settings, setSettings] = useState<AppSettings | null>(null)
   const [currentTheme, setCurrentTheme] = useState<Theme>(themes[0])
   const [loading, setLoading] = useState(true)
 
   // Load settings on mount
   useEffect(() => {
-    if (!window.electronAPI) {
-      setLoading(false)
-      return
-    }
     const loadSettings = async () => {
       try {
-        const loadedSettings = await window.electronAPI?.getSettings()
+        const loadedSettings = await api.getSettings()
         if (!loadedSettings) {
           return
         }
@@ -84,7 +82,7 @@ export function useSettings(): UseSettingsReturn {
       }
     }
     loadSettings()
-  }, [])
+  }, [api])
 
   const updateSettings = useCallback((newSettings: AppSettings) => {
     setSettings(newSettings)

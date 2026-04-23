@@ -88,9 +88,11 @@ function toUnified(raw: Record<string, unknown>): UnifiedTask {
 export class KspecAdapter implements TaskAdapter {
   readonly kind = 'kspec' as const
 
+  constructor(private api: Api) {}
+
   async check(cwd: string): Promise<BackendStatus> {
-    if (window.electronAPI?.kspecCheck) {
-      const res = await window.electronAPI.kspecCheck(cwd)
+    if (this.api.kspecCheck) {
+      const res = await this.api.kspecCheck(cwd)
       return { 
         kind: 'kspec', 
         installed: !!res?.installed, 
@@ -101,13 +103,13 @@ export class KspecAdapter implements TaskAdapter {
   }
 
   async init(cwd: string): Promise<{ success: boolean; error?: string }> {
-    const result = await window.electronAPI?.kspecInit?.(cwd)
+    const result = await this.api.kspecInit?.(cwd)
     return { success: !!result?.success, error: result?.error }
   }
 
   async list(cwd: string): Promise<UnifiedTask[]> {
     try {
-      const res = await window.electronAPI?.kspecList?.(cwd)
+      const res = await this.api.kspecList?.(cwd)
       if (res?.success && Array.isArray(res.items)) {
         return res.items.map(toUnified)
       }
@@ -119,7 +121,7 @@ export class KspecAdapter implements TaskAdapter {
 
   async show(cwd: string, taskId: string): Promise<UnifiedTask | null> {
     try {
-      const res = await window.electronAPI?.kspecShow?.(cwd, taskId)
+      const res = await this.api.kspecShow?.(cwd, taskId)
       if (res?.success && res.task) {
         return toUnified(res.task)
       }
@@ -131,7 +133,7 @@ export class KspecAdapter implements TaskAdapter {
 
   async create(cwd: string, params: CreateTaskParams): Promise<{ success: boolean; error?: string }> {
     try {
-      const res = await window.electronAPI?.kspecCreate?.(
+      const res = await this.api.kspecCreate?.(
         cwd, 
         params.title, 
         params.description, 
@@ -147,7 +149,7 @@ export class KspecAdapter implements TaskAdapter {
 
   async start(cwd: string, taskId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const res = await window.electronAPI?.kspecStart?.(cwd, taskId)
+      const res = await this.api.kspecStart?.(cwd, taskId)
       return { success: !!res?.success, error: res?.error }
     } catch (e) {
       return { success: false, error: String(e) }
@@ -156,7 +158,7 @@ export class KspecAdapter implements TaskAdapter {
 
   async complete(cwd: string, taskId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const res = await window.electronAPI?.kspecComplete?.(cwd, taskId)
+      const res = await this.api.kspecComplete?.(cwd, taskId)
       return { success: !!res?.success, error: res?.error }
     } catch (e) {
       return { success: false, error: String(e) }
@@ -165,7 +167,7 @@ export class KspecAdapter implements TaskAdapter {
 
   async delete(cwd: string, taskId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const res = await window.electronAPI?.kspecDelete?.(cwd, taskId)
+      const res = await this.api.kspecDelete?.(cwd, taskId)
       return { success: !!res?.success, error: res?.error }
     } catch (e) {
       return { success: false, error: String(e) }
@@ -176,7 +178,7 @@ export class KspecAdapter implements TaskAdapter {
     try {
       // Map unified status names back to kspec native status names
       const status = params.status === 'open' ? 'pending' : (params.status === 'closed' ? 'completed' : params.status)
-      const res = await window.electronAPI?.kspecUpdate?.(
+      const res = await this.api.kspecUpdate?.(
         cwd, 
         taskId, 
         status, 
@@ -202,16 +204,16 @@ export class KspecAdapter implements TaskAdapter {
   }
 
   watch(cwd: string): void {
-    window.electronAPI?.kspecWatch?.(cwd)
+    this.api.kspecWatch?.(cwd)
   }
 
   unwatch(cwd: string): void {
-    window.electronAPI?.kspecUnwatch?.(cwd)
+    this.api.kspecUnwatch?.(cwd)
   }
 
   onTasksChanged(callback: (data: { cwd: string }) => void): () => void {
-    if (window.electronAPI?.onKspecTasksChanged) {
-      return window.electronAPI.onKspecTasksChanged(callback)
+    if (this.api.onKspecTasksChanged) {
+      return this.api.onKspecTasksChanged(callback)
     }
     return () => {}
   }

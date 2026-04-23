@@ -17,7 +17,7 @@ export interface TerminalProps {
   onFocus?: () => void
   projectPath?: string | null
   backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
-  api?: Api  // API abstraction for PTY operations (uses electronAPI if not provided)
+  api?: Api  // API abstraction for PTY operations (consumed from ApiContext if not provided)
   isMobile?: boolean  // Whether running on mobile (for mobile-specific UI)
   onOpenFileBrowser?: () => void  // Callback to open file browser (mobile only)
   isTiled?: boolean  // Whether rendering in a tiled layout (removes large paddings)
