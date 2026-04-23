@@ -316,6 +316,14 @@ export class TauriBackend implements ExtendedApi {
     return await tauriIpc.scanProjectIntelligence(path);
   }
 
+  async projectScanAsync(path: string): Promise<{ success: boolean; job_id: string }> {
+    return await tauriIpc.projectScanAsync(path) as any;
+  }
+
+  async setCurrentProject(path: string | null): Promise<void> {
+    await tauriIpc.setCurrentProject(path);
+  }
+
   onProjectInitializationProgress(callback: (progress: any) => void): Unsubscribe {
     let unlisten: (() => void) | undefined;
     tauriIpc.onProjectInitializationProgress(callback).then(fn => unlisten = fn);
@@ -372,6 +380,18 @@ export class TauriBackend implements ExtendedApi {
     tauriIpc.onJobProgress(callback).then(fn => unlisten = fn);
     return () => unlisten?.();
   }
+  onAgentStatusChanged(callback: (data: { id: string, status: string }) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onAgentStatusChanged(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  onAgentRegistered(callback: (agent: any) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onAgentRegistered(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
   onJobStatusChanged(callback: (id: string) => void): Unsubscribe {
     let unlisten: (() => void) | undefined;
     tauriIpc.onJobStatusChanged(callback).then(fn => unlisten = fn);

@@ -32,13 +32,23 @@ export function useAgentBoard() {
     fetchAgents();
     const interval = setInterval(fetchAgents, 5000); // Update every 5s
     
-    const p = tauriIpc.onAgentStatusChanged((data) => {
+    const pStatus = tauriIpc.onAgentStatusChanged((data) => {
       setAgents(prev => prev.map(a => a.id === data.id ? { ...a, status: data.status } : a));
+    });
+
+    const pRegistered = tauriIpc.onAgentRegistered((agent) => {
+      setAgents(prev => {
+        if (prev.some(a => a.id === agent.id)) {
+          return prev.map(a => a.id === agent.id ? agent : a);
+        }
+        return [agent, ...prev];
+      });
     });
 
     return () => {
       clearInterval(interval);
-      p.then(unsub => unsub());
+      pStatus.then(unsub => unsub());
+      pRegistered.then(unsub => unsub());
     };
   }, [fetchAgents]);
 

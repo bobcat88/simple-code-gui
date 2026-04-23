@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use tauri::Emitter;
 use std::sync::Arc;
 use crate::database::DatabaseManager;
 
@@ -24,7 +25,7 @@ impl AgentManager {
         Self { db }
     }
 
-    pub async fn register(&self, agent: Agent) -> Result<(), String> {
+    pub async fn register(&self, app: &tauri::AppHandle, agent: Agent) -> Result<(), String> {
         sqlx::query(
             "INSERT OR REPLACE INTO agents (id, name, role, status, model, provider, burn_rate, quality_score, last_active) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)"
@@ -40,6 +41,8 @@ impl AgentManager {
         .execute(&self.db.pool)
         .await
         .map_err(|e| e.to_string())?;
+
+        let _ = app.emit("agent-registered", &agent);
 
         Ok(())
     }
@@ -65,13 +68,18 @@ impl AgentManager {
         }).collect())
     }
 
-    pub async fn update_status(&self, id: String, status: String) -> Result<(), String> {
+    pub async fn update_status(&self, app: &tauri::AppHandle, id: String, status: String) -> Result<(), String> {
         sqlx::query("UPDATE agents SET status = ?, last_active = CURRENT_TIMESTAMP WHERE id = ?")
-            .bind(status)
-            .bind(id)
+            .bind(&status)
+            .bind(&id)
             .execute(&self.db.pool)
             .await
             .map_err(|e| e.to_string())?;
+
+        let _ = app.emit("agent-status-changed", serde_json::json!({
+            "id": id,
+            "status": status
+        }));
 
         Ok(())
     }
@@ -80,10 +88,11 @@ impl AgentManager {
 // Tauri Commands
 #[tauri::command]
 pub async fn agent_register(
+    app: tauri::AppHandle,
     state: tauri::State<'_, Arc<AgentManager>>,
     agent: Agent,
 ) -> Result<(), String> {
-    state.register(agent).await
+    state.register(&app, agent).await
 }
 
 #[tauri::command]
@@ -95,9 +104,10 @@ pub async fn agent_list(
 
 #[tauri::command]
 pub async fn agent_update_status(
+    app: tauri::AppHandle,
     state: tauri::State<'_, Arc<AgentManager>>,
     id: String,
     status: String,
 ) -> Result<(), String> {
-    state.update_status(id, status).await
+    state.update_status(&app, id, status).await
 }

@@ -45,7 +45,10 @@ export function useJobPolling(api: any) {
   // Real-time event listeners
   useEffect(() => {
     const p1 = tauriIpc.onJobProgress((data: any) => {
-      updateJob(data.id, { progress: data.progress });
+      updateJob(data.id, { 
+        progress: data.progress,
+        message: data.message
+      });
     });
     
     const p2 = tauriIpc.onJobStatusChanged((_id: string) => {

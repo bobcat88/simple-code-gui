@@ -611,6 +611,8 @@ export interface ExtendedApi extends Api {
 
   // Project Initialization Wizard
   projectScan: (path: string, options?: ScanOptions) => Promise<ProjectCapabilityScan>
+  projectScanAsync: (path: string) => Promise<{ success: boolean; job_id: string }>,
+  setCurrentProject: (path: string | null) => Promise<void>,
   projectGenerateProposal: (scan: ProjectCapabilityScan, preset: string, projectName: string, taskBackend: string) => Promise<InitializationProposal>
   projectApplyProposal: (proposal: InitializationProposal) => Promise<string[]>,
   scanProjectIntelligence: (path: string) => Promise<ProjectIntelligence>,

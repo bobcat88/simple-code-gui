@@ -57,7 +57,7 @@ export const JobMonitor: React.FC = () => {
               </div>
               
               <div className="text-[9px] text-zinc-500 truncate">
-                {job.status === 'Running' ? 'Processing...' : job.status}
+                {job.message || (job.status === 'Running' ? 'Processing...' : job.status)}
               </div>
             </div>
           ))

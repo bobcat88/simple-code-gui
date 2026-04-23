@@ -41,5 +41,14 @@ export function useProjectIntelligence(api: ExtendedApi, projectPath: string | n
     return () => clearInterval(interval)
   }, [fetchIntelligence])
 
-  return { intelligence, capabilityScan, loading, error, refresh: fetchIntelligence }
+  const triggerDeepScan = useCallback(async () => {
+    if (!projectPath) return;
+    try {
+      await api.projectScanAsync(projectPath);
+    } catch (err) {
+      console.error('Failed to trigger deep scan:', err);
+    }
+  }, [api, projectPath]);
+
+  return { intelligence, capabilityScan, loading, error, refresh: fetchIntelligence, triggerDeepScan }
 }

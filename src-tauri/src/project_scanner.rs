@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use chrono::Utc;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -968,6 +970,20 @@ pub fn apply_proposal(app: &tauri::AppHandle, proposal: &InitializationProposal)
 #[tauri::command]
 pub async fn project_scan(path: String, options: ScanOptions) -> Result<ProjectCapabilityScan, String> {
     Ok(scan_project(&path, &options))
+}
+
+#[tauri::command]
+pub async fn project_scan_async(
+    state: tauri::State<'_, Arc<Mutex<crate::jobs_manager::JobsManager>>>,
+    path: String
+) -> Result<serde_json::Value, String> {
+    let manager = state.lock().await;
+    let job_id = manager.create_job("project-scan".to_string(), path).await?;
+
+    Ok(serde_json::json!({ 
+        "success": true,
+        "job_id": job_id
+    }))
 }
 
 #[tauri::command]

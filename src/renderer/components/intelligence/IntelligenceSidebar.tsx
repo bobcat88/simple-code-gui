@@ -23,6 +23,7 @@ interface IntelligenceSidebarProps {
   loading: boolean
   onClose: () => void
   onRefresh: () => void
+  onDeepScan: () => void
   onWidthChange: (width: number) => void
   width: number
 }
@@ -34,6 +35,7 @@ export function IntelligenceSidebar({
   loading, 
   onClose, 
   onRefresh,
+  onDeepScan,
   onWidthChange,
   width 
 }: IntelligenceSidebarProps) {
@@ -118,9 +120,16 @@ export function IntelligenceSidebar({
         </div>
         <div className="flex items-center gap-1">
           <button 
+            onClick={onDeepScan}
+            className="p-1.5 rounded-md hover:bg-white/10 text-white/40 hover:text-white/80 transition-all"
+            title="Trigger Deep Scan (Background Job)"
+          >
+            <ShieldCheck size={14} />
+          </button>
+          <button 
             onClick={onRefresh}
             className="p-1.5 rounded-md hover:bg-white/10 text-white/40 hover:text-white/80 transition-all"
-            title="Refresh Intelligence"
+            title="Refresh View"
           >
             <RefreshCw size={14} className={cn(loading && "animate-spin")} />
           </button>

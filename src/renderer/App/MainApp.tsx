@@ -254,6 +254,15 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
     }
   }, [activeTabId, openTabs, projects, setProjectVoice])
 
+  // Sync current project with backend for background orchestration
+  useEffect(() => {
+    if (isTauri && (api as any).setCurrentProject) {
+      (api as any).setCurrentProject(activeTab?.projectPath || null).catch(err => {
+        console.error('Failed to set current project on backend:', err);
+      });
+    }
+  }, [activeTab?.projectPath, api, isTauri]);
+
   // Save workspace when it changes
   useEffect(() => {
     if (!loading) {
@@ -484,6 +493,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
                   loading={intelligenceLoading}
                   onClose={() => setIntelligenceCollapsed(true)}
                   onRefresh={refreshIntelligence}
+                  onDeepScan={triggerDeepScan}
                   onWidthChange={setIntelligenceWidth}
                   width={intelligenceWidth}
                 />

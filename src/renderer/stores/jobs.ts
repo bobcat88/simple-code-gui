@@ -23,6 +23,7 @@ export interface BackgroundJob {
   payload: string;
   status: 'Pending' | 'Running' | 'Completed' | 'Failed' | 'Cancelled';
   progress: number;
+  message?: string;
   result?: string;
   error?: string;
 }

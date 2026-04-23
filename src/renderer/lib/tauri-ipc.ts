@@ -184,7 +184,11 @@ export const tauriIpc = {
   kspecDispatchStatus: (cwd: string) =>
     invoke<any>('kspec_dispatch_status', { cwd }),
   kspecDispatchStart: (cwd: string) =>
-    invoke<{ success: boolean; error?: string }>('kspec_dispatch_start', { cwd }),
+    invoke<{ success: boolean; job_id?: string; error?: string }>('kspec_dispatch_start', { cwd }),
+  projectScanAsync: (path: string) =>
+    invoke<{ success: boolean; job_id?: string; error?: string }>('project_scan_async', { path }),
+  setCurrentProject: (path: string | null) =>
+    invoke<void>('set_current_project', { path }),
   kspecDispatchStop: (cwd: string) =>
     invoke<{ success: boolean; error?: string }>('kspec_dispatch_stop', { cwd }),
   beadsList: (cwd: string) =>
@@ -231,6 +235,10 @@ export const tauriIpc = {
     invoke<any[]>('agent_list'),
   agentUpdateStatus: (id: string, status: string) =>
     invoke<void>('agent_update_status', { id, status }),
+  onAgentStatusChanged: (callback: (data: { id: string, status: string }) => void) =>
+    listen<{ id: string, status: string }>('agent-status-changed', (event) => callback(event.payload)),
+  onAgentRegistered: (callback: (agent: any) => void) =>
+    listen<any>('agent-registered', (event) => callback(event.payload)),
 
   // Health & Diagnostics
   healthGetStatus: () =>

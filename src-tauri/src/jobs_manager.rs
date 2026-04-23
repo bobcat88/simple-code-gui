@@ -46,6 +46,54 @@ impl JobsManager {
             }
         });
 
+        // Automated Scanning Loop
+        let app_handle_auto = app.clone();
+        tokio::spawn(async move {
+            // Initial delay to avoid slowing down startup
+            tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
+            
+            loop {
+                let settings = {
+                    let manager = app_handle_auto.try_state::<crate::settings_manager::SettingsManager>();
+                    if let Some(m) = manager {
+                        m.get().await
+                    } else {
+                        crate::settings_manager::AppSettings::default()
+                    }
+                };
+
+                if settings.auto_scan_enabled {
+                    let project_path = {
+                        let orch_state = app_handle_auto.try_state::<crate::orchestration::OrchestrationState>();
+                        if let Some(s) = orch_state {
+                            let current = s.current_project_path.lock();
+                            current.clone()
+                        } else {
+                            None
+                        }
+                    };
+
+                    if let Some(path) = project_path {
+                        println!("[JobsManager] Triggering automated scan for {}", path);
+                        
+                        // Use try_state for JobsManager to avoid deadlock if it's being initialized
+                        if let Some(manager_state) = app_handle_auto.try_state::<Arc<Mutex<JobsManager>>>() {
+                            let manager = manager_state.lock().await;
+                            let _ = manager.create_job("project-scan".to_string(), path).await;
+                        }
+                    }
+                }
+
+                let interval = if settings.auto_scan_interval > 0 {
+                    settings.auto_scan_interval
+                } else {
+                    3600
+                };
+                
+                tokio::time::sleep(tokio::time::Duration::from_secs(interval)).await;
+            }
+        });
+
         Self {
             db,
             activity,
@@ -70,28 +118,177 @@ impl JobsManager {
             timestamp: None,
         }).await;
 
-        // Simulated Job Processing (replace with real job logic)
-        // For now, we'll just wait and update progress
-        for i in 1..=10 {
-            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-            let progress = i as f32 / 10.0;
-            let _ = sqlx::query("UPDATE background_jobs SET progress = ? WHERE id = ?")
-                .bind(progress)
-                .bind(&job_id)
-                .execute(&db.pool)
-                .await;
-            
-            let _ = app.emit("job-progress", serde_json::json!({
-                "id": job_id.clone(),
-                "progress": progress
-            }));
-        }
-
-        // Update status to Completed
-        let _ = sqlx::query("UPDATE background_jobs SET status = 'Completed', progress = 1.0, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+        // Get the job to read the type and payload
+        let job = {
+            let row = sqlx::query_as::<_, (String, String)>(
+                "SELECT job_type, payload FROM background_jobs WHERE id = ?"
+            )
             .bind(&job_id)
-            .execute(&db.pool)
+            .fetch_one(&db.pool)
             .await;
+            
+            match row {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("Failed to fetch job {}: {}", job_id, e);
+                    return;
+                }
+            }
+        };
+
+        let (job_type, payload) = job;
+
+        match job_type.as_str() {
+            "kspec-dispatch" => {
+                let cwd = payload;
+                let _ = app.emit("job-progress", serde_json::json!({
+                    "id": job_id.clone(),
+                    "progress": 0.1,
+                    "message": "Starting kspec dispatch..."
+                }));
+
+                let output = std::process::Command::new("kspec")
+                    .current_dir(&cwd)
+                    .arg("agent")
+                    .arg("dispatch")
+                    .arg("start")
+                    .output();
+
+                match output {
+                    Ok(out) if out.status.success() => {
+                        let _ = sqlx::query("UPDATE background_jobs SET status = 'Completed', progress = 1.0, result = 'Dispatch started successfully', updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+                            .bind(&job_id)
+                            .execute(&db.pool)
+                            .await;
+                    }
+                    Ok(out) => {
+                        let stderr = String::from_utf8_lossy(&out.stderr);
+                        let _ = sqlx::query("UPDATE background_jobs SET status = 'Failed', error = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+                            .bind(stderr.to_string())
+                            .bind(&job_id)
+                            .execute(&db.pool)
+                            .await;
+                    }
+                    Err(e) => {
+                        let _ = sqlx::query("UPDATE background_jobs SET status = 'Failed', error = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+                            .bind(e.to_string())
+                            .bind(&job_id)
+                            .execute(&db.pool)
+                            .await;
+                    }
+                }
+            },
+            "kspec-stop" => {
+                let cwd = payload;
+                let _ = app.emit("job-progress", serde_json::json!({
+                    "id": job_id.clone(),
+                    "progress": 0.5,
+                    "message": "Stopping kspec dispatch..."
+                }));
+
+                let output = std::process::Command::new("kspec")
+                    .current_dir(&cwd)
+                    .arg("agent")
+                    .arg("dispatch")
+                    .arg("stop")
+                    .output();
+
+                match output {
+                    Ok(out) if out.status.success() => {
+                        let _ = sqlx::query("UPDATE background_jobs SET status = 'Completed', progress = 1.0, result = 'Dispatch stopped successfully', updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+                            .bind(&job_id)
+                            .execute(&db.pool)
+                            .await;
+                    }
+                    Ok(out) => {
+                        let stderr = String::from_utf8_lossy(&out.stderr);
+                        let _ = sqlx::query("UPDATE background_jobs SET status = 'Failed', error = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+                            .bind(stderr.to_string())
+                            .bind(&job_id)
+                            .execute(&db.pool)
+                            .await;
+                    }
+                    Err(e) => {
+                        let _ = sqlx::query("UPDATE background_jobs SET status = 'Failed', error = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+                            .bind(e.to_string())
+                            .bind(&job_id)
+                            .execute(&db.pool)
+                            .await;
+                    }
+                }
+            },
+            "project-scan" => {
+                let cwd = payload;
+                let _ = app.emit("job-progress", serde_json::json!({
+                    "id": job_id.clone(),
+                    "progress": 0.2,
+                    "message": "Scanning project structure..."
+                }));
+
+                // Run basic scan
+                let options = crate::project_scanner::ScanOptions {
+                    include_cli_health: Some(true),
+                    include_git_health: Some(true),
+                    max_depth: Some(3),
+                };
+                let scan_result = crate::project_scanner::scan_project(&cwd, &options);
+                
+                let _ = app.emit("job-progress", serde_json::json!({
+                    "id": job_id.clone(),
+                    "progress": 0.5,
+                    "message": "Analyzing project intelligence..."
+                }));
+
+                // Run intelligence scan
+                let intelligence = crate::project_intelligence::scan_project_intelligence(cwd.clone()).await;
+
+                // Combine results or store them
+                // For now just mark as completed
+                let result_json = serde_json::json!({
+                    "scan": scan_result,
+                    "intelligence": intelligence
+                });
+
+                match serde_json::to_string(&result_json) {
+                    Ok(res) => {
+                        let _ = sqlx::query("UPDATE background_jobs SET status = 'Completed', progress = 1.0, result = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+                            .bind(res)
+                            .bind(&job_id)
+                            .execute(&db.pool)
+                            .await;
+                    }
+                    Err(e) => {
+                        let _ = sqlx::query("UPDATE background_jobs SET status = 'Failed', error = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+                            .bind(e.to_string())
+                            .bind(&job_id)
+                            .execute(&db.pool)
+                            .await;
+                    }
+                }
+            },
+            _ => {
+                // Default simulation for unknown types
+                for i in 1..=10 {
+                    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+                    let progress = i as f32 / 10.0;
+                    let _ = sqlx::query("UPDATE background_jobs SET progress = ? WHERE id = ?")
+                        .bind(progress)
+                        .bind(&job_id)
+                        .execute(&db.pool)
+                        .await;
+                    
+                    let _ = app.emit("job-progress", serde_json::json!({
+                        "id": job_id.clone(),
+                        "progress": progress
+                    }));
+                }
+                
+                let _ = sqlx::query("UPDATE background_jobs SET status = 'Completed', progress = 1.0, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+                    .bind(&job_id)
+                    .execute(&db.pool)
+                    .await;
+            }
+        }
 
         let _ = app.emit("job-status-changed", job_id.clone());
         let _ = activity.log(app, ActivityEvent {

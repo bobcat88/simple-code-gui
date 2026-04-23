@@ -2,8 +2,11 @@ use serde::{Deserialize, Serialize};
 use std::process::Command;
 use tauri::{AppHandle, Emitter, State};
 use std::collections::HashMap;
-use parking_lot::Mutex;
+use std::sync::Arc;
+use parking_lot::Mutex as PlMutex;
+use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
+use crate::jobs_manager::JobsManager;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BeadTask {
@@ -84,9 +87,20 @@ pub struct ApprovalResponse {
 
 #[derive(Default)]
 pub struct OrchestrationState {
-    pub watched_projects: Mutex<HashMap<String, tauri::async_runtime::JoinHandle<()>>>,
-    pub watched_kspec_projects: Mutex<HashMap<String, tauri::async_runtime::JoinHandle<()>>>,
-    pub pending_approvals: Mutex<Vec<ApprovalRequest>>,
+    pub watched_projects: PlMutex<HashMap<String, tauri::async_runtime::JoinHandle<()>>>,
+    pub watched_kspec_projects: PlMutex<HashMap<String, tauri::async_runtime::JoinHandle<()>>>,
+    pub pending_approvals: PlMutex<Vec<ApprovalRequest>>,
+    pub current_project_path: PlMutex<Option<String>>,
+}
+
+#[tauri::command]
+pub async fn set_current_project(
+    state: State<'_, OrchestrationState>,
+    path: Option<String>
+) -> Result<(), String> {
+    let mut current = state.current_project_path.lock();
+    *current = path;
+    Ok(())
 }
 
 #[tauri::command]
@@ -780,41 +794,29 @@ pub async fn kspec_dispatch_status(cwd: String) -> Result<serde_json::Value, Str
 }
 
 #[tauri::command]
-pub async fn kspec_dispatch_start(cwd: String) -> Result<serde_json::Value, String> {
-    let output = Command::new("kspec")
-        .current_dir(&cwd)
-        .arg("agent")
-        .arg("dispatch")
-        .arg("start")
-        .output()
-        .map_err(|e| format!("Failed to execute kspec agent dispatch start: {}", e))?;
+pub async fn kspec_dispatch_start(
+    state: tauri::State<'_, Arc<Mutex<JobsManager>>>,
+    cwd: String
+) -> Result<serde_json::Value, String> {
+    let manager = state.lock().await;
+    let job_id = manager.create_job("kspec-dispatch".to_string(), cwd).await?;
 
-    if !output.status.success() {
-        return Ok(serde_json::json!({
-            "success": false,
-            "error": String::from_utf8_lossy(&output.stderr).to_string()
-        }));
-    }
-
-    Ok(serde_json::json!({ "success": true }))
+    Ok(serde_json::json!({ 
+        "success": true,
+        "job_id": job_id
+    }))
 }
 
 #[tauri::command]
-pub async fn kspec_dispatch_stop(cwd: String) -> Result<serde_json::Value, String> {
-    let output = Command::new("kspec")
-        .current_dir(&cwd)
-        .arg("agent")
-        .arg("dispatch")
-        .arg("stop")
-        .output()
-        .map_err(|e| format!("Failed to execute kspec agent dispatch stop: {}", e))?;
+pub async fn kspec_dispatch_stop(
+    state: tauri::State<'_, Arc<Mutex<JobsManager>>>,
+    cwd: String
+) -> Result<serde_json::Value, String> {
+    let manager = state.lock().await;
+    let job_id = manager.create_job("kspec-stop".to_string(), cwd).await?;
 
-    if !output.status.success() {
-        return Ok(serde_json::json!({
-            "success": false,
-            "error": String::from_utf8_lossy(&output.stderr).to_string()
-        }));
-    }
-
-    Ok(serde_json::json!({ "success": true }))
+    Ok(serde_json::json!({ 
+        "success": true,
+        "job_id": job_id
+    }))
 }

@@ -610,6 +610,7 @@ pub fn run() {
             get_token_stats,
             get_token_history,
             project_scan,
+            project_scanner::project_scan_async,
             project_generate_proposal,
             project_apply_proposal,
             voice_check_tts,
@@ -642,6 +643,7 @@ pub fn run() {
             diagnostic_manager::diagnostics_generate_bundle,
             claude_md_read,
             claude_md_save,
+            orchestration::set_current_project,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

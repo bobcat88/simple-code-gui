@@ -31,13 +31,19 @@ pub struct AppSettings {
     pub xtts_top_p: f32,
     #[serde(default)]
     pub xtts_repetition_penalty: f32,
-    #[serde(default)]
+    #[serde(default = "default_true")]
+    pub auto_scan_enabled: bool,
+    #[serde(default = "default_auto_scan_interval")]
+    pub auto_scan_interval: u64, // seconds
+    #[serde(default = "default_tada_voice")]
     pub tada_voice_sample: String,
 }
 
 fn default_true() -> bool { true }
 fn default_accent() -> String { String::from("#3b82f6") }
+fn default_auto_scan_interval() -> u64 { 3600 } // 1 hour
 fn default_tts_speed() -> f32 { 1.0 }
+fn default_tada_voice() -> String { String::from("v2/en_3") }
 
 impl Default for AppSettings {
     fn default() -> Self {
@@ -57,6 +63,8 @@ impl Default for AppSettings {
             xtts_top_p: 0.8,
             xtts_repetition_penalty: 2.0,
             tada_voice_sample: String::from("v2/en_3"),
+            auto_scan_enabled: true,
+            auto_scan_interval: 3600,
         }
     }
 }
