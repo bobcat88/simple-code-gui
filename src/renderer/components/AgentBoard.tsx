@@ -31,7 +31,7 @@ export const AgentBoard: React.FC = () => {
   };
 
   return (
-    <div className="p-4 bg-zinc-950/40 backdrop-blur-xl border border-white/5 rounded-2xl">
+    <div className="p-4 bg-zinc-950/40 backdrop-blur-xl border border-white/5 rounded-xl">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Activity size={18} className="text-blue-400" />

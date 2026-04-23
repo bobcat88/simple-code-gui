@@ -20,7 +20,7 @@ export const ActivityFeed: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden">
+    <div className="flex flex-col h-full bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-xl overflow-hidden">
       <div className="p-3 border-b border-white/5 flex items-center justify-between bg-white/5">
         <div className="flex items-center gap-2">
           <Activity size={14} className="text-emerald-400" />

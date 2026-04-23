@@ -230,8 +230,8 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
 
   if (activeSection === 'config') {
     return (
-      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
-        <div className="p-4 border-b border-border/50 font-bold flex items-center justify-between bg-white/5">
+      <div className="flex flex-col h-full glass-sidebar animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-white/5 font-bold flex items-center justify-between bg-white/5 backdrop-blur-md">
           <div className="flex items-center gap-2">
             <Settings size={18} className="text-primary" />
             <span className="tracking-tight">Configuration</span>
@@ -296,8 +296,8 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     )
   } else if (activeSection === 'terminal') {
     return (
-      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
-        <div className="p-4 border-b border-border/50 font-bold flex items-center gap-2 bg-white/5">
+      <div className="flex flex-col h-full glass-sidebar animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-white/5 font-bold flex items-center gap-2 bg-white/5 backdrop-blur-md">
           <MessageSquare size={18} className="text-primary" />
           <span className="tracking-tight text-white/90">Threads</span>
         </div>
@@ -309,7 +309,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
                 onClick={() => handlers.handleSwitchToTab(tab.id)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all border border-transparent group",
-                  "hover:bg-white/5 hover:border-white/10"
+                  "hover:bg-white/5 backdrop-blur-md hover:border-white/10"
                 )}
               >
                 <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
@@ -335,15 +335,15 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     )
   } else if (activeSection === 'orchestration') {
     return (
-      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
-        <div className="p-4 border-b border-border/50 font-bold flex items-center gap-2 bg-white/5">
+      <div className="flex flex-col h-full glass-sidebar animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-white/5 font-bold flex items-center gap-2 bg-white/5 backdrop-blur-md">
           <Zap size={18} className="text-primary" />
           <span className="tracking-tight text-white/90">Automations</span>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <div className="space-y-3">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">GSD Task Status</h4>
-            <div className="p-1 rounded-2xl bg-white/5 border border-white/5">
+            <div className="p-1 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5">
               <GSDStatus
                 projectPath={beadsProjectPath}
                 onCommand={(cmd) => {
@@ -358,7 +358,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
           
           <div className="space-y-3 pt-4 border-t border-white/5">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Active Beads</h4>
-            <div className="p-1 rounded-2xl bg-white/5 border border-white/5">
+            <div className="p-1 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5">
               <BeadsPanel
                 projectPath={beadsProjectPath}
                 isExpanded={true}
@@ -379,14 +379,14 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
 
           <div className="space-y-3 pt-4 border-t border-white/5">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Token Burn History</h4>
-            <div className="p-2 rounded-2xl bg-white/5 border border-white/5">
+            <div className="p-2 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5">
               <TokenBurnHistory api={api} />
             </div>
           </div>
 
           <div className="space-y-3 pt-4 border-t border-white/5">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Agent Assignments</h4>
-            <div className="p-2 rounded-2xl bg-white/5 border border-white/5">
+            <div className="p-2 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5">
               <TaskAssignmentView
                 onOpenSession={beadsProjectPath ? () => onOpenSession(beadsProjectPath) : undefined}
               />
@@ -395,7 +395,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
 
           <div className="space-y-3 pt-4 border-t border-white/5">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Approval Workflow</h4>
-            <div className="h-[520px] p-2 rounded-2xl bg-white/5 border border-white/5 overflow-hidden">
+            <div className="h-[520px] p-2 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
               <ApprovalWorkflow
                 requests={approvalRequests}
                 onApprove={(request, note) => respondToApproval(request, 'approved', note)}
@@ -409,22 +409,22 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     )
   } else if (activeSection === 'observability') {
     return (
-      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
-        <div className="p-4 border-b border-border/50 font-bold flex items-center gap-2 bg-white/5">
+      <div className="flex flex-col h-full glass-sidebar animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-white/5 font-bold flex items-center gap-2 bg-white/5 backdrop-blur-md">
           <Activity size={18} className="text-primary" />
           <span className="tracking-tight text-white/90">Observability</span>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
           <section className="space-y-3">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">App & Plugin Health</h4>
-            <div className="p-1 rounded-2xl bg-white/5 border border-white/5 overflow-hidden">
+            <div className="p-1 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
               <HealthDashboard />
             </div>
           </section>
 
           <section className="space-y-3 pt-4 border-t border-white/5">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Agent Board</h4>
-            <div className="p-1 rounded-2xl bg-white/5 border border-white/5 overflow-hidden">
+            <div className="p-1 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
               <AgentBoard />
             </div>
           </section>
@@ -438,7 +438,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
           
           <section className="space-y-3 pt-4 border-t border-white/5 h-[400px] flex flex-col">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Activity Feed</h4>
-            <div className="flex-1 rounded-2xl bg-white/5 border border-white/5 overflow-hidden">
+            <div className="flex-1 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
               <ActivityFeed />
             </div>
           </section>
@@ -447,8 +447,8 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     )
   } else if (activeSection === 'plugins') {
     return (
-      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
-        <div className="p-4 border-b border-border/50 font-semibold flex items-center gap-2">
+      <div className="flex flex-col h-full glass-sidebar animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-white/5 font-semibold flex items-center gap-2 bg-white/5 backdrop-blur-md">
           <Cpu size={18} />
           Plugins & Extensions
         </div>
@@ -502,8 +502,8 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
     )
   } else if (activeSection === 'help') {
     return (
-      <div className="flex flex-col h-full bg-background/80 backdrop-blur-md animate-in slide-in-from-left duration-200">
-        <div className="p-4 border-b border-border/50 font-semibold flex items-center gap-2">
+      <div className="flex flex-col h-full glass-sidebar animate-in slide-in-from-left duration-200">
+        <div className="p-4 border-b border-white/5 font-semibold flex items-center gap-2 bg-white/5 backdrop-blur-md">
           <Settings size={18} />
           Help & Support
         </div>
@@ -582,8 +582,8 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background/80 backdrop-blur-sm animate-in slide-in-from-left duration-200">
-      <div className="p-4 flex items-center justify-between border-b border-border/50">
+    <div className="flex flex-col h-full glass-sidebar animate-in slide-in-from-left duration-200">
+      <div className="p-4 flex items-center justify-between border-b border-white/5 bg-white/5 backdrop-blur-md">
         <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/70">Projects</h2>
         <button
           className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-all"
@@ -709,7 +709,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
         )}
       </div>
 
-      <div className="p-3 grid grid-cols-3 gap-2 border-t border-border/50">
+      <div className="p-3 grid grid-cols-3 gap-2 border-t border-white/5 backdrop-blur-md">
         <button
           className="flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl bg-muted/30 hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20 group"
           onClick={onOpenProjectWizard}

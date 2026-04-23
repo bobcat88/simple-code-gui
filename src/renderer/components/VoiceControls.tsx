@@ -152,7 +152,7 @@ export function VoiceControls({
     return pushToTalkEnabled ? 'Push-to-Talk (Ctrl+Space)' : 'Click to start voice'
   }
 
-  const buttonClass = "p-3 rounded-2xl transition-all duration-300 group relative flex items-center justify-center w-full text-muted-foreground hover:bg-muted/80 hover:text-foreground scale-95 hover:scale-100"
+  const buttonClass = "p-3 rounded-xl transition-all duration-300 group relative flex items-center justify-center w-full text-muted-foreground hover:bg-muted/80 hover:text-foreground scale-95 hover:scale-100"
 
   return (
     <div className={cn("flex gap-2", isVertical ? "flex-col w-full" : "flex-row")}>

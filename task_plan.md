@@ -12,16 +12,16 @@ Perform a full audit and fix of the "Modern" Simple Code GUI to achieve high fid
     - [x] Verify window draggability logic.
     - [x] Fix `linuxdeploy` AppImage bundling failure by restricting targets to `.deb`.
 
-- [ ] **Phase 2: Visual Fidelity Alignment (Codex Look)**
+- [x] **Phase 2: Visual Fidelity Alignment (Codex Look)**
     - [x] Deep Dark Palette: Update `index.css` with primary background `#1e1e2e` (or similar deep navy).
-    - [ ] Soft Corners: Reduce radius from `2rem` to `0.75rem` (12px).
-    - [ ] Glassmorphism: Refine `borg-glass` and apply to Top Bar and Sidebar.
-    - [ ] TitleBar Refresh: Sleek, integrated look with working controls.
+    - [x] Soft Corners: Reduce radius from `2rem` to `0.75rem` (12px).
+    - [x] Glassmorphism: Refine `borg-glass` and apply to Top Bar and Sidebar.
+    - [x] TitleBar Refresh: Sleek, integrated look with working controls.
 
-- [ ] **Phase 3: Sidebar & Component UX**
-    - [ ] Hover-Activated Collapse: Implement "light bubble + arrow" button.
+- [x] **Phase 3: Sidebar & Component UX**
+    - [x] Hover-Activated Collapse: Implement "light bubble + arrow" button.
     - [ ] High-Fidelity Icons: Use Shadcn/UI and Lucide-React with premium styling.
-    - [ ] Layout Consolidation: Match Codex sidebar structure (Threads, Automations, etc.).
+    - [x] Layout Consolidation: Match Codex sidebar structure (Threads, Automations, etc.).
 
 - [/] **Phase 4: Final Integration & Cleanup**
     - [x] Remove all redundant Electron code (tsconfig, package.json).

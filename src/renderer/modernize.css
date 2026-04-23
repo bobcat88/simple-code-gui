@@ -3,17 +3,18 @@
   --background: 240 10% 2%;
   --foreground: 0 0% 98%;
   
-  --bg-codex-dark: #0a0a0f;
-  --bg-codex-sidebar: rgba(8, 8, 12, 0.45);
-  --bg-codex-header: rgba(10, 10, 15, 0.35);
-  --bg-codex-accent: rgba(255, 255, 255, 0.05);
+  --bg-codex-dark: #050508;
+  --bg-codex-sidebar: rgba(8, 8, 12, 0.65);
+  --bg-codex-header: rgba(10, 10, 15, 0.45);
+  --bg-codex-accent: rgba(255, 255, 255, 0.03);
   
   --codex-blue: #3b82f6;
-  --codex-glow: rgba(59, 130, 246, 0.15);
+  --codex-blue-glow: rgba(59, 130, 246, 0.25);
+  --codex-glass: rgba(15, 15, 22, 0.6);
   
   --radius-codex: 12px;
-  --radius-inner: 8px;
-  --radius-modal: 12px;
+  --radius-inner: 10px;
+  --radius-modal: 16px;
   
   /* Standard variable overrides */
   --radius: 12px;
@@ -43,7 +44,7 @@ html, body, #root {
 }
 
 .app-container {
-  background-color: var(--bg-codex-dark);
+  background-color: #050508; /* Even deeper dark for premium feel */
   color: #f0f0f0;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: var(--radius-codex);
@@ -55,35 +56,34 @@ html, body, #root {
   flex-direction: column;
 }
 
-/* Force 12px corners everywhere */
-.rounded-\[2rem\], .rounded-2xl, .rounded-3xl, .rounded-xl, .rounded-lg, .rounded-codex {
+/* Force 12px corners for standard UI components */
+.rounded-2xl, .rounded-3xl, .rounded-xl, .rounded-lg, .rounded-codex {
   border-radius: var(--radius-codex) !important;
 }
 
 .glass-panel {
-  background: rgba(10, 10, 15, 0.45);
+  background: var(--codex-glass);
   backdrop-filter: blur(40px) saturate(210%);
   -webkit-backdrop-filter: blur(40px) saturate(210%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 
-    0 4px 24px -1px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 4px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.05);
   border-radius: var(--radius-codex);
 }
 
 .glass-sidebar {
   background: var(--bg-codex-sidebar);
-  backdrop-filter: blur(40px) saturate(210%);
-  -webkit-backdrop-filter: blur(40px) saturate(210%);
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(60px) saturate(220%);
+  -webkit-backdrop-filter: blur(60px) saturate(220%);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .sidebar {
   background: var(--bg-codex-sidebar) !important;
-  backdrop-filter: blur(40px) saturate(210%);
-  -webkit-backdrop-filter: blur(40px) saturate(210%);
-  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(60px) saturate(220%);
+  -webkit-backdrop-filter: blur(60px) saturate(220%);
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -108,7 +108,7 @@ html, body, #root {
 
 .sidebar.collapsed:hover::after {
   background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 10px var(--codex-glow);
+  box-shadow: 0 0 10px var(--codex-blue-glow);
 }
 
 .glass-header {
@@ -221,28 +221,41 @@ html, body, #root {
   border-radius: var(--radius-inner);
 }
 
+/* Icon Refinement */
+.lucide {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.05));
+  stroke-width: 1.5;
+  transition: all 0.3s ease;
+}
+
+.active .lucide,
+.text-primary .lucide,
+.bg-primary .lucide {
+  filter: drop-shadow(0 0 12px var(--codex-blue-glow));
+}
+
 /* Sidebar Hover Collapse Bubble */
 .collapse-bubble {
   position: absolute;
-  right: -10px;
+  right: -12px;
   top: 50%;
   transform: translateY(-50%) scale(0.8);
-  width: 24px;
-  height: 24px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  width: 26px;
+  height: 26px;
+  background: rgba(20, 20, 30, 0.6);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
   color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
   cursor: pointer;
   z-index: 1000;
   opacity: 0;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .sidebar-container:hover .collapse-bubble,
@@ -253,9 +266,10 @@ html, body, #root {
 }
 
 .collapse-bubble:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 0 15px var(--codex-glow);
+  background: rgba(40, 40, 60, 0.8);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 20px var(--codex-blue-glow), inset 0 1px 1px rgba(255,255,255,0.2);
+  color: #60a5fa;
 }
 
 /* Staggered Entry Animations */
@@ -392,7 +406,7 @@ html, body, #root {
   right: 20%;
   height: 2px;
   background: var(--codex-blue);
-  box-shadow: 0 0 10px var(--codex-glow);
+  box-shadow: 0 0 10px var(--codex-blue-glow);
   border-radius: 2px 2px 0 0;
 }
 /* Beads Rich Task Editing Styles */

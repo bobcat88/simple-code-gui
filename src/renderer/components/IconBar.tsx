@@ -35,7 +35,7 @@ export function IconBar({
   ]
 
   return (
-    <div className="w-16 flex flex-col items-center py-6 bg-background/20 backdrop-blur-xl border-r border-white/5 h-full gap-2 z-20">
+    <div className="w-16 flex flex-col items-center py-6 glass-sidebar border-r border-white/5 h-full gap-2 z-20">
       <div className="mb-6 px-3">
         <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-primary/60 flex items-center justify-center text-primary-foreground shadow-xl shadow-primary/20 cursor-pointer hover:scale-105 transition-all duration-300 group">
           <Cpu size={20} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />

@@ -399,6 +399,42 @@ export class HttpApiClient {
   onApiOpenSession(callback: (data: { projectPath: string; autoClose: boolean; model?: string }) => void): () => void {
     return misc.onApiOpenSession(callback)
   }
+
+  // ===========================================================================
+  // Kspec & Intelligence API
+  // ===========================================================================
+
+  kspecDispatchStatus(cwd: string): Promise<any> {
+    return misc.kspecDispatchStatus(cwd)
+  }
+
+  kspecDispatchStart(cwd: string): Promise<{ success: boolean; error?: string }> {
+    return misc.kspecDispatchStart(cwd)
+  }
+
+  kspecDispatchStop(cwd: string): Promise<{ success: boolean; error?: string }> {
+    return misc.kspecDispatchStop(cwd)
+  }
+
+  scanProjectIntelligence(path: string): Promise<any> {
+    return misc.scanProjectIntelligence(path)
+  }
+
+  projectScan(path: string, options?: any): Promise<any> {
+    return misc.projectScan(path, options)
+  }
+
+  projectGenerateProposal(scan: any, preset: string, projectName: string, taskBackend: string): Promise<any> {
+    return misc.projectGenerateProposal(scan, preset, projectName, taskBackend)
+  }
+
+  projectApplyProposal(proposal: any): Promise<string[]> {
+    return misc.projectApplyProposal(proposal)
+  }
+
+  onProjectInitializationProgress(callback: (progress: any) => void): () => void {
+    return misc.onProjectInitializationProgress(callback)
+  }
 }
 
 // =============================================================================
@@ -436,7 +472,11 @@ export function setHttpClient(client: HttpApiClient | null): void {
   httpClientInstance = client
 }
 
-export function getElectronAPI(): null {
-  return null
+/**
+ * Get the current API client instance as an Electron-compatible object
+ */
+export function getElectronAPI(): any {
+  // Return the singleton HTTP client instance as the "electronAPI" shim
+  return httpClientInstance
 }
 

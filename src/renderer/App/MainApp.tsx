@@ -331,7 +331,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden animate-entry delay-200">
         <TitleBar api={api} />
         
-        <div className="flex-1 flex flex-row overflow-hidden relative">
+        <div className="flex-1 flex flex-row relative">
           <div className="animate-entry delay-300 h-full flex">
             <Sidebar
               projects={projects}

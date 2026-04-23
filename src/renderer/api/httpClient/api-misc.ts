@@ -303,3 +303,39 @@ export function onApiOpenSession(
 ): () => void {
   return () => {}
 }
+
+// =============================================================================
+// Kspec & Intelligence (HTTP Stubs)
+// =============================================================================
+
+export function kspecDispatchStatus(_cwd: string): Promise<any> {
+  return Promise.resolve({ running: false })
+}
+
+export function kspecDispatchStart(_cwd: string): Promise<{ success: boolean; error?: string }> {
+  return Promise.resolve({ success: false, error: 'Not available via HTTP' })
+}
+
+export function kspecDispatchStop(_cwd: string): Promise<{ success: boolean; error?: string }> {
+  return Promise.resolve({ success: false, error: 'Not available via HTTP' })
+}
+
+export function scanProjectIntelligence(_path: string): Promise<any> {
+  return Promise.resolve({ name: '', description: '', stack: [], capabilities: [] })
+}
+
+export function projectScan(_path: string, _options?: any): Promise<any> {
+  return Promise.resolve({ capabilities: [] })
+}
+
+export function projectGenerateProposal(_scan: any, _preset: string, _projectName: string, _taskBackend: string): Promise<any> {
+  return Promise.resolve({ steps: [] })
+}
+
+export function projectApplyProposal(_proposal: any): Promise<string[]> {
+  return Promise.resolve([])
+}
+
+export function onProjectInitializationProgress(_callback: (progress: any) => void): () => void {
+  return () => {}
+}
