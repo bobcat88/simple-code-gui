@@ -135,6 +135,14 @@ export class TauriBackend implements ExtendedApi {
     }
   }
 
+  async aiSaveKey(provider: string, key: string, baseUrl?: string): Promise<void> {
+    try {
+      await tauriIpc.aiSaveKey(provider, key, baseUrl);
+    } catch (e) {
+      console.error('Failed to save AI key to Tauri', e);
+    }
+  }
+
   // Project Management
   async addProject(): Promise<string | null> {
     return await tauriIpc.selectDirectory();

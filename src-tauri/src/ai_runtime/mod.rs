@@ -5,7 +5,7 @@ use crate::database::DatabaseManager;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use types::{CompletionRequest, CompletionResponse, ModelInfo, ModelTier, RoutingPolicy, TaskType};
+use types::{AgentRole, CompletionRequest, CompletionResponse, ModelInfo, ModelTier, RoutingPolicy, TaskType};
 
 use async_trait::async_trait;
 
@@ -19,18 +19,107 @@ pub trait AIProvider: Send + Sync {
 
 pub struct RuntimeManager {
     providers: Arc<Mutex<HashMap<String, Box<dyn AIProvider>>>>,
+    settings: Arc<Mutex<Option<Arc<crate::settings_manager::SettingsManager>>>>,
+    db: Arc<Mutex<Option<Arc<DatabaseManager>>>>,
 }
 
 impl RuntimeManager {
     pub fn new() -> Self {
         Self {
             providers: Arc::new(Mutex::new(HashMap::new())),
+            settings: Arc::new(Mutex::new(None)),
+            db: Arc::new(Mutex::new(None)),
         }
+    }
+
+    pub async fn set_settings_manager(&self, manager: Arc<crate::settings_manager::SettingsManager>) {
+        let mut settings = self.settings.lock().await;
+        *settings = Some(manager);
+    }
+
+    pub async fn set_database_manager(&self, manager: Arc<DatabaseManager>) {
+        let mut db = self.db.lock().await;
+        *db = Some(manager);
     }
 
     pub async fn register_provider(&self, provider: Box<dyn AIProvider>) {
         let mut providers = self.providers.lock().await;
         providers.insert(provider.name().to_string(), provider);
+    }
+
+    pub async fn sync_settings(&self) -> Result<(), String> {
+        let settings_lock = self.settings.lock().await;
+        let manager = settings_lock.as_ref().ok_or("Settings manager not set")?;
+        let settings = manager.get().await;
+
+        let db_lock = self.db.lock().await;
+        let db = db_lock.as_ref();
+
+        for p_config in &settings.ai_runtime.providers {
+            if !p_config.enabled {
+                continue;
+            }
+
+            // Try database first
+            let mut api_key = p_config.api_key.clone();
+            let mut base_url = p_config.base_url.clone();
+
+            if let Some(db_mgr) = db {
+                let db_row = sqlx::query_as::<_, (String, Option<String>)>("SELECT key, base_url FROM api_keys WHERE provider = ?")
+                    .bind(&p_config.id)
+                    .fetch_optional(&db_mgr.pool)
+                    .await
+                    .ok()
+                    .flatten();
+                
+                if let Some((key, url)) = db_row {
+                    api_key = Some(key);
+                    if url.is_some() {
+                        base_url = url;
+                    }
+                }
+            }
+
+            if let Some(key) = api_key {
+                if key.is_empty() {
+                    continue;
+                }
+
+                match p_config.id.as_str() {
+                    "claude" => {
+                        self.register_provider(Box::new(
+                            providers::claude::ClaudeProvider::new(key),
+                        ))
+                        .await;
+                    }
+                    "gemini" => {
+                        self.register_provider(Box::new(
+                            providers::gemini::GeminiProvider::new(key),
+                        ))
+                        .await;
+                    }
+                    "openai" => {
+                        self.register_provider(Box::new(
+                            providers::openai::OpenAIProvider::new(
+                                key,
+                                base_url,
+                            ),
+                        ))
+                        .await;
+                    }
+                    "ollama" => {
+                        self.register_provider(Box::new(
+                            providers::ollama::OllamaProvider::new(
+                                base_url.or_else(|| Some("http://localhost:11434".to_string())),
+                            ),
+                        ))
+                        .await;
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Ok(())
     }
 
     pub async fn completion(
@@ -142,6 +231,53 @@ impl RuntimeManager {
                 all_models.sort_by(|(_, a), (_, b)| a.tier.partial_cmp(&b.tier).unwrap());
                 Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
             }
+            Some(RoutingPolicy::Agent { role }) => {
+                let settings_lock = self.settings.lock().await;
+                if let Some(settings_manager) = &*settings_lock {
+                    let settings = settings_manager.get().await;
+                    let role_str = match role {
+                        AgentRole::Planner => "planner",
+                        AgentRole::Builder => "builder",
+                        AgentRole::Reviewer => "reviewer",
+                        AgentRole::Researcher => "researcher",
+                    };
+
+                    // Find routing policy for this role
+                    let policy = settings.ai_runtime.routing.iter().find(|r| r.role == role_str);
+                    
+                    if let Some(p) = policy {
+                        // Check for explicit overrides
+                        if let (Some(prov), Some(mod_id)) = (&p.provider_override, &p.model_override) {
+                            return Ok(vec![(prov.clone(), mod_id.clone())]);
+                        }
+
+                        // Otherwise use the plan
+                        if let Some(plan_id) = &p.plan_id {
+                            if let Some(plan) = settings.ai_runtime.plans.iter().find(|pl| pl.id == *plan_id) {
+                                let model_id = match role {
+                                    AgentRole::Planner => &plan.planner_model,
+                                    AgentRole::Builder => &plan.builder_model,
+                                    AgentRole::Reviewer => &plan.reviewer_model,
+                                    AgentRole::Researcher => &plan.researcher_model,
+                                };
+
+                                // Find which provider has this model
+                                for (prov_name, provider) in providers.iter() {
+                                    if let Ok(models) = provider.list_models().await {
+                                        if models.iter().any(|m| m.id == *model_id) {
+                                            return Ok(vec![(prov_name.clone(), model_id.clone())]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Fallback to default quality routing if no agent policy found or settings missing
+                all_models.sort_by(|(_, a), (_, b)| a.tier.partial_cmp(&b.tier).unwrap());
+                Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
+            }
         }
     }
 
@@ -194,6 +330,7 @@ pub async fn ai_list_providers(
 #[tauri::command]
 pub async fn ai_save_key(
     db: tauri::State<'_, Arc<DatabaseManager>>,
+    runtime: tauri::State<'_, Arc<RuntimeManager>>,
     provider: String,
     key: String,
     base_url: Option<String>,
@@ -205,6 +342,10 @@ pub async fn ai_save_key(
         .execute(&db.pool)
         .await
         .map_err(|e| e.to_string())?;
+
+    // Trigger runtime sync to reload providers with the new key
+    let _ = runtime.sync_settings().await;
+
     Ok(())
 }
 

@@ -140,14 +140,14 @@ async fn set_pty_backend(
 
 // Settings Commands
 #[tauri::command]
-async fn get_settings(state: State<'_, SettingsManager>) -> Result<AppSettings, String> {
+async fn get_settings(state: State<'_, Arc<SettingsManager>>) -> Result<AppSettings, String> {
     Ok(state.get().await)
 }
 
 #[tauri::command]
 async fn voice_save_settings(
     app: AppHandle,
-    state: State<'_, SettingsManager>,
+    state: State<'_, Arc<SettingsManager>>,
     settings: AppSettings,
 ) -> Result<(), String> {
     state.save(settings.clone()).await?;
@@ -238,23 +238,25 @@ async fn get_token_history(
 #[tauri::command]
 async fn save_settings(
     app: AppHandle,
-    state: State<'_, SettingsManager>,
+    state: State<'_, Arc<SettingsManager>>,
+    ai_runtime: State<'_, Arc<ai_runtime::RuntimeManager>>,
     settings: AppSettings,
 ) -> Result<(), String> {
     state.save(settings.clone()).await?;
+    let _ = ai_runtime.sync_settings().await;
     let _ = app.emit("settings-changed", settings);
     Ok(())
 }
 
 // Workspace Commands
 #[tauri::command]
-async fn get_workspace(state: State<'_, WorkspaceManager>) -> Result<Workspace, String> {
+async fn get_workspace(state: State<'_, Arc<WorkspaceManager>>) -> Result<Workspace, String> {
     Ok(state.get().await)
 }
 
 #[tauri::command]
 async fn save_workspace(
-    state: State<'_, WorkspaceManager>,
+    state: State<'_, Arc<WorkspaceManager>>,
     workspace: Workspace,
 ) -> Result<(), String> {
     state.save(workspace).await
@@ -437,14 +439,17 @@ pub fn run() {
                     .expect("Failed to initialize database");
                 let db_arc = Arc::new(db_manager);
 
-                let settings_manager = SettingsManager::new(&app_handle, Arc::clone(&db_arc)).await;
+                let settings_manager = Arc::new(SettingsManager::new(&app_handle, Arc::clone(&db_arc)).await);
                 let workspace_manager =
-                    WorkspaceManager::new(&app_handle, Arc::clone(&db_arc)).await;
+                    Arc::new(WorkspaceManager::new(&app_handle, Arc::clone(&db_arc)).await);
 
                 // Initialize AI Runtime
                 let ai_runtime = Arc::new(ai_runtime::RuntimeManager::new());
+                ai_runtime.set_settings_manager(Arc::clone(&settings_manager)).await;
+                ai_runtime.set_database_manager(Arc::clone(&db_arc)).await;
+                let _ = ai_runtime.sync_settings().await;
 
-                // Register providers (for now with placeholder keys or env vars)
+                // Register providers from env if database/settings don't have them
                 if let Ok(key) = std::env::var("ANTHROPIC_API_KEY") {
                     ai_runtime
                         .register_provider(Box::new(

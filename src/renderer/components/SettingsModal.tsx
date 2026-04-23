@@ -14,6 +14,7 @@ import {
   UninstallTTSSection,
   VersionSettings,
   McpSettings,
+  AiRuntimeSettings,
   DEFAULT_GENERAL,
   DEFAULT_VOICE,
   DEFAULT_XTTS,
@@ -81,12 +82,12 @@ export function SettingsModal({
   const [tadaInstalled, setTadaInstalled] = useState<boolean | null>(null)
   const [tadaInstalling, setTadaInstalling] = useState(false)
   const [tadaInstallError, setTadaInstallError] = useState<string | null>(null)
-
   const categories = [
     { id: 'general', label: 'General', icon: Settings, desc: 'Core settings & backend' },
-    { id: 'appearance', label: 'Appearance', icon: Palette, desc: 'Themes & styling' },
-    { id: 'mcp', label: 'MCP & Agents', icon: Cpu, desc: 'Beads, GSD & tools' },
+    { id: 'mcp', label: 'MCP & Agents', icon: Settings, desc: 'Beads, GSD & tools' },
+    { id: 'ai-runtime', label: 'AI Runtime', icon: Cpu, desc: 'Providers & models' },
     { id: 'voice', label: 'Voice', icon: Volume2, desc: 'Speech & AI audio' },
+    { id: 'appearance', label: 'Appearance', icon: Palette, desc: 'Themes & styling' },
     { id: 'about', label: 'About', icon: Info, desc: 'Version & info' },
   ]
 
@@ -103,7 +104,8 @@ export function SettingsModal({
           permissionMode: settings.permissionMode || 'default',
           backend: settings.backend || 'default',
           glowEnabled: settings.themeCustomization?.accentColor ? true : true, // Keeping it simple
-          accentColor: settings.themeCustomization?.accentColor || '#3b82f6'
+          accentColor: settings.themeCustomization?.accentColor || '#3b82f6',
+          aiRuntime: settings.aiRuntime || DEFAULT_GENERAL.aiRuntime
         }))
       })
 
@@ -151,21 +153,33 @@ export function SettingsModal({
     }
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const updatedThemeCustomization = {
       ...general.themeCustomization,
       accentColor: general.accentColor || general.themeCustomization?.accentColor || null
     };
 
-    api?.saveSettings?.({
+    // Save general settings
+    await api?.saveSettings?.({
       defaultProjectDir: general.defaultProjectDir,
       theme: general.selectedTheme,
       themeCustomization: updatedThemeCustomization,
       autoAcceptTools: general.autoAcceptTools,
       permissionMode: general.permissionMode,
-      backend: general.backend
+      backend: general.backend,
+      aiRuntime: general.aiRuntime
     })
-    api?.voiceSaveSettings?.({
+
+    // Save AI keys to database
+    if (general.aiRuntime?.providers) {
+      for (const provider of general.aiRuntime.providers) {
+        if (provider.apiKey || provider.baseUrl) {
+          await api?.aiSaveKey?.(provider.id, provider.apiKey || '', provider.baseUrl);
+        }
+      }
+    }
+
+    await api?.voiceSaveSettings?.({
       ttsVoice: voice.selectedVoice,
       ttsEngine: voice.selectedEngine,
       ttsSpeed: voice.ttsSpeed,
@@ -175,13 +189,15 @@ export function SettingsModal({
       xttsRepetitionPenalty: xtts.repetitionPenalty,
       tadaVoiceSample: voice.tadaVoiceSample
     })
+
     onSaved?.({
       defaultProjectDir: general.defaultProjectDir,
       theme: general.selectedTheme,
       themeCustomization: updatedThemeCustomization,
       autoAcceptTools: general.autoAcceptTools,
       permissionMode: general.permissionMode,
-      backend: general.backend
+      backend: general.backend,
+      aiRuntime: general.aiRuntime
     })
     onClose()
   }
@@ -383,6 +399,15 @@ export function SettingsModal({
                       focusedTabPtyId={focusedTabPtyId}
                       onOpenSession={onOpenSession}
                       api={api}
+                    />
+                </div>
+              )}
+
+              {activeCategory === 'ai-runtime' && (
+                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-300">
+                   <AiRuntimeSettings 
+                      settings={general.aiRuntime}
+                      onChange={(aiRuntime) => setGeneral(prev => ({ ...prev, aiRuntime }))}
                     />
                 </div>
               )}

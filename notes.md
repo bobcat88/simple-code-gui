@@ -382,14 +382,15 @@ If you want, I can turn this into a **full technical spec with folder structure,
 - **Phase 8: GitNexus Intelligence**: Full sidebar integration with repo health, stack detection, and architectural graph metadata.
 - **Phase 9: Voice and TTS**: Push-to-Talk workflow with Piper/Whisper integration.
 - **Phase 10: Updater**: Auto-update service for application binaries and dependencies.
-- **Phase 11: Activity Feed**: Workspace-wide event stream for observability (Backend Ready).
-- **Phase 12: Crash Reporting**: Native crash handler and diagnostic bundle generator (Backend Ready).
+- **Phase 11: Activity Feed**: Workspace-wide event stream for observability.
+- **Phase 12: Crash Reporting**: Native crash handler and diagnostic bundle generator.
+- **Phase 13: Frontend Integration**: Connected the UI components (Activity Feed, Job Monitor, Health Dashboard, Agent Board) to the Rust backend.
 
 ### 🚧 In Progress / Next
-- **Phase 13: Frontend Integration**: Connecting the UI components (Activity Feed, Job Monitor, Health Dashboard, Agent Board) to the Rust backend.
+- **Phase 14: AI Runtime Orchestration**: Implementing the provider manager, model plans, and routing policies for agent-specific execution.
 
 ### 📍 Current Milestone
-**Intelligence & Observability Gate**: The app now provides a high-fidelity view of the repository's health and architecture, enabling agents to operate with context-awareness.
+**Orchestration & Governance Gate**: The app now supports real-time observability and is transitioning into a multi-agent orchestration platform with fine-grained provider control.
 
 [1]: https://donutsdelivery.online/index.php/about/?utm_source=chatgpt.com "DonutsDelivery.online — Free Open-Source Desktop Apps"
 [2]: https://www.skill-gallery.jp/en/skills/kynetic-ai/spec?utm_source=chatgpt.com "spec - Agent Skill | Skill Gallery"

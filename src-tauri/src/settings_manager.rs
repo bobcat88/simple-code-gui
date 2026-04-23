@@ -7,6 +7,48 @@ use crate::database::DatabaseManager;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct ProviderConfig {
+    pub id: String,
+    pub name: String,
+    pub enabled: bool,
+    pub api_key: Option<String>,
+    pub base_url: Option<String>,
+    pub models: Vec<String>,
+    pub default_model: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelPlan {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub planner_model: String,
+    pub builder_model: String,
+    pub reviewer_model: String,
+    pub researcher_model: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentRoutingPolicy {
+    pub role: String,
+    pub plan_id: Option<String>,
+    pub model_override: Option<String>,
+    pub provider_override: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct AiRuntimeSettings {
+    pub providers: Vec<ProviderConfig>,
+    pub plans: Vec<ModelPlan>,
+    pub routing: Vec<AgentRoutingPolicy>,
+    pub active_plan_id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct AppSettings {
     pub default_project_dir: String,
     pub theme: String,
@@ -37,6 +79,8 @@ pub struct AppSettings {
     pub auto_scan_interval: u64, // seconds
     #[serde(default = "default_tada_voice")]
     pub tada_voice_sample: String,
+    #[serde(default = "default_ai_runtime")]
+    pub ai_runtime: AiRuntimeSettings,
 }
 
 fn default_true() -> bool { true }
@@ -44,6 +88,76 @@ fn default_accent() -> String { String::from("#3b82f6") }
 fn default_auto_scan_interval() -> u64 { 3600 } // 1 hour
 fn default_tts_speed() -> f32 { 1.0 }
 fn default_tada_voice() -> String { String::from("v2/en_3") }
+
+fn default_ai_runtime() -> AiRuntimeSettings {
+    AiRuntimeSettings {
+        providers: vec![
+            ProviderConfig {
+                id: "claude".to_string(),
+                name: "Anthropic Claude".to_string(),
+                enabled: true,
+                api_key: None,
+                base_url: None,
+                models: vec!["claude-3-5-sonnet".to_string(), "claude-3-opus".to_string(), "claude-3-haiku".to_string()],
+                default_model: Some("claude-3-5-sonnet".to_string()),
+            },
+            ProviderConfig {
+                id: "gemini".to_string(),
+                name: "Google Gemini".to_string(),
+                enabled: true,
+                api_key: None,
+                base_url: None,
+                models: vec!["gemini-1.5-pro".to_string(), "gemini-1.5-flash".to_string()],
+                default_model: Some("gemini-1.5-pro".to_string()),
+            },
+            ProviderConfig {
+                id: "openai".to_string(),
+                name: "OpenAI / Codex".to_string(),
+                enabled: false,
+                api_key: None,
+                base_url: None,
+                models: vec!["gpt-4o".to_string(), "gpt-4-turbo".to_string(), "gpt-3.5-turbo".to_string()],
+                default_model: Some("gpt-4o".to_string()),
+            },
+            ProviderConfig {
+                id: "ollama".to_string(),
+                name: "Local Ollama".to_string(),
+                enabled: false,
+                api_key: None,
+                base_url: Some("http://localhost:11434".to_string()),
+                models: vec!["llama3".to_string(), "codellama".to_string(), "mistral".to_string()],
+                default_model: Some("llama3".to_string()),
+            },
+        ],
+        plans: vec![
+            ModelPlan {
+                id: "balanced".to_string(),
+                name: "Balanced".to_string(),
+                description: "Optimal mix of speed and intelligence.".to_string(),
+                planner_model: "claude-3-5-sonnet".to_string(),
+                builder_model: "claude-3-5-sonnet".to_string(),
+                reviewer_model: "claude-3-5-sonnet".to_string(),
+                researcher_model: "gemini-1.5-flash".to_string(),
+            },
+            ModelPlan {
+                id: "budget".to_string(),
+                name: "Budget".to_string(),
+                description: "Lowest cost, suitable for simple tasks.".to_string(),
+                planner_model: "claude-3-haiku".to_string(),
+                builder_model: "claude-3-haiku".to_string(),
+                reviewer_model: "claude-3-haiku".to_string(),
+                researcher_model: "gemini-1.5-flash".to_string(),
+            },
+        ],
+        routing: vec![
+            AgentRoutingPolicy { role: "planner".to_string(), plan_id: Some("balanced".to_string()), model_override: None, provider_override: None },
+            AgentRoutingPolicy { role: "builder".to_string(), plan_id: Some("balanced".to_string()), model_override: None, provider_override: None },
+            AgentRoutingPolicy { role: "reviewer".to_string(), plan_id: Some("balanced".to_string()), model_override: None, provider_override: None },
+            AgentRoutingPolicy { role: "researcher".to_string(), plan_id: Some("balanced".to_string()), model_override: None, provider_override: None },
+        ],
+        active_plan_id: "balanced".to_string(),
+    }
+}
 
 impl Default for AppSettings {
     fn default() -> Self {
@@ -65,6 +179,7 @@ impl Default for AppSettings {
             tada_voice_sample: String::from("v2/en_3"),
             auto_scan_enabled: true,
             auto_scan_interval: 3600,
+            ai_runtime: default_ai_runtime(),
         }
     }
 }

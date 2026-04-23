@@ -641,6 +641,7 @@ export interface ExtendedApi extends Api {
 
   // Custom Commands
   commandsSave?: (path: string, commands: any[]) => Promise<{ success: boolean; error?: string }>
+  aiSaveKey?: (provider: string, key: string, baseUrl?: string) => Promise<void>
 
   // Voice (Extended/Desktop)
   voiceGetInstalled?: () => Promise<any[]>

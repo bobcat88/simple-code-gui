@@ -56,6 +56,40 @@ export const BACKEND_MODES = [
   { label: 'Aider', value: 'aider', desc: 'Use Aider AI pair programmer' },
 ]
 
+export interface ProviderConfig {
+  id: string
+  name: string
+  enabled: boolean
+  apiKey?: string
+  baseUrl?: string
+  models: string[]
+  defaultModel?: string
+}
+
+export interface ModelPlan {
+  id: string
+  name: string
+  description: string
+  plannerModel: string
+  builderModel: string
+  reviewerModel: string
+  researcherModel: string
+}
+
+export interface AgentRoutingPolicy {
+  role: string
+  planId?: string
+  modelOverride?: string
+  providerOverride?: string
+}
+
+export interface AiRuntimeSettings {
+  providers: ProviderConfig[]
+  plans: ModelPlan[]
+  routing: AgentRoutingPolicy[]
+  activePlanId: string
+}
+
 // Terminal ANSI colors customization
 export interface TerminalColorsCustomization {
   black?: string
@@ -94,6 +128,7 @@ export interface GeneralSettings {
   backend: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
   glowEnabled: boolean
   accentColor: string
+  aiRuntime: AiRuntimeSettings
 }
 
 export interface VoiceSettings {
@@ -133,7 +168,42 @@ export const DEFAULT_GENERAL: GeneralSettings = {
   customTool: '',
   backend: 'default',
   glowEnabled: true,
-  accentColor: '#3b82f6'
+  accentColor: '#3b82f6',
+  aiRuntime: {
+    providers: [
+      { id: 'claude', name: 'Anthropic Claude', enabled: true, models: ['claude-3-5-sonnet', 'claude-3-opus', 'claude-3-haiku'], defaultModel: 'claude-3-5-sonnet' },
+      { id: 'gemini', name: 'Google Gemini', enabled: true, models: ['gemini-1.5-pro', 'gemini-1.5-flash'], defaultModel: 'gemini-1.5-pro' },
+      { id: 'openai', name: 'OpenAI / Codex', enabled: false, models: ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'], defaultModel: 'gpt-4o' },
+      { id: 'ollama', name: 'Local Ollama', enabled: false, models: ['llama3', 'codellama', 'mistral', 'phi3'], defaultModel: 'llama3' },
+    ],
+    plans: [
+      {
+        id: 'balanced',
+        name: 'Balanced',
+        description: 'Optimal mix of speed and intelligence.',
+        plannerModel: 'claude-3-5-sonnet',
+        builderModel: 'claude-3-5-sonnet',
+        reviewerModel: 'claude-3-5-sonnet',
+        researcherModel: 'gemini-1.5-flash'
+      },
+      {
+        id: 'budget',
+        name: 'Budget',
+        description: 'Lowest cost, suitable for simple tasks.',
+        plannerModel: 'claude-3-haiku',
+        builderModel: 'claude-3-haiku',
+        reviewerModel: 'claude-3-haiku',
+        researcherModel: 'gemini-1.5-flash'
+      }
+    ],
+    routing: [
+      { role: 'planner', planId: 'balanced' },
+      { role: 'builder', planId: 'balanced' },
+      { role: 'reviewer', planId: 'balanced' },
+      { role: 'researcher', planId: 'balanced' },
+    ],
+    activePlanId: 'balanced'
+  }
 }
 
 export const DEFAULT_VOICE: VoiceSettings = {

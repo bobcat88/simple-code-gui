@@ -31,6 +31,9 @@ export const tauriIpc = {
   saveSettings: (settings: any) => 
     invoke<void>('save_settings', { settings }),
     
+  aiSaveKey: (provider: string, key: string, baseUrl?: string) =>
+    invoke<void>('ai_save_key', { provider, key, base_url: baseUrl }),
+    
   getWorkspace: () => 
     invoke<any>('get_workspace'),
     

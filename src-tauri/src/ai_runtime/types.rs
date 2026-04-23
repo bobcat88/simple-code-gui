@@ -15,12 +15,22 @@ pub enum TaskType {
     Vision,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum AgentRole {
+    Planner,
+    Builder,
+    Reviewer,
+    Researcher,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum RoutingPolicy {
     Direct { provider: String, model: String },
     Tiered { task: TaskType, allow_fallback: bool },
     CheapFirst,
     QualityFirst,
+    Agent { role: AgentRole },
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
