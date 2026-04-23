@@ -30,7 +30,9 @@ pub enum RoutingPolicy {
     Tiered { task: TaskType, allow_fallback: bool },
     CheapFirst,
     QualityFirst,
+    LatencyFirst,
     Agent { role: AgentRole },
+    Auto,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

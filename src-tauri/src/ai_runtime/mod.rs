@@ -184,7 +184,12 @@ impl RuntimeManager {
 
         match &request.policy {
             Some(RoutingPolicy::Direct { provider, model }) => {
-                Ok(vec![(provider.clone(), model.clone())])
+                // For direct, we still check if provider is registered
+                if providers.contains_key(provider) {
+                    Ok(vec![(provider.clone(), model.clone())])
+                } else {
+                    Err(format!("Provider {} not found for direct routing", provider))
+                }
             }
             Some(RoutingPolicy::Tiered {
                 task,
@@ -226,9 +231,14 @@ impl RuntimeManager {
                 });
                 Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
             }
-            Some(RoutingPolicy::QualityFirst) | None => {
+            Some(RoutingPolicy::QualityFirst) => {
                 // Default to quality first (Tier1 > Tier2 > Tier3)
                 all_models.sort_by(|(_, a), (_, b)| a.tier.partial_cmp(&b.tier).unwrap());
+                Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
+            }
+            Some(RoutingPolicy::LatencyFirst) => {
+                // Heuristic: Tier3 is fastest, then Tier2, then Tier1
+                all_models.sort_by(|(_, a), (_, b)| b.tier.partial_cmp(&a.tier).unwrap());
                 Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
             }
             Some(RoutingPolicy::Agent { role }) => {
@@ -275,6 +285,46 @@ impl RuntimeManager {
                 }
                 
                 // Fallback to default quality routing if no agent policy found or settings missing
+                all_models.sort_by(|(_, a), (_, b)| a.tier.partial_cmp(&b.tier).unwrap());
+                Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
+            }
+            Some(RoutingPolicy::Auto) | None => {
+                // Intelligent routing: check settings first
+                let settings_lock = self.settings.lock().await;
+                if let Some(settings_manager) = &*settings_lock {
+                    let settings = settings_manager.get().await;
+                    
+                    // Map strategy string to internal policy
+                    let strategy = match settings.ai_runtime.default_strategy.as_str() {
+                        "cheap" => Some(RoutingPolicy::CheapFirst),
+                        "latency" => Some(RoutingPolicy::LatencyFirst),
+                        "auto" => {
+                            // If truly "auto", try active plan
+                            let active_plan_id = &settings.ai_runtime.active_plan_id;
+                            if let Some(plan) = settings.ai_runtime.plans.iter().find(|p| p.id == *active_plan_id) {
+                                let model_id = &plan.planner_model;
+                                for (prov_name, provider) in providers.iter() {
+                                    if let Ok(models) = provider.list_models().await {
+                                        if models.iter().any(|m| m.id == *model_id) {
+                                            return Ok(vec![(prov_name.clone(), model_id.clone())]);
+                                        }
+                                    }
+                                }
+                            }
+                            None
+                        }
+                        _ => Some(RoutingPolicy::QualityFirst), // Default to quality
+                    };
+
+                    if let Some(p) = strategy {
+                        // Recurse with the derived strategy
+                        let mut req = request.clone();
+                        req.policy = Some(p);
+                        return Box::pin(self.resolve_routes(&req)).await;
+                    }
+                }
+                
+                // Fallback to quality first
                 all_models.sort_by(|(_, a), (_, b)| a.tier.partial_cmp(&b.tier).unwrap());
                 Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
             }

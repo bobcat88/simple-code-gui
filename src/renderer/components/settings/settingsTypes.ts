@@ -88,6 +88,7 @@ export interface AiRuntimeSettings {
   plans: ModelPlan[]
   routing: AgentRoutingPolicy[]
   activePlanId: string
+  defaultStrategy: string
 }
 
 // Terminal ANSI colors customization
@@ -202,7 +203,8 @@ export const DEFAULT_GENERAL: GeneralSettings = {
       { role: 'reviewer', planId: 'balanced' },
       { role: 'researcher', planId: 'balanced' },
     ],
-    activePlanId: 'balanced'
+    activePlanId: 'balanced',
+    defaultStrategy: 'quality'
   }
 }
 

@@ -45,6 +45,7 @@ pub struct AiRuntimeSettings {
     pub plans: Vec<ModelPlan>,
     pub routing: Vec<AgentRoutingPolicy>,
     pub active_plan_id: String,
+    pub default_strategy: String, // "quality", "cheap", "latency", "auto"
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -156,6 +157,7 @@ fn default_ai_runtime() -> AiRuntimeSettings {
             AgentRoutingPolicy { role: "researcher".to_string(), plan_id: Some("balanced".to_string()), model_override: None, provider_override: None },
         ],
         active_plan_id: "balanced".to_string(),
+        default_strategy: "quality".to_string(),
     }
 }
 

@@ -45,34 +45,50 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
           <p className="text-xs text-white/40">Manage your LLM providers and agent routing policies.</p>
         </div>
         
-        <div className="flex bg-white/5 border border-white/10 rounded-lg p-1">
-          <button 
-            onClick={() => setActiveSubTab('plans')}
-            className={cn(
-              "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-              activeSubTab === 'plans' ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/60"
-            )}
-          >
-            Plans
-          </button>
-          <button 
-            onClick={() => setActiveSubTab('providers')}
-            className={cn(
-              "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-              activeSubTab === 'providers' ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/60"
-            )}
-          >
-            Providers
-          </button>
-          <button 
-            onClick={() => setActiveSubTab('routing')}
-            className={cn(
-              "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-              activeSubTab === 'routing' ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/60"
-            )}
-          >
-            Routing
-          </button>
+        <div className="flex gap-2">
+          <div className="bg-white/5 border border-white/10 rounded-lg p-1 flex items-center">
+            <span className="text-[10px] uppercase font-bold text-white/30 px-2">Strategy</span>
+            <select
+              value={settings.defaultStrategy}
+              onChange={(e) => onChange({ ...settings, defaultStrategy: e.target.value })}
+              className="bg-transparent text-xs text-white/70 focus:outline-none border-none pr-6"
+            >
+              <option value="quality">Quality First</option>
+              <option value="cheap">Cheap First</option>
+              <option value="latency">Latency First</option>
+              <option value="auto">Auto (Plan)</option>
+            </select>
+          </div>
+
+          <div className="flex bg-white/5 border border-white/10 rounded-lg p-1">
+            <button 
+              onClick={() => setActiveSubTab('plans')}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                activeSubTab === 'plans' ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/60"
+              )}
+            >
+              Plans
+            </button>
+            <button 
+              onClick={() => setActiveSubTab('providers')}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                activeSubTab === 'providers' ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/60"
+              )}
+            >
+              Providers
+            </button>
+            <button 
+              onClick={() => setActiveSubTab('routing')}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                activeSubTab === 'routing' ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/60"
+              )}
+            >
+              Routing
+            </button>
+          </div>
         </div>
       </div>
 
