@@ -387,10 +387,13 @@ If you want, I can turn this into a **full technical spec with folder structure,
 - **Phase 13: Frontend Integration**: Connected the UI components (Activity Feed, Job Monitor, Health Dashboard, Agent Board) to the Rust backend.
 
 ### 🚧 In Progress / Next
-- **Phase 14: AI Runtime Orchestration**: Implementing the provider manager, model plans, and routing policies for agent-specific execution.
+- **Phase 14: AI Runtime Orchestration**: Implemented the provider manager, model plans, and routing infrastructure for agent-specific execution.
+
+### 🚧 In Progress / Next
+- **Phase 15: Agent Board Evolution**: Implementing the visual agent cards with real-time status, queue management, and token burn rate tracking.
 
 ### 📍 Current Milestone
-**Orchestration & Governance Gate**: The app now supports real-time observability and is transitioning into a multi-agent orchestration platform with fine-grained provider control.
+**Multi-Agent Execution Core**: The orchestration layer is fully integrated, enabling the app to route tasks across multiple AI providers with persisted configuration and real-time synchronization.
 
 [1]: https://donutsdelivery.online/index.php/about/?utm_source=chatgpt.com "DonutsDelivery.online — Free Open-Source Desktop Apps"
 [2]: https://www.skill-gallery.jp/en/skills/kynetic-ai/spec?utm_source=chatgpt.com "spec - Agent Skill | Skill Gallery"
