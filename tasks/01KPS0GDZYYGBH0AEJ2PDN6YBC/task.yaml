@@ -1,0 +1,33 @@
+_ulid: 01KPS0GDZYYGBH0AEJ2PDN6YBC
+slugs:
+  - task-app-plugin-health-dashboard
+title: "Implement: App & Plugin Health Dashboard"
+type: task
+description: "Implement and verify @01KPNWYK: status monitoring for core services and installed MCP/plugins."
+spec_ref: "@01KPNWYK"
+meta_ref: null
+plan_ref: null
+status: completed
+blocked_by: []
+closed_reason: "Integrated second Codex batch; validation passed: health_manager tests, gsd_engine
+  tests, HealthDashboard/TokenBudgetHud/useTokenMeter Vitest, cargo test --lib, git diff --check,
+  bun run build."
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+submission_linkage:
+  review_url: null
+  branch: rust-revamp
+  captured_at: 2026-04-22T06:13:05.086Z
+  commit: 63c03e134f7bbcd31f8d50200fd30a17ec2518dd
+  remote: origin
+  remote_url: https://github.com/bobcat88/simple-code-gui
+  upstream_ref: refs/heads/rust-revamp
+created_at: 2026-04-21T21:52:56.318Z
+started_at: 2026-04-22T06:01:05.035Z
+submitted_at: 2026-04-22T06:13:05.195Z
+completed_at: 2026-04-22T06:13:18.451Z
+todos: []
+automation: eligible

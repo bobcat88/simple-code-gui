@@ -1,0 +1,34 @@
+_ulid: 01KPS0GE3XDTDGATRJTWYREYXC
+slugs:
+  - task-gsd-execution-engine
+title: "Implement: GSD Execution Engine"
+type: task
+description: "Implement and verify @gsd-engine: phase-based agent execution engine with verifier
+  loops and wave-based orchestration."
+spec_ref: "@gsd-engine"
+meta_ref: null
+plan_ref: null
+status: completed
+blocked_by: []
+closed_reason: "Integrated second Codex batch; validation passed: health_manager tests, gsd_engine
+  tests, HealthDashboard/TokenBudgetHud/useTokenMeter Vitest, cargo test --lib, git diff --check,
+  bun run build."
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+submission_linkage:
+  review_url: null
+  branch: rust-revamp
+  captured_at: 2026-04-22T06:13:05.073Z
+  commit: 63c03e134f7bbcd31f8d50200fd30a17ec2518dd
+  remote: origin
+  remote_url: https://github.com/bobcat88/simple-code-gui
+  upstream_ref: refs/heads/rust-revamp
+created_at: 2026-04-21T21:52:56.445Z
+started_at: 2026-04-22T06:01:04.758Z
+submitted_at: 2026-04-22T06:13:05.080Z
+completed_at: 2026-04-22T06:13:15.446Z
+todos: []
+automation: eligible

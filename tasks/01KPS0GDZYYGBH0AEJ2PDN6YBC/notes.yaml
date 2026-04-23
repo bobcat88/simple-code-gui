@@ -1,0 +1,37 @@
+notes:
+  - _ulid: 01KPS0ZJEEN5SMTJMG61V7CHJY
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:01:12.399Z
+  - _ulid: 01KPS10DKYPZ1CF3S7XEW1QX2Q
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:01:40.223Z
+  - _ulid: 01KPSWE6A4TYV876GS4QXRP42P
+    content: Reset from blocked to pending
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-22T06:01:03.044Z
+  - _ulid: 01KPNWYKZAPPHEATH0001ABCDE
+    content: |-
+      Implemented the App & Plugin Health Dashboard by expanding health_get_status to return
+      core service snapshots (database, extension store, MCP config) plus installed extension
+      inventory, then rendering the service and extension state in the sidebar observability
+      panel. HealthHUD now reflects the aggregate status string instead of hardcoding Healthy.
+      Verification: cargo test health_manager --lib (3 passed), bunx vitest run
+      src/renderer/components/HealthDashboard.test.tsx (1 passed), bun run build (passed).
+    supersedes: null
+    author: "@claude"
+    created_at: 2026-04-22T06:09:15Z
+  - _ulid: 01KPSX3XXY7Z7WW7SNWK0HVK0Z
+    content: "Integrated Codex worker output into main worktree. Added health status service/plugin
+      snapshots, dashboard rows, real HealthHUD aggregate status, and focused tests. Checks passed:
+      cargo test health_manager --lib, HealthDashboard Vitest, cargo test --lib, git diff --check,
+      bun run build."
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-22T06:12:55.358Z

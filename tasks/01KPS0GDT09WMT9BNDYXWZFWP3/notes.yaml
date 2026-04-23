@@ -1,0 +1,69 @@
+notes:
+  - _ulid: 01KPS0RM6BEATY5623SE41V881
+    content: >-
+      Approach: 
+
+      1. Create SQLite-backed token-burn-db.ts in src/main/ using better-sqlite3 (already a dep)
+
+      2. Create IPC handlers for logging and querying token history
+
+      3. Wire preload bridge for renderer access
+
+      4. Create TokenBurnHistory React component with table view and aggregation
+
+      5. Integrate into OrchestrationPanel
+
+
+      Key patterns: follow session-discovery.ts for SQLite usage, orchestration-handlers.ts for IPC
+      pattern, OrchestrationPanel.tsx for UI integration.
+
+
+      Test plan: 4 ACs × 1+ test each covering DB init, record insertion, query/filtering, and UI
+      rendering.
+    supersedes: null
+    author: "@claude"
+    created_at: 2026-04-21T21:57:24.812Z
+  - _ulid: 01KPS0X3X164HVYNMY6XGD8ZZ6
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T21:59:51.970Z
+  - _ulid: 01KPS0XSGTR4BV9MXQE2MXK3HM
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:00:14.106Z
+  - _ulid: 01KPS0YAHX2KP3F8TXJ7RCVYMC
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:00:31.549Z
+  - _ulid: 01KPS1T5P0FJ8KKE7CMVX2BPT9
+    content: Reset from blocked to pending
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:15:44.065Z
+  - _ulid: 01KPS2N9DMQ208HVZEQ83Y0HJN
+    content: "Worker B implemented token burn history: added token_transactions SQLite schema/indexes
+      plus Rust insert/query helpers and get_token_history command; updated Tauri renderer API
+      bridge and token meter to log session/project/backend/input/output/cost transactions; added
+      TokenBurnHistory UI in Automations with totals, daily bars, project/backend breakdowns,
+      filters, and session rows; added AC-annotated Rust and Vitest coverage. Verification: cargo
+      test database::tests passed (2 tests); bun run test
+      src/renderer/components/orchestration/TokenBurnHistory.test.tsx passed (1 test); bun run build
+      completed successfully and produced the deb bundle. Note: did not submit/complete, commit, or
+      push."
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:30:32.628Z
+  - _ulid: 01KPSWB3TPQFXBXT6QGDCTQMX6
+    content: "Integrated Codex worker output into main worktree. Verified SQLite token transaction
+      insert/query helpers, renderer TokenBurnHistory component, Tauri API bridge, token meter
+      logging. Checks passed: cargo test database::tests --lib, TokenBurnHistory Vitest, cargo test
+      --lib, bun run build."
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-22T05:59:22.198Z

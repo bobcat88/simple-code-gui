@@ -1,0 +1,55 @@
+notes:
+  - _ulid: 01KPS0NWHWXKZETC3P0DMQ5DE8
+    content: |-
+      Approach: 
+      1. Main process IPC handler reads Claude JSONL session files, sums usage fields
+      2. Preload bridge exposes getSessionTokenUsage  
+      3. Api interface + ElectronBackend implementation
+      4. TokenCostHUD component in terminal header, polls every 10s
+      5. Supports Claude sessions only (JSONL format has usage data)
+      Edge cases: no session yet, session file not found, parse errors in JSONL
+      Test plan: unit test for token parsing logic, component render test
+    supersedes: null
+    author: "@claude"
+    created_at: 2026-04-21T21:55:55.068Z
+  - _ulid: 01KPS0X6CZKWMQC3P6RSPEHEX0
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T21:59:54.527Z
+  - _ulid: 01KPS0XG7NZX2KR61E34YY6W4A
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:00:04.597Z
+  - _ulid: 01KPS0XX2RWHT3YXQWK5P2QBW2
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:00:17.752Z
+  - _ulid: 01KPSWE681K037PFJWJV8J2RSZ
+    content: Reset from blocked to pending
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-22T06:01:02.977Z
+  - _ulid: 01KPSWSEAWPZPFASZ4JGRPCCZA
+    content: "Implemented a live session token HUD inside the terminal viewport. useTokenMeter now
+      tracks cumulative session burn state (input/output/saved/cost/event count), resets cleanly on
+      PTY changes, and still logs token events when the backend API is present. Added TokenBudgetHud
+      with session burn, estimated cost, and budget-guardrail status plus a progress bar; wired it
+      into Terminal as an overlay for the active session. Verification: vitest run on
+      TokenBudgetHud.test.tsx and useTokenMeter.test.tsx passed. bun run build failed in
+      src/health_manager.rs with a pre-existing Rust compile error unrelated to this HUD change."
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-22T06:07:11.709Z
+  - _ulid: 01KPSX3XXSFKZ6Y9ZGS3VSFAGX
+    content: "Integrated Codex worker output into main worktree. Added live terminal token/cost HUD
+      backed by useTokenMeter session snapshot and focused tests. Checks passed:
+      TokenBudgetHud/useTokenMeter Vitest, cargo test --lib, git diff --check, bun run build."
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-22T06:12:55.354Z

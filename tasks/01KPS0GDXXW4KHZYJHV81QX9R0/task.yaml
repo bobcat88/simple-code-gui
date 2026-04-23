@@ -1,0 +1,32 @@
+_ulid: 01KPS0GDXXW4KHZYJHV81QX9R0
+slugs:
+  - task-task-assignment-view
+title: "Implement: Task Assignment View"
+type: task
+description: "Implement and verify @01KPNWYE: management view for assigning agents to repositories or tasks."
+spec_ref: "@01KPNWYE"
+meta_ref: null
+plan_ref: null
+status: completed
+blocked_by: []
+closed_reason: "Integrated final Codex batch; validation passed: ApprovalWorkflow and
+  TaskAssignmentView Vitest, git diff --check, bun run build."
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+submission_linkage:
+  review_url: null
+  branch: rust-revamp
+  captured_at: 2026-04-22T06:25:39.314Z
+  commit: 4f2ef4995cec057ae5ee73c26fc1a7905e6f3b4a
+  remote: origin
+  remote_url: https://github.com/bobcat88/simple-code-gui
+  upstream_ref: refs/heads/rust-revamp
+created_at: 2026-04-21T21:52:56.253Z
+started_at: 2026-04-22T06:14:02.397Z
+submitted_at: 2026-04-22T06:25:39.379Z
+completed_at: 2026-04-22T06:25:52.249Z
+todos: []
+automation: eligible

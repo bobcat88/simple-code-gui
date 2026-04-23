@@ -1,0 +1,51 @@
+notes:
+  - _ulid: 01KPS0ZFJDQEDHSM6PWHMF2P68
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:01:09.453Z
+  - _ulid: 01KPS10A7QN0Y0YXY2VGTX6AT7
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:01:36.759Z
+  - _ulid: 01KPS11ADF0YVB4AGS8C93AWHJ
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:02:09.711Z
+  - _ulid: 01KPSWE66C9M2D2E6CS75V7ZT3
+    content: Reset from blocked to pending
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-22T06:01:02.924Z
+  - _ulid: 01KPSWSY4KE9HP6AT21GGQFG9P
+    content: "Implemented phase-based execution orchestration in src-tauri/src/gsd_engine: plans now
+      seed execution metadata defaults, phases run through a runtime config resolver, steps execute
+      in waves via JoinSet, and each step has a verifier retry loop before atomic commit. Added
+      structured gsd-execution-event emission plus focused unit tests for wave batching, runtime
+      defaults, and verifier retry decisions. Verification: cargo fmt --manifest-path
+      src-tauri/Cargo.toml passed. cargo test --manifest-path src-tauri/Cargo.toml gsd_engine --lib
+      still fails on a pre-existing Send error in src/health_manager.rs (MutexGuard across await in
+      health_get_status), so the repo-level test gate is currently blocked outside this task."
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-22T06:07:27.892Z
+  - _ulid: 01KPSWZ40J4BPCP2JTZ5P5CQ3K
+    content: "Repo build verification passed: bun run build completed successfully and produced
+      src-tauri/target/release/bundle/deb/simple-code-gui_0.1.0_amd64.deb. The earlier cargo test
+      failure is still isolated to the pre-existing health_manager Send issue, not the GSD engine
+      patch."
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-22T06:10:17.747Z
+  - _ulid: 01KPSX3XX6AHFNG6EBSJAAK5DV
+    content: "Integrated Codex worker output into main worktree. Verified phase/wave execution, verifier
+      retries, execution events, and focused unit coverage. Checks passed: cargo test gsd_engine
+      --lib, cargo test --lib, git diff --check, bun run build."
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-22T06:12:55.334Z

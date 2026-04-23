@@ -1,0 +1,51 @@
+notes:
+  - _ulid: 01KPS0Z5RJD363ZQYWBGFPFRF1
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:00:59.410Z
+  - _ulid: 01KPS1031MR7QZQZESGS1GKMFE
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:01:29.396Z
+  - _ulid: 01KPS1149HEG6KGAB87JYF9M95
+    content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
+      (Europe/Paris)"
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:02:03.442Z
+  - _ulid: 01KPS1T5QM2FS433E1VZY7B4AQ
+    content: Reset from blocked to pending
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:15:44.117Z
+  - _ulid: 01KPS2CCATD4SAK6PJJH7P6GNM
+    content: "Worker C: added OpenAI runtime provider using Chat Completions with
+      OPENAI_API_KEY/OPENAI_BASE_URL startup registration, exported providers::openai, and added
+      in-memory runtime routing tests for direct and cheap-first dispatch plus OpenAI role
+      normalization. Verified with rtk cargo test --lib from src-tauri: 7 passed; warnings are
+      pre-existing unused/dead-code warnings. GitNexus impact checks for
+      RuntimeManager/register_provider/run/AIProvider/completion/list_models/resolve_routes were LOW
+      except AIProvider.list_models MEDIUM; CLI detect_changes command is unavailable in this
+      GitNexus version."
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:25:40.698Z
+  - _ulid: 01KPS2E035TQ56C3DTGS1W489D
+    content: "Worker C update: after removing accidental out-of-scope database/lib formatting churn,
+      reran rtk cargo test --lib from src-tauri: 5 passed; warnings remain existing unused/dead-code
+      warnings. Runtime scope retained: OpenAI provider file, providers::openai export,
+      OPENAI_API_KEY/OPENAI_BASE_URL registration, and routing/provider tests."
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-21T22:26:33.701Z
+  - _ulid: 01KPSWB3VVEC00K1XBY9D44BJ4
+    content: "Integrated Codex worker output into main worktree. Added OpenAI provider registration and
+      routing coverage; corrected model metadata against official OpenAI docs to
+      gpt-5.2/gpt-5-mini/gpt-5-nano. Checks passed: cargo test --lib, bun run build."
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-04-22T05:59:22.235Z

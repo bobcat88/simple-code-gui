@@ -23,673 +23,142 @@
     - task-session-discovery
   title: "Implement: Session Discovery"
   type: task
-  description: "Implement and verify the Session Discovery feature from @session-discovery: discover
-    previous sessions from Claude, OpenCode, and other supported backends so users can resume work
-    reliably."
   spec_ref: "@session-discovery"
-  meta_ref: null
-  plan_ref: null
   status: completed
   blocked_by: []
-  closed_reason: "Integrated first Codex batch; validation passed: session_manager tests, database
-    tests, TokenBurnHistory Vitest, cargo test --lib, git diff --check, bun run build."
   depends_on: []
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
-  submission_linkage:
-    review_url: null
-    branch: rust-revamp
-    captured_at: 2026-04-22T05:59:32.751Z
-    commit: 08e5412e935656acbbbcce287d840cb155f16c9a
-    remote: origin
-    remote_url: https://github.com/bobcat88/simple-code-gui
-    upstream_ref: refs/heads/rust-revamp
-  session_id: null
+  notes_count: 7
+  todos_count: 0
   created_at: 2026-04-21T21:52:55.989Z
   started_at: 2026-04-21T22:15:45.973Z
   submitted_at: 2026-04-22T05:59:32.758Z
   completed_at: 2026-04-22T05:59:43.129Z
-  notes:
-    - _ulid: 01KPS0KSNP8W26PDGWH224EE1P
-      content: |-
-        Approach: session-discovery.ts already implemented with Claude + OpenCode backends. Need to:
-        1. Write comprehensive tests for discoverClaudeSessions and discoverOpenCodeSessions
-        2. Verify edge cases (missing dirs, corrupt files, legacy encoding)
-        3. Test the dispatch function routes correctly by backend type
-        Existing code reads ~/.claude/projects/ JSONL files and .opencode/opencode.db SQLite.
-      supersedes: null
-      author: "@claude"
-      created_at: 2026-04-21T21:54:46.582Z
-    - _ulid: 01KPS0X1F08Z91CZKSSC98Y48V
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T21:59:49.472Z
-    - _ulid: 01KPS0XJQVEDTJGC8ZQ61W9YFF
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:00:07.163Z
-    - _ulid: 01KPS0Y643HD1K2X2CGAQ7FAP3
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:00:27.012Z
-    - _ulid: 01KPS1T5MYENTXRBYFVYNE72MF
-      content: Reset from blocked to pending
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:15:44.030Z
-    - _ulid: 01KPS2F1W7XZ10FGQ717JHXWKD
-      content: "Worker A update: implemented scoped session discovery changes in
-        src-tauri/src/session_manager.rs and dependency updates in src-tauri/Cargo.toml/Cargo.lock.
-        Added OpenCode SQLite discovery for project-local .opencode/opencode.db plus user data
-        opencode/opencode.db fallback, Claude JSONL discovery tests/helpers, lossy legacy JSONL slug
-        parsing, corrupt/missing data tolerance, and backend dispatch routing coverage. GitNexus
-        impact before editing
-        discover_sessions/discover_claude_sessions/extract_slug_from_jsonl/sanitize_path was LOW
-        (0-2 upstream impacted, no affected processes). Verification: rustfmt --check
-        src/session_manager.rs passed; git diff --check for session discovery files passed. cargo
-        test session_manager --lib is currently blocked by unrelated src-tauri/src/lib.rs imports
-        from database token-history symbols (E0432). bun run build tail also fails on the same
-        unrelated compile error in current worktree. Earlier during this batch the same focused
-        session_manager tests passed 8/8 before concurrent unrelated token-history changes shifted
-        the worktree; final current-state gates are blocked outside session discovery scope. Did not
-        submit/complete task, commit, or push."
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:27:08.295Z
-    - _ulid: 01KPSWB3TSD7H9D20G869CZC7W
-      content: Integrated Codex worker output into main worktree. Verified Claude JSONL discovery,
-        OpenCode SQLite discovery, backend dispatch, corrupt/missing data tolerance via cargo test
-        session_manager --lib. Full cargo test --lib and bun run build passed.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T05:59:22.202Z
-  todos: []
   automation: eligible
 - _ulid: 01KPS0GDQXR8JD6QA2MGT2KD9S
   slugs:
     - task-live-token-cost-hud
   title: "Implement: Live Token/Cost HUD"
   type: task
-  description: "Implement and verify @01KPNWTQ: real-time UI showing current session token burn, cost,
-    and budget status."
   spec_ref: "@01KPNWTQ"
-  meta_ref: null
-  plan_ref: null
   status: completed
   blocked_by: []
-  closed_reason: "Integrated second Codex batch; validation passed: health_manager tests, gsd_engine
-    tests, HealthDashboard/TokenBudgetHud/useTokenMeter Vitest, cargo test --lib, git diff --check,
-    bun run build."
   depends_on: []
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
-  submission_linkage:
-    review_url: null
-    branch: rust-revamp
-    captured_at: 2026-04-22T06:13:05.076Z
-    commit: 63c03e134f7bbcd31f8d50200fd30a17ec2518dd
-    remote: origin
-    remote_url: https://github.com/bobcat88/simple-code-gui
-    upstream_ref: refs/heads/rust-revamp
-  session_id: null
+  notes_count: 7
+  todos_count: 0
   created_at: 2026-04-21T21:52:56.061Z
   started_at: 2026-04-22T06:01:04.503Z
   submitted_at: 2026-04-22T06:13:05.134Z
   completed_at: 2026-04-22T06:13:16.961Z
-  notes:
-    - _ulid: 01KPS0NWHWXKZETC3P0DMQ5DE8
-      content: |-
-        Approach: 
-        1. Main process IPC handler reads Claude JSONL session files, sums usage fields
-        2. Preload bridge exposes getSessionTokenUsage  
-        3. Api interface + ElectronBackend implementation
-        4. TokenCostHUD component in terminal header, polls every 10s
-        5. Supports Claude sessions only (JSONL format has usage data)
-        Edge cases: no session yet, session file not found, parse errors in JSONL
-        Test plan: unit test for token parsing logic, component render test
-      supersedes: null
-      author: "@claude"
-      created_at: 2026-04-21T21:55:55.068Z
-    - _ulid: 01KPS0X6CZKWMQC3P6RSPEHEX0
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T21:59:54.527Z
-    - _ulid: 01KPS0XG7NZX2KR61E34YY6W4A
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:00:04.597Z
-    - _ulid: 01KPS0XX2RWHT3YXQWK5P2QBW2
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:00:17.752Z
-    - _ulid: 01KPSWE681K037PFJWJV8J2RSZ
-      content: Reset from blocked to pending
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T06:01:02.977Z
-    - _ulid: 01KPSWSEAWPZPFASZ4JGRPCCZA
-      content: "Implemented a live session token HUD inside the terminal viewport. useTokenMeter now
-        tracks cumulative session burn state (input/output/saved/cost/event count), resets cleanly
-        on PTY changes, and still logs token events when the backend API is present. Added
-        TokenBudgetHud with session burn, estimated cost, and budget-guardrail status plus a
-        progress bar; wired it into Terminal as an overlay for the active session. Verification:
-        vitest run on TokenBudgetHud.test.tsx and useTokenMeter.test.tsx passed. bun run build
-        failed in src/health_manager.rs with a pre-existing Rust compile error unrelated to this HUD
-        change."
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T06:07:11.709Z
-    - _ulid: 01KPSX3XXSFKZ6Y9ZGS3VSFAGX
-      content: "Integrated Codex worker output into main worktree. Added live terminal token/cost HUD
-        backed by useTokenMeter session snapshot and focused tests. Checks passed:
-        TokenBudgetHud/useTokenMeter Vitest, cargo test --lib, git diff --check, bun run build."
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T06:12:55.354Z
-  todos: []
   automation: eligible
 - _ulid: 01KPS0GDT09WMT9BNDYXWZFWP3
   slugs:
     - task-token-burn-history
   title: "Implement: Token Burn History"
   type: task
-  description: "Implement and verify @01KPNWTT: SQLite-backed logging and historical analysis of token
-    transactions."
   spec_ref: "@01KPNWTT"
-  meta_ref: null
-  plan_ref: null
   status: completed
   blocked_by: []
-  closed_reason: "Integrated first Codex batch; validation passed: session_manager tests, database
-    tests, TokenBurnHistory Vitest, cargo test --lib, git diff --check, bun run build."
   depends_on: []
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
-  submission_linkage:
-    review_url: null
-    branch: rust-revamp
-    captured_at: 2026-04-22T05:59:32.756Z
-    commit: 08e5412e935656acbbbcce287d840cb155f16c9a
-    remote: origin
-    remote_url: https://github.com/bobcat88/simple-code-gui
-    upstream_ref: refs/heads/rust-revamp
-  session_id: null
+  notes_count: 7
+  todos_count: 0
   created_at: 2026-04-21T21:52:56.128Z
   started_at: 2026-04-21T22:15:45.575Z
   submitted_at: 2026-04-22T05:59:32.813Z
   completed_at: 2026-04-22T05:59:44.684Z
-  notes:
-    - _ulid: 01KPS0RM6BEATY5623SE41V881
-      content: >-
-        Approach: 
-
-        1. Create SQLite-backed token-burn-db.ts in src/main/ using better-sqlite3 (already a dep)
-
-        2. Create IPC handlers for logging and querying token history
-
-        3. Wire preload bridge for renderer access
-
-        4. Create TokenBurnHistory React component with table view and aggregation
-
-        5. Integrate into OrchestrationPanel
-
-
-        Key patterns: follow session-discovery.ts for SQLite usage, orchestration-handlers.ts for
-        IPC pattern, OrchestrationPanel.tsx for UI integration.
-
-
-        Test plan: 4 ACs × 1+ test each covering DB init, record insertion, query/filtering, and UI
-        rendering.
-      supersedes: null
-      author: "@claude"
-      created_at: 2026-04-21T21:57:24.812Z
-    - _ulid: 01KPS0X3X164HVYNMY6XGD8ZZ6
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T21:59:51.970Z
-    - _ulid: 01KPS0XSGTR4BV9MXQE2MXK3HM
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:00:14.106Z
-    - _ulid: 01KPS0YAHX2KP3F8TXJ7RCVYMC
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:00:31.549Z
-    - _ulid: 01KPS1T5P0FJ8KKE7CMVX2BPT9
-      content: Reset from blocked to pending
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:15:44.065Z
-    - _ulid: 01KPS2N9DMQ208HVZEQ83Y0HJN
-      content: "Worker B implemented token burn history: added token_transactions SQLite schema/indexes
-        plus Rust insert/query helpers and get_token_history command; updated Tauri renderer API
-        bridge and token meter to log session/project/backend/input/output/cost transactions; added
-        TokenBurnHistory UI in Automations with totals, daily bars, project/backend breakdowns,
-        filters, and session rows; added AC-annotated Rust and Vitest coverage. Verification: cargo
-        test database::tests passed (2 tests); bun run test
-        src/renderer/components/orchestration/TokenBurnHistory.test.tsx passed (1 test); bun run
-        build completed successfully and produced the deb bundle. Note: did not submit/complete,
-        commit, or push."
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:30:32.628Z
-    - _ulid: 01KPSWB3TPQFXBXT6QGDCTQMX6
-      content: "Integrated Codex worker output into main worktree. Verified SQLite token transaction
-        insert/query helpers, renderer TokenBurnHistory component, Tauri API bridge, token meter
-        logging. Checks passed: cargo test database::tests --lib, TokenBurnHistory Vitest, cargo
-        test --lib, bun run build."
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T05:59:22.198Z
-  todos: []
   automation: eligible
 - _ulid: 01KPS0GDVZNW3C7K4XM86WS21M
   slugs:
     - task-approval-workflow-ui
   title: "Implement: Approval Workflow UI"
   type: task
-  description: "Implement and verify @01KPNWYD: interactive prompts for user review and approval of
-    proposed agent modifications."
   spec_ref: "@01KPNWYD"
-  meta_ref: null
-  plan_ref: null
   status: completed
   blocked_by: []
-  closed_reason: "Integrated final Codex batch; validation passed: ApprovalWorkflow and
-    TaskAssignmentView Vitest, git diff --check, bun run build."
   depends_on: []
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
-  submission_linkage:
-    review_url: null
-    branch: rust-revamp
-    captured_at: 2026-04-22T06:25:39.294Z
-    commit: 4f2ef4995cec057ae5ee73c26fc1a7905e6f3b4a
-    remote: origin
-    remote_url: https://github.com/bobcat88/simple-code-gui
-    upstream_ref: refs/heads/rust-revamp
+  notes_count: 6
+  todos_count: 0
   created_at: 2026-04-21T21:52:56.191Z
   started_at: 2026-04-22T06:14:02.710Z
   submitted_at: 2026-04-22T06:25:39.302Z
   completed_at: 2026-04-22T06:25:50.809Z
-  notes:
-    - _ulid: 01KPS0YPCAMC3XA45XCYHZBSNF
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:00:43.658Z
-    - _ulid: 01KPS0ZSPA5E9D4CSBNB6FKTHK
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:01:19.818Z
-    - _ulid: 01KPS10PYV16NTD43NV63E4J1A
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:01:49.787Z
-    - _ulid: 01KPSX5XNJX0H5BZJPFWEVBNSD
-      content: Reset from blocked to pending
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T06:14:00.626Z
-    - _ulid: 01KQ0Y8D0N2Q6V9FJ2W8E7M1ZP
-      content: Added src/renderer/components/orchestration/ApprovalWorkflow.tsx with a split queue +
-        detail review UI, explicit approve/reject/request-changes actions, diff rendering, and
-        per-request notes/conditions. Added focused Vitest coverage for rendering, selection,
-        decision callbacks, request-change parsing, and empty state. Verified with focused
-        ApprovalWorkflow test and bun run build.
-      supersedes: null
-      author: Codex
-      created_at: 2026-04-22T06:20:08.000Z
-    - _ulid: 01KPSXTW7A1S1EXQ1SZ6ZHW3HM
-      content: "Integrated Codex worker output into main worktree and wired ApprovalWorkflow into
-        Automations sidebar using getPendingApprovals, approval request/resolved events, and
-        respondToApproval. Checks passed: ApprovalWorkflow Vitest, TaskAssignmentView Vitest, git
-        diff --check, bun run build."
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T06:25:27.274Z
-  todos: []
   automation: eligible
 - _ulid: 01KPS0GDXXW4KHZYJHV81QX9R0
   slugs:
     - task-task-assignment-view
   title: "Implement: Task Assignment View"
   type: task
-  description: "Implement and verify @01KPNWYE: management view for assigning agents to repositories or tasks."
   spec_ref: "@01KPNWYE"
-  meta_ref: null
-  plan_ref: null
   status: completed
   blocked_by: []
-  closed_reason: "Integrated final Codex batch; validation passed: ApprovalWorkflow and
-    TaskAssignmentView Vitest, git diff --check, bun run build."
   depends_on: []
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
-  submission_linkage:
-    review_url: null
-    branch: rust-revamp
-    captured_at: 2026-04-22T06:25:39.314Z
-    commit: 4f2ef4995cec057ae5ee73c26fc1a7905e6f3b4a
-    remote: origin
-    remote_url: https://github.com/bobcat88/simple-code-gui
-    upstream_ref: refs/heads/rust-revamp
+  notes_count: 6
+  todos_count: 0
   created_at: 2026-04-21T21:52:56.253Z
   started_at: 2026-04-22T06:14:02.397Z
   submitted_at: 2026-04-22T06:25:39.379Z
   completed_at: 2026-04-22T06:25:52.249Z
-  notes:
-    - _ulid: 01KPS0YRX348XKV3RAES77PAYK
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:00:46.244Z
-    - _ulid: 01KPS0ZZQ9TSA97EXM2MZ28V4C
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:01:25.993Z
-    - _ulid: 01KPS10VJTYP9V8SPY5BYCRW0M
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:01:54.522Z
-    - _ulid: 01KPSX5XQBSE5YH9JAAZ26CF30
-      content: Reset from blocked to pending
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T06:14:00.683Z
-    - _ulid: 01KQ0000000000000000000000
-      content: Reworked TaskAssignmentView to show repository assignment rows plus active task session
-        rows, with agent switcher, open-session affordance, assignment/status chips, and summary
-        counts. Verified with `bun run test --
-        src/renderer/components/orchestration/TaskAssignmentView.test.tsx` and `bun run build`.
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T06:17:47.144Z
-    - _ulid: 01KPSXTW775X26XRA02F4YP3VP
-      content: "Integrated Codex worker output into main worktree. TaskAssignmentView now shows repository
-        assignment rows, active task-session rows, agent reassignment, status chips, and resume/open
-        actions. Checks passed: TaskAssignmentView Vitest, ApprovalWorkflow Vitest, git diff
-        --check, bun run build."
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T06:25:27.272Z
-  todos: []
   automation: eligible
 - _ulid: 01KPS0GDZYYGBH0AEJ2PDN6YBC
   slugs:
     - task-app-plugin-health-dashboard
   title: "Implement: App & Plugin Health Dashboard"
   type: task
-  description: "Implement and verify @01KPNWYK: status monitoring for core services and installed MCP/plugins."
   spec_ref: "@01KPNWYK"
-  meta_ref: null
-  plan_ref: null
   status: completed
   blocked_by: []
-  closed_reason: "Integrated second Codex batch; validation passed: health_manager tests, gsd_engine
-    tests, HealthDashboard/TokenBudgetHud/useTokenMeter Vitest, cargo test --lib, git diff --check,
-    bun run build."
   depends_on: []
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
-  submission_linkage:
-    review_url: null
-    branch: rust-revamp
-    captured_at: 2026-04-22T06:13:05.086Z
-    commit: 63c03e134f7bbcd31f8d50200fd30a17ec2518dd
-    remote: origin
-    remote_url: https://github.com/bobcat88/simple-code-gui
-    upstream_ref: refs/heads/rust-revamp
+  notes_count: 5
+  todos_count: 0
   created_at: 2026-04-21T21:52:56.318Z
   started_at: 2026-04-22T06:01:05.035Z
   submitted_at: 2026-04-22T06:13:05.195Z
   completed_at: 2026-04-22T06:13:18.451Z
-  notes:
-    - _ulid: 01KPS0ZJEEN5SMTJMG61V7CHJY
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:01:12.399Z
-    - _ulid: 01KPS10DKYPZ1CF3S7XEW1QX2Q
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:01:40.223Z
-    - _ulid: 01KPSWE6A4TYV876GS4QXRP42P
-      content: Reset from blocked to pending
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T06:01:03.044Z
-    - _ulid: 01KPNWYKZAPPHEATH0001ABCDE
-      content: |-
-        Implemented the App & Plugin Health Dashboard by expanding health_get_status to return
-        core service snapshots (database, extension store, MCP config) plus installed extension
-        inventory, then rendering the service and extension state in the sidebar observability
-        panel. HealthHUD now reflects the aggregate status string instead of hardcoding Healthy.
-        Verification: cargo test health_manager --lib (3 passed), bunx vitest run
-        src/renderer/components/HealthDashboard.test.tsx (1 passed), bun run build (passed).
-      supersedes: null
-      author: "@claude"
-      created_at: 2026-04-22T06:09:15Z
-    - _ulid: 01KPSX3XXY7Z7WW7SNWK0HVK0Z
-      content: "Integrated Codex worker output into main worktree. Added health status service/plugin
-        snapshots, dashboard rows, real HealthHUD aggregate status, and focused tests. Checks
-        passed: cargo test health_manager --lib, HealthDashboard Vitest, cargo test --lib, git diff
-        --check, bun run build."
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T06:12:55.358Z
-  todos: []
   automation: eligible
 - _ulid: 01KPS0GE1Y0DMY1MKT77AASR4Z
   slugs:
     - task-multi-provider-ai-runtime
   title: "Implement: Multi-Provider AI Runtime"
   type: task
-  description: "Implement and verify @ai-runtime: abstraction layer and routing for Claude, OpenAI,
-    Gemini, and Ollama providers."
   spec_ref: "@ai-runtime"
-  meta_ref: null
-  plan_ref: null
   status: completed
   blocked_by: []
-  closed_reason: "Integrated first Codex batch; validation passed: session_manager tests, database
-    tests, TokenBurnHistory Vitest, cargo test --lib, git diff --check, bun run build."
   depends_on: []
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
-  submission_linkage:
-    review_url: null
-    branch: rust-revamp
-    captured_at: 2026-04-22T05:59:32.776Z
-    commit: 08e5412e935656acbbbcce287d840cb155f16c9a
-    remote: origin
-    remote_url: https://github.com/bobcat88/simple-code-gui
-    upstream_ref: refs/heads/rust-revamp
+  notes_count: 7
+  todos_count: 0
   created_at: 2026-04-21T21:52:56.382Z
   started_at: 2026-04-21T22:15:46.469Z
   submitted_at: 2026-04-22T05:59:32.782Z
   completed_at: 2026-04-22T05:59:46.337Z
-  notes:
-    - _ulid: 01KPS0Z5RJD363ZQYWBGFPFRF1
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:00:59.410Z
-    - _ulid: 01KPS1031MR7QZQZESGS1GKMFE
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:01:29.396Z
-    - _ulid: 01KPS1149HEG6KGAB87JYF9M95
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:02:03.442Z
-    - _ulid: 01KPS1T5QM2FS433E1VZY7B4AQ
-      content: Reset from blocked to pending
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:15:44.117Z
-    - _ulid: 01KPS2CCATD4SAK6PJJH7P6GNM
-      content: "Worker C: added OpenAI runtime provider using Chat Completions with
-        OPENAI_API_KEY/OPENAI_BASE_URL startup registration, exported providers::openai, and added
-        in-memory runtime routing tests for direct and cheap-first dispatch plus OpenAI role
-        normalization. Verified with rtk cargo test --lib from src-tauri: 7 passed; warnings are
-        pre-existing unused/dead-code warnings. GitNexus impact checks for
-        RuntimeManager/register_provider/run/AIProvider/completion/list_models/resolve_routes were
-        LOW except AIProvider.list_models MEDIUM; CLI detect_changes command is unavailable in this
-        GitNexus version."
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:25:40.698Z
-    - _ulid: 01KPS2E035TQ56C3DTGS1W489D
-      content: "Worker C update: after removing accidental out-of-scope database/lib formatting churn,
-        reran rtk cargo test --lib from src-tauri: 5 passed; warnings remain existing
-        unused/dead-code warnings. Runtime scope retained: OpenAI provider file, providers::openai
-        export, OPENAI_API_KEY/OPENAI_BASE_URL registration, and routing/provider tests."
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:26:33.701Z
-    - _ulid: 01KPSWB3VVEC00K1XBY9D44BJ4
-      content: "Integrated Codex worker output into main worktree. Added OpenAI provider registration and
-        routing coverage; corrected model metadata against official OpenAI docs to
-        gpt-5.2/gpt-5-mini/gpt-5-nano. Checks passed: cargo test --lib, bun run build."
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T05:59:22.235Z
-  todos: []
   automation: eligible
 - _ulid: 01KPS0GE3XDTDGATRJTWYREYXC
   slugs:
     - task-gsd-execution-engine
   title: "Implement: GSD Execution Engine"
   type: task
-  description: "Implement and verify @gsd-engine: phase-based agent execution engine with verifier
-    loops and wave-based orchestration."
   spec_ref: "@gsd-engine"
-  meta_ref: null
-  plan_ref: null
   status: completed
   blocked_by: []
-  closed_reason: "Integrated second Codex batch; validation passed: health_manager tests, gsd_engine
-    tests, HealthDashboard/TokenBudgetHud/useTokenMeter Vitest, cargo test --lib, git diff --check,
-    bun run build."
   depends_on: []
-  context: []
   priority: 3
   tags: []
-  vcs_refs: []
-  submission_linkage:
-    review_url: null
-    branch: rust-revamp
-    captured_at: 2026-04-22T06:13:05.073Z
-    commit: 63c03e134f7bbcd31f8d50200fd30a17ec2518dd
-    remote: origin
-    remote_url: https://github.com/bobcat88/simple-code-gui
-    upstream_ref: refs/heads/rust-revamp
+  notes_count: 7
+  todos_count: 0
   created_at: 2026-04-21T21:52:56.445Z
   started_at: 2026-04-22T06:01:04.758Z
   submitted_at: 2026-04-22T06:13:05.080Z
   completed_at: 2026-04-22T06:13:15.446Z
-  notes:
-    - _ulid: 01KPS0ZFJDQEDHSM6PWHMF2P68
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:01:09.453Z
-    - _ulid: 01KPS10A7QN0Y0YXY2VGTX6AT7
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:01:36.759Z
-    - _ulid: 01KPS11ADF0YVB4AGS8C93AWHJ
-      content: "[AGENT-FAIL] Invocation failed: Internal error: You've hit your limit · resets 4am
-        (Europe/Paris)"
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-21T22:02:09.711Z
-    - _ulid: 01KPSWE66C9M2D2E6CS75V7ZT3
-      content: Reset from blocked to pending
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T06:01:02.924Z
-    - _ulid: 01KPSWSY4KE9HP6AT21GGQFG9P
-      content: "Implemented phase-based execution orchestration in src-tauri/src/gsd_engine: plans now
-        seed execution metadata defaults, phases run through a runtime config resolver, steps
-        execute in waves via JoinSet, and each step has a verifier retry loop before atomic commit.
-        Added structured gsd-execution-event emission plus focused unit tests for wave batching,
-        runtime defaults, and verifier retry decisions. Verification: cargo fmt --manifest-path
-        src-tauri/Cargo.toml passed. cargo test --manifest-path src-tauri/Cargo.toml gsd_engine
-        --lib still fails on a pre-existing Send error in src/health_manager.rs (MutexGuard across
-        await in health_get_status), so the repo-level test gate is currently blocked outside this
-        task."
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T06:07:27.892Z
-    - _ulid: 01KPSWZ40J4BPCP2JTZ5P5CQ3K
-      content: "Repo build verification passed: bun run build completed successfully and produced
-        src-tauri/target/release/bundle/deb/simple-code-gui_0.1.0_amd64.deb. The earlier cargo test
-        failure is still isolated to the pre-existing health_manager Send issue, not the GSD engine
-        patch."
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T06:10:17.747Z
-    - _ulid: 01KPSX3XX6AHFNG6EBSJAAK5DV
-      content: "Integrated Codex worker output into main worktree. Verified phase/wave execution, verifier
-        retries, execution events, and focused unit coverage. Checks passed: cargo test gsd_engine
-        --lib, cargo test --lib, git diff --check, bun run build."
-      supersedes: null
-      author: Johan.P
-      created_at: 2026-04-22T06:12:55.334Z
-  todos: []
   automation: eligible

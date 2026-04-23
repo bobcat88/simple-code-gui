@@ -1,0 +1,33 @@
+_ulid: 01KPS0GE1Y0DMY1MKT77AASR4Z
+slugs:
+  - task-multi-provider-ai-runtime
+title: "Implement: Multi-Provider AI Runtime"
+type: task
+description: "Implement and verify @ai-runtime: abstraction layer and routing for Claude, OpenAI,
+  Gemini, and Ollama providers."
+spec_ref: "@ai-runtime"
+meta_ref: null
+plan_ref: null
+status: completed
+blocked_by: []
+closed_reason: "Integrated first Codex batch; validation passed: session_manager tests, database
+  tests, TokenBurnHistory Vitest, cargo test --lib, git diff --check, bun run build."
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+submission_linkage:
+  review_url: null
+  branch: rust-revamp
+  captured_at: 2026-04-22T05:59:32.776Z
+  commit: 08e5412e935656acbbbcce287d840cb155f16c9a
+  remote: origin
+  remote_url: https://github.com/bobcat88/simple-code-gui
+  upstream_ref: refs/heads/rust-revamp
+created_at: 2026-04-21T21:52:56.382Z
+started_at: 2026-04-21T22:15:46.469Z
+submitted_at: 2026-04-22T05:59:32.782Z
+completed_at: 2026-04-22T05:59:46.337Z
+todos: []
+automation: eligible
