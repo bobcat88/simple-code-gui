@@ -35,6 +35,7 @@ interface JobState {
   
   setStatus: (status: DispatchStatus) => void;
   setJobs: (jobs: BackgroundJob[]) => void;
+  updateJob: (id: string, updates: Partial<BackgroundJob>) => void;
   setPolling: (isPolling: boolean) => void;
 }
 
@@ -46,5 +47,9 @@ export const useJobStore = create<JobState>((set) => ({
   
   setStatus: (status) => set({ status, lastUpdate: Date.now() }),
   setJobs: (jobs) => set({ jobs, lastUpdate: Date.now() }),
+  updateJob: (id, updates) => set((state) => ({
+    jobs: state.jobs.map(j => j.id === id ? { ...j, ...updates } : j),
+    lastUpdate: Date.now()
+  })),
   setPolling: (isPolling) => set({ isPolling })
 }))

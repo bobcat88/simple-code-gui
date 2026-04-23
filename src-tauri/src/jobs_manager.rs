@@ -81,7 +81,10 @@ impl JobsManager {
                 .execute(&db.pool)
                 .await;
             
-            let _ = app.emit("job-progress", (job_id.clone(), progress));
+            let _ = app.emit("job-progress", serde_json::json!({
+                "id": job_id.clone(),
+                "progress": progress
+            }));
         }
 
         // Update status to Completed

@@ -616,15 +616,14 @@ export interface ExtendedApi extends Api {
   scanProjectIntelligence: (path: string) => Promise<ProjectIntelligence>,
 
   // Orchestration (Beads/Kspec)
-  kspec_dispatch_status: (cwd: string) => Promise<any>,
-  kspec_dispatch_start: (cwd: string) => Promise<{ success: boolean; error?: string }>,
-  kspec_dispatch_stop: (cwd: string) => Promise<{ success: boolean; error?: string }>,
+  kspecDispatchStatus: (cwd: string) => Promise<any>,
+  kspecDispatchStart: (cwd: string) => Promise<{ success: boolean; error?: string }>,
+  kspecDispatchStop: (cwd: string) => Promise<{ success: boolean; error?: string }>,
   apiStatus?: (projectPath: string) => Promise<{ running: boolean; port?: number }>,
   beadsCheck?: (cwd: string) => Promise<{ installed: boolean; initialized: boolean }>,
-  beadsList?: (cwd: string) => Promise<{ success: boolean; tasks?: Array<{ status: string }>; error?: string }>,
-  beads_list: (cwd: string) => Promise<any>,
-  beads_start: (cwd: string, task_id: string) => Promise<any>,
-  beads_complete: (cwd: string, task_id: string) => Promise<any>,
+  beadsList: (cwd: string) => Promise<any>,
+  beadsStart: (cwd: string, task_id: string) => Promise<any>,
+  beadsComplete: (cwd: string, task_id: string) => Promise<any>,
 
   // Approval Workflow
   onApprovalRequest: (callback: (request: ApprovalRequest) => void) => Unsubscribe,

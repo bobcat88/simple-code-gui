@@ -31,7 +31,15 @@ export function useAgentBoard() {
   useEffect(() => {
     fetchAgents();
     const interval = setInterval(fetchAgents, 5000); // Update every 5s
-    return () => clearInterval(interval);
+    
+    const p = tauriIpc.onAgentStatusChanged((data) => {
+      setAgents(prev => prev.map(a => a.id === data.id ? { ...a, status: data.status } : a));
+    });
+
+    return () => {
+      clearInterval(interval);
+      p.then(unsub => unsub());
+    };
   }, [fetchAgents]);
 
   const updateStatus = async (id: string, status: string) => {

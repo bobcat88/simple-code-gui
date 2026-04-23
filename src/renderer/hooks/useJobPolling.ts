@@ -1,12 +1,13 @@
 import { useEffect, useCallback } from 'react'
 import { useJobStore } from '../stores/jobs'
 import { useWorkspaceStore } from '../stores/workspace'
+import { tauriIpc } from '../lib/tauri-ipc'
 
 export function useJobPolling(api: any) {
-  const { setStatus, setJobs, setPolling } = useJobStore()
+  const { setStatus, setJobs, setPolling, updateJob } = useJobStore()
   const { projects } = useWorkspaceStore()
   
-  const poll = useCallback(async () => {
+  const fetchStatus = useCallback(async () => {
     const { projects, openTabs, activeTabId } = useWorkspaceStore.getState()
     
     // Determine the active project path from the active tab
@@ -15,14 +16,14 @@ export function useJobPolling(api: any) {
     
     try {
       // 1. Poll Kspec dispatch status if available
-      if (activeProjectPath && api.kspec_dispatch_status) {
-        const status = await api.kspec_dispatch_status(activeProjectPath)
+      if (activeProjectPath && api.kspecDispatchStatus) {
+        const status = await api.kspecDispatchStatus(activeProjectPath)
         setStatus(status)
       }
 
       // 2. Poll generic background jobs
-      if (api.jobs_list) {
-        const jobs = await api.jobs_list()
+      if (api.jobsList) {
+        const jobs = await api.jobsList()
         setJobs(jobs)
       }
     } catch (err) {
@@ -32,12 +33,29 @@ export function useJobPolling(api: any) {
 
   useEffect(() => {
     setPolling(true)
-    poll()
-    const interval = setInterval(poll, 3000) // Poll every 3 seconds
+    fetchStatus()
+    const interval = setInterval(fetchStatus, 3000) // Poll every 3 seconds
     
     return () => {
       clearInterval(interval)
       setPolling(false)
     }
-  }, [poll, setPolling])
+  }, [fetchStatus, setPolling])
+
+  // Real-time event listeners
+  useEffect(() => {
+    const p1 = tauriIpc.onJobProgress((data: any) => {
+      updateJob(data.id, { progress: data.progress });
+    });
+    
+    const p2 = tauriIpc.onJobStatusChanged((_id: string) => {
+      // Re-fetch all to get the new status and potentially results/errors
+      fetchStatus();
+    });
+
+    return () => {
+      p1.then(unsub => unsub());
+      p2.then(unsub => unsub());
+    };
+  }, [updateJob, fetchStatus]);
 }
