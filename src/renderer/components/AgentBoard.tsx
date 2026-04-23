@@ -76,12 +76,25 @@ export const AgentBoard: React.FC = () => {
                   {agent.model}
                 </span>
               </div>
+              {agent.active_task && (
+                <div className="pt-2 mt-1 border-t border-white/5">
+                  <div className="text-[9px] text-zinc-500 mb-0.5 uppercase tracking-tighter">Current Task</div>
+                  <div className="text-[10px] text-blue-300/80 font-medium truncate italic" title={agent.active_task}>
+                    {agent.active_task}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/5">
               <div className="flex items-center gap-1.5">
                 <div className={`w-2 h-2 rounded-full ${getStatusColor(agent.status)}`} />
                 <span className="text-[10px] text-zinc-400 capitalize">{agent.status}</span>
+                {agent.queue_size > 0 && (
+                  <span className="ml-1 text-[8px] bg-zinc-800 text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/20 font-bold">
+                    {agent.queue_size}
+                  </span>
+                )}
               </div>
               <div className="text-[9px] text-zinc-600">
                 {agent.last_active ? 'Online' : 'Offline'}

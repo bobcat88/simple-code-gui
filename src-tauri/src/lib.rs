@@ -643,6 +643,7 @@ pub fn run() {
             agent_manager::agent_register,
             agent_manager::agent_list,
             agent_manager::agent_update_status,
+            agent_manager::agent_update_metrics,
             health_manager::health_get_status,
             health_manager::health_log_check,
             diagnostic_manager::diagnostics_generate_bundle,

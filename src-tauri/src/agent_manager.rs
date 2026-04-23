@@ -13,6 +13,8 @@ pub struct Agent {
     pub provider: Option<String>,
     pub burn_rate: Option<f64>,
     pub quality_score: Option<f64>,
+    pub queue_size: Option<i32>,
+    pub active_task: Option<String>,
     pub last_active: Option<String>,
 }
 
@@ -27,8 +29,8 @@ impl AgentManager {
 
     pub async fn register(&self, app: &tauri::AppHandle, agent: Agent) -> Result<(), String> {
         sqlx::query(
-            "INSERT OR REPLACE INTO agents (id, name, role, status, model, provider, burn_rate, quality_score, last_active) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)"
+            "INSERT OR REPLACE INTO agents (id, name, role, status, model, provider, burn_rate, quality_score, queue_size, active_task, last_active) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)"
         )
         .bind(&agent.id)
         .bind(&agent.name)
@@ -38,6 +40,8 @@ impl AgentManager {
         .bind(&agent.provider)
         .bind(agent.burn_rate.unwrap_or(0.0))
         .bind(agent.quality_score.unwrap_or(0.0))
+        .bind(agent.queue_size.unwrap_or(0))
+        .bind(&agent.active_task)
         .execute(&self.db.pool)
         .await
         .map_err(|e| e.to_string())?;
@@ -48,8 +52,8 @@ impl AgentManager {
     }
 
     pub async fn list(&self) -> Result<Vec<Agent>, String> {
-        let rows = sqlx::query_as::<_, (String, String, String, String, Option<String>, Option<String>, f64, f64, String)>(
-            "SELECT id, name, role, status, model, provider, burn_rate, quality_score, last_active FROM agents ORDER BY last_active DESC"
+        let rows = sqlx::query_as::<_, (String, String, String, String, Option<String>, Option<String>, f64, f64, i32, Option<String>, String)>(
+            "SELECT id, name, role, status, model, provider, burn_rate, quality_score, queue_size, active_task, last_active FROM agents ORDER BY last_active DESC"
         )
         .fetch_all(&self.db.pool)
         .await
@@ -64,7 +68,9 @@ impl AgentManager {
             provider: r.5,
             burn_rate: Some(r.6),
             quality_score: Some(r.7),
-            last_active: Some(r.8),
+            queue_size: Some(r.8),
+            active_task: r.9,
+            last_active: Some(r.10),
         }).collect())
     }
 
@@ -79,6 +85,36 @@ impl AgentManager {
         let _ = app.emit("agent-status-changed", serde_json::json!({
             "id": id,
             "status": status
+        }));
+
+        Ok(())
+    }
+
+    pub async fn update_metrics(
+        &self,
+        app: &tauri::AppHandle,
+        id: String,
+        burn_rate: f64,
+        quality_score: f64,
+        queue_size: i32,
+        active_task: Option<String>,
+    ) -> Result<(), String> {
+        sqlx::query("UPDATE agents SET burn_rate = ?, quality_score = ?, queue_size = ?, active_task = ?, last_active = CURRENT_TIMESTAMP WHERE id = ?")
+            .bind(burn_rate)
+            .bind(quality_score)
+            .bind(queue_size)
+            .bind(&active_task)
+            .bind(&id)
+            .execute(&self.db.pool)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let _ = app.emit("agent-metrics-changed", serde_json::json!({
+            "id": id,
+            "burn_rate": burn_rate,
+            "quality_score": quality_score,
+            "queue_size": queue_size,
+            "active_task": active_task
         }));
 
         Ok(())
@@ -110,4 +146,17 @@ pub async fn agent_update_status(
     status: String,
 ) -> Result<(), String> {
     state.update_status(&app, id, status).await
+}
+
+#[tauri::command]
+pub async fn agent_update_metrics(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, Arc<AgentManager>>,
+    id: String,
+    burn_rate: f64,
+    quality_score: f64,
+    queue_size: i32,
+    active_task: Option<String>,
+) -> Result<(), String> {
+    state.update_metrics(&app, id, burn_rate, quality_score, queue_size, active_task).await
 }

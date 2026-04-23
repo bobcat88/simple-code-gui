@@ -11,6 +11,8 @@ export interface Agent {
   provider: string;
   burn_rate: number;
   quality_score: number;
+  queue_size: number;
+  active_task?: string;
 }
 
 export function useAgentBoard() {
@@ -44,11 +46,22 @@ export function useAgentBoard() {
         return [agent, ...prev];
       });
     });
+    
+    const pMetrics = tauriIpc.onAgentMetricsChanged((data) => {
+      setAgents(prev => prev.map(a => a.id === data.id ? { 
+        ...a, 
+        burn_rate: data.burn_rate,
+        quality_score: data.quality_score,
+        queue_size: data.queue_size,
+        active_task: data.active_task
+      } : a));
+    });
 
     return () => {
       clearInterval(interval);
       pStatus.then(unsub => unsub());
       pRegistered.then(unsub => unsub());
+      pMetrics.then(unsub => unsub());
     };
   }, [fetchAgents]);
 
