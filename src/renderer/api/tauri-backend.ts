@@ -59,19 +59,22 @@ export class TauriBackend implements ExtendedApi {
     return () => unlisten?.();
   }
 
-  onPtyTitle(_id: string, _callback: (title: string) => void): Unsubscribe {
-    // Not yet implemented in Tauri backend
-    return () => {};
+  onPtyTitle(id: string, callback: (title: string) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onPtyTitle(id, callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
   }
 
-  onPtyPath(_id: string, _callback: (path: string) => void): Unsubscribe {
-    // Not yet implemented in Tauri backend
-    return () => {};
+  onPtyPath(id: string, callback: (path: string) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onPtyPath(id, callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
   }
 
-  onPtyPid(_id: string, _callback: (pid: string) => void): Unsubscribe {
-    // Not yet implemented in Tauri backend
-    return () => {};
+  onPtyPid(id: string, callback: (pid: string) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onPtyPid(id, callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
   }
 
   async setPtyBackend(id: string, backend: BackendId): Promise<void> {

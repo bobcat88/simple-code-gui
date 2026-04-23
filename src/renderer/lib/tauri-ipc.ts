@@ -46,6 +46,15 @@ export const tauriIpc = {
   onPtyRecreated: (callback: (data: { oldId: string, newId: string, backend: string }) => void): Promise<UnlistenFn> => 
     listen<{ oldId: string, newId: string, backend: string }>('pty-recreated', (event) => callback(event.payload)),
     
+  onPtyTitle: (id: string, callback: (title: string) => void): Promise<UnlistenFn> => 
+    listen<string>(`pty-title-${id}`, (event) => callback(event.payload)),
+    
+  onPtyPath: (id: string, callback: (path: string) => void): Promise<UnlistenFn> => 
+    listen<string>(`pty-path-${id}`, (event) => callback(event.payload)),
+    
+  onPtyPid: (id: string, callback: (pid: string) => void): Promise<UnlistenFn> => 
+    listen<string>(`pty-pid-${id}`, (event) => callback(event.payload)),
+    
   onSettingsChanged: (callback: (settings: any) => void): Promise<UnlistenFn> =>
     listen<any>('settings-changed', (event) => callback(event.payload)),
     

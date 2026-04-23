@@ -186,7 +186,11 @@ impl PtyManager {
             println!("[PTY] Error: {}", err_msg);
             err_msg
         })?;
-        
+        let pid = child.process_id();
+        if let Some(p) = pid {
+            let _ = app.emit(&format!("pty-pid-{}", id), p.to_string());
+        }
+
         println!("[PTY] Command spawned successfully with ID: {}", id);
         let output_buffer = Arc::new(Mutex::new(OutputBuffer::new()));
         let output_buffer_clone = Arc::clone(&output_buffer);
@@ -196,11 +200,43 @@ impl PtyManager {
         // Spawn reader thread
         let mut reader = pair.master.try_clone_reader().map_err(|e: anyhow::Error| e.to_string())?;
         thread::spawn(move || {
+            let osc_regex = Regex::new(r"\x1b\]([0-9]+);([^\x07\x1b]*)(?:\x07|\x1b\\)").unwrap();
             let mut buf = [0u8; 8192];
             loop {
                 match reader.read(&mut buf) {
                     Ok(n) if n > 0 => {
                         let data = String::from_utf8_lossy(&buf[..n]).to_string();
+                        
+                        // Metadata extraction (Title, Path)
+                        for cap in osc_regex.captures_iter(&data) {
+                            let code = &cap[1];
+                            let value = &cap[2];
+                            match code {
+                                "0" | "1" | "2" => {
+                                    let _ = app_clone.emit(&format!("pty-title-{}", id_clone), value.to_string());
+                                }
+                                "7" => {
+                                    // OSC 7 value is usually file://hostname/path
+                                    let path = if value.starts_with("file://") {
+                                        // Simple extraction: find the first '/' after file://hostname
+                                        if let Some(path_start) = value.find("//") {
+                                            if let Some(actual_path_start) = value[path_start+2..].find('/') {
+                                                value[path_start+2+actual_path_start..].to_string()
+                                            } else {
+                                                "/".to_string()
+                                            }
+                                        } else {
+                                            value.to_string()
+                                        }
+                                    } else {
+                                        value.to_string()
+                                    };
+                                    let _ = app_clone.emit(&format!("pty-path-{}", id_clone), path);
+                                }
+                                _ => {}
+                            }
+                        }
+
                         output_buffer_clone.lock().append(&data);
                         let _ = app_clone.emit(&format!("pty-data-{}", id_clone), data);
                     }
@@ -268,9 +304,14 @@ impl PtyManager {
         let child = session.pair.slave.spawn_command(cmd).map_err(|e| e.to_string())?;
         
         // Update session
+        let pid = child.process_id();
         session.child = child;
         session.backend = new_backend.clone();
         session.args = new_args;
+
+        if let Some(p) = pid {
+            let _ = app.emit(&format!("pty-pid-{}", id), p.to_string());
+        }
 
         // Emit recreation event
         let _ = app.emit("pty-recreated", serde_json::json!({
