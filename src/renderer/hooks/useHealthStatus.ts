@@ -13,6 +13,12 @@ export interface HealthStatus {
     name: string;
     status: string;
     detail: string;
+    diagnostics: Array<{
+      level: string;
+      message: string;
+      suggestion?: string;
+      code?: string;
+    }>;
   }>;
   installed_extensions: InstalledExtension[];
 }

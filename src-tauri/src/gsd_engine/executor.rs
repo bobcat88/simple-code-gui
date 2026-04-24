@@ -3,6 +3,7 @@ use crate::database::DatabaseManager;
 use crate::gsd_engine::types::{ExecutionEvent, GsdPhase, GsdStep, StepStatus};
 use chrono::Utc;
 use std::collections::HashMap;
+use std::process::Command;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
 use tokio::task::JoinSet;
@@ -258,6 +259,19 @@ impl Executor {
 
             if verified {
                 self.atomic_commit(&step).await?;
+                
+                // Trigger learning loop
+                let plan_id_clone = plan_id.to_string();
+                let phase_id_clone = phase_id.to_string();
+                let step_clone = step.clone();
+                let executor_clone = self.clone();
+                
+                tokio::spawn(async move {
+                    if let Err(e) = executor_clone.trigger_learning_loop(&plan_id_clone, &phase_id_clone, &step_clone).await {
+                        eprintln!("[GSD] Learning loop failed: {}", e);
+                    }
+                });
+
                 self.emit_execution_event(
                     plan_id,
                     Some(phase_id),
@@ -306,6 +320,42 @@ impl Executor {
 
     pub async fn verify_step(&self, step: &GsdStep) -> Result<bool, String> {
         Ok(verification_outcome(&step.description, step.attempts))
+    }
+
+    async fn trigger_learning_loop(
+        &self,
+        _plan_id: &str,
+        _phase_id: &str,
+        step: &GsdStep,
+    ) -> Result<(), String> {
+        let learning_content = format!(
+            "LEARNED from GSD Step: {}\nDescription: {}\nResult: {}",
+            step.title,
+            step.description,
+            step.result.as_deref().unwrap_or("No result")
+        );
+
+        // Call 'bd remember'
+        let output = Command::new("bd")
+            .arg("remember")
+            .arg(&learning_content)
+            .output()
+            .map_err(|e| format!("Failed to execute bd remember: {}", e))?;
+
+        if !output.status.success() {
+            let err = String::from_utf8_lossy(&output.stderr).to_string();
+            return Err(format!("bd remember failed: {}", err));
+        }
+
+        self.emit_execution_event(
+            _plan_id,
+            Some(_phase_id),
+            Some(&step.id),
+            "learning_triggered",
+            format!("Automated learning captured for step: {}", step.title),
+        );
+
+        Ok(())
     }
 }
 

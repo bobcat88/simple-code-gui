@@ -7,11 +7,20 @@ use sysinfo::{CpuExt, System, SystemExt};
 use tauri::AppHandle;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DiagnosticItem {
+    pub level: String,     // info, warning, error
+    pub message: String,
+    pub suggestion: Option<String>,
+    pub code: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ServiceStatus {
     pub id: String,
     pub name: String,
     pub status: String,
     pub detail: String,
+    pub diagnostics: Vec<DiagnosticItem>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -95,6 +104,7 @@ impl HealthManager {
         services.push(check_database_service(&self.db).await);
         services.push(check_project_capability_service(&self.orchestration).await);
 
+        let mut extension_diagnostics = Vec::new();
         let installed_extensions = match crate::extension_manager::extensions_get_installed().await
         {
             Ok(installed) => {
@@ -109,6 +119,22 @@ impl HealthManager {
                     .count();
                 let plugin_count = total.saturating_sub(mcp_count);
 
+                if total == 0 {
+                    extension_diagnostics.push(DiagnosticItem {
+                        level: "info".to_string(),
+                        message: "No extensions installed".to_string(),
+                        suggestion: Some("Visit the Extension Store to add capabilities".to_string()),
+                        code: Some("EXT_EMPTY".to_string()),
+                    });
+                } else if enabled_count < total {
+                    extension_diagnostics.push(DiagnosticItem {
+                        level: "info".to_string(),
+                        message: format!("{} extensions are currently disabled", total - enabled_count),
+                        suggestion: Some("Enable extensions in the settings to use their features".to_string()),
+                        code: Some("EXT_DISABLED".to_string()),
+                    });
+                }
+
                 services.push(ServiceStatus {
                     id: "extensions".to_string(),
                     name: "Extension Store".to_string(),
@@ -117,6 +143,7 @@ impl HealthManager {
                         "{} installed extensions, {} enabled, {} MCP, {} plugin",
                         total, enabled_count, mcp_count, plugin_count
                     ),
+                    diagnostics: extension_diagnostics,
                 });
 
                 installed
@@ -127,6 +154,12 @@ impl HealthManager {
                     name: "Extension Store".to_string(),
                     status: "Error".to_string(),
                     detail: format!("Failed to load installed extensions: {}", error),
+                    diagnostics: vec![DiagnosticItem {
+                        level: "error".to_string(),
+                        message: format!("Registry failure: {}", error),
+                        suggestion: Some("Check if the extension directory is accessible and not corrupted".to_string()),
+                        code: Some("EXT_LOAD_FAIL".to_string()),
+                    }],
                 });
 
                 Vec::new()
@@ -151,6 +184,27 @@ impl HealthManager {
             "Error".to_string()
         };
 
+        let mut ai_diagnostics = Vec::new();
+        if total_providers == 0 {
+            ai_diagnostics.push(DiagnosticItem {
+                level: "warning".to_string(),
+                message: "No AI providers configured".to_string(),
+                suggestion: Some("Add an OpenAI, Anthropic, or Local provider in settings".to_string()),
+                code: Some("AI_NO_PROVIDERS".to_string()),
+            });
+        } else if degraded_providers > 0 {
+            for (provider, healthy) in ai_health.iter() {
+                if !*healthy {
+                    ai_diagnostics.push(DiagnosticItem {
+                        level: "error".to_string(),
+                        message: format!("Provider '{}' is unreachable", provider),
+                        suggestion: Some(format!("Verify API key and network connectivity for {}", provider)),
+                        code: Some("AI_PROVIDER_DOWN".to_string()),
+                    });
+                }
+            }
+        }
+
         services.push(ServiceStatus {
             id: "ai_runtime".to_string(),
             name: "AI Orchestration".to_string(),
@@ -159,6 +213,7 @@ impl HealthManager {
                 "{} providers active ({} healthy, {} degraded)",
                 total_providers, healthy_providers, degraded_providers
             ),
+            diagnostics: ai_diagnostics,
         });
 
         let status = aggregate_status(&services);
@@ -222,12 +277,19 @@ async fn check_database_service(db: &Arc<DatabaseManager>) -> ServiceStatus {
             name: "Database".to_string(),
             status: "Healthy".to_string(),
             detail: "Connection ready".to_string(),
+            diagnostics: Vec::new(),
         },
         Err(error) => ServiceStatus {
             id: "database".to_string(),
             name: "Database".to_string(),
             status: "Error".to_string(),
             detail: format!("Database check failed: {}", error),
+            diagnostics: vec![DiagnosticItem {
+                level: "error".to_string(),
+                message: format!("SQLite connection error: {}", error),
+                suggestion: Some("Ensure the app data directory is writable and the disk is not full".to_string()),
+                code: Some("DB_CONN_FAIL".to_string()),
+            }],
         },
     }
 }
@@ -256,6 +318,12 @@ fn check_mcp_config_service(installed_extensions: &[InstalledExtension]) -> Serv
                     "No mcp_config.json found for {} installed MCP",
                     installed_mcp_count
                 ),
+                diagnostics: vec![DiagnosticItem {
+                    level: "warning".to_string(),
+                    message: "MCP configuration file missing".to_string(),
+                    suggestion: Some("Initialize Claude Desktop or create mcp_config.json manually".to_string()),
+                    code: Some("MCP_CONFIG_NOT_FOUND".to_string()),
+                }],
             }
         } else {
             ServiceStatus {
@@ -263,6 +331,7 @@ fn check_mcp_config_service(installed_extensions: &[InstalledExtension]) -> Serv
                 name: "MCP Config".to_string(),
                 status: "Healthy".to_string(),
                 detail: "No MCP servers configured".to_string(),
+                diagnostics: Vec::new(),
             }
         };
     }
@@ -275,6 +344,12 @@ fn check_mcp_config_service(installed_extensions: &[InstalledExtension]) -> Serv
                 name: "MCP Config".to_string(),
                 status: "Error".to_string(),
                 detail: format!("Failed to read mcp_config.json: {}", error),
+                diagnostics: vec![DiagnosticItem {
+                    level: "error".to_string(),
+                    message: format!("IO error reading MCP config: {}", error),
+                    suggestion: Some("Check file permissions for mcp_config.json".to_string()),
+                    code: Some("MCP_CONFIG_READ_ERR".to_string()),
+                }],
             }
         }
     };
@@ -287,6 +362,12 @@ fn check_mcp_config_service(installed_extensions: &[InstalledExtension]) -> Serv
                 name: "MCP Config".to_string(),
                 status: "Error".to_string(),
                 detail: format!("Failed to parse mcp_config.json: {}", error),
+                diagnostics: vec![DiagnosticItem {
+                    level: "error".to_string(),
+                    message: format!("Syntax error in MCP config: {}", error),
+                    suggestion: Some("Ensure mcp_config.json is valid JSON".to_string()),
+                    code: Some("MCP_CONFIG_PARSE_ERR".to_string()),
+                }],
             }
         }
     };
@@ -297,9 +378,16 @@ fn check_mcp_config_service(installed_extensions: &[InstalledExtension]) -> Serv
         .map(|servers| servers.len())
         .unwrap_or(0);
 
+    let mut diagnostics = Vec::new();
     let status = if installed_mcp_count == 0 {
         "Healthy".to_string()
     } else if configured_servers < installed_mcp_count {
+        diagnostics.push(DiagnosticItem {
+            level: "warning".to_string(),
+            message: format!("{} extensions are not registered in mcp_config.json", installed_mcp_count - configured_servers),
+            suggestion: Some("Run 'Register with Claude' for the missing extensions".to_string()),
+            code: Some("MCP_CONFIG_MISSING".to_string()),
+        });
         "Warning".to_string()
     } else {
         "Healthy".to_string()
@@ -319,6 +407,7 @@ fn check_mcp_config_service(installed_extensions: &[InstalledExtension]) -> Serv
         name: "MCP Config".to_string(),
         status,
         detail,
+        diagnostics,
     }
 }
 
@@ -332,6 +421,7 @@ async fn check_project_capability_service(
             name: "Project Capabilities".to_string(),
             status: "Idle".to_string(),
             detail: "No project currently selected".to_string(),
+            diagnostics: Vec::new(),
         };
     }
 
@@ -353,11 +443,31 @@ async fn check_project_capability_service(
             scan.capabilities.len(),
         );
 
+        let mut diagnostics = Vec::new();
+        if health < 0.6 {
+            diagnostics.push(DiagnosticItem {
+                level: "warning".to_string(),
+                message: "Low project health detected".to_string(),
+                suggestion: Some("Review the Project Intelligence report and fix identified gaps".to_string()),
+                code: Some("PROJ_HEALTH_LOW".to_string()),
+            });
+        }
+
+        if scan.capabilities.is_empty() {
+             diagnostics.push(DiagnosticItem {
+                level: "info".to_string(),
+                message: "No project capabilities detected".to_string(),
+                suggestion: Some("Ensure the project has standard configuration files (package.json, etc.)".to_string()),
+                code: Some("PROJ_NO_CAPS".to_string()),
+            });
+        }
+
         ServiceStatus {
             id: "project_capabilities".to_string(),
             name: "Project Capabilities".to_string(),
             status: status.to_string(),
             detail,
+            diagnostics,
         }
     } else {
         ServiceStatus {
@@ -365,6 +475,7 @@ async fn check_project_capability_service(
             name: "Project Capabilities".to_string(),
             status: "Scanning".to_string(),
             detail: "Awaiting initial project scan".to_string(),
+            diagnostics: Vec::new(),
         }
     }
 }
@@ -423,18 +534,21 @@ mod tests {
                 name: "Database".to_string(),
                 status: "Healthy".to_string(),
                 detail: "ok".to_string(),
+                diagnostics: Vec::new(),
             },
             ServiceStatus {
                 id: "mcp_config".to_string(),
                 name: "MCP Config".to_string(),
                 status: "Warning".to_string(),
                 detail: "warn".to_string(),
+                diagnostics: Vec::new(),
             },
             ServiceStatus {
                 id: "extensions".to_string(),
                 name: "Extension Store".to_string(),
                 status: "Error".to_string(),
                 detail: "fail".to_string(),
+                diagnostics: Vec::new(),
             },
         ];
 
@@ -449,12 +563,14 @@ mod tests {
                 name: "Database".to_string(),
                 status: "Healthy".to_string(),
                 detail: "ok".to_string(),
+                diagnostics: Vec::new(),
             },
             ServiceStatus {
                 id: "mcp_config".to_string(),
                 name: "MCP Config".to_string(),
                 status: "Warning".to_string(),
                 detail: "warn".to_string(),
+                diagnostics: Vec::new(),
             },
         ];
 

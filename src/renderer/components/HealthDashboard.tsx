@@ -1,6 +1,6 @@
 import React from 'react';
 import { useHealthStatus } from '../hooks/useHealthStatus';
-import { Activity, Cpu, Database, Server } from 'lucide-react';
+import { Activity, AlertCircle, AlertTriangle, ChevronDown, ChevronUp, Cpu, Database, Info, Server } from 'lucide-react';
 
 export const HealthDashboard: React.FC = () => {
   const { status, loading } = useHealthStatus();
@@ -76,6 +76,84 @@ export const HealthDashboard: React.FC = () => {
     </div>
   );
 
+  const ServiceRow = ({ service }: { service: any }) => {
+    const [expanded, setExpanded] = React.useState(false);
+    const hasDiagnostics = service.diagnostics && service.diagnostics.length > 0;
+
+    return (
+      <div className="flex flex-col gap-1">
+        <div
+          className={`flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-zinc-900/40 px-3 py-2.5 ${
+            hasDiagnostics ? 'cursor-pointer hover:bg-zinc-900/60' : ''
+          }`}
+          onClick={() => hasDiagnostics && setExpanded(!expanded)}
+        >
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <div className="text-sm font-semibold text-zinc-100">{service.name}</div>
+              {hasDiagnostics && (
+                <div className="text-[10px] text-zinc-500">
+                  {expanded ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+                </div>
+              )}
+            </div>
+            <div className="mt-0.5 truncate text-[10px] uppercase tracking-widest text-zinc-500">
+              {service.detail}
+            </div>
+          </div>
+          <span
+            className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest ${
+              service.status.toLowerCase() === 'healthy'
+                ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'
+                : service.status.toLowerCase() === 'warning'
+                  ? 'border-amber-500/20 bg-amber-500/10 text-amber-300'
+                  : service.status.toLowerCase() === 'scanning'
+                    ? 'border-blue-500/20 bg-blue-500/10 text-blue-300'
+                    : 'border-rose-500/20 bg-rose-500/10 text-rose-300'
+            }`}
+          >
+            {service.status}
+          </span>
+        </div>
+
+        {expanded && hasDiagnostics && (
+          <div className="ml-2 space-y-1 border-l border-white/5 pl-3 py-1">
+            {service.diagnostics.map((diag: any, idx: number) => (
+              <div key={idx} className="group rounded-lg bg-white/5 p-2 transition-colors hover:bg-white/10">
+                <div className="flex items-start gap-2">
+                  <div className="mt-0.5 shrink-0">
+                    {diag.level === 'error' ? (
+                      <AlertCircle size={12} className="text-rose-400" />
+                    ) : diag.level === 'warning' ? (
+                      <AlertTriangle size={12} className="text-amber-400" />
+                    ) : (
+                      <Info size={12} className="text-blue-400" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11px] font-medium leading-tight text-zinc-200">
+                      {diag.message}
+                    </div>
+                    {diag.suggestion && (
+                      <div className="mt-1 text-[10px] leading-relaxed text-zinc-500">
+                        <span className="font-semibold text-zinc-400">Suggestion:</span> {diag.suggestion}
+                      </div>
+                    )}
+                    {diag.code && (
+                      <div className="mt-1 text-[8px] font-mono uppercase tracking-tighter text-zinc-600">
+                        {diag.code}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="relative z-10 mb-4 flex items-center justify-between gap-3">
@@ -115,26 +193,7 @@ export const HealthDashboard: React.FC = () => {
           </div>
           <div className="space-y-2">
             {status.services.map((service) => (
-              <div
-                key={service.id}
-                className="flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-zinc-900/40 px-3 py-2.5"
-              >
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-zinc-100">{service.name}</div>
-                  <div className="mt-0.5 truncate text-[10px] uppercase tracking-widest text-zinc-500">{service.detail}</div>
-                </div>
-                <span
-                  className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest ${
-                    service.status.toLowerCase() === 'healthy'
-                      ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'
-                      : service.status.toLowerCase() === 'warning'
-                        ? 'border-amber-500/20 bg-amber-500/10 text-amber-300'
-                        : 'border-rose-500/20 bg-rose-500/10 text-rose-300'
-                  }`}
-                >
-                  {service.status}
-                </span>
-              </div>
+              <ServiceRow key={service.id} service={service} />
             ))}
           </div>
         </section>
