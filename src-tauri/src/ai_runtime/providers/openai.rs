@@ -81,7 +81,7 @@ impl AIProvider for OpenAIProvider {
         let usage = Usage {
             input_tokens: json["usage"]["prompt_tokens"].as_u64().unwrap_or(0) as u32,
             output_tokens: json["usage"]["completion_tokens"].as_u64().unwrap_or(0) as u32,
-            saved_tokens: 0,
+            ..Default::default()
         };
 
         Ok(CompletionResponse {

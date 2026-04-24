@@ -67,7 +67,7 @@ impl AIProvider for GeminiProvider {
         let usage = Usage {
             input_tokens: json["usageMetadata"]["promptTokenCount"].as_u64().unwrap_or(0) as u32,
             output_tokens: json["usageMetadata"]["candidatesTokenCount"].as_u64().unwrap_or(0) as u32,
-            saved_tokens: 0,
+            ..Default::default()
         };
 
         Ok(CompletionResponse {

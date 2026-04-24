@@ -3,6 +3,7 @@ import type { Theme } from '../themes'
 import { VoiceBrowserModal } from './VoiceBrowserModal'
 import { useVoice } from '../contexts/VoiceContext'
 import { useFocusTrap } from '../hooks/useFocusTrap'
+import { CostDashboard } from './telemetry/CostDashboard'
 import {
   ThemeSettings,
   ProjectDirectorySettings,
@@ -86,6 +87,7 @@ export function SettingsModal({
     { id: 'general', label: 'General', icon: Settings, desc: 'Core settings & backend' },
     { id: 'mcp', label: 'MCP & Agents', icon: Settings, desc: 'Beads, GSD & tools' },
     { id: 'ai-runtime', label: 'AI Runtime', icon: Cpu, desc: 'Providers & models' },
+    { id: 'usage', label: 'Usage & Costs', icon: Coins, desc: 'Token accounting' },
     { id: 'voice', label: 'Voice', icon: Volume2, desc: 'Speech & AI audio' },
     { id: 'appearance', label: 'Appearance', icon: Palette, desc: 'Themes & styling' },
     { id: 'about', label: 'About', icon: Info, desc: 'Version & info' },
@@ -409,6 +411,12 @@ export function SettingsModal({
                       settings={general.aiRuntime}
                       onChange={(aiRuntime) => setGeneral(prev => ({ ...prev, aiRuntime }))}
                     />
+                </div>
+              )}
+
+              {activeCategory === 'usage' && (
+                <div className="animate-in slide-in-from-bottom-4 duration-300 h-full">
+                   <CostDashboard projectPath={projectPath || undefined} />
                 </div>
               )}
 

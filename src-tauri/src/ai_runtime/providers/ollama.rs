@@ -59,7 +59,7 @@ impl AIProvider for OllamaProvider {
         let usage = Usage {
             input_tokens: json["prompt_eval_count"].as_u64().unwrap_or(0) as u32,
             output_tokens: json["eval_count"].as_u64().unwrap_or(0) as u32,
-            saved_tokens: 0,
+            ..Default::default()
         };
 
         Ok(CompletionResponse {

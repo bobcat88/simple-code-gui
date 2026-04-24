@@ -1,11 +1,11 @@
 pub mod providers;
 pub mod types;
 
-use crate::database::DatabaseManager;
+use crate::database::{DatabaseManager, insert_token_transaction, TokenTransactionInput};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use types::{AgentRole, CompletionRequest, CompletionResponse, ModelInfo, ModelTier, RoutingPolicy, TaskType};
+use types::{AgentRole, CompletionRequest, CompletionResponse, ModelInfo, ModelTier, RoutingPolicy, TaskType, Usage};
 
 use async_trait::async_trait;
 
@@ -175,7 +175,7 @@ impl RuntimeManager {
             .get(provider_name)
             .ok_or_else(|| format!("Provider {} not found", provider_name))?;
 
-        let mut req = request;
+        let mut req = request.clone();
         if req.model.is_none() {
             // Pick first model if none specified
             let models = provider.list_models().await?;
@@ -188,7 +188,13 @@ impl RuntimeManager {
             );
         }
 
-        provider.completion(req).await
+        let model_id = req.model.clone().unwrap();
+        let mut resp = provider.completion(req).await?;
+        
+        // Finalize usage if success
+        self.finalize_usage(provider_name, &model_id, &mut resp, &request).await;
+        
+        Ok(resp)
     }
 
     pub async fn dispatch(&self, request: CompletionRequest) -> Result<CompletionResponse, String> {
@@ -565,22 +571,74 @@ impl RuntimeManager {
         let providers = self.providers.lock().await;
         providers.keys().cloned().collect()
     }
+
+    async fn finalize_usage(
+        &self,
+        provider_name: &str,
+        model_id: &str,
+        response: &mut CompletionResponse,
+        request: &CompletionRequest,
+    ) {
+        if let Some(usage) = &mut response.usage {
+            // 1. Get model info for pricing
+            let providers = self.providers.lock().await;
+            let provider = providers.get(provider_name);
+            let mut pricing = (0.0, 0.0); // (input, output)
+
+            if let Some(p) = provider {
+                if let Ok(models) = p.list_models().await {
+                    if let Some(m) = models.iter().find(|m| m.id == model_id) {
+                        pricing = (m.pricing_input_1m, m.pricing_output_1m);
+                    }
+                }
+            }
+
+            // 2. Calculate cost
+            let input_cost = (usage.input_tokens as f64 / 1_000_000.0) * pricing.0;
+            let output_cost = (usage.output_tokens as f64 / 1_000_000.0) * pricing.1;
+            let total_cost = input_cost + output_cost;
+            usage.cost_estimate = Some(total_cost);
+
+            // 3. Record transaction to database
+            let db_lock = self.db.lock().await;
+            if let Some(db) = &*db_lock {
+                let transaction = TokenTransactionInput {
+                    session_id: request.session_id.clone().unwrap_or_else(|| "default".to_string()),
+                    project_path: request.project_path.clone().unwrap_or_else(|| "none".to_string()),
+                    backend: provider_name.to_string(),
+                    input_tokens: usage.input_tokens as i64,
+                    output_tokens: usage.output_tokens as i64,
+                    cost_estimate: total_cost,
+                    timestamp: None,
+                };
+                let _ = insert_token_transaction(&db.pool, &transaction).await;
+            }
+        }
+    }
 }
 
 #[tauri::command]
 pub async fn ai_dispatch(
     manager: tauri::State<'_, Arc<RuntimeManager>>,
-    request: CompletionRequest,
+    orchestration: tauri::State<'_, crate::orchestration::OrchestrationState>,
+    mut request: CompletionRequest,
 ) -> Result<CompletionResponse, String> {
+    if request.project_path.is_none() {
+        request.project_path = orchestration.current_project_path.lock().clone();
+    }
     manager.dispatch(request).await
 }
 
 #[tauri::command]
 pub async fn ai_completion(
     manager: tauri::State<'_, Arc<RuntimeManager>>,
+    orchestration: tauri::State<'_, crate::orchestration::OrchestrationState>,
     provider: String,
-    request: CompletionRequest,
+    mut request: CompletionRequest,
 ) -> Result<CompletionResponse, String> {
+    if request.project_path.is_none() {
+        request.project_path = orchestration.current_project_path.lock().clone();
+    }
     manager.completion(&provider, request).await
 }
 

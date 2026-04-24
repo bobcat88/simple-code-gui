@@ -57,7 +57,7 @@ impl AIProvider for ClaudeProvider {
         let usage = Usage {
             input_tokens: json["usage"]["input_tokens"].as_u64().unwrap_or(0) as u32,
             output_tokens: json["usage"]["output_tokens"].as_u64().unwrap_or(0) as u32,
-            saved_tokens: 0,
+            ..Default::default()
         };
 
         Ok(CompletionResponse {

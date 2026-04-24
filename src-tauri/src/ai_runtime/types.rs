@@ -58,6 +58,8 @@ impl Default for RetryConfig {
 pub struct CompletionRequest {
     pub messages: Vec<Message>,
     pub model: Option<String>,
+    pub project_path: Option<String>,
+    pub session_id: Option<String>,
     pub policy: Option<RoutingPolicy>,
     pub retry: Option<RetryConfig>,
     pub temperature: Option<f32>,
@@ -78,6 +80,7 @@ pub struct Usage {
     pub input_tokens: u32,
     pub output_tokens: u32,
     pub saved_tokens: u32,
+    pub cost_estimate: Option<f64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, PartialOrd)]
