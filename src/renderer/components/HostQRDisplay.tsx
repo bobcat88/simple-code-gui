@@ -195,7 +195,7 @@ export function HostQRDisplay({
   const connectionUrl = `claude-terminal://${localIPs[0] || 'localhost'}:${serverPort}?token=${token}`
 
   // Regenerate token via server (also refreshes nonce)
-  const handleRegenerate = async () => {
+  const handleRegenerateToken = useCallback(async () => {
     if (api?.mobileRegenerateToken) {
       setLoading(true)
       try {
@@ -214,7 +214,7 @@ export function HostQRDisplay({
       setToken(newToken)
       setCopied(false)
     }
-  }, [])
+  }, [api])
 
   // Copy URL to clipboard
   const handleCopyUrl = useCallback(async () => {

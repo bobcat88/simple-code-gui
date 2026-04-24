@@ -207,32 +207,73 @@ export function ProjectInitializationWizard({ isOpen, onClose, onProjectCreated,
                   </div>
 
                   <div className="p-4 bg-white/5 border border-white/10 rounded-xl space-y-3">
-                    <div className="flex items-center gap-2 text-white/60 text-xs font-bold uppercase tracking-widest">
-                      <Cpu size={14} />
-                      Capabilities
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-white/60 text-xs font-bold uppercase tracking-widest">
+                        <Cpu size={14} />
+                        Capabilities
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-white/40">Health:</span>
+                        <div className="w-16 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                          <div 
+                            className={cn(
+                              "h-full transition-all duration-500",
+                              wizard.scan.projectHealthScore > 0.8 ? "bg-green-500" : 
+                              wizard.scan.projectHealthScore > 0.4 ? "bg-amber-500" : "bg-red-500"
+                            )}
+                            style={{ width: `${wizard.scan.projectHealthScore * 100}%` }}
+                          />
+                        </div>
+                        <span className={cn(
+                          "text-[10px] font-bold",
+                          wizard.scan.projectHealthScore > 0.8 ? "text-green-500" : 
+                          wizard.scan.projectHealthScore > 0.4 ? "text-amber-500" : "text-red-500"
+                        )}>
+                          {Math.round(wizard.scan.projectHealthScore * 100)}%
+                        </span>
+                      </div>
                     </div>
                     <div className="space-y-1.5">
                       {wizard.scan.capabilities.slice(0, 6).map(c => (
-                        <button 
+                        <div 
                           key={c.id} 
-                          onClick={() => {
-                            setEnabledCapabilities(prev => 
-                              prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]
-                            )
-                          }}
                           className={cn(
                             "w-full flex items-center justify-between text-[10px] p-1.5 rounded transition-colors group",
-                            enabledCapabilities.includes(c.id) ? "hover:bg-white/5" : "opacity-40 grayscale hover:opacity-100 hover:grayscale-0"
+                            enabledCapabilities.includes(c.id) ? "bg-white/5" : "opacity-40 grayscale hover:opacity-100 hover:grayscale-0"
                           )}
                         >
-                          <span className="text-white/60 group-hover:text-white transition-colors">{c.id.replace(/_/g, ' ')}</span>
-                          <div className={cn(
-                            "w-3 h-3 rounded-sm border flex items-center justify-center transition-all",
-                            enabledCapabilities.includes(c.id) ? "bg-primary border-primary text-black" : "border-white/20"
-                          )}>
-                            {enabledCapabilities.includes(c.id) && <CheckCircle2 size={8} strokeWidth={4} />}
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => {
+                                setEnabledCapabilities(prev => 
+                                  prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]
+                                )
+                              }}
+                              className={cn(
+                                "w-3 h-3 rounded-sm border flex items-center justify-center transition-all",
+                                enabledCapabilities.includes(c.id) ? "bg-primary border-primary text-black" : "border-white/20"
+                              )}
+                            >
+                              {enabledCapabilities.includes(c.id) && <CheckCircle2 size={8} strokeWidth={4} />}
+                            </button>
+                            <span className="text-white/60 group-hover:text-white transition-colors">{c.id.replace(/_/g, ' ')}</span>
                           </div>
-                        </button>
+                          
+                          <div className="flex items-center gap-1.5">
+                            <div className={cn(
+                              "px-1.5 py-0.5 rounded-[4px] text-[8px] font-bold uppercase",
+                              c.installed ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "bg-white/5 text-white/20 border border-white/5"
+                            )}>
+                              {c.installed ? 'Installed' : 'Missing'}
+                            </div>
+                            <div className={cn(
+                              "px-1.5 py-0.5 rounded-[4px] text-[8px] font-bold uppercase",
+                              c.initialized ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                            )}>
+                              {c.initialized ? 'Ready' : 'New'}
+                            </div>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
