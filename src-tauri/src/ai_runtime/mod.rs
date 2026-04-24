@@ -29,6 +29,7 @@ pub struct RuntimeManager {
     db: Arc<Mutex<Option<Arc<DatabaseManager>>>>,
     agents: Arc<Mutex<Option<Arc<crate::agent_manager::AgentManager>>>>,
     activity: Arc<Mutex<Option<Arc<crate::activity_manager::ActivityManager>>>>,
+    orchestration: Arc<Mutex<Option<Arc<crate::orchestration::OrchestrationState>>>>,
     health: Arc<Mutex<HashMap<String, HealthInfo>>>,
 }
 
@@ -40,8 +41,14 @@ impl RuntimeManager {
             db: Arc::new(Mutex::new(None)),
             agents: Arc::new(Mutex::new(None)),
             activity: Arc::new(Mutex::new(None)),
+            orchestration: Arc::new(Mutex::new(None)),
             health: Arc::new(Mutex::new(HashMap::new())),
         }
+    }
+
+    pub async fn set_orchestration_state(&self, manager: Arc<crate::orchestration::OrchestrationState>) {
+        let mut orchestration = self.orchestration.lock().await;
+        *orchestration = Some(manager);
     }
 
     pub async fn set_settings_manager(&self, manager: Arc<crate::settings_manager::SettingsManager>) {
@@ -167,6 +174,17 @@ impl RuntimeManager {
         if entry.consecutive_failures >= 3 {
             entry.is_degraded = true;
         }
+    }
+
+    async fn get_project_health(&self) -> f32 {
+        let orch_lock = self.orchestration.lock().await;
+        if let Some(orch) = &*orch_lock {
+            let last_scan = orch.last_scan.lock();
+            if let Some(scan) = &*last_scan {
+                return scan.project_health_score;
+            }
+        }
+        1.0 // Default to healthy if no scan or project yet
     }
 
     pub async fn completion(
@@ -486,9 +504,17 @@ impl RuntimeManager {
                 let settings_lock = self.settings.lock().await;
                 if let Some(settings_manager) = &*settings_lock {
                     let settings = settings_manager.get().await;
-                    
+
+                    // If project health is low, override "cheap" or "latency" to "auto" (Quality First)
+                    let health_score = self.get_project_health().await;
+                    let strategy_str = if health_score < 0.6 {
+                        "auto"
+                    } else {
+                        settings.ai_runtime.default_strategy.as_str()
+                    };
+
                     // Map strategy string to internal policy
-                    let strategy = match settings.ai_runtime.default_strategy.as_str() {
+                    let strategy = match strategy_str {
                         "cheap" => Some(RoutingPolicy::CheapFirst),
                         "latency" => Some(RoutingPolicy::LatencyFirst),
                         "auto" => {

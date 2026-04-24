@@ -28,16 +28,22 @@ pub struct HealthStatus {
 pub struct HealthManager {
     db: Arc<DatabaseManager>,
     ai_runtime: Arc<crate::ai_runtime::RuntimeManager>,
+    orchestration: Arc<crate::orchestration::OrchestrationState>,
     system: std::sync::Mutex<System>,
 }
 
 impl HealthManager {
-    pub fn new(db: Arc<DatabaseManager>, ai_runtime: Arc<crate::ai_runtime::RuntimeManager>) -> Self {
+    pub fn new(
+        db: Arc<DatabaseManager>, 
+        ai_runtime: Arc<crate::ai_runtime::RuntimeManager>,
+        orchestration: Arc<crate::orchestration::OrchestrationState>,
+    ) -> Self {
         let mut system = System::new_all();
         system.refresh_all();
         Self {
             db,
             ai_runtime,
+            orchestration,
             system: std::sync::Mutex::new(system),
         }
     }
@@ -87,6 +93,7 @@ impl HealthManager {
         let mut services = Vec::new();
 
         services.push(check_database_service(&self.db).await);
+        services.push(check_project_capability_service(&self.orchestration).await);
 
         let installed_extensions = match crate::extension_manager::extensions_get_installed().await
         {
@@ -312,6 +319,53 @@ fn check_mcp_config_service(installed_extensions: &[InstalledExtension]) -> Serv
         name: "MCP Config".to_string(),
         status,
         detail,
+    }
+}
+
+async fn check_project_capability_service(
+    orchestration: &crate::orchestration::OrchestrationState,
+) -> ServiceStatus {
+    let project_path = orchestration.current_project_path.lock();
+    if project_path.is_none() {
+        return ServiceStatus {
+            id: "project_capabilities".to_string(),
+            name: "Project Capabilities".to_string(),
+            status: "Idle".to_string(),
+            detail: "No project currently selected".to_string(),
+        };
+    }
+
+    let last_scan = orchestration.last_scan.lock();
+
+    if let Some(scan) = last_scan.as_ref() {
+        let health = scan.project_health_score;
+        let status = if health >= 0.8 {
+            "Healthy"
+        } else if health >= 0.5 {
+            "Warning"
+        } else {
+            "Error"
+        };
+
+        let detail = format!(
+            "Health Score: {:.0}%, {} capabilities detected",
+            health * 100.0,
+            scan.capabilities.len(),
+        );
+
+        ServiceStatus {
+            id: "project_capabilities".to_string(),
+            name: "Project Capabilities".to_string(),
+            status: status.to_string(),
+            detail,
+        }
+    } else {
+        ServiceStatus {
+            id: "project_capabilities".to_string(),
+            name: "Project Capabilities".to_string(),
+            status: "Scanning".to_string(),
+            detail: "Awaiting initial project scan".to_string(),
+        }
     }
 }
 

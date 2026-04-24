@@ -500,9 +500,17 @@ pub fn run() {
                     Arc::clone(&activity_manager),
                 )));
 
+                // Initialize Orchestration State
+                let orchestration_state = Arc::new(OrchestrationState::default());
+                ai_runtime.set_orchestration_state(Arc::clone(&orchestration_state)).await;
+
                 // Initialize Health Manager
                 let health_manager =
-                    Arc::new(health_manager::HealthManager::new(Arc::clone(&db_arc), Arc::clone(&ai_runtime)));
+                    Arc::new(health_manager::HealthManager::new(
+                        Arc::clone(&db_arc), 
+                        Arc::clone(&ai_runtime),
+                        Arc::clone(&orchestration_state)
+                    ));
                 health_manager::HealthManager::setup_panic_hook(app_handle.clone());
 
                 // Initialize Diagnostic Manager
@@ -520,13 +528,13 @@ pub fn run() {
                 app_handle.manage(agent_manager);
                 app_handle.manage(health_manager);
                 app_handle.manage(diagnostic_manager);
+                app_handle.manage(orchestration_state);
             });
 
             let pty_manager = PtyManager::new();
             let pty_manager_arc = Arc::new(pty_manager);
             app.manage(Arc::clone(&pty_manager_arc));
             app.manage(VoiceManager::new());
-            app.manage(OrchestrationState::default());
             app.manage(McpManager::new());
 
             // PTY Watchdog

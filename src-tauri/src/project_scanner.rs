@@ -3,6 +3,7 @@ use std::path::Path;
 use chrono::Utc;
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use crate::orchestration::OrchestrationState;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -252,7 +253,7 @@ pub fn scan_project(root_path: &str, options: &ScanOptions) -> ProjectCapability
         id: "beads_task_backend".into(),
         kind: CapabilityKind::TaskBackend,
         source_system: SourceSystem::Beads,
-        installed: beads_present,
+        installed: beads_cli_present,
         initialized: beads_present,
         enabled: beads_present,
         mode: if beads_present && beads_cli_present { CapabilityMode::Full } else if beads_present { CapabilityMode::Degraded } else { CapabilityMode::Disabled },
@@ -270,8 +271,8 @@ pub fn scan_project(root_path: &str, options: &ScanOptions) -> ProjectCapability
         id: "kspec_spec_backend".into(),
         kind: CapabilityKind::SpecBackend,
         source_system: SourceSystem::Kspec,
-        installed: kspec_has_worktree || kspec_has_generated,
-        initialized: kspec_has_worktree,
+        installed: kspec_cli_present,
+        initialized: kspec_has_worktree || kspec_has_generated,
         enabled: kspec_has_worktree,
         mode: if kspec_has_worktree && kspec_cli_present { CapabilityMode::Full } else if kspec_has_worktree { CapabilityMode::Degraded } else if kspec_has_generated { CapabilityMode::InstructionOnly } else { CapabilityMode::Disabled },
         health: if kspec_has_worktree && kspec_cli_present { HealthStatus::Healthy } else if kspec_has_worktree || kspec_has_generated { HealthStatus::Warning } else { HealthStatus::Unknown },
@@ -287,7 +288,7 @@ pub fn scan_project(root_path: &str, options: &ScanOptions) -> ProjectCapability
         id: "rtk_token_optimizer".into(),
         kind: CapabilityKind::TokenOptimizer,
         source_system: SourceSystem::Rtk,
-        installed: rtk_installed,
+        installed: rtk_cli_present,
         initialized: has("rtk_config"),
         enabled: rtk_installed,
         mode: if has("rtk_config") && rtk_cli_present { CapabilityMode::Full } else if has("rtk_rules") { CapabilityMode::InstructionOnly } else { CapabilityMode::Disabled },
@@ -968,8 +969,18 @@ pub fn apply_proposal(app: &tauri::AppHandle, proposal: &InitializationProposal)
 }
 
 #[tauri::command]
-pub async fn project_scan(path: String, options: ScanOptions) -> Result<ProjectCapabilityScan, String> {
-    Ok(scan_project(&path, &options))
+pub async fn project_scan(
+    state: tauri::State<'_, Arc<OrchestrationState>>,
+    path: String, 
+    options: ScanOptions
+) -> Result<ProjectCapabilityScan, String> {
+    let scan = scan_project(&path, &options);
+    
+    // Update last scan in orchestration state
+    let mut last_scan = state.last_scan.lock();
+    *last_scan = Some(scan.clone());
+    
+    Ok(scan)
 }
 
 #[tauri::command]

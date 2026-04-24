@@ -91,6 +91,7 @@ pub struct OrchestrationState {
     pub watched_kspec_projects: PlMutex<HashMap<String, tauri::async_runtime::JoinHandle<()>>>,
     pub pending_approvals: PlMutex<Vec<ApprovalRequest>>,
     pub current_project_path: PlMutex<Option<String>>,
+    pub last_scan: PlMutex<Option<crate::project_scanner::ProjectCapabilityScan>>,
 }
 
 #[tauri::command]
