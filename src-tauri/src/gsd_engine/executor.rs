@@ -328,24 +328,53 @@ impl Executor {
         _phase_id: &str,
         step: &GsdStep,
     ) -> Result<(), String> {
-        let learning_content = format!(
-            "LEARNED from GSD Step: {}\nDescription: {}\nResult: {}",
-            step.title,
-            step.description,
-            step.result.as_deref().unwrap_or("No result")
-        );
+        let ai = self._ai.clone();
+        let step_title = step.title.clone();
+        let step_desc = step.description.clone();
+        let step_result = step.result.clone().unwrap_or_else(|| "Success".to_string());
 
-        // Call 'bd remember'
-        let output = Command::new("bd")
-            .arg("remember")
-            .arg(&learning_content)
-            .output()
-            .map_err(|e| format!("Failed to execute bd remember: {}", e))?;
+        tokio::spawn(async move {
+            // 1. AI-Driven Summarization
+            let prompt = format!(
+                "You are an AI Learning Optimizer. Extract ONE high-value technical lesson from this successful GSD step.\n\nStep: {}\nDesc: {}\nResult: {}\n\nFocus on patterns or traps, avoid generic fluff. Output ONLY the lesson.",
+                step_title, step_desc, step_result
+            );
 
-        if !output.status.success() {
-            let err = String::from_utf8_lossy(&output.stderr).to_string();
-            return Err(format!("bd remember failed: {}", err));
-        }
+            let request = crate::ai_runtime::types::CompletionRequest {
+                messages: vec![crate::ai_runtime::types::Message {
+                    role: "user".to_string(),
+                    content: prompt,
+                }],
+                temperature: Some(0.3),
+                max_tokens: Some(100),
+                ..Default::default()
+            };
+
+            let learning = match ai.dispatch(request).await {
+                Ok(resp) => resp.content,
+                Err(_) => format!("Success: {} - {}", step_title, step_result),
+            };
+
+            // 2. Local Persistence (Beads)
+            let _ = Command::new("bd")
+                .arg("remember")
+                .arg(&learning)
+                .output();
+
+            // 3. Durable Vault Persistence (Borg)
+            let borg_path = std::path::Path::new("/home/_johan/Documents/Borg/200 Notes/Learnings/chronicle.md");
+            let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
+            let entry = format!("\n### [{}] {}\n{}\n", timestamp, step_title, learning);
+            
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(borg_path)
+            {
+                use std::io::Write;
+                let _ = writeln!(file, "{}", entry);
+            }
+        });
 
         self.emit_execution_event(
             _plan_id,

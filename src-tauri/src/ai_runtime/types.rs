@@ -54,7 +54,7 @@ impl Default for RetryConfig {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct CompletionRequest {
     pub messages: Vec<Message>,
     pub model: Option<String>,
