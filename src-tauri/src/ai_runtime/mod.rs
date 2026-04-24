@@ -28,6 +28,7 @@ pub struct RuntimeManager {
     settings: Arc<Mutex<Option<Arc<crate::settings_manager::SettingsManager>>>>,
     db: Arc<Mutex<Option<Arc<DatabaseManager>>>>,
     agents: Arc<Mutex<Option<Arc<crate::agent_manager::AgentManager>>>>,
+    activity: Arc<Mutex<Option<Arc<crate::activity_manager::ActivityManager>>>>,
     health: Arc<Mutex<HashMap<String, HealthInfo>>>,
 }
 
@@ -38,6 +39,7 @@ impl RuntimeManager {
             settings: Arc::new(Mutex::new(None)),
             db: Arc::new(Mutex::new(None)),
             agents: Arc::new(Mutex::new(None)),
+            activity: Arc::new(Mutex::new(None)),
             health: Arc::new(Mutex::new(HashMap::new())),
         }
     }
@@ -50,6 +52,11 @@ impl RuntimeManager {
     pub async fn set_database_manager(&self, manager: Arc<DatabaseManager>) {
         let mut db = self.db.lock().await;
         *db = Some(manager);
+    }
+
+    pub async fn set_activity_manager(&self, manager: Arc<crate::activity_manager::ActivityManager>) {
+        let mut activity = self.activity.lock().await;
+        *activity = Some(manager);
     }
 
     pub async fn set_agent_manager(&self, manager: Arc<crate::agent_manager::AgentManager>) {

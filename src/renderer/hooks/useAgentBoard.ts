@@ -17,6 +17,7 @@ export interface Agent {
 
 export function useAgentBoard() {
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [providerHealth, setProviderHealth] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   const refreshBurnRates = useCallback(async () => {
@@ -30,8 +31,12 @@ export function useAgentBoard() {
   const fetchAgents = useCallback(async () => {
     try {
       await refreshBurnRates();
-      const list = await tauriIpc.agentList();
+      const [list, health] = await Promise.all([
+        tauriIpc.agentList(),
+        tauriIpc.aiGetHealthStatus()
+      ]);
       setAgents(list);
+      setProviderHealth(health);
     } catch (err) {
       console.error('Failed to fetch agents:', err);
     } finally {
@@ -79,5 +84,5 @@ export function useAgentBoard() {
     await fetchAgents();
   };
 
-  return { agents, loading, updateStatus, refresh: fetchAgents, refreshBurnRates };
+  return { agents, providerHealth, loading, updateStatus, refresh: fetchAgents, refreshBurnRates };
 }

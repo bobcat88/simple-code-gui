@@ -27,15 +27,17 @@ pub struct HealthStatus {
 
 pub struct HealthManager {
     db: Arc<DatabaseManager>,
+    ai_runtime: Arc<crate::ai_runtime::RuntimeManager>,
     system: std::sync::Mutex<System>,
 }
 
 impl HealthManager {
-    pub fn new(db: Arc<DatabaseManager>) -> Self {
+    pub fn new(db: Arc<DatabaseManager>, ai_runtime: Arc<crate::ai_runtime::RuntimeManager>) -> Self {
         let mut system = System::new_all();
         system.refresh_all();
         Self {
             db,
+            ai_runtime,
             system: std::sync::Mutex::new(system),
         }
     }
@@ -125,6 +127,32 @@ impl HealthManager {
         };
 
         services.push(check_mcp_config_service(&installed_extensions));
+
+        // Check AI Runtime Health
+        let ai_health = self.ai_runtime.get_health().await;
+        let total_providers = ai_health.len();
+        let healthy_providers = ai_health.values().filter(|h| **h).count();
+        let degraded_providers = total_providers - healthy_providers;
+        
+        let ai_status = if total_providers == 0 {
+            "Warning".to_string()
+        } else if healthy_providers == total_providers {
+            "Healthy".to_string()
+        } else if healthy_providers > 0 {
+            "Warning".to_string()
+        } else {
+            "Error".to_string()
+        };
+
+        services.push(ServiceStatus {
+            id: "ai_runtime".to_string(),
+            name: "AI Orchestration".to_string(),
+            status: ai_status,
+            detail: format!(
+                "{} providers active ({} healthy, {} degraded)",
+                total_providers, healthy_providers, degraded_providers
+            ),
+        });
 
         let status = aggregate_status(&services);
 

@@ -448,9 +448,14 @@ pub fn run() {
                 ai_runtime.set_settings_manager(Arc::clone(&settings_manager)).await;
                 ai_runtime.set_database_manager(Arc::clone(&db_arc)).await;
 
+                // Initialize Activity Manager
+                let activity_manager =
+                    Arc::new(activity_manager::ActivityManager::new(Arc::clone(&db_arc)));
+
                 // Initialize Agent Manager
                 let agent_manager = Arc::new(agent_manager::AgentManager::new(Arc::clone(&db_arc)));
                 ai_runtime.set_agent_manager(Arc::clone(&agent_manager)).await;
+                ai_runtime.set_activity_manager(Arc::clone(&activity_manager)).await;
 
                 let _ = ai_runtime.sync_settings().await;
 
@@ -487,9 +492,6 @@ pub fn run() {
                 // Initialize GSD Engine
                 let gsd_engine = Arc::new(gsd_engine::GsdEngine::new(Arc::clone(&db_arc)));
 
-                // Initialize Activity Manager
-                let activity_manager =
-                    Arc::new(activity_manager::ActivityManager::new(Arc::clone(&db_arc)));
 
                 // Initialize Jobs Manager
                 let jobs_manager = Arc::new(Mutex::new(jobs_manager::JobsManager::new(
@@ -500,7 +502,7 @@ pub fn run() {
 
                 // Initialize Health Manager
                 let health_manager =
-                    Arc::new(health_manager::HealthManager::new(Arc::clone(&db_arc)));
+                    Arc::new(health_manager::HealthManager::new(Arc::clone(&db_arc), Arc::clone(&ai_runtime)));
                 health_manager::HealthManager::setup_panic_hook(app_handle.clone());
 
                 // Initialize Diagnostic Manager

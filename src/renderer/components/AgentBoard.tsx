@@ -3,7 +3,7 @@ import { useAgentBoard } from '../hooks/useAgentBoard';
 import { User, Shield, PenTool, Search, GitBranch, Cpu, Activity } from 'lucide-react';
 
 export const AgentBoard: React.FC = () => {
-  const { agents, loading } = useAgentBoard();
+  const { agents, providerHealth, loading } = useAgentBoard();
 
   if (loading) {
     return <div className="p-4 text-zinc-500 animate-pulse">Loading agents...</div>;
@@ -28,6 +28,13 @@ export const AgentBoard: React.FC = () => {
       case 'error': return 'bg-red-500';
       default: return 'bg-zinc-500';
     }
+  };
+
+  const getProviderHealthColor = (provider?: string) => {
+    if (!provider) return 'bg-zinc-500';
+    const isHealthy = providerHealth[provider.toLowerCase()];
+    if (isHealthy === undefined) return 'bg-zinc-500';
+    return isHealthy ? 'bg-emerald-500' : 'bg-amber-500';
   };
 
   return (
@@ -57,13 +64,13 @@ export const AgentBoard: React.FC = () => {
               </div>
               <div className="flex flex-col items-end gap-1">
                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded bg-zinc-800 border border-white/5 ${
-                  agent.quality_score >= 0.8 ? 'text-emerald-400' : 
-                  agent.quality_score >= 0.5 ? 'text-blue-400' : 'text-zinc-500'
+                  (agent.quality_score || 0) >= 0.8 ? 'text-emerald-400' : 
+                  (agent.quality_score || 0) >= 0.5 ? 'text-blue-400' : 'text-zinc-500'
                 }`}>
-                  Q:{(agent.quality_score * 100).toFixed(0)}
+                  Q:{((agent.quality_score || 0) * 100).toFixed(0)}
                 </span>
                 <span className="text-[9px] font-mono text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20">
-                  ${agent.burn_rate.toFixed(4)}/h
+                  ${(agent.burn_rate || 0).toFixed(4)}/h
                 </span>
               </div>
             </div>
@@ -71,7 +78,10 @@ export const AgentBoard: React.FC = () => {
             <div className="space-y-2 mb-4">
               <div className="flex items-center justify-between text-[10px]">
                 <span className="text-zinc-500">Provider</span>
-                <span className="text-zinc-300 font-medium capitalize">{agent.provider}</span>
+                <div className="flex items-center gap-1.5">
+                  <div className={`w-1.5 h-1.5 rounded-full ${getProviderHealthColor(agent.provider)}`} />
+                  <span className="text-zinc-300 font-medium capitalize">{agent.provider}</span>
+                </div>
               </div>
               <div className="flex items-center justify-between text-[10px]">
                 <span className="text-zinc-500">Model</span>
@@ -93,7 +103,7 @@ export const AgentBoard: React.FC = () => {
               <div className="flex items-center gap-1.5">
                 <div className={`w-2 h-2 rounded-full ${getStatusColor(agent.status)}`} />
                 <span className="text-[10px] text-zinc-400 capitalize">{agent.status}</span>
-                {agent.queue_size > 0 && (
+                {(agent.queue_size || 0) > 0 && (
                   <span className="ml-1 text-[8px] bg-zinc-800 text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/20 font-bold">
                     {agent.queue_size}
                   </span>
