@@ -36,10 +36,30 @@ pub enum RoutingPolicy {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RetryConfig {
+    pub max_retries: u32,
+    pub initial_delay_ms: u64,
+    pub max_delay_ms: u64,
+    pub backoff_factor: f32,
+}
+
+impl Default for RetryConfig {
+    fn default() -> Self {
+        Self {
+            max_retries: 3,
+            initial_delay_ms: 1000,
+            max_delay_ms: 10000,
+            backoff_factor: 2.0,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CompletionRequest {
     pub messages: Vec<Message>,
     pub model: Option<String>,
     pub policy: Option<RoutingPolicy>,
+    pub retry: Option<RetryConfig>,
     pub temperature: Option<f32>,
     pub max_tokens: Option<u32>,
     pub stream: Option<bool>,

@@ -477,6 +477,7 @@ impl DatabaseManager {
                 provider TEXT,
                 burn_rate REAL DEFAULT 0.0,
                 quality_score REAL DEFAULT 0.0,
+                error_rate REAL DEFAULT 0.0,
                 queue_size INTEGER DEFAULT 0,
                 active_task TEXT,
                 last_active DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -503,6 +504,9 @@ impl DatabaseManager {
             .execute(&self.pool)
             .await;
         let _ = sqlx::query("ALTER TABLE agents ADD COLUMN active_task TEXT")
+            .execute(&self.pool)
+            .await;
+        let _ = sqlx::query("ALTER TABLE agents ADD COLUMN error_rate REAL DEFAULT 0.0")
             .execute(&self.pool)
             .await;
 

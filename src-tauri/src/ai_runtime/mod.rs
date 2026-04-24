@@ -17,11 +17,19 @@ pub trait AIProvider: Send + Sync {
     async fn check_health(&self) -> bool;
 }
 
+#[derive(Debug, Clone)]
+struct HealthInfo {
+    last_failure: Option<std::time::Instant>,
+    consecutive_failures: u32,
+    is_degraded: bool,
+}
+
 pub struct RuntimeManager {
     providers: Arc<Mutex<HashMap<String, Box<dyn AIProvider>>>>,
     settings: Arc<Mutex<Option<Arc<crate::settings_manager::SettingsManager>>>>,
     db: Arc<Mutex<Option<Arc<DatabaseManager>>>>,
     agents: Arc<Mutex<Option<Arc<crate::agent_manager::AgentManager>>>>,
+    health: Arc<Mutex<HashMap<String, HealthInfo>>>,
 }
 
 impl RuntimeManager {
@@ -31,6 +39,7 @@ impl RuntimeManager {
             settings: Arc::new(Mutex::new(None)),
             db: Arc::new(Mutex::new(None)),
             agents: Arc::new(Mutex::new(None)),
+            health: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -129,6 +138,33 @@ impl RuntimeManager {
         Ok(())
     }
 
+    async fn record_success(&self, provider_name: &str) {
+        let mut health = self.health.lock().await;
+        let entry = health.entry(provider_name.to_string()).or_insert(HealthInfo {
+            last_failure: None,
+            consecutive_failures: 0,
+            is_degraded: false,
+        });
+        entry.consecutive_failures = 0;
+        entry.is_degraded = false;
+    }
+
+    async fn record_failure(&self, provider_name: &str) {
+        let mut health = self.health.lock().await;
+        let entry = health.entry(provider_name.to_string()).or_insert(HealthInfo {
+            last_failure: None,
+            consecutive_failures: 0,
+            is_degraded: false,
+        });
+        entry.consecutive_failures += 1;
+        entry.last_failure = Some(std::time::Instant::now());
+        
+        // Mark as degraded if more than 3 failures
+        if entry.consecutive_failures >= 3 {
+            entry.is_degraded = true;
+        }
+    }
+
     pub async fn completion(
         &self,
         provider_name: &str,
@@ -157,22 +193,55 @@ impl RuntimeManager {
 
     pub async fn dispatch(&self, request: CompletionRequest) -> Result<CompletionResponse, String> {
         let routes = self.resolve_routes(&request).await?;
+        let retry_config = request.retry.clone().unwrap_or_default();
 
         let mut last_error = "No suitable routes found".to_string();
         for (provider_name, model_id) in routes {
+            // Check health before trying
+            {
+                let health = self.health.lock().await;
+                if let Some(info) = health.get(&provider_name) {
+                    if info.is_degraded {
+                        // Check if we should "retry" the degraded provider after some time (60s)
+                        if let Some(last) = info.last_failure {
+                            if last.elapsed().as_secs() < 60 {
+                                continue; // Skip degraded provider
+                            }
+                        }
+                    }
+                }
+            }
+
             let mut req = request.clone();
             req.model = Some(model_id.clone());
 
-            match self.completion(&provider_name, req).await {
-                Ok(resp) => return Ok(resp),
-                Err(e) => {
-                    last_error = format!("{} ({}): {}", provider_name, model_id, e);
-                    continue;
+            let mut attempt = 0;
+            let mut delay = retry_config.initial_delay_ms;
+
+            while attempt <= retry_config.max_retries {
+                match self.completion(&provider_name, req.clone()).await {
+                    Ok(resp) => {
+                        self.record_success(&provider_name).await;
+                        return Ok(resp);
+                    }
+                    Err(e) => {
+                        attempt += 1;
+                        last_error = format!("{} ({}): attempt {}: {}", provider_name, model_id, attempt, e);
+                        
+                        if attempt <= retry_config.max_retries {
+                            tokio::time::sleep(std::time::Duration::from_millis(delay)).await;
+                            delay = (delay as f32 * retry_config.backoff_factor) as u64;
+                            delay = delay.min(retry_config.max_delay_ms);
+                        }
+                    }
                 }
             }
+            
+            // If all retries on THIS provider failed, record failure and move to next provider
+            self.record_failure(&provider_name).await;
         }
 
-        Err(format!("Dispatch failed: {}", last_error))
+        Err(format!("Dispatch failed after all retries and fallbacks: {}", last_error))
     }
 
     async fn resolve_routes(
@@ -248,9 +317,10 @@ impl RuntimeManager {
                     if let Ok(agents) = agent_manager.list().await {
                         for agent in agents {
                             if let (Some(prov), Some(mod_id)) = (agent.provider, agent.model) {
-                                let entry = model_metrics.entry((prov, mod_id)).or_insert((0.0, 0));
+                                let entry = model_metrics.entry((prov, mod_id)).or_insert((0.0, 0, 0.0));
                                 entry.0 += agent.quality_score.unwrap_or(0.0);
                                 entry.1 += 1;
+                                entry.2 += agent.error_rate.unwrap_or(0.0);
                             }
                         }
                     }
@@ -263,10 +333,18 @@ impl RuntimeManager {
                         return tier_cmp;
                     }
 
-                    // 2. Quality Score (Higher is better)
+                    // 2. Error Rate (Lower is better)
                     let metrics_a = model_metrics.get(&(p_a.clone(), m_a.id.clone()));
                     let metrics_b = model_metrics.get(&(p_b.clone(), m_b.id.clone()));
 
+                    let e_a = metrics_a.map(|m| m.2 / m.1 as f64).unwrap_or(0.0);
+                    let e_b = metrics_b.map(|m| m.2 / m.1 as f64).unwrap_or(0.0);
+                    let e_cmp = e_a.partial_cmp(&e_b).unwrap();
+                    if e_cmp != std::cmp::Ordering::Equal {
+                        return e_cmp;
+                    }
+
+                    // 3. Quality Score (Higher is better)
                     let s_a = metrics_a.map(|m| m.0 / m.1 as f64).unwrap_or(0.0);
                     let s_b = metrics_b.map(|m| m.0 / m.1 as f64).unwrap_or(0.0);
 
@@ -284,10 +362,11 @@ impl RuntimeManager {
                     if let Ok(agents) = agent_manager.list().await {
                         for agent in agents {
                             if let (Some(prov), Some(mod_id)) = (agent.provider, agent.model) {
-                                let entry = model_metrics.entry((prov, mod_id)).or_insert((0, 0.0, 0));
+                                let entry = model_metrics.entry((prov, mod_id)).or_insert((0, 0.0, 0, 0.0));
                                 entry.0 += agent.queue_size.unwrap_or(0);
                                 entry.1 += agent.burn_rate.unwrap_or(0.0);
                                 entry.2 += 1;
+                                entry.3 += agent.error_rate.unwrap_or(0.0);
                             }
                         }
                     }
@@ -300,10 +379,18 @@ impl RuntimeManager {
                         return tier_cmp;
                     }
 
-                    // 2. Queue Size (Lower is better)
+                    // 2. Error Rate (Lower is better)
                     let metrics_a = model_metrics.get(&(p_a.clone(), m_a.id.clone()));
                     let metrics_b = model_metrics.get(&(p_b.clone(), m_b.id.clone()));
 
+                    let e_a = metrics_a.map(|m| m.3 / m.2 as f64).unwrap_or(0.0);
+                    let e_b = metrics_b.map(|m| m.3 / m.2 as f64).unwrap_or(0.0);
+                    let e_cmp = e_a.partial_cmp(&e_b).unwrap();
+                    if e_cmp != std::cmp::Ordering::Equal {
+                        return e_cmp;
+                    }
+
+                    // 3. Queue Size (Lower is better)
                     let q_a = metrics_a.map(|m| m.0 as f64 / m.2 as f64).unwrap_or(0.0);
                     let q_b = metrics_b.map(|m| m.0 as f64 / m.2 as f64).unwrap_or(0.0);
 
@@ -398,11 +485,12 @@ impl RuntimeManager {
                                     if let Ok(agents) = agent_manager.list().await {
                                         for agent in agents {
                                             if let (Some(prov), Some(mod_id)) = (agent.provider, agent.model) {
-                                                let entry = model_metrics.entry((prov, mod_id)).or_insert((0, 0.0, 0, 0.0));
+                                                let entry = model_metrics.entry((prov, mod_id)).or_insert((0, 0.0, 0, 0.0, 0.0));
                                                 entry.0 += agent.queue_size.unwrap_or(0);
                                                 entry.1 += agent.burn_rate.unwrap_or(0.0);
                                                 entry.2 += 1;
                                                 entry.3 += agent.quality_score.unwrap_or(0.0);
+                                                entry.4 += agent.error_rate.unwrap_or(0.0);
                                             }
                                         }
                                     }
@@ -412,7 +500,15 @@ impl RuntimeManager {
                                     let metrics_a = model_metrics.get(&(p_a.clone(), m_a.id.clone()));
                                     let metrics_b = model_metrics.get(&(p_b.clone(), m_b.id.clone()));
 
-                                    // 1. Quality Score (Higher is better)
+                                    // 1. Error Rate (Lower is better)
+                                    let e_a = metrics_a.map(|m| m.4 / m.2 as f64).unwrap_or(0.0);
+                                    let e_b = metrics_b.map(|m| m.4 / m.2 as f64).unwrap_or(0.0);
+                                    let e_cmp = e_a.partial_cmp(&e_b).unwrap();
+                                    if e_cmp != std::cmp::Ordering::Equal {
+                                        return e_cmp;
+                                    }
+
+                                    // 2. Quality Score (Higher is better)
                                     let s_a = metrics_a.map(|m| m.3 / m.2 as f64).unwrap_or(0.0);
                                     let s_b = metrics_b.map(|m| m.3 / m.2 as f64).unwrap_or(0.0);
                                     let s_cmp = s_b.partial_cmp(&s_a).unwrap();
@@ -420,7 +516,7 @@ impl RuntimeManager {
                                         return s_cmp;
                                     }
 
-                                    // 2. Queue Size (Lower is better)
+                                    // 3. Queue Size (Lower is better)
                                     let q_a = metrics_a.map(|m| m.0 as f64 / m.2 as f64).unwrap_or(0.0);
                                     let q_b = metrics_b.map(|m| m.0 as f64 / m.2 as f64).unwrap_or(0.0);
 
@@ -429,7 +525,7 @@ impl RuntimeManager {
                                         return q_cmp;
                                     }
 
-                                    // 3. Burn Rate (Higher is better)
+                                    // 4. Burn Rate (Higher is better)
                                     let b_a = metrics_a.map(|m| m.1 / m.2 as f64).unwrap_or(0.0);
                                     let b_b = metrics_b.map(|m| m.1 / m.2 as f64).unwrap_or(0.0);
                                     b_b.partial_cmp(&b_a).unwrap()
