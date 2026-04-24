@@ -11,6 +11,7 @@ pub struct DatabaseManager {
 #[serde(rename_all = "camelCase")]
 pub struct TokenTransactionInput {
     pub session_id: String,
+    pub agent_id: Option<String>,
     pub project_path: String,
     pub backend: String,
     pub input_tokens: i64,
@@ -86,10 +87,11 @@ pub async fn insert_token_transaction(
     // AC: @01KPNWTT ac-2
     sqlx::query(
         "INSERT INTO token_transactions
-            (session_id, project_path, backend, input_tokens, output_tokens, cost_estimate, timestamp)
-         VALUES (?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))",
+            (session_id, agent_id, project_path, backend, input_tokens, output_tokens, cost_estimate, timestamp)
+         VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))",
     )
     .bind(&transaction.session_id)
+    .bind(&transaction.agent_id)
     .bind(&transaction.project_path)
     .bind(&transaction.backend)
     .bind(transaction.input_tokens)
@@ -393,6 +395,7 @@ impl DatabaseManager {
             "CREATE TABLE IF NOT EXISTS token_transactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 session_id TEXT NOT NULL,
+                agent_id TEXT,
                 project_path TEXT NOT NULL,
                 backend TEXT NOT NULL,
                 input_tokens INTEGER NOT NULL DEFAULT 0,
@@ -404,6 +407,10 @@ impl DatabaseManager {
         .execute(&self.pool)
         .await
         .map_err(|e| e.to_string())?;
+
+        let _ = sqlx::query("ALTER TABLE token_transactions ADD COLUMN agent_id TEXT")
+            .execute(&self.pool)
+            .await;
 
         sqlx::query(
             "CREATE INDEX IF NOT EXISTS idx_token_transactions_filters
@@ -573,6 +580,7 @@ mod tests {
             &pool,
             &TokenTransactionInput {
                 session_id: "pty-1".into(),
+                agent_id: Some("agent-1".into()),
                 project_path: "/repo".into(),
                 backend: "codex".into(),
                 input_tokens: 120,
@@ -609,6 +617,7 @@ mod tests {
         for transaction in [
             TokenTransactionInput {
                 session_id: "s1".into(),
+                agent_id: None,
                 project_path: "/repo-a".into(),
                 backend: "codex".into(),
                 input_tokens: 100,
@@ -618,6 +627,7 @@ mod tests {
             },
             TokenTransactionInput {
                 session_id: "s1".into(),
+                agent_id: None,
                 project_path: "/repo-a".into(),
                 backend: "codex".into(),
                 input_tokens: 40,
@@ -627,6 +637,7 @@ mod tests {
             },
             TokenTransactionInput {
                 session_id: "s2".into(),
+                agent_id: None,
                 project_path: "/repo-b".into(),
                 backend: "claude".into(),
                 input_tokens: 999,

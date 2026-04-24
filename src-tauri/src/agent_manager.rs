@@ -125,6 +125,44 @@ impl AgentManager {
 
         Ok(())
     }
+
+    pub async fn refresh_burn_rates(&self, app: &tauri::AppHandle) -> Result<(), String> {
+        // Reset all burn rates to 0 first so agents without recent activity show 0
+        sqlx::query("UPDATE agents SET burn_rate = 0.0")
+            .execute(&self.db.pool)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        // Calculate burn rate as total cost in the last 60 minutes
+        let rows = sqlx::query_as::<_, (String, f64)>(
+            "SELECT 
+                agent_id, 
+                SUM(cost_estimate) 
+             FROM token_transactions 
+             WHERE agent_id IS NOT NULL 
+               AND timestamp >= datetime('now', '-1 hour')
+             GROUP BY agent_id"
+        )
+        .fetch_all(&self.db.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        for (agent_id, burn_rate) in rows {
+            sqlx::query("UPDATE agents SET burn_rate = ? WHERE id = ?")
+                .bind(burn_rate)
+                .bind(&agent_id)
+                .execute(&self.db.pool)
+                .await
+                .map_err(|e| e.to_string())?;
+
+            let _ = app.emit("agent-metrics-changed", serde_json::json!({
+                "id": agent_id,
+                "burn_rate": burn_rate
+            }));
+        }
+
+        Ok(())
+    }
 }
 
 // Tauri Commands
@@ -166,4 +204,12 @@ pub async fn agent_update_metrics(
     active_task: Option<String>,
 ) -> Result<(), String> {
     state.update_metrics(&app, id, burn_rate, quality_score, error_rate, queue_size, active_task).await
+}
+
+#[tauri::command]
+pub async fn agent_refresh_burn_rates(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, Arc<AgentManager>>,
+) -> Result<(), String> {
+    state.refresh_burn_rates(&app).await
 }

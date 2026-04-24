@@ -604,6 +604,7 @@ impl RuntimeManager {
             if let Some(db) = &*db_lock {
                 let transaction = TokenTransactionInput {
                     session_id: request.session_id.clone().unwrap_or_else(|| "default".to_string()),
+                    agent_id: request.agent_id.clone(),
                     project_path: request.project_path.clone().unwrap_or_else(|| "none".to_string()),
                     backend: provider_name.to_string(),
                     input_tokens: usage.input_tokens as i64,

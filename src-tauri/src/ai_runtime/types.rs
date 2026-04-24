@@ -60,6 +60,7 @@ pub struct CompletionRequest {
     pub model: Option<String>,
     pub project_path: Option<String>,
     pub session_id: Option<String>,
+    pub agent_id: Option<String>,
     pub policy: Option<RoutingPolicy>,
     pub retry: Option<RetryConfig>,
     pub temperature: Option<f32>,

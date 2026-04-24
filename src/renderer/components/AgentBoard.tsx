@@ -55,12 +55,15 @@ export const AgentBoard: React.FC = () => {
                   <div className="text-[10px] text-zinc-500 uppercase tracking-wider">{agent.role}</div>
                 </div>
               </div>
-              <div className="flex flex-col items-end">
+              <div className="flex flex-col items-end gap-1">
                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded bg-zinc-800 border border-white/5 ${
                   agent.quality_score >= 0.8 ? 'text-emerald-400' : 
                   agent.quality_score >= 0.5 ? 'text-blue-400' : 'text-zinc-500'
                 }`}>
                   Q:{(agent.quality_score * 100).toFixed(0)}
+                </span>
+                <span className="text-[9px] font-mono text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20">
+                  ${agent.burn_rate.toFixed(4)}/h
                 </span>
               </div>
             </div>

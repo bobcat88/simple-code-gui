@@ -19,8 +19,17 @@ export function useAgentBoard() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const refreshBurnRates = useCallback(async () => {
+    try {
+      await tauriIpc.agentRefreshBurnRates();
+    } catch (err) {
+      console.error('Failed to refresh burn rates:', err);
+    }
+  }, []);
+
   const fetchAgents = useCallback(async () => {
     try {
+      await refreshBurnRates();
       const list = await tauriIpc.agentList();
       setAgents(list);
     } catch (err) {
@@ -28,7 +37,7 @@ export function useAgentBoard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [refreshBurnRates]);
 
   useEffect(() => {
     fetchAgents();
@@ -70,5 +79,5 @@ export function useAgentBoard() {
     await fetchAgents();
   };
 
-  return { agents, loading, updateStatus, refresh: fetchAgents };
+  return { agents, loading, updateStatus, refresh: fetchAgents, refreshBurnRates };
 }
