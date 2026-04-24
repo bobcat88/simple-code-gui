@@ -163,6 +163,23 @@ impl AgentManager {
 
         Ok(())
     }
+
+    pub async fn cancel_task(&self, app: &tauri::AppHandle, id: String) -> Result<(), String> {
+        sqlx::query("UPDATE agents SET active_task = NULL, status = 'idle', queue_size = MAX(0, queue_size - 1), last_active = CURRENT_TIMESTAMP WHERE id = ?")
+            .bind(&id)
+            .execute(&self.db.pool)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let _ = app.emit("agent-metrics-changed", serde_json::json!({
+            "id": id,
+            "status": "idle",
+            "active_task": null,
+            "queue_size": 0
+        }));
+
+        Ok(())
+    }
 }
 
 // Tauri Commands
@@ -212,4 +229,13 @@ pub async fn agent_refresh_burn_rates(
     state: tauri::State<'_, Arc<AgentManager>>,
 ) -> Result<(), String> {
     state.refresh_burn_rates(&app).await
+}
+
+#[tauri::command]
+pub async fn agent_cancel_task(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, Arc<AgentManager>>,
+    id: String,
+) -> Result<(), String> {
+    state.cancel_task(&app, id).await
 }

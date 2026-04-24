@@ -84,5 +84,10 @@ export function useAgentBoard() {
     await fetchAgents();
   };
 
-  return { agents, providerHealth, loading, updateStatus, refresh: fetchAgents, refreshBurnRates };
+  const cancelTask = async (id: string) => {
+    await tauriIpc.agentCancelTask(id);
+    await fetchAgents();
+  };
+
+  return { agents, providerHealth, loading, updateStatus, cancelTask, refresh: fetchAgents, refreshBurnRates };
 }

@@ -1,9 +1,9 @@
 import React from 'react';
 import { useAgentBoard } from '../hooks/useAgentBoard';
-import { User, Shield, PenTool, Search, GitBranch, Cpu, Activity } from 'lucide-react';
+import { User, Shield, PenTool, Search, GitBranch, Cpu, Activity, XCircle } from 'lucide-react';
 
 export const AgentBoard: React.FC = () => {
-  const { agents, providerHealth, loading } = useAgentBoard();
+  const { agents, providerHealth, loading, cancelTask } = useAgentBoard();
 
   if (loading) {
     return <div className="p-4 text-zinc-500 animate-pulse">Loading agents...</div>;
@@ -90,9 +90,18 @@ export const AgentBoard: React.FC = () => {
                 </span>
               </div>
               {agent.active_task && (
-                <div className="pt-2 mt-1 border-t border-white/5">
-                  <div className="text-[9px] text-zinc-500 mb-0.5 uppercase tracking-tighter">Current Task</div>
-                  <div className="text-[10px] text-blue-300/80 font-medium truncate italic" title={agent.active_task}>
+                <div className="pt-2 mt-1 border-t border-white/5 group/task relative">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <div className="text-[9px] text-zinc-500 uppercase tracking-tighter">Current Task</div>
+                    <button 
+                      onClick={() => cancelTask(agent.id)}
+                      className="opacity-0 group-hover/task:opacity-100 text-red-400/60 hover:text-red-400 transition-all p-0.5 hover:bg-red-400/10 rounded"
+                      title="Cancel Task"
+                    >
+                      <XCircle size={10} />
+                    </button>
+                  </div>
+                  <div className="text-[10px] text-blue-300/80 font-medium truncate italic pr-4" title={agent.active_task}>
                     {agent.active_task}
                   </div>
                 </div>

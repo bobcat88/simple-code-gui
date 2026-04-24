@@ -658,6 +658,7 @@ pub fn run() {
             agent_manager::agent_update_status,
             agent_manager::agent_update_metrics,
             agent_manager::agent_refresh_burn_rates,
+            agent_manager::agent_cancel_task,
             health_manager::health_get_status,
             health_manager::health_log_check,
             diagnostic_manager::diagnostics_generate_bundle,

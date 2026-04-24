@@ -248,6 +248,8 @@ export const tauriIpc = {
     listen<{ id: string, burn_rate: number, quality_score: number, queue_size: number, active_task?: string }>('agent-metrics-changed', (event) => callback(event.payload)),
   agentRefreshBurnRates: () =>
     invoke<void>('agent_refresh_burn_rates'),
+  agentCancelTask: (id: string) =>
+    invoke<void>('agent_cancel_task', { id }),
 
   // Health & Diagnostics
   healthGetStatus: () =>
