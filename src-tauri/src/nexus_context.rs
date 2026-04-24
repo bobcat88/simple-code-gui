@@ -36,7 +36,7 @@ struct GitNexusQueryResult {
 }
 
 #[command]
-pub async fn rtk_prune_context(request: ContextRequest) -> Result<ContextResponse, String> {
+pub async fn nexus_prune_context(request: ContextRequest) -> Result<ContextResponse, String> {
     let mut relevant_files = HashSet::new();
 
     // 1. Run gitnexus query on the prompt to find semantically relevant files
@@ -65,13 +65,22 @@ pub async fn rtk_prune_context(request: ContextRequest) -> Result<ContextRespons
         }
     }
 
-    // 2. Filter input files
+    // 2. Fetch internal project intelligence to 'assimilate' raw graph data
+    let dirty_files: HashSet<String> = crate::project_intelligence::get_dirty_files(&request.project_path)
+        .into_iter()
+        .collect();
+
+    // 3. Filter input files with Nexus Logic
     let mut kept_files = Vec::new();
     let mut pruned_files = Vec::new();
 
     for file in request.files {
-        // Simple heuristic: if the file is semantically relevant or mentioned in prompt
+        // Nexus Logic: A file is kept if:
+        // a) It's semantically relevant (GitNexus)
+        // b) It's dirty (Internal Git Logic - Assimilated)
+        // c) It's explicitly mentioned in the prompt
         let is_relevant = relevant_files.iter().any(|rf| file.contains(rf)) 
+            || dirty_files.contains(&file)
             || request.prompt.to_lowercase().contains(&file.to_lowercase());
             
         if is_relevant {

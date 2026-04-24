@@ -12,7 +12,7 @@ mod mcp_bridge;
 mod orchestration;
 mod platform;
 mod pty_manager;
-mod rtk_context;
+mod nexus_context;
 mod rtk_manager;
 mod session_manager;
 mod settings_manager;
@@ -55,7 +55,7 @@ use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{TrayIcon, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, State};
 use tauri_plugin_dialog::DialogExt;
-use rtk_context::rtk_prune_context;
+use nexus_context::nexus_prune_context;
 use rtk_manager::{rtk_check, rtk_get_history, rtk_get_stats};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
@@ -651,7 +651,7 @@ pub fn run() {
             rtk_manager::rtk_check,
             rtk_manager::rtk_get_stats,
             rtk_manager::rtk_get_history,
-            rtk_prune_context,
+            nexus_prune_context,
             jobs_manager::jobs_create,
             jobs_manager::jobs_get,
             jobs_manager::jobs_list,

@@ -56,7 +56,7 @@ pub struct GitNexusInfo {
     pub stale: bool,
 }
 
-fn run_git(cwd: &str, args: &[&str]) -> Option<String> {
+pub fn run_git(cwd: &str, args: &[&str]) -> Option<String> {
     Command::new("git")
         .args(args)
         .current_dir(cwd)
@@ -69,6 +69,20 @@ fn run_git(cwd: &str, args: &[&str]) -> Option<String> {
                 None
             }
         })
+}
+
+pub fn get_dirty_files(cwd: &str) -> Vec<String> {
+    run_git(cwd, &["status", "--porcelain"])
+        .unwrap_or_default()
+        .lines()
+        .filter_map(|line| {
+            if line.len() > 3 {
+                Some(line[3..].trim().to_string())
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 fn detect_git(cwd: &str) -> Option<GitInfo> {
