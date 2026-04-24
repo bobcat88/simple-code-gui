@@ -12,7 +12,7 @@ import {
   Table,
   Layout
 } from 'lucide-react'
-import type { AiRuntimeSettings as AiRuntimeSettingsType, ProviderConfig, ModelPlan, AgentRoutingPolicy } from './settingsTypes'
+import type { AiRuntimeSettings as AiRuntimeSettingsType, ProviderConfig, ModelPlan, AgentRoutingPolicy, ProviderHealth } from './settingsTypes'
 import { cn } from '../../lib/utils'
 import { tauriIpc } from '../../lib/tauri-ipc'
 import { useEffect } from 'react'
@@ -26,7 +26,7 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
   const [activeSubTab, setActiveSubTab] = useState<'plans' | 'providers' | 'routing'>('plans')
   const [editingPlan, setEditingPlan] = useState<ModelPlan | null>(null)
   const [isNewPlan, setIsNewPlan] = useState(false)
-  const [healthStatus, setHealthStatus] = useState<Record<string, boolean>>({})
+  const [healthStatus, setHealthStatus] = useState<Record<string, ProviderHealth>>({})
 
   // Poll for provider health when on the providers tab
   useEffect(() => {
@@ -343,15 +343,22 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
                           <div 
                             className={cn(
                               "w-1.5 h-1.5 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)]",
-                              healthStatus[provider.id] !== false ? "bg-green-500" : "bg-red-500"
+                              healthStatus[provider.id]?.isHealthy !== false ? "bg-green-500" : "bg-red-500"
                             )} 
-                            title={healthStatus[provider.id] !== false ? "Healthy" : "Degraded"}
+                            title={healthStatus[provider.id]?.isHealthy !== false ? "Healthy" : healthStatus[provider.id]?.lastError || "Degraded"}
                           />
                         )}
                       </div>
-                      <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold">
-                        {provider.enabled ? 'Connected' : 'Disabled'}
-                      </p>
+                      <div className="flex flex-col">
+                        <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold">
+                          {provider.enabled ? 'Connected' : 'Disabled'}
+                        </p>
+                        {provider.enabled && healthStatus[provider.id]?.lastError && (
+                          <p className="text-[9px] text-red-400/60 mt-0.5 max-w-[200px] truncate">
+                            {healthStatus[provider.id]?.lastError}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                   

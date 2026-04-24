@@ -271,5 +271,5 @@ export const tauriIpc = {
   aiListModels: (provider: string) =>
     invoke<any[]>('ai_list_models', { provider }),
   aiGetHealthStatus: () =>
-    invoke<Record<string, boolean>>('ai_get_health_status'),
+    invoke<Record<string, any>>('ai_get_health_status'),
 };

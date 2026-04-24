@@ -110,3 +110,11 @@ pub struct ProviderConfig {
     pub base_url: Option<String>,
     pub models: Vec<ModelInfo>,
 }
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ProviderHealth {
+    pub is_healthy: bool,
+    pub last_error: Option<String>,
+    pub consecutive_failures: u32,
+    pub last_failure_at: Option<u64>,
+}

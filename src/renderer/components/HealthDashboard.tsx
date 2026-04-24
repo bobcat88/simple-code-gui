@@ -83,17 +83,17 @@ export const HealthDashboard: React.FC = () => {
     return (
       <div className="flex flex-col gap-1">
         <div
-          className={`flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-zinc-900/40 px-3 py-2.5 ${
-            hasDiagnostics ? 'cursor-pointer hover:bg-zinc-900/60' : ''
-          }`}
+          className={`flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-zinc-900/40 px-3 py-2.5 transition-all duration-200 ${
+            hasDiagnostics ? 'cursor-pointer hover:bg-zinc-900/60 hover:border-white/10' : ''
+          } ${expanded ? 'bg-zinc-900/60 border-white/10' : ''}`}
           onClick={() => hasDiagnostics && setExpanded(!expanded)}
         >
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <div className="text-sm font-semibold text-zinc-100">{service.name}</div>
               {hasDiagnostics && (
-                <div className="text-[10px] text-zinc-500">
-                  {expanded ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+                <div className={`text-[10px] transition-transform duration-200 text-zinc-500 ${expanded ? 'rotate-180' : ''}`}>
+                  <ChevronDown size={10} />
                 </div>
               )}
             </div>
@@ -102,7 +102,7 @@ export const HealthDashboard: React.FC = () => {
             </div>
           </div>
           <span
-            className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest ${
+            className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest shadow-sm ${
               service.status.toLowerCase() === 'healthy'
                 ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'
                 : service.status.toLowerCase() === 'warning'
@@ -117,9 +117,9 @@ export const HealthDashboard: React.FC = () => {
         </div>
 
         {expanded && hasDiagnostics && (
-          <div className="ml-2 space-y-1 border-l border-white/5 pl-3 py-1">
+          <div className="ml-2 space-y-1 border-l border-white/5 pl-3 py-1 animate-in fade-in slide-in-from-left-1 duration-200">
             {service.diagnostics.map((diag: any, idx: number) => (
-              <div key={idx} className="group rounded-lg bg-white/5 p-2 transition-colors hover:bg-white/10">
+              <div key={idx} className="group rounded-lg bg-white/5 p-2 transition-colors hover:bg-white/10 border border-transparent hover:border-white/5">
                 <div className="flex items-start gap-2">
                   <div className="mt-0.5 shrink-0">
                     {diag.level === 'error' ? (
@@ -150,6 +150,54 @@ export const HealthDashboard: React.FC = () => {
             ))}
           </div>
         )}
+      </div>
+    );
+  };
+
+  const HealthExplainer = () => {
+    const allDiagnostics = status.services.flatMap(s => 
+      (s.diagnostics || []).map(d => ({ ...d, serviceId: s.id, serviceName: s.name }))
+    );
+
+    const issues = allDiagnostics.filter(d => d.level === 'error' || d.level === 'warning');
+    if (issues.length === 0) return null;
+
+    return (
+      <div className="mb-6 overflow-hidden rounded-xl border border-rose-500/20 bg-rose-500/5 backdrop-blur-sm">
+        <div className="flex items-center justify-between border-b border-rose-500/10 bg-rose-500/10 px-3 py-2">
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-rose-400">
+            <AlertCircle size={12} />
+            <span>Diagnostic Explainer</span>
+          </div>
+          <span className="text-[9px] font-bold text-rose-400/60">{issues.length} Issues Detected</span>
+        </div>
+        <div className="divide-y divide-rose-500/10 px-1">
+          {issues.map((issue, idx) => (
+            <div key={idx} className="p-3 transition-colors hover:bg-rose-500/10">
+              <div className="flex gap-3">
+                <div className="mt-0.5 shrink-0 rounded-full bg-rose-500/20 p-1">
+                  {issue.level === 'error' ? (
+                    <AlertCircle size={12} className="text-rose-400" />
+                  ) : (
+                    <AlertTriangle size={12} className="text-amber-400" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-tighter text-rose-400/80">{issue.serviceName}</span>
+                    {issue.code && <span className="text-[8px] font-mono text-rose-400/40">{issue.code}</span>}
+                  </div>
+                  <div className="mt-0.5 text-xs font-semibold text-zinc-100">{issue.message}</div>
+                  {issue.suggestion && (
+                    <div className="mt-1.5 rounded-md bg-zinc-900/40 p-2 text-[10px] leading-relaxed text-zinc-400 border border-white/5">
+                      <span className="font-bold text-emerald-400/80">Action:</span> {issue.suggestion}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   };
@@ -186,10 +234,12 @@ export const HealthDashboard: React.FC = () => {
       </div>
 
       <div className="flex-1 space-y-5 overflow-y-auto pr-1 custom-scrollbar">
-        <section className="space-y-2">
-          <div className="flex items-center justify-between">
+        <HealthExplainer />
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between border-b border-white/5 pb-2">
             <h4 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Core Services</h4>
-            <span className="text-[10px] font-mono text-zinc-500">{serviceCount} monitored</span>
+            <span className="rounded bg-white/5 px-1.5 py-0.5 text-[9px] font-mono text-zinc-400">{serviceCount} active</span>
           </div>
           <div className="space-y-2">
             {status.services.map((service) => (

@@ -101,6 +101,41 @@ impl HealthManager {
 
         let mut services = Vec::new();
 
+        // System Resource Service
+        let mut system_diagnostics = Vec::new();
+        let cpu_status = if cpu_usage > 90.0 {
+            system_diagnostics.push(DiagnosticItem {
+                level: "warning".to_string(),
+                message: format!("High CPU usage: {:.1}%", cpu_usage),
+                suggestion: Some("Close unnecessary background processes or reduce agent concurrency".to_string()),
+                code: Some("SYS_CPU_HIGH".to_string()),
+            });
+            "Warning"
+        } else {
+            "Healthy"
+        };
+
+        let mem_percent = (memory_usage as f32 / total_memory as f32) * 100.0;
+        let mem_status = if mem_percent > 90.0 {
+            system_diagnostics.push(DiagnosticItem {
+                level: "warning".to_string(),
+                message: format!("High memory usage: {:.1}%", mem_percent),
+                suggestion: Some("Free up system memory to avoid OOM issues".to_string()),
+                code: Some("SYS_MEM_HIGH".to_string()),
+            });
+            "Warning"
+        } else {
+            "Healthy"
+        };
+
+        services.push(ServiceStatus {
+            id: "system".to_string(),
+            name: "System Resources".to_string(),
+            status: if cpu_status == "Warning" || mem_status == "Warning" { "Warning".to_string() } else { "Healthy".to_string() },
+            detail: format!("CPU: {:.1}%, Mem: {:.1}%", cpu_usage, mem_percent),
+            diagnostics: system_diagnostics,
+        });
+
         services.push(check_database_service(&self.db).await);
         services.push(check_project_capability_service(&self.orchestration).await);
 
@@ -171,7 +206,7 @@ impl HealthManager {
         // Check AI Runtime Health
         let ai_health = self.ai_runtime.get_health().await;
         let total_providers = ai_health.len();
-        let healthy_providers = ai_health.values().filter(|h| **h).count();
+        let healthy_providers = ai_health.values().filter(|h| h.is_healthy).count();
         let degraded_providers = total_providers - healthy_providers;
         
         let ai_status = if total_providers == 0 {
@@ -192,14 +227,22 @@ impl HealthManager {
                 suggestion: Some("Add an OpenAI, Anthropic, or Local provider in settings".to_string()),
                 code: Some("AI_NO_PROVIDERS".to_string()),
             });
-        } else if degraded_providers > 0 {
-            for (provider, healthy) in ai_health.iter() {
-                if !*healthy {
+        } else {
+            for (provider, health) in ai_health.iter() {
+                if !health.is_healthy {
+                    let error_msg = health.last_error.as_deref().unwrap_or("Unreachable");
                     ai_diagnostics.push(DiagnosticItem {
                         level: "error".to_string(),
-                        message: format!("Provider '{}' is unreachable", provider),
-                        suggestion: Some(format!("Verify API key and network connectivity for {}", provider)),
+                        message: format!("Provider '{}' failed: {}", provider, error_msg),
+                        suggestion: Some(format!("Check configuration and connectivity for {}", provider)),
                         code: Some("AI_PROVIDER_DOWN".to_string()),
+                    });
+                } else if health.consecutive_failures > 0 {
+                    ai_diagnostics.push(DiagnosticItem {
+                        level: "warning".to_string(),
+                        message: format!("Provider '{}' has {} recent failures", provider, health.consecutive_failures),
+                        suggestion: Some("Intermittent issues detected; monitoring...".to_string()),
+                        code: Some("AI_PROVIDER_FLAKY".to_string()),
                     });
                 }
             }

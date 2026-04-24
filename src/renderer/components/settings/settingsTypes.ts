@@ -56,6 +56,13 @@ export const BACKEND_MODES = [
   { label: 'Aider', value: 'aider', desc: 'Use Aider AI pair programmer' },
 ]
 
+export interface ProviderHealth {
+  isHealthy: boolean
+  lastError?: string
+  consecutiveFailures: number
+  lastFailureAt?: number
+}
+
 export interface ProviderConfig {
   id: string
   name: string

@@ -5,7 +5,7 @@ use crate::database::{DatabaseManager, insert_token_transaction, TokenTransactio
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use types::{AgentRole, CompletionRequest, CompletionResponse, ModelInfo, ModelTier, RoutingPolicy, TaskType};
+use types::{AgentRole, CompletionRequest, CompletionResponse, ModelInfo, ModelTier, ProviderHealth, RoutingPolicy, TaskType};
 
 use async_trait::async_trait;
 
@@ -19,6 +19,7 @@ pub trait AIProvider: Send + Sync {
 #[derive(Debug, Clone)]
 struct HealthInfo {
     last_failure: Option<std::time::Instant>,
+    last_error: Option<String>,
     consecutive_failures: u32,
     is_degraded: bool,
 }
@@ -153,22 +154,26 @@ impl RuntimeManager {
         let mut health = self.health.lock().await;
         let entry = health.entry(provider_name.to_string()).or_insert(HealthInfo {
             last_failure: None,
+            last_error: None,
             consecutive_failures: 0,
             is_degraded: false,
         });
         entry.consecutive_failures = 0;
         entry.is_degraded = false;
+        entry.last_error = None;
     }
 
-    async fn record_failure(&self, provider_name: &str) {
+    async fn record_failure(&self, provider_name: &str, error: String) {
         let mut health = self.health.lock().await;
         let entry = health.entry(provider_name.to_string()).or_insert(HealthInfo {
             last_failure: None,
+            last_error: None,
             consecutive_failures: 0,
             is_degraded: false,
         });
         entry.consecutive_failures += 1;
         entry.last_failure = Some(std::time::Instant::now());
+        entry.last_error = Some(error);
         
         // Mark as degraded if more than 3 failures
         if entry.consecutive_failures >= 3 {
@@ -269,7 +274,7 @@ impl RuntimeManager {
             }
             
             // If all retries on THIS provider failed, record failure and move to next provider
-            self.record_failure(&provider_name).await;
+            self.record_failure(&provider_name, last_error.clone()).await;
         }
 
         Err(format!("Dispatch failed after all retries and fallbacks: {}", last_error))
@@ -664,11 +669,28 @@ impl RuntimeManager {
         }
     }
 
-    pub async fn get_health(&self) -> HashMap<String, bool> {
+    pub async fn get_health(&self) -> HashMap<String, ProviderHealth> {
         let health = self.health.lock().await;
         let mut status = HashMap::new();
         for (name, info) in health.iter() {
-            status.insert(name.clone(), !info.is_degraded);
+            status.insert(
+                name.clone(),
+                ProviderHealth {
+                    is_healthy: !info.is_degraded,
+                    last_error: info.last_error.clone(),
+                    consecutive_failures: info.consecutive_failures,
+                    last_failure_at: info.last_failure.map(|inst| {
+                        // Approximate Unix timestamp
+                        let now = std::time::SystemTime::now();
+                        let now_inst = std::time::Instant::now();
+                        let elapsed = now_inst.duration_since(inst);
+                        now.duration_since(std::time::UNIX_EPOCH)
+                            .unwrap_or_default()
+                            .as_secs()
+                            .saturating_sub(elapsed.as_secs())
+                    }),
+                },
+            );
         }
         status
     }
@@ -717,7 +739,7 @@ pub async fn ai_list_providers(
 #[tauri::command]
 pub async fn ai_get_health_status(
     manager: tauri::State<'_, Arc<RuntimeManager>>,
-) -> Result<HashMap<String, bool>, String> {
+) -> Result<HashMap<String, ProviderHealth>, String> {
     Ok(manager.get_health().await)
 }
 
