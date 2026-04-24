@@ -99,8 +99,4 @@ impl AIProvider for GeminiProvider {
             }
         ])
     }
-
-    async fn check_health(&self) -> bool {
-        !self.api_key.is_empty()
-    }
 }

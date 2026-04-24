@@ -97,9 +97,4 @@ impl AIProvider for ClaudeProvider {
             }
         ])
     }
-
-    async fn check_health(&self) -> bool {
-        // Simple health check could be listing models or a lightweight call
-        !self.api_key.is_empty()
-    }
 }

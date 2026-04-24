@@ -5,7 +5,7 @@ use crate::database::{DatabaseManager, insert_token_transaction, TokenTransactio
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use types::{AgentRole, CompletionRequest, CompletionResponse, ModelInfo, ModelTier, RoutingPolicy, TaskType, Usage};
+use types::{AgentRole, CompletionRequest, CompletionResponse, ModelInfo, ModelTier, RoutingPolicy, TaskType};
 
 use async_trait::async_trait;
 
@@ -14,7 +14,6 @@ pub trait AIProvider: Send + Sync {
     fn name(&self) -> &str;
     async fn completion(&self, request: CompletionRequest) -> Result<CompletionResponse, String>;
     async fn list_models(&self) -> Result<Vec<ModelInfo>, String>;
-    async fn check_health(&self) -> bool;
 }
 
 #[derive(Debug, Clone)]
@@ -25,7 +24,7 @@ struct HealthInfo {
 }
 
 pub struct RuntimeManager {
-    providers: Arc<Mutex<HashMap<String, Box<dyn AIProvider>>>>,
+    providers: Arc<Mutex<HashMap<String, Arc<dyn AIProvider>>>>,
     settings: Arc<Mutex<Option<Arc<crate::settings_manager::SettingsManager>>>>,
     db: Arc<Mutex<Option<Arc<DatabaseManager>>>>,
     agents: Arc<Mutex<Option<Arc<crate::agent_manager::AgentManager>>>>,
@@ -58,7 +57,7 @@ impl RuntimeManager {
         *agents = Some(manager);
     }
 
-    pub async fn register_provider(&self, provider: Box<dyn AIProvider>) {
+    pub async fn register_provider(&self, provider: Arc<dyn AIProvider>) {
         let mut providers = self.providers.lock().await;
         providers.insert(provider.name().to_string(), provider);
     }
@@ -103,28 +102,26 @@ impl RuntimeManager {
 
                 match p_config.id.as_str() {
                     "claude" => {
-                        self.register_provider(Box::new(
+                        self.register_provider(Arc::new(
                             providers::claude::ClaudeProvider::new(key),
                         ))
                         .await;
                     }
                     "gemini" => {
-                        self.register_provider(Box::new(
+                        self.register_provider(Arc::new(
                             providers::gemini::GeminiProvider::new(key),
                         ))
                         .await;
                     }
                     "openai" => {
-                        self.register_provider(Box::new(
-                            providers::openai::OpenAIProvider::new(
-                                key,
-                                base_url,
-                            ),
-                        ))
+                        self.register_provider(Arc::new(providers::openai::OpenAIProvider::new(
+                            key,
+                            base_url,
+                        )))
                         .await;
                     }
                     "ollama" => {
-                        self.register_provider(Box::new(
+                        self.register_provider(Arc::new(
                             providers::ollama::OllamaProvider::new(
                                 base_url.or_else(|| Some("http://localhost:11434".to_string())),
                             ),
@@ -170,10 +167,13 @@ impl RuntimeManager {
         provider_name: &str,
         request: CompletionRequest,
     ) -> Result<CompletionResponse, String> {
-        let providers = self.providers.lock().await;
-        let provider = providers
-            .get(provider_name)
-            .ok_or_else(|| format!("Provider {} not found", provider_name))?;
+        let provider = {
+            let providers = self.providers.lock().await;
+            providers
+                .get(provider_name)
+                .cloned()
+                .ok_or_else(|| format!("Provider {} not found", provider_name))?
+        };
 
         let mut req = request.clone();
         if req.model.is_none() {
@@ -414,7 +414,9 @@ impl RuntimeManager {
                 Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
             }
             Some(RoutingPolicy::Agent { role }) => {
+                let mut routes = Vec::new();
                 let settings_lock = self.settings.lock().await;
+                
                 if let Some(settings_manager) = &*settings_lock {
                     let settings = settings_manager.get().await;
                     let role_str = match role {
@@ -428,13 +430,11 @@ impl RuntimeManager {
                     let policy = settings.ai_runtime.routing.iter().find(|r| r.role == role_str);
                     
                     if let Some(p) = policy {
-                        // Check for explicit overrides
+                        // 1. Check for explicit overrides
                         if let (Some(prov), Some(mod_id)) = (&p.provider_override, &p.model_override) {
-                            return Ok(vec![(prov.clone(), mod_id.clone())]);
-                        }
-
-                        // Otherwise use the plan
-                        if let Some(plan_id) = &p.plan_id {
+                            routes.push((prov.clone(), mod_id.clone()));
+                        } else if let Some(plan_id) = &p.plan_id {
+                            // 2. Otherwise use the plan
                             if let Some(plan) = settings.ai_runtime.plans.iter().find(|pl| pl.id == *plan_id) {
                                 let model_id = match role {
                                     AgentRole::Planner => &plan.planner_model,
@@ -447,7 +447,8 @@ impl RuntimeManager {
                                 for (prov_name, provider) in providers.iter() {
                                     if let Ok(models) = provider.list_models().await {
                                         if models.iter().any(|m| m.id == *model_id) {
-                                            return Ok(vec![(prov_name.clone(), model_id.clone())]);
+                                            routes.push((prov_name.clone(), model_id.clone()));
+                                            break; // Found the primary from plan
                                         }
                                     }
                                 }
@@ -456,9 +457,22 @@ impl RuntimeManager {
                     }
                 }
                 
-                // Fallback to default quality routing if no agent policy found or settings missing
-                all_models.sort_by(|(_, a), (_, b)| a.tier.partial_cmp(&b.tier).unwrap());
-                Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
+                // 3. Fallback: Add other models sorted by Tier (Quality)
+                let mut fallbacks = all_models.clone();
+                fallbacks.sort_by(|(_, a), (_, b)| a.tier.partial_cmp(&b.tier).unwrap());
+                
+                for (p, m) in fallbacks {
+                    let mid = m.id.clone();
+                    if !routes.iter().any(|(rp, rm)| rp == &p && rm == &mid) {
+                        routes.push((p, mid));
+                    }
+                }
+
+                if routes.is_empty() {
+                    Err("No models found for agent policy".to_string())
+                } else {
+                    Ok(routes)
+                }
             }
             Some(RoutingPolicy::Auto) | None => {
                 // Intelligent routing: check settings first
@@ -616,6 +630,15 @@ impl RuntimeManager {
             }
         }
     }
+
+    pub async fn get_health(&self) -> HashMap<String, bool> {
+        let health = self.health.lock().await;
+        let mut status = HashMap::new();
+        for (name, info) in health.iter() {
+            status.insert(name.clone(), !info.is_degraded);
+        }
+        status
+    }
 }
 
 #[tauri::command]
@@ -656,6 +679,13 @@ pub async fn ai_list_providers(
     manager: tauri::State<'_, Arc<RuntimeManager>>,
 ) -> Result<Vec<String>, String> {
     Ok(manager.list_providers().await)
+}
+
+#[tauri::command]
+pub async fn ai_get_health_status(
+    manager: tauri::State<'_, Arc<RuntimeManager>>,
+) -> Result<HashMap<String, bool>, String> {
+    Ok(manager.get_health().await)
 }
 
 #[tauri::command]
@@ -716,10 +746,6 @@ mod tests {
         async fn list_models(&self) -> Result<Vec<ModelInfo>, String> {
             Ok(self.models.clone())
         }
-
-        async fn check_health(&self) -> bool {
-            !self.fail
-        }
     }
 
     fn model(id: &str, tier: ModelTier, input_price: f64) -> ModelInfo {
@@ -741,6 +767,10 @@ mod tests {
             }],
             model: None,
             policy,
+            project_path: None,
+            session_id: None,
+            agent_id: None,
+            retry: None,
             temperature: None,
             max_tokens: None,
             stream: None,
@@ -754,7 +784,7 @@ mod tests {
         fail: bool,
     ) {
         manager
-            .register_provider(Box::new(MockProvider {
+            .register_provider(Arc::new(MockProvider {
                 name: name.to_string(),
                 models,
                 fail,
@@ -810,5 +840,95 @@ mod tests {
 
         assert_eq!(response.content, "openai");
         assert_eq!(response.model, "gpt-nano");
+    }
+
+    #[tokio::test]
+    async fn dispatch_falls_back_on_failure() {
+        let manager = RuntimeManager::new();
+        register_mock(
+            &manager,
+            "provider1",
+            vec![model("model1", ModelTier::Tier1, 10.0)],
+            true, // This one will fail
+        )
+        .await;
+        register_mock(
+            &manager,
+            "provider2",
+            vec![model("model2", ModelTier::Tier1, 10.0)],
+            false, // This one will succeed
+        )
+        .await;
+
+        let response = manager
+            .dispatch(request(Some(RoutingPolicy::QualityFirst)))
+            .await
+            .expect("should fallback to provider2");
+
+        assert_eq!(response.model, "model2");
+        assert_eq!(response.content, "provider2");
+    }
+
+    #[tokio::test]
+    async fn dispatch_skips_degraded_provider() {
+        let manager = RuntimeManager::new();
+        register_mock(
+            &manager,
+            "provider1",
+            vec![model("model1", ModelTier::Tier1, 10.0)],
+            false,
+        )
+        .await;
+
+        // Manually mark provider1 as degraded
+        {
+            let mut health = manager.health.lock().await;
+            health.insert("provider1".to_string(), HealthInfo {
+                last_failure: Some(std::time::Instant::now()),
+                consecutive_failures: 5,
+                is_degraded: true,
+            });
+        }
+
+        register_mock(
+            &manager,
+            "provider2",
+            vec![model("model2", ModelTier::Tier1, 10.0)],
+            false,
+        )
+        .await;
+
+        let response = manager
+            .dispatch(request(Some(RoutingPolicy::QualityFirst)))
+            .await
+            .expect("should skip provider1 and use provider2");
+
+        assert_eq!(response.model, "model2");
+        assert_eq!(response.content, "provider2");
+    }
+
+    #[tokio::test]
+    async fn resolve_routes_tiered_fallback() {
+        let manager = RuntimeManager::new();
+        // Only Tier3 models available
+        register_mock(
+            &manager,
+            "provider1",
+            vec![model("fast-model", ModelTier::Tier3, 1.0)],
+            false,
+        )
+        .await;
+
+        // Request Tier1 with fallback
+        let routes = manager
+            .resolve_routes(&request(Some(RoutingPolicy::Tiered {
+                task: TaskType::Reasoning,
+                allow_fallback: true,
+            })))
+            .await
+            .expect("should resolve with fallback");
+
+        assert_eq!(routes.len(), 1);
+        assert_eq!(routes[0].1, "fast-model");
     }
 }

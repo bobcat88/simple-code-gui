@@ -262,4 +262,12 @@ export const tauriIpc = {
     invoke<{ success: boolean; content?: string; exists?: boolean; error?: string }>('claude_md_read', { projectPath }),
   claudeMdSave: (projectPath: string, content: string) =>
     invoke<{ success: boolean; error?: string }>('claude_md_save', { projectPath, content }),
+
+  // AI Runtime Orchestration
+  aiListProviders: () =>
+    invoke<any[]>('ai_list_providers'),
+  aiListModels: (provider: string) =>
+    invoke<any[]>('ai_list_models', { provider }),
+  aiGetHealthStatus: () =>
+    invoke<Record<string, boolean>>('ai_get_health_status'),
 };

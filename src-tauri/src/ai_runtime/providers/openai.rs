@@ -120,10 +120,6 @@ impl AIProvider for OpenAIProvider {
             },
         ])
     }
-
-    async fn check_health(&self) -> bool {
-        !self.api_key.is_empty()
-    }
 }
 
 fn normalize_role(role: &str) -> String {

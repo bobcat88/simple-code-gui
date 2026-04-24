@@ -457,14 +457,14 @@ pub fn run() {
                 // Register providers from env if database/settings don't have them
                 if let Ok(key) = std::env::var("ANTHROPIC_API_KEY") {
                     ai_runtime
-                        .register_provider(Box::new(
+                        .register_provider(Arc::new(
                             ai_runtime::providers::claude::ClaudeProvider::new(key),
                         ))
                         .await;
                 }
                 if let Ok(key) = std::env::var("GOOGLE_API_KEY") {
                     ai_runtime
-                        .register_provider(Box::new(
+                        .register_provider(Arc::new(
                             ai_runtime::providers::gemini::GeminiProvider::new(key),
                         ))
                         .await;
@@ -472,14 +472,14 @@ pub fn run() {
                 if let Ok(key) = std::env::var("OPENAI_API_KEY") {
                     let base_url = std::env::var("OPENAI_BASE_URL").ok();
                     ai_runtime
-                        .register_provider(Box::new(
+                        .register_provider(Arc::new(
                             ai_runtime::providers::openai::OpenAIProvider::new(key, base_url),
                         ))
                         .await;
                 }
                 // Ollama is usually local
                 ai_runtime
-                    .register_provider(Box::new(
+                    .register_provider(Arc::new(
                         ai_runtime::providers::ollama::OllamaProvider::new(None),
                     ))
                     .await;
@@ -629,6 +629,7 @@ pub fn run() {
             ai_runtime::ai_list_models,
             ai_runtime::ai_list_providers,
             ai_runtime::ai_save_key,
+            ai_runtime::ai_get_health_status,
             ai_runtime::ai_dispatch,
             gsd_engine::gsd_create_plan,
             gsd_engine::gsd_add_phase,

@@ -14,6 +14,8 @@ import {
 } from 'lucide-react'
 import type { AiRuntimeSettings as AiRuntimeSettingsType, ProviderConfig, ModelPlan, AgentRoutingPolicy } from './settingsTypes'
 import { cn } from '../../lib/utils'
+import { tauriIpc } from '../../lib/tauri-ipc'
+import { useEffect } from 'react'
 
 interface AiRuntimeSettingsProps {
   settings: AiRuntimeSettingsType
@@ -22,6 +24,27 @@ interface AiRuntimeSettingsProps {
 
 export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps): React.ReactElement {
   const [activeSubTab, setActiveSubTab] = useState<'plans' | 'providers' | 'routing'>('plans')
+  const [editingPlan, setEditingPlan] = useState<ModelPlan | null>(null)
+  const [isNewPlan, setIsNewPlan] = useState(false)
+  const [healthStatus, setHealthStatus] = useState<Record<string, boolean>>({})
+
+  // Poll for provider health when on the providers tab
+  useEffect(() => {
+    if (activeSubTab !== 'providers') return
+
+    const fetchHealth = async () => {
+      try {
+        const status = await tauriIpc.aiGetHealthStatus()
+        setHealthStatus(status)
+      } catch (err) {
+        console.error('Failed to fetch provider health:', err)
+      }
+    }
+
+    fetchHealth()
+    const interval = setInterval(fetchHealth, 30000)
+    return () => clearInterval(interval)
+  }, [activeSubTab])
 
   const updateProvider = (id: string, updates: Partial<ProviderConfig>) => {
     const nextProviders = settings.providers.map(p => 
@@ -35,6 +58,49 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
       r.role === role ? { ...r, ...updates } : r
     )
     onChange({ ...settings, routing: nextRouting })
+  }
+
+  const handleCreatePlan = () => {
+    const newPlan: ModelPlan = {
+      id: crypto.randomUUID(),
+      name: 'New Plan',
+      description: 'Custom model orchestration plan',
+      plannerModel: 'claude-3-5-sonnet-latest',
+      builderModel: 'claude-3-5-sonnet-latest'
+    }
+    setEditingPlan(newPlan)
+    setIsNewPlan(true)
+  }
+
+  const handleEditPlan = (plan: ModelPlan) => {
+    setEditingPlan({ ...plan })
+    setIsNewPlan(false)
+  }
+
+  const handleSavePlan = () => {
+    if (!editingPlan) return
+
+    let nextPlans: ModelPlan[]
+    if (isNewPlan) {
+      nextPlans = [...settings.plans, editingPlan]
+    } else {
+      nextPlans = settings.plans.map(p => p.id === editingPlan.id ? editingPlan : p)
+    }
+
+    onChange({ 
+      ...settings, 
+      plans: nextPlans,
+      activePlanId: isNewPlan ? editingPlan.id : settings.activePlanId 
+    })
+    setEditingPlan(null)
+  }
+
+  const handleDeletePlan = (id: string) => {
+    if (settings.plans.length <= 1) return // Keep at least one plan
+    const nextPlans = settings.plans.filter(p => p.id !== id)
+    const nextActiveId = settings.activePlanId === id ? nextPlans[0].id : settings.activePlanId
+    onChange({ ...settings, plans: nextPlans, activePlanId: nextActiveId })
+    setEditingPlan(null)
   }
 
   return (
@@ -94,53 +160,165 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
 
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
         {activeSubTab === 'plans' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {settings.plans.map(plan => (
-              <button
-                key={plan.id}
-                onClick={() => onChange({ ...settings, activePlanId: plan.id })}
-                className={cn(
-                  "relative group flex flex-col items-start p-5 rounded-xl border transition-all text-left",
-                  settings.activePlanId === plan.id 
-                    ? "bg-primary/10 border-primary/40 ring-1 ring-primary/20" 
-                    : "bg-white/5 border-white/10 hover:bg-white/10"
+          editingPlan ? (
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/20 text-primary rounded-lg">
+                    <Settings2 size={18} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white/90">{isNewPlan ? 'Create New Plan' : 'Edit Model Plan'}</h4>
+                    <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold">Plan Configuration</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setEditingPlan(null)}
+                  className="text-xs text-white/40 hover:text-white/60 px-3 py-1 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <div className="grid gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">Plan Name</label>
+                  <input 
+                    type="text"
+                    value={editingPlan.name}
+                    onChange={(e) => setEditingPlan({ ...editingPlan, name: e.target.value })}
+                    placeholder="e.g., Performance Boost"
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white/80 focus:border-primary/40 focus:outline-none transition-all shadow-inner"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">Description</label>
+                  <textarea 
+                    value={editingPlan.description}
+                    onChange={(e) => setEditingPlan({ ...editingPlan, description: e.target.value })}
+                    placeholder="Describe how this plan optimizes your workflow..."
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white/80 focus:border-primary/40 focus:outline-none transition-all min-h-[80px] resize-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">Planner Model</label>
+                    <input 
+                      type="text"
+                      value={editingPlan.plannerModel}
+                      onChange={(e) => setEditingPlan({ ...editingPlan, plannerModel: e.target.value })}
+                      placeholder="e.g., claude-3-5-sonnet-latest"
+                      className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white/80 focus:border-primary/40 focus:outline-none transition-all font-mono"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">Builder Model</label>
+                    <input 
+                      type="text"
+                      value={editingPlan.builderModel}
+                      onChange={(e) => setEditingPlan({ ...editingPlan, builderModel: e.target.value })}
+                      placeholder="e.g., claude-3-5-sonnet-latest"
+                      className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white/80 focus:border-primary/40 focus:outline-none transition-all font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-6 border-t border-white/5">
+                {!isNewPlan && settings.plans.length > 1 && (
+                  <button 
+                    onClick={() => handleDeletePlan(editingPlan.id)}
+                    className="text-xs text-red-400/60 hover:text-red-400 px-4 py-2 rounded-lg hover:bg-red-400/5 transition-all"
+                  >
+                    Delete Plan
+                  </button>
                 )}
-              >
-                <div className="flex items-center justify-between w-full mb-3">
-                  <div className={cn(
-                    "p-2 rounded-lg",
-                    settings.activePlanId === plan.id ? "bg-primary/20 text-primary" : "bg-white/10 text-white/60"
-                  )}>
-                    <Zap size={18} />
-                  </div>
-                  {settings.activePlanId === plan.id && (
-                    <div className="bg-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full">
-                      Active
-                    </div>
+                <div className="flex items-center gap-3 ml-auto">
+                  <button 
+                    onClick={() => setEditingPlan(null)}
+                    className="text-xs text-white/40 hover:text-white/60 px-4 py-2 transition-colors"
+                  >
+                    Discard Changes
+                  </button>
+                  <button 
+                    onClick={handleSavePlan}
+                    className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 rounded-lg text-sm font-semibold transition-all shadow-lg shadow-primary/10 active:scale-95"
+                  >
+                    <Zap size={14} className="fill-current" />
+                    {isNewPlan ? 'Create Plan' : 'Update Plan'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-left-4 duration-300">
+              {settings.plans.map(plan => (
+                <div
+                  key={plan.id}
+                  className={cn(
+                    "relative group flex flex-col items-start p-5 rounded-xl border transition-all text-left overflow-hidden",
+                    settings.activePlanId === plan.id 
+                      ? "bg-primary/10 border-primary/40 ring-1 ring-primary/20" 
+                      : "bg-white/5 border-white/10 hover:bg-white/10"
                   )}
-                </div>
-                
-                <h4 className="text-sm font-bold text-white/90">{plan.name}</h4>
-                <p className="text-xs text-white/40 mt-1 line-clamp-2">{plan.description}</p>
-                
-                <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 w-full pt-4 border-t border-white/5">
-                  <div className="space-y-0.5">
-                    <span className="text-[10px] text-white/30 uppercase font-bold tracking-tighter">Planner</span>
-                    <span className="text-[11px] text-white/70 block truncate">{plan.plannerModel}</span>
+                >
+                  <div className="flex items-center justify-between w-full mb-3">
+                    <div className={cn(
+                      "p-2 rounded-lg",
+                      settings.activePlanId === plan.id ? "bg-primary/20 text-primary" : "bg-white/10 text-white/60"
+                    )}>
+                      <Zap size={18} />
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      {settings.activePlanId === plan.id && (
+                        <div className="bg-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full">
+                          Active
+                        </div>
+                      )}
+                      <button 
+                        onClick={() => handleEditPlan(plan)}
+                        className="p-1.5 text-white/20 hover:text-white/60 hover:bg-white/5 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                      >
+                        <Settings2 size={14} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="space-y-0.5">
-                    <span className="text-[10px] text-white/30 uppercase font-bold tracking-tighter">Builder</span>
-                    <span className="text-[11px] text-white/70 block truncate">{plan.builderModel}</span>
-                  </div>
+                  
+                  <button 
+                    className="w-full text-left"
+                    onClick={() => onChange({ ...settings, activePlanId: plan.id })}
+                  >
+                    <h4 className="text-sm font-bold text-white/90">{plan.name}</h4>
+                    <p className="text-xs text-white/40 mt-1 line-clamp-2">{plan.description}</p>
+                    
+                    <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 w-full pt-4 border-t border-white/5">
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] text-white/30 uppercase font-bold tracking-tighter">Planner</span>
+                        <span className="text-[11px] text-white/70 block truncate font-mono">{plan.plannerModel}</span>
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] text-white/30 uppercase font-bold tracking-tighter">Builder</span>
+                        <span className="text-[11px] text-white/70 block truncate font-mono">{plan.builderModel}</span>
+                      </div>
+                    </div>
+                  </button>
                 </div>
+              ))}
+              
+              <button 
+                onClick={handleCreatePlan}
+                className="flex flex-col items-center justify-center p-5 rounded-xl border border-dashed border-white/10 bg-black/20 hover:bg-white/5 transition-all text-white/40 hover:text-white/60 min-h-[160px] group"
+              >
+                <div className="p-3 bg-white/5 rounded-full mb-3 group-hover:scale-110 group-hover:bg-white/10 transition-all duration-300">
+                  <Plus size={24} />
+                </div>
+                <span className="text-xs font-medium">Create Custom Plan</span>
               </button>
-            ))}
-            
-            <button className="flex flex-col items-center justify-center p-5 rounded-xl border border-dashed border-white/10 bg-black/20 hover:bg-white/5 transition-all text-white/40 hover:text-white/60 min-h-[160px]">
-              <Plus size={24} className="mb-2" />
-              <span className="text-xs font-medium">New Plan</span>
-            </button>
-          </div>
+            </div>
+          )
         )}
 
         {activeSubTab === 'providers' && (
@@ -159,7 +337,18 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
                       {provider.id === 'ollama' && <Settings2 size={18} />}
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white/90">{provider.name}</h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-white/90">{provider.name}</h4>
+                        {provider.enabled && (
+                          <div 
+                            className={cn(
+                              "w-1.5 h-1.5 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)]",
+                              healthStatus[provider.id] !== false ? "bg-green-500" : "bg-red-500"
+                            )} 
+                            title={healthStatus[provider.id] !== false ? "Healthy" : "Degraded"}
+                          />
+                        )}
+                      </div>
                       <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold">
                         {provider.enabled ? 'Connected' : 'Disabled'}
                       </p>

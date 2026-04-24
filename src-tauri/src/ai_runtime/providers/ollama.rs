@@ -93,9 +93,4 @@ impl AIProvider for OllamaProvider {
 
         Ok(models)
     }
-
-    async fn check_health(&self) -> bool {
-        let url = format!("{}/api/tags", self.base_url);
-        self.client.get(&url).send().await.is_ok()
-    }
 }

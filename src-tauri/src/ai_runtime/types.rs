@@ -102,6 +102,7 @@ pub struct ModelInfo {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[allow(dead_code)]
 pub struct ProviderConfig {
     pub id: String,
     pub name: String,
