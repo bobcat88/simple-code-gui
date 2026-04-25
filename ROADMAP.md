@@ -55,7 +55,7 @@ Bridging global knowledge into the UI and backend indexing loop.
 - [x] **Frontend Bridge**: UI triggers for "Sync Global Knowledge" in the Intelligence Sidebar.
 - [x] **Unified Search**: Seamless semantic search across project and global memory.
 
-## Phase 21: Neural UI Navigation (In Progress)
+## Phase 21: Neural UI Navigation (Complete)
 Making project intelligence actionable through the user interface.
 
 - [x] **Neural Spotlight**: Unified semantic search (Cmd+K) using vector embeddings.
@@ -69,6 +69,14 @@ Replacing mock execution with real AI-driven tool calling and provider orchestra
 - [x] **Tool-Calling Protocol**: Unified tool-use support for Claude, OpenAI, and Gemini.
 - [x] **Hardened Execution Loop**: Multi-turn agentic reasoning in GsdExecutor.
 - [x] **Context-Aware Path Resolution**: Automatic project-root mapping for tools.
+
+## Phase 23: Autonomous Debugging & Forensics
+Enabling agents to perform root-cause analysis and systematic debugging.
+
+- [ ] **Systematic Debugging Toolset**: Trace-point injection and log analysis tools for agents.
+- [ ] **Git History Awareness**: Reading and comparing git diffs to identify regressions.
+- [ ] **Forensic Triage**: Automated hypothesis testing for bug reports.
+- [ ] **Error IPC Bridge**: Streaming real-time backend errors directly to the agent runtime.
 
 ---
 

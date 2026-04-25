@@ -4,6 +4,7 @@ use std::path::Path;
 use std::process::Command;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct Tool {
     pub name: String,
     pub description: String,
@@ -35,20 +36,7 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
             let command = args["command"].as_str().ok_or("Missing command argument")?;
             let mut cmd = Command::new("bash");
             cmd.arg("-c").arg(command);
-            
-            if let Some(path) = project_path {
-                cmd.current_dir(path);
-            }
-
-            let output = cmd.output().map_err(|e| e.to_string())?;
-            let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-
-            if output.status.success() {
-                Ok(stdout)
-            } else {
-                Err(format!("Command failed with exit code {}: {}", output.status.code().unwrap_or(-1), stderr))
-            }
+            run_command(&mut cmd, project_path)
         }
         "list_dir" => {
             let path = args["path"].as_str().unwrap_or(".");
@@ -64,7 +52,56 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
             }
             Ok(serde_json::to_string(&result).unwrap_or_default())
         }
+        "git_diff" => {
+            let base = args["base"].as_str().unwrap_or("HEAD");
+            let target = args["target"].as_str();
+            let mut cmd = Command::new("git");
+            cmd.arg("diff").arg(base);
+            if let Some(t) = target {
+                cmd.arg(t);
+            }
+            run_command(&mut cmd, project_path)
+        }
+        "git_log" => {
+            let limit = args["limit"].as_u64().unwrap_or(10);
+            let mut cmd = Command::new("git");
+            cmd.arg("log").arg("-n").arg(limit.to_string()).arg("--oneline");
+            run_command(&mut cmd, project_path)
+        }
+        "git_blame" => {
+            let path = args["path"].as_str().ok_or("Missing path argument")?;
+            let mut cmd = Command::new("git");
+            cmd.arg("blame").arg(path);
+            run_command(&mut cmd, project_path)
+        }
+        "grep_search" => {
+            let query = args["query"].as_str().ok_or("Missing query argument")?;
+            let path = args["path"].as_str().unwrap_or(".");
+            let mut cmd = Command::new("grep");
+            cmd.arg("-r").arg("-n").arg(query).arg(path);
+            run_command(&mut cmd, project_path)
+        }
         _ => Err(format!("Unknown tool: {}", name)),
+    }
+}
+
+fn run_command(cmd: &mut Command, project_path: &Option<String>) -> Result<String, String> {
+    if let Some(path) = project_path {
+        cmd.current_dir(path);
+    }
+
+    let output = cmd.output().map_err(|e| e.to_string())?;
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+
+    if output.status.success() {
+        Ok(stdout)
+    } else {
+        // grep returns non-zero if no matches found
+        if cmd.get_program() == "grep" && output.status.code() == Some(1) {
+            return Ok("No matches found".to_string());
+        }
+        Err(format!("Command failed with exit code {}: {}", output.status.code().unwrap_or(-1), stderr))
     }
 }
 
@@ -124,6 +161,50 @@ pub fn get_gsd_tools() -> Vec<crate::ai_runtime::types::ToolDefinition> {
                 "properties": {
                     "path": { "type": "string", "description": "The path to the directory (defaults to .)" }
                 }
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "git_diff".to_string(),
+            description: "Show changes between commits, commit and working tree, etc".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "base": { "type": "string", "description": "The base commit or reference (defaults to HEAD)" },
+                    "target": { "type": "string", "description": "The target commit or reference (optional)" }
+                }
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "git_log".to_string(),
+            description: "Show the commit history".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "limit": { "type": "integer", "description": "Number of commits to show (defaults to 10)" }
+                }
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "git_blame".to_string(),
+            description: "Show who changed what line in a file".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "path": { "type": "string", "description": "The path to the file" }
+                },
+                "required": ["path"]
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "grep_search".to_string(),
+            description: "Search for a string in the project files".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "query": { "type": "string", "description": "The string to search for" },
+                    "path": { "type": "string", "description": "The path to search in (defaults to .)" }
+                },
+                "required": ["query"]
             }),
         },
     ]
