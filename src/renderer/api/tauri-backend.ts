@@ -17,7 +17,9 @@ import {
   ApprovalResponse,
   TokenHistoryFilters,
   TokenHistoryResponse,
-  TokenTransactionInput
+  TokenTransactionInput,
+  GsdSeed,
+  KSpecDraft
 } from './types'
 import { tauriIpc } from '../lib/tauri-ipc'
 import { check } from '@tauri-apps/plugin-updater'
@@ -513,5 +515,22 @@ export class TauriBackend implements ExtendedApi {
   }
   async vectorIndexKnowledge(): Promise<{ success: boolean; error?: string }> {
     return await tauriIpc.vectorIndexKnowledge();
+  }
+
+  // Brainstorm Companion
+  async gsdListSeeds(cwd: string): Promise<GsdSeed[]> {
+    return await tauriIpc.gsdListSeeds(cwd);
+  }
+
+  async gsdPlantSeed(cwd: string, seed: GsdSeed): Promise<void> {
+    await tauriIpc.gsdPlantSeed(cwd, seed);
+  }
+
+  async kspecListDrafts(cwd: string): Promise<KSpecDraft[]> {
+    return await tauriIpc.kspecListDrafts(cwd);
+  }
+
+  async kspecWriteDraft(cwd: string, moduleId: string, content: string): Promise<void> {
+    await tauriIpc.kspecWriteDraft(cwd, moduleId, content);
   }
 }

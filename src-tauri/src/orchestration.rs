@@ -17,6 +17,25 @@ pub struct BeadTask {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GsdSeed {
+    pub id: String,
+    pub title: String,
+    pub slug: String,
+    pub why: String,
+    pub when_to_surface: String,
+    pub status: String,
+    pub timestamp: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct KSpecDraft {
+    pub id: String,
+    pub title: String,
+    pub content: String,
+    pub last_modified: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FileDiffHunk {
     pub old_start: u32,
     pub new_start: u32,
@@ -798,6 +817,122 @@ pub async fn broadcast_agent_message(
     let _ = app.emit("agent-message", &message);
 
     Ok(serde_json::json!({ "success": true, "id": message.id }))
+}
+
+// ============================================================================
+// Brainstorm Companion Commands
+// ============================================================================
+
+#[tauri::command]
+pub async fn gsd_list_seeds(cwd: String) -> Result<Vec<GsdSeed>, String> {
+    let seeds_dir = std::path::Path::new(&cwd).join(".planning").join("seeds");
+    if !seeds_dir.exists() {
+        return Ok(Vec::new());
+    }
+
+    let mut seeds = Vec::new();
+    let entries = std::fs::read_dir(seeds_dir).map_err(|e| e.to_string())?;
+
+    for entry in entries {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let path = entry.path();
+        if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("md") {
+            let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+            let filename = path.file_stem().and_then(|s| s.to_str()).unwrap_or("unknown");
+            
+            // Basic parsing of the seed file
+            // Expecting format like:
+            // # Title
+            // why: ...
+            // whenToSurface: ...
+            
+            let mut title = filename.to_string();
+            let mut why = String::new();
+            let mut when_to_surface = String::new();
+            
+            for line in content.lines() {
+                if line.starts_with("# ") {
+                    title = line[2..].to_string();
+                } else if line.starts_with("why: ") {
+                    why = line[5..].to_string();
+                } else if line.starts_with("whenToSurface: ") {
+                    when_to_surface = line[15..].to_string();
+                }
+            }
+
+            seeds.push(GsdSeed {
+                id: filename.to_string(),
+                title,
+                slug: filename.to_string(),
+                why,
+                when_to_surface,
+                status: "planted".to_string(),
+                timestamp: entry.metadata().and_then(|m| m.modified()).map(|t| t.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs()).unwrap_or(0),
+            });
+        }
+    }
+
+    Ok(seeds)
+}
+
+#[tauri::command]
+pub async fn gsd_plant_seed(cwd: String, seed: GsdSeed) -> Result<(), String> {
+    let seeds_dir = std::path::Path::new(&cwd).join(".planning").join("seeds");
+    std::fs::create_dir_all(&seeds_dir).map_err(|e| e.to_string())?;
+
+    let filename = if seed.slug.is_empty() {
+        seed.title.to_lowercase().replace(" ", "-")
+    } else {
+        seed.slug.clone()
+    };
+    
+    let path = seeds_dir.join(format!("{}.md", filename));
+    let content = format!(
+        "# {}\n\nwhy: {}\nwhenToSurface: {}\nstatus: planted\n",
+        seed.title, seed.why, seed.when_to_surface
+    );
+
+    std::fs::write(path, content).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn kspec_list_drafts(cwd: String) -> Result<Vec<KSpecDraft>, String> {
+    let draft_dir = std::path::Path::new(&cwd).join(".kspec").join("modules").join("drafts");
+    if !draft_dir.exists() {
+        return Ok(Vec::new());
+    }
+
+    let mut drafts = Vec::new();
+    let entries = std::fs::read_dir(draft_dir).map_err(|e| e.to_string())?;
+
+    for entry in entries {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let path = entry.path();
+        if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("yaml") {
+            let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+            let filename = path.file_stem().and_then(|s| s.to_str()).unwrap_or("unknown");
+            
+            drafts.push(KSpecDraft {
+                id: filename.to_string(),
+                title: filename.to_string(),
+                content,
+                last_modified: entry.metadata().and_then(|m| m.modified()).map(|t| t.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs()).unwrap_or(0),
+            });
+        }
+    }
+
+    Ok(drafts)
+}
+
+#[tauri::command]
+pub async fn kspec_write_draft(cwd: String, module_id: String, content: String) -> Result<(), String> {
+    let draft_dir = std::path::Path::new(&cwd).join(".kspec").join("modules").join("drafts");
+    std::fs::create_dir_all(&draft_dir).map_err(|e| e.to_string())?;
+
+    let path = draft_dir.join(format!("{}.yaml", module_id));
+    std::fs::write(path, content).map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 #[tauri::command]

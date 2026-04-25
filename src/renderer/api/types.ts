@@ -327,6 +327,23 @@ export interface VectorChunk {
   embedding?: number[]
 }
 
+export interface GsdSeed {
+  id: string
+  title: string
+  slug: string
+  why: string
+  whenToSurface: string
+  status: 'planted' | 'sprouted' | 'archived'
+  timestamp: number
+}
+
+export interface KSpecDraft {
+  id: string
+  title: string
+  content: string
+  lastModified: number
+}
+
 export interface VectorIndexStatus {
   totalChunks: number
   indexedChunks: number
@@ -617,6 +634,12 @@ export interface Api {
   vectorGetStatus?: () => Promise<VectorIndexStatus>
   vectorAddChunks?: (chunks: VectorChunk[]) => Promise<{ success: boolean }>
   vectorIndexProject?: (projectPath: string) => Promise<{ success: boolean; error?: string }>
+
+  // Brainstorm Companion
+  gsdListSeeds?: (cwd: string) => Promise<GsdSeed[]>
+  gsdPlantSeed?: (cwd: string, seed: GsdSeed) => Promise<void>
+  kspecListDrafts?: (cwd: string) => Promise<KSpecDraft[]>
+  kspecWriteDraft?: (cwd: string, moduleId: string, content: string) => Promise<void>
 }
 
 // ============================================================================
@@ -725,6 +748,12 @@ export interface ExtendedApi extends Api {
   vectorAddChunks: (chunks: VectorChunk[]) => Promise<{ success: boolean }>
   vectorIndexProject: (projectPath: string) => Promise<{ success: boolean; error?: string }>
   vectorIndexKnowledge: () => Promise<{ success: boolean; error?: string }>
+
+  // Brainstorm Companion
+  gsdListSeeds: (cwd: string) => Promise<GsdSeed[]>
+  gsdPlantSeed: (cwd: string, seed: GsdSeed) => Promise<void>
+  kspecListDrafts: (cwd: string) => Promise<KSpecDraft[]>
+  kspecWriteDraft: (cwd: string, moduleId: string, content: string) => Promise<void>
 }
 
 // ============================================================================

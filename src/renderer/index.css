@@ -361,3 +361,31 @@
   @apply text-muted-foreground hover:text-white hover:bg-white/5;
 }
 
+/* Brainstorm Companion Styles */
+.brainstorm-card {
+  @apply rounded-2xl border border-white/5 bg-white/[0.03] backdrop-blur-xl transition-all duration-300;
+  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.3);
+}
+
+.brainstorm-card:hover {
+  @apply border-indigo-500/20 bg-white/[0.05] shadow-indigo-500/5;
+  transform: translateY(-2px);
+}
+
+.seed-input-group {
+  @apply relative rounded-2xl bg-black/40 border border-white/10 p-4 transition-all focus-within:border-indigo-500/40;
+}
+
+.spec-editor-textarea {
+  @apply w-full bg-transparent border-none focus:ring-0 text-sm font-mono leading-relaxed text-white/80 p-0;
+  min-height: 200px;
+}
+
+.spec-editor-textarea::selection {
+  @apply bg-purple-500/30;
+}
+
+.glass-sidebar {
+  @apply bg-codex-sidebar/60 backdrop-blur-2xl border-l border-white/5;
+}
+

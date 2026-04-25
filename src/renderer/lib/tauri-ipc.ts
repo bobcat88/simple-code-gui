@@ -336,4 +336,14 @@ export const tauriIpc = {
     invoke<any[]>('get_agent_messages', { limit }),
   onAgentMessage: (callback: (message: any) => void): Promise<UnlistenFn> =>
     listen<any>('agent-message', (event) => callback(event.payload)),
+
+  // Brainstorm Companion
+  gsdListSeeds: (cwd: string) =>
+    invoke<any[]>('gsd_list_seeds', { cwd }),
+  gsdPlantSeed: (cwd: string, seed: any) =>
+    invoke<void>('gsd_plant_seed', { cwd, seed }),
+  kspecListDrafts: (cwd: string) =>
+    invoke<any[]>('kspec_list_drafts', { cwd }),
+  kspecWriteDraft: (cwd: string, moduleId: string, content: string) =>
+    invoke<void>('kspec_write_draft', { cwd, module_id: moduleId, content }),
 };

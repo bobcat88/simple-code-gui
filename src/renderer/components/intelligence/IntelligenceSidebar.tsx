@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   Activity, 
   GitBranch, 
@@ -15,11 +15,25 @@ import {
   Search,
   Brain,
   Cpu,
-  Users
+  Users,
+  Lightbulb, 
+  Sparkles, 
+  Wand2
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { SwarmActivityStream } from '../orchestration/SwarmActivityStream'
-import type { ProjectIntelligence, ProjectCapabilityScan, InitializationProposal, ProposalOperation, ExtendedApi, ProposalProgress, VectorIndexStatus } from '../../api/types'
+import type { 
+  ProjectIntelligence, 
+  ProjectCapabilityScan, 
+  InitializationProposal, 
+  ProposalOperation, 
+  ExtendedApi, 
+  ProposalProgress, 
+  VectorIndexStatus,
+  GsdSeed,
+  KSpecDraft
+} from '../../api/types'
+import { BrainstormTab } from './BrainstormTab'
 
 interface IntelligenceSidebarProps {
   intelligence: ProjectIntelligence | null
@@ -54,13 +68,14 @@ export function IntelligenceSidebar({
   gitnexus,
   activeTab
 }: IntelligenceSidebarProps) {
-  const [isResizing, setIsResizing] = React.useState(false)
-  const [showWizard, setShowWizard] = React.useState(false)
-  const [selectedPreset, setSelectedPreset] = React.useState<string>('Standard')
-  const [proposal, setProposal] = React.useState<InitializationProposal | null>(null)
-  const [applying, setApplying] = React.useState(false)
-  const [applyResult, setApplyResult] = React.useState<string[] | null>(null)
-  const [progress, setProgress] = React.useState<ProposalProgress | null>(null)
+  const [isResizing, setIsResizing] = useState(false)
+  const [showWizard, setShowWizard] = useState(false)
+  const [selectedPreset, setSelectedPreset] = useState<string>('Standard')
+  const [proposal, setProposal] = useState<InitializationProposal | null>(null)
+  const [applying, setApplying] = useState(false)
+  const [applyResult, setApplyResult] = useState<string[] | null>(null)
+  const [progress, setProgress] = useState<ProposalProgress | null>(null)
+  const [activeSection, setActiveSection] = useState<'intelligence' | 'brainstorm'>('intelligence')
   const [suggestions, setSuggestions] = useState<any[]>([])
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const healthScore = Math.round(capabilityScan?.projectHealthScore ?? 0)
@@ -91,7 +106,7 @@ export function IntelligenceSidebar({
     setIsResizing(true)
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isResizing) return
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -179,7 +194,41 @@ export function IntelligenceSidebar({
         </div>
       </div>
 
+      {/* Main Section Tabs */}
+      <div className="px-4 py-2 border-b border-white/5 flex gap-4">
+        <button
+          onClick={() => setActiveSection('intelligence')}
+          className={cn(
+            "pb-2 text-[11px] font-bold uppercase tracking-wider transition-all border-b-2",
+            activeSection === 'intelligence' 
+              ? "text-white border-indigo-500" 
+              : "text-white/30 border-transparent hover:text-white/60"
+          )}
+        >
+          Overview
+        </button>
+        <button
+          onClick={() => setActiveSection('brainstorm')}
+          className={cn(
+            "pb-2 text-[11px] font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
+            activeSection === 'brainstorm' 
+              ? "text-white border-purple-500" 
+              : "text-white/30 border-transparent hover:text-white/60"
+          )}
+        >
+          Brainstorm
+          <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+        </button>
+      </div>
+
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
+        {activeSection === 'brainstorm' ? (
+          <BrainstormTab 
+            api={api} 
+            projectPath={activeTab?.projectPath || ''} 
+          />
+        ) : (
+          <>
         <section className="bg-indigo-500/5 rounded-xl border border-indigo-500/10 p-3 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -669,6 +718,8 @@ export function IntelligenceSidebar({
           </div>
           <SwarmActivityStream />
         </section>
+        </>
+        )}
       </div>
 
       <div className="p-4 border-t border-white/10 bg-black/20 text-[10px] text-white/40 flex items-center justify-between">
@@ -739,4 +790,4 @@ function RiskBadge({ risk }: { risk: string }) {
 }
 
 // Add these to imports at the top
-import { Wand2 } from 'lucide-react'
+// No longer needed here as they are moved to the top
