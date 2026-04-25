@@ -666,6 +666,7 @@ pub fn run() {
             gsd_engine::gsd_create_plan,
             gsd_engine::gsd_add_phase,
             gsd_engine::gsd_add_step,
+            gsd_engine::gsd_list_plans,
             gsd_engine::gsd_execute_plan,
             gsd_engine::gsd_respond_to_checkpoint,
             rtk_check,

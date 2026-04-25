@@ -571,9 +571,11 @@ export interface Api {
   // GSD Engine
   // ==========================================================================
   gsdCreatePlan?: (taskId: string, title: string) => Promise<GsdPlan>
+  gsdListPlans?: (projectPath: string) => Promise<GsdPlan[]>
   gsdAddPhase?: (planId: string, title: string) => Promise<GsdPhase>
   gsdAddStep?: (planId: string, phaseId: string, title: string, description: string) => Promise<GsdStep>
   gsdExecutePlan?: (planId: string) => Promise<void>
+  gsdRespondToCheckpoint?: (stepId: string, response: 'Approve' | 'Retry' | 'Abort') => Promise<void>
   onGsdExecutionEvent?: (callback: (event: GsdExecutionEvent) => void) => Unsubscribe
   onGsdPhaseUpdated?: (callback: (phase: GsdPhase) => void) => Unsubscribe
   onGsdStepUpdated?: (callback: (step: GsdStep) => void) => Unsubscribe
@@ -855,6 +857,7 @@ export interface GsdPhase {
 
 export interface GsdPlan {
   id: string
+  title: string
   taskId: string
   phases: GsdPhase[]
   metadata: Record<string, string>

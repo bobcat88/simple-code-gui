@@ -37,6 +37,7 @@ pub struct GsdPhase {
 #[serde(rename_all = "camelCase")]
 pub struct GsdPlan {
     pub id: String,
+    pub title: String,
     pub task_id: String,
     pub phases: Vec<GsdPhase>,
     pub metadata: HashMap<String, String>,

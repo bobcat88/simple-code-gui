@@ -24,30 +24,42 @@ interface GSDPlannerProps {
 
 export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
   const [plan, setPlan] = useState<GsdPlan | null>(null);
+  const [availablePlans, setAvailablePlans] = useState<GsdPlan[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [executing, setExecuting] = useState(false);
   const [expandedPhases, setExpandedPhases] = useState<Record<string, boolean>>({});
+  const [showPlanSelector, setShowPlanSelector] = useState(false);
 
-  // Initialize/Load plan
-  const loadPlan = useCallback(async () => {
-    if (!projectPath) return;
+  // Initialize/Load plans
+  const refreshPlans = useCallback(async (autoSelectId?: string) => {
+    if (!projectPath || !api.gsdListPlans) return;
     setLoading(true);
     try {
-      const newPlan = await api.gsdCreatePlan(projectPath, "Project Plan");
-      setPlan(newPlan);
+      const plans = await api.gsdListPlans(projectPath);
+      setAvailablePlans(plans);
+      
+      if (plans.length > 0) {
+        // Auto-select the requested plan, or the first one
+        const selected = autoSelectId 
+          ? plans.find(p => p.id === autoSelectId) || plans[0]
+          : plans[0];
+        setPlan(selected);
+      } else {
+        setPlan(null);
+      }
       setError(null);
     } catch (err) {
-      console.error('Failed to load GSD plan:', err);
-      setError('Failed to initialize planner.');
+      console.error('Failed to list GSD plans:', err);
+      setError('Failed to fetch project plans.');
     } finally {
       setLoading(false);
     }
   }, [api, projectPath]);
 
   useEffect(() => {
-    loadPlan();
-  }, [loadPlan]);
+    refreshPlans();
+  }, [refreshPlans]);
 
   // Listen for execution events
   useEffect(() => {
@@ -91,8 +103,25 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
     };
   }, [api]);
 
+  const handleCreateNewPlan = async () => {
+    if (!projectPath || !api.gsdCreatePlan) return;
+    const title = prompt('Plan Title:', 'New GSD Plan');
+    if (!title) return;
+
+    try {
+      setLoading(true);
+      const newPlan = await api.gsdCreatePlan(projectPath, title);
+      await refreshPlans(newPlan.id);
+      setShowPlanSelector(false);
+    } catch (err) {
+      setError('Failed to create new plan.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAddPhase = async () => {
-    if (!plan || !projectPath) return;
+    if (!plan || !projectPath || !api.gsdAddPhase) return;
     const name = prompt('Phase Name:');
     if (!name) return;
 
@@ -191,7 +220,61 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
             <Milestone size={24} />
           </div>
           <div>
-            <h2 className="text-xl font-bold tracking-tight">Transwarp Planner</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold tracking-tight">Transwarp Planner</h2>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowPlanSelector(!showPlanSelector)}
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/5 text-muted-foreground hover:text-white transition-colors text-xs font-semibold border border-transparent hover:border-white/10"
+                >
+                  {plan?.title || 'Select Plan'}
+                  <ChevronDown size={14} className={cn("transition-transform", showPlanSelector && "rotate-180")} />
+                </button>
+
+                {showPlanSelector && (
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <div className="p-2 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-2">Available Plans</span>
+                      <button 
+                        onClick={handleCreateNewPlan}
+                        className="p-1.5 rounded-lg hover:bg-primary/20 text-primary transition-colors"
+                        title="Create New Plan"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto p-1">
+                      {availablePlans.length === 0 ? (
+                        <div className="p-4 text-center">
+                          <p className="text-xs text-muted-foreground">No plans found.</p>
+                        </div>
+                      ) : (
+                        availablePlans.map(p => (
+                          <button
+                            key={p.id}
+                            onClick={() => {
+                              setPlan(p);
+                              setShowPlanSelector(false);
+                            }}
+                            className={cn(
+                              "w-full flex flex-col items-start p-3 rounded-lg text-left transition-all hover:bg-white/5 group",
+                              plan?.id === p.id ? "bg-primary/10 border border-primary/20" : "border border-transparent"
+                            )}
+                          >
+                            <span className={cn("text-sm font-semibold", plan?.id === p.id ? "text-primary" : "text-white/80")}>
+                              {p.title}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground mt-1">
+                              {p.phases.length} Phases • {p.phases.reduce((acc, ph) => acc + ph.steps.length, 0)} Steps
+                            </span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">Phase 17 Deep Execution Engine</p>
           </div>
         </div>
