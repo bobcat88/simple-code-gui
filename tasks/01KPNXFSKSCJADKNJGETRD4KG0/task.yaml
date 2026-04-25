@@ -8,8 +8,7 @@ derivation: auto
 status: completed
 blocked_by: []
 closed_reason: Merged finalized migration and quick-switcher implementation into rust-revamp.
-depends_on:
-  - "@task-advanced-workspace-control"
+depends_on: []
 context: []
 priority: 3
 tags: []

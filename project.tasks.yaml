@@ -6,8 +6,7 @@
   spec_ref: "@01KPNWYGEC5WX1JKYWJ2WF0YB0"
   status: completed
   blocked_by: []
-  depends_on:
-    - "@task-advanced-workspace-control"
+  depends_on: []
   priority: 3
   tags: []
   review_ref: "@01KPRRB1Y266W9ARVWMWGQ5AX9"
