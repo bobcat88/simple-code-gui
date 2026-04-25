@@ -27,32 +27,104 @@ impl AIProvider for ClaudeProvider {
 
     async fn completion(&self, request: CompletionRequest) -> Result<CompletionResponse, String> {
         let model = request.model.clone().expect("Model must be specified");
+        
+        let mut messages = Vec::new();
+        for msg in &request.messages {
+            if msg.role == "tool" {
+                messages.push(json!({
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": msg.tool_call_id.clone().unwrap_or_default(),
+                            "content": msg.content.clone(),
+                        }
+                    ]
+                }));
+            } else if let Some(tool_calls) = &msg.tool_calls {
+                let mut content = vec![json!({ "type": "text", "text": msg.content.clone() })];
+                for tc in tool_calls {
+                    content.push(json!({
+                        "type": "tool_use",
+                        "id": tc.id,
+                        "name": tc.name,
+                        "input": serde_json::from_str::<Value>(&tc.arguments).unwrap_or(json!({}))
+                    }));
+                }
+                messages.push(json!({
+                    "role": msg.role.clone(),
+                    "content": content
+                }));
+            } else {
+                messages.push(json!({
+                    "role": msg.role.clone(),
+                    "content": msg.content.clone()
+                }));
+            }
+        }
+
+        let mut body = json!({
+            "model": model,
+            "messages": messages,
+            "max_tokens": request.max_tokens.unwrap_or(1024),
+            "temperature": request.temperature.unwrap_or(0.7),
+        });
+
+        if let Some(tools) = &request.tools {
+            let anthropic_tools: Vec<Value> = tools.iter().map(|t| {
+                json!({
+                    "name": t.name,
+                    "description": t.description,
+                    "input_schema": t.parameters
+                })
+            }).collect();
+            body["tools"] = json!(anthropic_tools);
+            
+            if let Some(choice) = &request.tool_choice {
+                body["tool_choice"] = json!({ "type": choice });
+            }
+        }
+
         let response = self.client.post("https://api.anthropic.com/v1/messages")
             .header("x-api-key", &self.api_key)
             .header("anthropic-version", "2023-06-01")
             .header("content-type", "application/json")
-            .json(&json!({
-                "model": model,
-                "messages": request.messages,
-                "max_tokens": request.max_tokens.unwrap_or(1024),
-                "temperature": request.temperature.unwrap_or(0.7),
-            }))
+            .json(&body)
             .send()
             .await
             .map_err(|e| e.to_string())?;
 
         let status = response.status();
-        let body = response.text().await.map_err(|e| e.to_string())?;
+        let body_text = response.text().await.map_err(|e| e.to_string())?;
 
         if !status.is_success() {
-            return Err(format!("Claude API Error ({}): {}", status, body));
+            return Err(format!("Claude API Error ({}): {}", status, body_text));
         }
 
-        let json: Value = serde_json::from_str(&body).map_err(|e| e.to_string())?;
+        let json: Value = serde_json::from_str(&body_text).map_err(|e| e.to_string())?;
         
-        let content = json["content"][0]["text"].as_str()
-            .ok_or("Failed to parse content from Claude response")?
-            .to_string();
+        let mut content = String::new();
+        let mut tool_calls = Vec::new();
+
+        if let Some(content_blocks) = json["content"].as_array() {
+            for block in content_blocks {
+                match block["type"].as_str() {
+                    Some("text") => {
+                        if let Some(text) = block["text"].as_str() {
+                            content.push_str(text);
+                        }
+                    }
+                    Some("tool_use") => {
+                        tool_calls.push(crate::ai_runtime::types::ToolCall {
+                            id: block["id"].as_str().unwrap_or_default().to_string(),
+                            name: block["name"].as_str().unwrap_or_default().to_string(),
+                            arguments: block["input"].to_string(),
+                        });
+                    }
+                    _ => {}
+                }
+            }
+        }
 
         let usage = Usage {
             input_tokens: json["usage"]["input_tokens"].as_u64().unwrap_or(0) as u32,
@@ -64,6 +136,7 @@ impl AIProvider for ClaudeProvider {
             id: json["id"].as_str().unwrap_or("unknown").to_string(),
             model,
             content,
+            tool_calls: if tool_calls.is_empty() { None } else { Some(tool_calls) },
             usage: Some(usage),
         })
     }

@@ -4,6 +4,31 @@ use serde::{Deserialize, Serialize};
 pub struct Message {
     pub role: String,
     pub content: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_calls: Option<Vec<ToolCall>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_call_id: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ToolDefinition {
+    pub name: String,
+    pub description: String,
+    pub parameters: serde_json::Value,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ToolCall {
+    pub id: String,
+    pub name: String,
+    pub arguments: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ToolResult {
+    pub call_id: String,
+    pub content: String,
+    pub is_error: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
@@ -64,6 +89,8 @@ pub struct CompletionRequest {
     pub agent_id: Option<String>,
     pub policy: Option<RoutingPolicy>,
     pub retry: Option<RetryConfig>,
+    pub tools: Option<Vec<ToolDefinition>>,
+    pub tool_choice: Option<String>,
     pub temperature: Option<f32>,
     pub max_tokens: Option<u32>,
     pub stream: Option<bool>,
@@ -74,6 +101,7 @@ pub struct CompletionResponse {
     pub id: String,
     pub model: String,
     pub content: String,
+    pub tool_calls: Option<Vec<ToolCall>>,
     pub usage: Option<Usage>,
 }
 

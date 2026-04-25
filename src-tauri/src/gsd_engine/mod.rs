@@ -10,6 +10,7 @@ use tokio::sync::Mutex;
 
 pub mod executor;
 pub mod types;
+pub mod tools;
 
 pub struct GsdEngine {
     pub active_plans: Arc<Mutex<HashMap<String, GsdPlan>>>,
@@ -217,7 +218,13 @@ pub async fn gsd_execute_plan(
     let project_path = orch.current_project_path.lock().clone();
 
     tauri::async_runtime::spawn(async move {
-        let executor = executor::Executor::new(ai, engine.db.clone(), app_handle.clone(), engine.pending_responses.clone());
+        let executor = executor::Executor::new(
+            ai, 
+            engine.db.clone(), 
+            app_handle.clone(), 
+            engine.pending_responses.clone(),
+            project_path.clone()
+        );
         let max_phase_step_count = plan
             .phases
             .iter()

@@ -32,37 +32,110 @@ impl AIProvider for GeminiProvider {
             model, self.api_key
         );
 
-        let contents: Vec<Value> = request.messages.iter().map(|m| {
-            json!({
-                "role": if m.role == "user" { "user" } else { "model" },
-                "parts": [{"text": m.content}]
-            })
+        let mut system_instruction = None;
+        let contents: Vec<Value> = request.messages.iter().filter_map(|m| {
+            if m.role == "system" {
+                system_instruction = Some(json!({
+                    "parts": [{"text": m.content}]
+                }));
+                return None;
+            }
+
+            let mut parts = Vec::new();
+            
+            if !m.content.is_empty() {
+                parts.push(json!({"text": m.content}));
+            }
+
+            if let Some(tool_calls) = &m.tool_calls {
+                for tc in tool_calls {
+                    parts.push(json!({
+                        "functionCall": {
+                            "name": tc.name,
+                            "args": serde_json::from_str::<Value>(&tc.arguments).unwrap_or(json!({}))
+                        }
+                    }));
+                }
+            }
+
+            if let Some(tool_call_id) = &m.tool_call_id {
+                // In Gemini, the tool_call_id (if we use it as the function name) 
+                // maps to the functionResponse part.
+                parts.push(json!({
+                    "functionResponse": {
+                        "name": tool_call_id,
+                        "response": { "content": m.content }
+                    }
+                }));
+            }
+
+            Some(json!({
+                "role": if m.role == "user" || m.role == "tool" { "user" } else { "model" },
+                "parts": parts
+            }))
         }).collect();
 
+        let mut body = json!({
+            "contents": contents,
+            "generationConfig": {
+                "temperature": request.temperature.unwrap_or(0.7),
+                "maxOutputTokens": request.max_tokens.unwrap_or(2048),
+            }
+        });
+
+        if let Some(sys) = system_instruction {
+            body["systemInstruction"] = sys;
+        }
+
+        if let Some(tools) = request.tools {
+            let function_declarations: Vec<Value> = tools.into_iter().map(|t| json!({
+                "name": t.name,
+                "description": t.description,
+                "parameters": t.parameters,
+            })).collect();
+            
+            body["tools"] = json!([{
+                "functionDeclarations": function_declarations
+            }]);
+        }
+
         let response = self.client.post(&url)
-            .json(&json!({
-                "contents": contents,
-                "generationConfig": {
-                    "temperature": request.temperature.unwrap_or(0.7),
-                    "maxOutputTokens": request.max_tokens.unwrap_or(2048),
-                }
-            }))
+            .json(&body)
             .send()
             .await
             .map_err(|e| e.to_string())?;
 
         let status = response.status();
-        let body = response.text().await.map_err(|e| e.to_string())?;
+        let body_text = response.text().await.map_err(|e| e.to_string())?;
 
         if !status.is_success() {
-            return Err(format!("Gemini API Error ({}): {}", status, body));
+            return Err(format!("Gemini API Error ({}): {}", status, body_text));
         }
 
-        let json: Value = serde_json::from_str(&body).map_err(|e| e.to_string())?;
+        let json: Value = serde_json::from_str(&body_text).map_err(|e| e.to_string())?;
         
-        let content = json["candidates"][0]["content"]["parts"][0]["text"].as_str()
-            .ok_or("Failed to parse content from Gemini response")?
-            .to_string();
+        let candidate = &json["candidates"][0];
+        let mut content = String::new();
+        let mut tool_calls = None;
+
+        if let Some(parts) = candidate["content"]["parts"].as_array() {
+            let mut calls = Vec::new();
+            for part in parts {
+                if let Some(text) = part["text"].as_str() {
+                    content.push_str(text);
+                }
+                if let Some(call) = part["functionCall"].as_object() {
+                    calls.push(crate::ai_runtime::types::ToolCall {
+                        id: call["name"].as_str().unwrap_or("").to_string(), // Use name as ID for Gemini
+                        name: call["name"].as_str().unwrap_or("").to_string(),
+                        arguments: call["args"].to_string(),
+                    });
+                }
+            }
+            if !calls.is_empty() {
+                tool_calls = Some(calls);
+            }
+        }
 
         let usage = Usage {
             input_tokens: json["usageMetadata"]["promptTokenCount"].as_u64().unwrap_or(0) as u32,
@@ -71,9 +144,10 @@ impl AIProvider for GeminiProvider {
         };
 
         Ok(CompletionResponse {
-            id: "gemini-resp".to_string(), // Gemini doesn't seem to provide a response ID in the same way
+            id: "gemini-resp".to_string(),
             model,
             content,
+            tool_calls,
             usage: Some(usage),
         })
     }
@@ -88,7 +162,7 @@ impl AIProvider for GeminiProvider {
         // Gemini embedContent takes a single string or multiple. We'll handle the first input for now as a common pattern,
         // or loop if there are multiple.
         let mut embeddings = Vec::new();
-        let mut total_tokens = 0;
+        let total_tokens = 0;
 
         for text in request.input {
             let response = self.client.post(&url)

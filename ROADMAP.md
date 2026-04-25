@@ -62,6 +62,14 @@ Making project intelligence actionable through the user interface.
 - [x] **Contextual Quick Actions**: Smart suggestions based on the current active file.
 - [x] **Session Re-threading**: Semantic context restoration for PTY sessions.
 
+## Phase 22: GSD Deep Hardening & Agentic Tooling (Complete)
+Replacing mock execution with real AI-driven tool calling and provider orchestration.
+
+- [x] **Agentic Tooling**: Core system tools (read, write, bash, list) for GSD agents.
+- [x] **Tool-Calling Protocol**: Unified tool-use support for Claude, OpenAI, and Gemini.
+- [x] **Hardened Execution Loop**: Multi-turn agentic reasoning in GsdExecutor.
+- [x] **Context-Aware Path Resolution**: Automatic project-root mapping for tools.
+
 ---
 
 *Last Updated: April 2026*

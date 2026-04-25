@@ -66,6 +66,7 @@ impl AIProvider for OllamaProvider {
             id: "ollama-resp".to_string(),
             model,
             content,
+            tool_calls: None,
             usage: Some(usage),
         })
     }

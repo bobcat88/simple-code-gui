@@ -8,6 +8,8 @@ use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
 use tokio::sync::Mutex;
 use tokio::task::JoinSet;
+use crate::gsd_engine::tools::{execute_tool, get_gsd_tools};
+use crate::ai_runtime::types::{CompletionRequest, Message};
 use tokio::time::{sleep, Duration};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -85,10 +87,11 @@ pub(crate) fn verification_outcome(description: &str, attempts: u32) -> bool {
 
 #[derive(Clone)]
 pub struct Executor {
-    pub _ai: Arc<RuntimeManager>,
-    pub _db: Arc<DatabaseManager>,
+    pub ai: Arc<RuntimeManager>,
+    pub db: Arc<DatabaseManager>,
     pub app: AppHandle,
     pub pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<crate::gsd_engine::UserResponse>>>>,
+    pub project_path: Option<String>,
 }
 
 impl Executor {
@@ -97,12 +100,14 @@ impl Executor {
         db: Arc<DatabaseManager>,
         app: AppHandle,
         pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<crate::gsd_engine::UserResponse>>>>,
+        project_path: Option<String>,
     ) -> Self {
         Self {
-            _ai: ai,
-            _db: db,
+            ai,
+            db,
             app,
             pending_responses,
+            project_path,
         }
     }
 
@@ -260,15 +265,97 @@ impl Executor {
             );
             let _ = self.app.emit("gsd-step-updated", step.clone());
 
-            // TODO: Replace with real RuntimeManager call
-            sleep(Duration::from_millis(150)).await;
+            // Real Execution Loop
+            let system_prompt = "You are a Transwarp Nexus GSD (Get Stuff Done) Agent. \
+                Your goal is to complete the technical task described. \
+                Use the provided tools to read/write files and run commands. \
+                Be concise and efficient. When the task is finished, provide a brief summary of what you accomplished.";
+            
+            let mut messages = vec![
+                Message { 
+                    role: "system".to_string(), 
+                    content: system_prompt.to_string(), 
+                    tool_calls: None, 
+                    tool_call_id: None 
+                },
+                Message { 
+                    role: "user".to_string(), 
+                    content: format!("Task: {}\nDescription: {}", step.title, step.description), 
+                    tool_calls: None, 
+                    tool_call_id: None 
+                },
+            ];
+
+            let tools = get_gsd_tools();
+            let mut turn_count = 0;
+            let max_turns = 15;
+            let mut final_content = String::new();
+
+            while turn_count < max_turns {
+                turn_count += 1;
+                
+                let request = CompletionRequest {
+                    messages: messages.clone(),
+                    tools: Some(tools.clone()),
+                    tool_choice: Some("auto".to_string()),
+                    project_path: self.project_path.clone(),
+                    ..Default::default()
+                };
+
+                let response = match self.ai.dispatch(request).await {
+                    Ok(res) => res,
+                    Err(e) => {
+                        step.status = StepStatus::Failed(format!("AI Dispatch failed: {}", e));
+                        let _ = self.app.emit("gsd-step-updated", step.clone());
+                        return Ok(step);
+                    }
+                };
+
+                final_content = response.content.clone();
+                
+                messages.push(Message {
+                    role: "assistant".to_string(),
+                    content: response.content.clone(),
+                    tool_calls: response.tool_calls.clone(),
+                    tool_call_id: None,
+                });
+
+                if let Some(tool_calls) = response.tool_calls {
+                    for tc in tool_calls {
+                        self.emit_execution_event(
+                            plan_id,
+                            Some(phase_id),
+                            Some(&step.id),
+                            "tool_call",
+                            format!("Agent invoked {}({})", tc.name, tc.arguments),
+                        );
+
+                        let tool_result = match execute_tool(&tc.name, &tc.arguments, &self.project_path).await {
+                            Ok(res) => res,
+                            Err(e) => format!("Error: {}", e),
+                        };
+
+                        messages.push(Message {
+                            role: "tool".to_string(),
+                            content: tool_result,
+                            tool_calls: None,
+                            tool_call_id: Some(tc.id),
+                        });
+                    }
+                } else {
+                    // Final response received
+                    break;
+                }
+            }
+
+            if turn_count >= max_turns {
+                step.result = Some(format!("Execution halted: exceeded max turns ({}). Partial output: {}", max_turns, final_content));
+            } else {
+                step.result = Some(final_content);
+            }
 
             step.status = StepStatus::Completed;
             step.completed_at = Some(Utc::now().timestamp_millis() as u64);
-            step.result = Some(format!(
-                "Step executed successfully on attempt {}",
-                step.attempts
-            ));
             let _ = self.app.emit("gsd-step-updated", step.clone());
 
             let verified = self.verify_step(&step).await?;
@@ -424,7 +511,7 @@ impl Executor {
         _phase_id: &str,
         step: &GsdStep,
     ) -> Result<(), String> {
-        let ai = self._ai.clone();
+        let ai = self.ai.clone();
         let step_title = step.title.clone();
         let step_desc = step.description.clone();
         let step_result = step.result.clone().unwrap_or_else(|| "Success".to_string());
@@ -440,6 +527,8 @@ impl Executor {
                 messages: vec![crate::ai_runtime::types::Message {
                     role: "user".to_string(),
                     content: prompt,
+                    tool_calls: None,
+                    tool_call_id: None,
                 }],
                 temperature: Some(0.3),
                 max_tokens: Some(100),
@@ -484,7 +573,7 @@ impl Executor {
     }
 
     pub async fn generate_auto_fix(&self, step: &GsdStep) -> Result<String, String> {
-        let ai = self._ai.clone();
+        let ai = self.ai.clone();
         let prompt = format!(
             "You are a GSD Auto-Fix Engine. A task has failed verification. Propose a specific, concise fix.\n\nTask: {}\nDescription: {}\nResult: {}\n\nOutput ONLY the proposed fix description (e.g., 'Update imports in utils.ts').",
             step.title, step.description, step.result.clone().unwrap_or_else(|| "N/A".to_string())
@@ -494,6 +583,8 @@ impl Executor {
             messages: vec![crate::ai_runtime::types::Message {
                 role: "user".to_string(),
                 content: prompt,
+                tool_calls: None,
+                tool_call_id: None,
             }],
             temperature: Some(0.3),
             max_tokens: Some(150),
