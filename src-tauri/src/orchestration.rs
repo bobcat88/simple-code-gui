@@ -85,11 +85,22 @@ pub struct ApprovalResponse {
     pub conditions: Option<Vec<String>>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AgentMessage {
+    pub id: String,
+    pub agent_id: String,
+    pub agent_name: String,
+    pub content: String,
+    pub timestamp: u64,
+    pub message_type: String, // "finding", "request", "alert", etc.
+}
+
 #[derive(Default)]
 pub struct OrchestrationState {
     pub watched_projects: PlMutex<HashMap<String, tauri::async_runtime::JoinHandle<()>>>,
     pub watched_kspec_projects: PlMutex<HashMap<String, tauri::async_runtime::JoinHandle<()>>>,
     pub pending_approvals: PlMutex<Vec<ApprovalRequest>>,
+    pub message_bus: PlMutex<Vec<AgentMessage>>,
     pub current_project_path: PlMutex<Option<String>>,
     pub last_scan: PlMutex<Option<crate::project_scanner::ProjectCapabilityScan>>,
 }
@@ -762,6 +773,42 @@ pub async fn submit_approval_request(
     let _ = app.emit("approval-request", &request);
 
     Ok(serde_json::json!({ "success": true, "id": request.id }))
+}
+
+// ============================================================================
+// Agent Messaging Commands
+// ============================================================================
+
+#[tauri::command]
+pub async fn broadcast_agent_message(
+    app: AppHandle,
+    state: State<'_, OrchestrationState>,
+    message: AgentMessage,
+) -> Result<serde_json::Value, String> {
+    {
+        let mut bus = state.message_bus.lock();
+        bus.push(message.clone());
+        
+        // Keep only the last 100 messages to avoid unbounded growth
+        if bus.len() > 100 {
+            bus.remove(0);
+        }
+    }
+
+    let _ = app.emit("agent-message", &message);
+
+    Ok(serde_json::json!({ "success": true, "id": message.id }))
+}
+
+#[tauri::command]
+pub async fn get_agent_messages(
+    state: State<'_, OrchestrationState>,
+    limit: Option<usize>,
+) -> Result<Vec<AgentMessage>, String> {
+    let bus = state.message_bus.lock();
+    let n = limit.unwrap_or(bus.len());
+    let start = if bus.len() > n { bus.len() - n } else { 0 };
+    Ok(bus[start..].to_vec())
 }
 
 #[tauri::command]

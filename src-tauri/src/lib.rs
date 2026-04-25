@@ -37,6 +37,7 @@ use orchestration::{
     kspec_dispatch_status, kspec_dispatch_stop, kspec_ensure_daemon, kspec_init, kspec_list,
     kspec_show, kspec_start, kspec_unwatch, kspec_update, kspec_watch, respond_to_approval,
     submit_approval_request, sync_workflow, OrchestrationState,
+    broadcast_agent_message, get_agent_messages,
 };
 use pty_manager::PtyManager;
 use settings_manager::{AppSettings, SettingsManager};
@@ -738,7 +739,9 @@ pub fn run() {
             upgrade_manager::project_analyze_upgrade,
             upgrade_manager::project_upgrade_dependency,
             upgrade_manager::project_rollback_dependency,
-            ai_runtime::ai_switch_model_plan
+            ai_runtime::ai_switch_model_plan,
+            broadcast_agent_message,
+            get_agent_messages
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

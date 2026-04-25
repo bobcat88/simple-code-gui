@@ -280,8 +280,17 @@ impl Executor {
                 5. RESOLUTION: Once the root cause is verified, implement the fix and verify it with tests.\n\n\
                 Use `git_diff` and `git_log` to identify regressions if applicable.";
 
+            let supervisor_prompt = "You are the Supervisor Nexus Agent. Your goal is to orchestrate a swarm of specialized agents to complete complex tasks.\n\
+                1. ANALYZE: Break down the main goal into smaller, manageable sub-tasks.\n\
+                2. DELEGATE: Use the `delegate_task` tool to assign sub-tasks to specialized agents (Rust Expert, Frontend Dev, etc.).\n\
+                3. INTEGRATE: Combine the results from sub-agents to form the final solution.\n\
+                4. VERIFY: Ensure the integrated solution meets all requirements.\n\n\
+                You are the brain of the operation. Coordinate effectively.";
+
             let system_prompt = if step.description.contains("[forensic]") {
                 forensic_prompt
+            } else if step.description.contains("[supervisor]") {
+                supervisor_prompt
             } else {
                 base_prompt
             };
@@ -411,6 +420,25 @@ impl Executor {
                         eprintln!("[GSD] Learning loop failed: {}", e);
                     }
                 });
+
+                // Semantic Indexing: Index successful step into VectorEngine
+                let vector_engine = self.app.state::<Arc<crate::vector_engine::VectorEngine>>();
+                let chunk = crate::vector_engine::types::VectorChunk {
+                    id: uuid::Uuid::new_v4().to_string(),
+                    symbol_name: format!("gsd_step:{}", step.id),
+                    project_path: self.project_path.clone().unwrap_or_default(),
+                    file_path: format!("gsd/plans/{}/{}", plan_id, step.id),
+                    content: format!("Task: {}\nResult: {}", step.title, step.result.clone().unwrap_or_default()),
+                    metadata: {
+                        let mut m = HashMap::new();
+                        m.insert("kind".to_string(), "gsd_step".to_string());
+                        m.insert("plan_id".to_string(), plan_id.to_string());
+                        m.insert("step_id".to_string(), step.id.clone());
+                        m
+                    },
+                    embedding: None,
+                };
+                let _ = vector_engine.add_chunks(vec![chunk]).await;
 
                 self.emit_execution_event(
                     plan_id,

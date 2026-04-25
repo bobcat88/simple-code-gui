@@ -78,6 +78,14 @@ Enabling agents to perform root-cause analysis and systematic debugging.
 - [x] **Forensic Triage**: Automated hypothesis testing for bug reports via specialized agent prompts and health checks.
 - [x] **Error IPC Bridge**: Streaming real-time backend log context directly to the agent on failure.
 
+## Phase 24: Collaborative Agent Swarms (Complete)
+Enabling multiple agents to work together on complex tasks with shared memory and supervisor orchestration.
+
+- [x] **Supervisor Orchestration**: Implement role-based sub-agent delegation.
+- [x] **Shared Semantic Workspace**: Vector memory indexing for agent findings.
+- [x] **Cross-Agent Messaging**: Native IPC channel for agent communication.
+- [x] **Automated Peer Review**: Supervisor-driven consensus protocol for validating sub-agent output.
+
 ---
 
 *Last Updated: April 2026*

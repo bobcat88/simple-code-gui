@@ -3,7 +3,7 @@ use serde_json::{json, Value};
 use std::path::Path;
 use std::process::Command;
 use std::sync::Arc;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(dead_code)]
@@ -139,6 +139,146 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
                     Ok(serde_json::to_string(&status).unwrap_or_default())
                 }
             }
+        }
+        "delegate_task" => {
+            let task = args["task"].as_str().ok_or("Missing task argument")?;
+            let role = args["role"].as_str().ok_or("Missing role argument")?;
+            
+            let ai = app.state::<Arc<crate::ai_runtime::RuntimeManager>>();
+            
+            let system_prompt = match role {
+                "rust_expert" => "You are a Rust Expert Agent. You specialize in safe, efficient, and idiomatic Rust code.",
+                "frontend_dev" => "You are a Frontend Developer Agent. You specialize in modern web technologies, React, and CSS.",
+                "qa_specialist" => "You are a QA Specialist Agent. Your goal is to find bugs, verify functionality, and ensure code quality.",
+                "researcher" => "You are a Research Agent. Your goal is to gather information and provide detailed reports on technical topics.",
+                _ => "You are a specialized GSD Agent. Complete the task as requested.",
+            };
+
+            let request = crate::ai_runtime::types::CompletionRequest {
+                messages: vec![
+                    crate::ai_runtime::types::Message {
+                        role: "system".to_string(),
+                        content: system_prompt.to_string(),
+                        tool_calls: None,
+                        tool_call_id: None,
+                    },
+                    crate::ai_runtime::types::Message {
+                        role: "user".to_string(),
+                        content: task.to_string(),
+                        tool_calls: None,
+                        tool_call_id: None,
+                    },
+                ],
+                // Sub-agents can use tools too!
+                tools: Some(get_gsd_tools()), 
+                tool_choice: Some("auto".to_string()),
+                project_path: project_path.clone(),
+                ..Default::default()
+            };
+
+            // Recursive dispatch
+            let response = ai.dispatch(request).await.map_err(|e| e.to_string())?;
+            
+            Ok(response.content)
+        }
+        "vector_query" => {
+            let query = args["query"].as_str().ok_or("Missing query argument")?;
+            let limit = args["limit"].as_u64().unwrap_or(5) as usize;
+            
+            let vector_engine = app.state::<Arc<crate::vector_engine::VectorEngine>>();
+            let results = vector_engine.search(query.to_string(), limit).await?;
+            
+            let formatted = results.iter().map(|r| {
+                format!("[Score: {:.2}] File: {} (Symbol: {})\nContent: {}\n", 
+                    r.score, r.chunk.file_path, r.chunk.symbol_name, r.chunk.content)
+            }).collect::<Vec<_>>().join("\n---\n");
+            
+            Ok(if formatted.is_empty() { "No relevant context found in vector memory.".to_string() } else { formatted })
+        }
+        "broadcast_message" => {
+            let content = args["content"].as_str().ok_or("Missing content argument")?;
+            let message_type = args["message_type"].as_str().unwrap_or("finding");
+            
+            let id = uuid::Uuid::new_v4().to_string();
+            let timestamp = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs();
+                
+            let message = crate::orchestration::AgentMessage {
+                id: id.clone(),
+                agent_id: "gsd_agent".to_string(), // In a real swarm, this would be dynamic
+                agent_name: "GSD Agent".to_string(),
+                content: content.to_string(),
+                timestamp,
+                message_type: message_type.to_string(),
+            };
+            
+            let state = app.state::<Arc<crate::orchestration::OrchestrationState>>();
+            {
+                let mut bus = state.message_bus.lock();
+                bus.push(message.clone());
+                if bus.len() > 100 {
+                    bus.remove(0);
+                }
+            }
+            
+            let _ = app.emit("agent-message", &message);
+            
+            Ok(format!("Message broadcast successfully with ID: {}", id))
+        }
+        "request_peer_review" => {
+            let content = args["content"].as_str().ok_or("Missing content argument")?;
+            let criteria = args["criteria"].as_str().ok_or("Missing criteria argument")?;
+            
+            let ai = app.state::<Arc<crate::ai_runtime::RuntimeManager>>();
+            
+            // Spawn two reviewers
+            let reviewer_prompt = format!(
+                "You are a Peer Review Agent. Review the following content based on these criteria:\n\nCriteria: {}\n\nContent to Review:\n{}\n\nOutput your verdict as: [VERDICT: APPROVE] or [VERDICT: REJECT] followed by your detailed reasoning.",
+                criteria, content
+            );
+            
+            let req1 = crate::ai_runtime::types::CompletionRequest {
+                messages: vec![crate::ai_runtime::types::Message {
+                    role: "user".to_string(),
+                    content: reviewer_prompt.clone(),
+                    tool_calls: None,
+                    tool_call_id: None,
+                }],
+                ..Default::default()
+            };
+            
+            let req2 = crate::ai_runtime::types::CompletionRequest {
+                messages: vec![crate::ai_runtime::types::Message {
+                    role: "user".to_string(),
+                    content: reviewer_prompt,
+                    tool_calls: None,
+                    tool_call_id: None,
+                }],
+                ..Default::default()
+            };
+            
+            let (res1, res2) = tokio::join!(
+                ai.dispatch(req1),
+                ai.dispatch(req2)
+            );
+            
+            let r1 = res1.map_err(|e| e.to_string())?;
+            let r2 = res2.map_err(|e| e.to_string())?;
+            
+            let approved1 = r1.content.contains("[VERDICT: APPROVE]");
+            let approved2 = r2.content.contains("[VERDICT: APPROVE]");
+            
+            let result = if approved1 && approved2 {
+                format!("Consensus reached: APPROVED.\n\nReviewer 1:\n{}\n\nReviewer 2:\n{}", r1.content, r2.content)
+            } else if !approved1 && !approved2 {
+                format!("Consensus reached: REJECTED.\n\nReviewer 1:\n{}\n\nReviewer 2:\n{}", r1.content, r2.content)
+            } else {
+                format!("Conflict detected: One reviewer approved, one rejected. Manual resolution required.\n\nReviewer 1:\n{}\n\nReviewer 2:\n{}", r1.content, r2.content)
+            };
+            
+            Ok(result)
         }
         _ => Err(format!("Unknown tool: {}", name)),
     }
@@ -304,6 +444,54 @@ pub fn get_gsd_tools() -> Vec<crate::ai_runtime::types::ToolDefinition> {
                 "properties": {
                     "component": { "type": "string", "enum": ["ai_runtime", "system"], "description": "The component to check (defaults to system)" }
                 }
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "delegate_task".to_string(),
+            description: "Delegate a sub-task to a specialized agent swarm. Use this for complex tasks that require specific expertise (Rust, Frontend, QA, etc.).".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "task": { "type": "string", "description": "The specific task for the sub-agent" },
+                    "role": { "type": "string", "enum": ["rust_expert", "frontend_dev", "qa_specialist", "researcher"], "description": "The specialization required" }
+                },
+                "required": ["task", "role"]
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "vector_query".to_string(),
+            description: "Search the shared semantic workspace for relevant context, learnings, or code snippets across the project and previous agent interactions.".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "query": { "type": "string", "description": "The semantic search query" },
+                    "limit": { "type": "integer", "description": "Max results to return (defaults to 5)" }
+                },
+                "required": ["query"]
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "broadcast_message".to_string(),
+            description: "Broadcast a message to all other agents in the swarm. Use this to share important findings, request help, or warn about potential issues.".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "content": { "type": "string", "description": "The content of the message" },
+                    "message_type": { "type": "string", "enum": ["finding", "request", "warning", "alert"], "description": "The type of message (defaults to finding)" }
+                },
+                "required": ["content"]
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "request_peer_review".to_string(),
+            description: "Request an automated peer review from other agents in the swarm to validate findings or code changes. Returns a consensus report.".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "content": { "type": "string", "description": "The content to be reviewed" },
+                    "criteria": { "type": "string", "description": "The criteria or instructions for the review" }
+                },
+                "required": ["content", "criteria"]
             }),
         },
     ]
