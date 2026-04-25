@@ -28,6 +28,7 @@ interface IntelligenceSidebarProps {
   onRefresh: () => void
   onDeepScan: () => void
   onReindex: () => void
+  onSyncMemory: () => void
   onOpenSearch: () => void
   onWidthChange: (width: number) => void
   vectorStatus: VectorIndexStatus | null
@@ -43,6 +44,7 @@ export function IntelligenceSidebar({
   onRefresh,
   onDeepScan,
   onReindex,
+  onSyncMemory,
   onOpenSearch,
   onWidthChange,
   width,
@@ -543,14 +545,23 @@ export function IntelligenceSidebar({
               </div>
             </div>
 
-            <div className="p-2.5 rounded-lg bg-purple-500/5 border border-purple-500/10 flex items-start gap-2">
-              <Brain size={14} className="text-purple-400 shrink-0 mt-0.5" />
-              <div>
-                <div className="text-[11px] font-medium text-purple-400">Long-term Memory</div>
-                <p className="text-[10px] text-white/40 leading-normal">
-                  Vector index enables semantic codebase understanding and session recall.
-                </p>
+            <div className="p-2.5 rounded-lg bg-purple-500/5 border border-purple-500/10 flex flex-col gap-2">
+              <div className="flex items-start gap-2">
+                <Brain size={14} className="text-purple-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="text-[11px] font-medium text-purple-400">Long-term Memory</div>
+                  <p className="text-[10px] text-white/40 leading-normal">
+                    Vector index enables semantic codebase understanding and global knowledge recall.
+                  </p>
+                </div>
               </div>
+              <button 
+                onClick={onSyncMemory}
+                className="w-full py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 rounded-lg text-[10px] font-medium transition-all flex items-center justify-center gap-2"
+              >
+                <RefreshCw size={12} className={cn(vectorStatus?.isIndexing && "animate-spin")} />
+                Sync Global Knowledge (Borg)
+              </button>
             </div>
           </div>
         </section>

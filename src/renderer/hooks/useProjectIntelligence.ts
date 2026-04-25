@@ -53,6 +53,25 @@ export function useProjectIntelligence(api: ExtendedApi, projectPath: string | n
     }
   }, [api, projectPath]);
 
+  const syncGlobalKnowledge = useCallback(async () => {
+    try {
+      await api.vectorIndexKnowledge();
+      await fetchIntelligence();
+    } catch (err) {
+      console.error('Failed to sync global knowledge:', err);
+    }
+  }, [api, fetchIntelligence]);
+
+  const reindexProject = useCallback(async () => {
+    if (!projectPath) return;
+    try {
+      await api.vectorIndexProject(projectPath);
+      await fetchIntelligence();
+    } catch (err) {
+      console.error('Failed to reindex project:', err);
+    }
+  }, [api, projectPath, fetchIntelligence]);
+
   return { 
     intelligence, 
     capabilityScan, 
@@ -60,6 +79,8 @@ export function useProjectIntelligence(api: ExtendedApi, projectPath: string | n
     loading, 
     error, 
     refresh: fetchIntelligence, 
-    triggerDeepScan 
+    triggerDeepScan,
+    syncGlobalKnowledge,
+    reindexProject
   }
 }

@@ -372,7 +372,7 @@ fn report_ready() {
     println!("WEBVIEW_READY");
 }
 
-use vector_engine::{VectorEngine, vector_index_project};
+use vector_engine::{VectorEngine, vector_index_project, vector_index_knowledge};
 use vector_engine::types::{VectorChunk, VectorIndexStatus, VectorSearchResult};
 
 #[tauri::command]
@@ -568,7 +568,7 @@ pub fn run() {
                 ai_runtime.set_learning_manager(Arc::clone(&learning_manager)).await;
 
                 // Initialize Vector Engine
-                let vector_engine = Arc::new(vector_engine::VectorEngine::new(Arc::clone(&ai_runtime)));
+                let vector_engine = Arc::new(vector_engine::VectorEngine::new(Arc::clone(&ai_runtime), db_arc.pool.clone()));
 
                 app_handle.manage(db_arc);
                 app_handle.manage(settings_manager);
@@ -682,6 +682,7 @@ pub fn run() {
             vector_get_status,
             vector_add_chunks,
             vector_index_project,
+            vector_index_knowledge,
             log_token_event,
             get_token_stats,
             get_token_history,

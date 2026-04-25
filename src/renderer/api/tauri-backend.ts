@@ -497,4 +497,7 @@ export class TauriBackend implements ExtendedApi {
   async vectorIndexProject(projectPath: string): Promise<{ success: boolean; error?: string }> {
     return await tauriIpc.vectorIndexProject(projectPath);
   }
+  async vectorIndexKnowledge(): Promise<{ success: boolean; error?: string }> {
+    return await tauriIpc.vectorIndexKnowledge();
+  }
 }

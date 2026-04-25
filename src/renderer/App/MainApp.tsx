@@ -123,21 +123,13 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
     vectorStatus,
     loading: intelligenceLoading, 
     refresh: refreshIntelligence,
-    triggerDeepScan 
+    triggerDeepScan,
+    syncGlobalKnowledge,
+    reindexProject
   } = useProjectIntelligence(
     api as any,
     activeTab?.projectPath || null
   )
-
-  const handleReindex = useCallback(async () => {
-    if (!activeTab?.projectPath) return;
-    try {
-      await api.vectorIndexProject(activeTab.projectPath);
-      refreshIntelligence();
-    } catch (err) {
-      console.error('Failed to trigger re-index:', err);
-    }
-  }, [api, activeTab?.projectPath, refreshIntelligence]);
 
   // Workspace loader hook
   const {
@@ -515,7 +507,8 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
                   onClose={() => setIntelligenceCollapsed(true)}
                   onRefresh={refreshIntelligence}
                   onDeepScan={triggerDeepScan}
-                  onReindex={handleReindex}
+                  onReindex={reindexProject}
+                  onSyncMemory={syncGlobalKnowledge}
                   onOpenSearch={() => setCognitiveSearchOpen(true)}
                   onWidthChange={setIntelligenceWidth}
                   width={intelligenceWidth}

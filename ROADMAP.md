@@ -35,12 +35,25 @@ Refining the GSD integration from a CLI wrapper to a native execution core.
 - [x] **Wave Execution UI**: Visualizing parallel task waves and blockers.
 - [x] **Verifier Feedback Loop**: Interactive UAT and auto-fix cycles within the GUI.
 
-## Phase 18: Cognitive Search & Long-term Memory
+## Phase 18: Cognitive Search & Long-term Memory (Complete)
 Enhancing project intelligence with vector embeddings and cross-project knowledge.
 
-- [ ] **Vector Indexing**: Background embedding generation for repository symbols.
-- [ ] **Cognitive Query**: Semantic search across the codebase and historical session logs.
-- [ ] **Borg Integration**: Durable cross-project memory layer for "Condensed Knowledge" sharing.
+- [x] **Vector Indexing**: Background embedding generation for repository symbols.
+- [x] **Cognitive Query**: Semantic search across the codebase and historical session logs.
+- [x] **Borg Integration**: Durable cross-project memory layer for "Condensed Knowledge" sharing.
+
+## Phase 19: Vector Persistence (Complete)
+Ensuring vector knowledge survives application restarts.
+
+- [x] **SQLite Storage**: Persistent storage for vector chunks and metadata.
+- [x] **Background Loading**: Automatic restoration of indexed knowledge on startup.
+
+## Phase 20: Borg Cognitive Integration (Complete)
+Bridging global knowledge into the UI and backend indexing loop.
+
+- [x] **Global Indexing**: Support for `~/.gemini/antigravity/knowledge` folder.
+- [x] **Frontend Bridge**: UI triggers for "Sync Global Knowledge" in the Intelligence Sidebar.
+- [x] **Unified Search**: Seamless semantic search across project and global memory.
 
 ---
 

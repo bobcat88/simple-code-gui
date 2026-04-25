@@ -625,8 +625,102 @@ impl DatabaseManager {
         .await
         .map_err(|e| e.to_string())?;
 
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS vector_chunks (
+                id TEXT PRIMARY KEY,
+                project_path TEXT NOT NULL,
+                file_path TEXT NOT NULL,
+                symbol_name TEXT,
+                content TEXT NOT NULL,
+                embedding TEXT,
+                metadata TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_vector_chunks_project
+             ON vector_chunks (project_path)",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
         Ok(())
     }
+}
+
+pub async fn insert_vector_chunk(
+    pool: &sqlx::SqlitePool,
+    chunk: &crate::vector_engine::types::VectorChunk,
+) -> Result<(), String> {
+    let embedding_json = chunk.embedding.as_ref().map(|e| serde_json::to_string(e).unwrap());
+    let metadata_json = serde_json::to_string(&chunk.metadata).unwrap_or_else(|_| "{}".to_string());
+
+    sqlx::query(
+        "INSERT INTO vector_chunks 
+            (id, project_path, file_path, symbol_name, content, embedding, metadata)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET
+            embedding = excluded.embedding,
+            metadata = excluded.metadata,
+            content = excluded.content,
+            symbol_name = excluded.symbol_name",
+    )
+    .bind(&chunk.id)
+    .bind(&chunk.project_path)
+    .bind(&chunk.file_path)
+    .bind(&chunk.symbol_name)
+    .bind(&chunk.content)
+    .bind(embedding_json)
+    .bind(metadata_json)
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+pub async fn get_vector_chunks(
+    pool: &sqlx::SqlitePool,
+    project_path: Option<&str>,
+) -> Result<Vec<crate::vector_engine::types::VectorChunk>, String> {
+    let rows = if let Some(path) = project_path {
+        sqlx::query_as::<_, (String, String, String, String, String, Option<String>, String)>(
+            "SELECT id, project_path, file_path, symbol_name, content, embedding, metadata 
+             FROM vector_chunks WHERE project_path = ?",
+        )
+        .bind(path)
+        .fetch_all(pool)
+        .await
+    } else {
+        sqlx::query_as::<_, (String, String, String, String, String, Option<String>, String)>(
+            "SELECT id, project_path, file_path, symbol_name, content, embedding, metadata 
+             FROM vector_chunks",
+        )
+        .fetch_all(pool)
+        .await
+    }.map_err(|e| e.to_string())?;
+
+    let chunks = rows.into_iter().map(|(id, project_path, file_path, symbol_name, content, embedding_json, metadata_json)| {
+        let embedding = embedding_json.and_then(|s| serde_json::from_str(&s).ok());
+        let metadata = serde_json::from_str(&metadata_json).unwrap_or_default();
+
+        crate::vector_engine::types::VectorChunk {
+            id,
+            project_path,
+            file_path,
+            symbol_name,
+            content,
+            embedding,
+            metadata,
+        }
+    }).collect();
+
+    Ok(chunks)
 }
 
 #[cfg(test)]

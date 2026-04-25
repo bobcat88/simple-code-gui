@@ -320,4 +320,6 @@ export const tauriIpc = {
     invoke<{ success: boolean }>('vector_add_chunks', { chunks }),
   vectorIndexProject: (projectPath: string) =>
     invoke<{ success: boolean, error?: string }>('vector_index_project', { project_path: projectPath }),
+  vectorIndexKnowledge: () =>
+    invoke<{ success: boolean, error?: string }>('vector_index_knowledge'),
 };

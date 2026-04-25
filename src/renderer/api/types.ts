@@ -720,6 +720,7 @@ export interface ExtendedApi extends Api {
   vectorGetStatus: () => Promise<VectorIndexStatus>
   vectorAddChunks: (chunks: VectorChunk[]) => Promise<{ success: boolean }>
   vectorIndexProject: (projectPath: string) => Promise<{ success: boolean; error?: string }>
+  vectorIndexKnowledge: () => Promise<{ success: boolean; error?: string }>
 }
 
 // ============================================================================

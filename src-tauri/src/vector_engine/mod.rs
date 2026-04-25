@@ -12,21 +12,45 @@ use std::path::PathBuf;
 
 pub struct VectorEngine {
     runtime: Arc<RuntimeManager>,
+    pool: sqlx::SqlitePool,
     chunks: Arc<Mutex<Vec<VectorChunk>>>,
     status: Arc<Mutex<VectorIndexStatus>>,
 }
 
 impl VectorEngine {
-    pub fn new(runtime: Arc<RuntimeManager>) -> Self {
+    pub fn new(runtime: Arc<RuntimeManager>, pool: sqlx::SqlitePool) -> Self {
+        let chunks = Arc::new(Mutex::new(Vec::new()));
+        let status = Arc::new(Mutex::new(VectorIndexStatus {
+            total_chunks: 0,
+            indexed_chunks: 0,
+            is_indexing: false,
+            last_updated: 0,
+        }));
+
+        let chunks_clone = chunks.clone();
+        let status_clone = status.clone();
+        let pool_clone = pool.clone();
+
+        // Load existing chunks from database in a background task
+        tokio::spawn(async move {
+            if let Ok(existing_chunks) = crate::database::get_vector_chunks(&pool_clone, None).await {
+                let mut chunks_lock = chunks_clone.lock().await;
+                let mut status_lock = status_clone.lock().await;
+                
+                status_lock.total_chunks = existing_chunks.len();
+                status_lock.indexed_chunks = existing_chunks.iter().filter(|c| c.embedding.is_some()).count();
+                *chunks_lock = existing_chunks;
+                
+                println!("[VectorEngine] Loaded {} chunks from database ({} indexed)", 
+                    status_lock.total_chunks, status_lock.indexed_chunks);
+            }
+        });
+
         Self {
             runtime,
-            chunks: Arc::new(Mutex::new(Vec::new())),
-            status: Arc::new(Mutex::new(VectorIndexStatus {
-                total_chunks: 0,
-                indexed_chunks: 0,
-                is_indexing: false,
-                last_updated: 0,
-            })),
+            pool,
+            chunks,
+            status,
         }
     }
 
@@ -34,6 +58,11 @@ impl VectorEngine {
         let mut chunks = self.chunks.lock().await;
         let mut status = self.status.lock().await;
         
+        // Persist initial chunks to database (without embeddings yet)
+        for chunk in &new_chunks {
+            let _ = crate::database::insert_vector_chunk(&self.pool, chunk).await;
+        }
+
         status.total_chunks += new_chunks.len();
         chunks.append(&mut new_chunks);
         
@@ -42,11 +71,12 @@ impl VectorEngine {
             let engine_chunks = self.chunks.clone();
             let engine_status = self.status.clone();
             let runtime = self.runtime.clone();
+            let pool = self.pool.clone();
             
             status.is_indexing = true;
             
             tokio::spawn(async move {
-                Self::indexing_loop(engine_chunks, engine_status, runtime).await;
+                Self::indexing_loop(engine_chunks, engine_status, runtime, pool).await;
             });
         }
     }
@@ -55,6 +85,7 @@ impl VectorEngine {
         chunks_mutex: Arc<Mutex<Vec<VectorChunk>>>,
         status_mutex: Arc<Mutex<VectorIndexStatus>>,
         runtime: Arc<RuntimeManager>,
+        pool: sqlx::SqlitePool,
     ) {
         loop {
             let mut target_index = None;
@@ -85,6 +116,9 @@ impl VectorEngine {
                             if index < chunks.len() {
                                 chunks[index].embedding = Some(embedding);
                                 
+                                // Persist updated chunk with embedding to database
+                                let _ = crate::database::insert_vector_chunk(&pool, &chunks[index]).await;
+
                                 let mut status = status_mutex.lock().await;
                                 status.indexed_chunks += 1;
                                 status.last_updated = std::time::SystemTime::now()
@@ -145,6 +179,25 @@ impl VectorEngine {
     pub async fn get_status(&self) -> VectorIndexStatus {
         self.status.lock().await.clone()
     }
+}
+#[tauri::command]
+pub async fn vector_index_knowledge(
+    engine: tauri::State<'_, Arc<VectorEngine>>,
+) -> Result<usize, String> {
+    let home_dir = std::env::var("HOME").map_err(|_| "Could not find HOME directory".to_string())?;
+    let knowledge_path = PathBuf::from(home_dir).join(".gemini/antigravity/knowledge");
+    
+    if !knowledge_path.exists() {
+        return Err(format!("Knowledge path does not exist: {:?}", knowledge_path));
+    }
+
+    let indexer = ProjectIndexer::new(knowledge_path);
+    let chunks = indexer.scan();
+    let count = chunks.len();
+    
+    engine.add_chunks(chunks).await;
+    
+    Ok(count)
 }
 
 fn cosine_similarity(v1: &[f32], v2: &[f32]) -> f32 {
