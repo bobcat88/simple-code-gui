@@ -20,6 +20,7 @@ pub struct GsdEngine {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum UserResponse {
     Approve,
+    ApproveFix,
     Retry,
     Abort,
 }
@@ -137,6 +138,8 @@ pub async fn gsd_add_phase(
         title,
         steps: Vec::new(),
         status: StepStatus::Pending,
+        started_at: None,
+        completed_at: None,
     };
 
     plan.phases.push(phase.clone());
@@ -178,6 +181,8 @@ pub async fn gsd_add_step(
         attempts: 0,
         max_retries: 3,
         wave_index: None,
+        started_at: None,
+        completed_at: None,
     };
 
     phase.steps.push(step.clone());

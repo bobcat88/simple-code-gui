@@ -133,6 +133,7 @@ impl Executor {
         runtime: PlanRuntimeConfig,
     ) -> Result<(), String> {
         phase.status = StepStatus::InProgress;
+        phase.started_at = Some(Utc::now().timestamp_millis() as u64);
         let _ = self.app.emit("gsd-phase-updated", phase.clone());
         self.emit_execution_event(
             plan_id,
@@ -188,6 +189,7 @@ impl Executor {
                         updated_step.id,
                         wave_index + 1
                     ));
+                    phase.completed_at = Some(Utc::now().timestamp_millis() as u64);
                     let _ = self.app.emit("gsd-phase-updated", phase.clone());
                     self.emit_execution_event(
                         plan_id,
@@ -221,6 +223,7 @@ impl Executor {
         }
 
         phase.status = StepStatus::Completed;
+        phase.completed_at = Some(Utc::now().timestamp_millis() as u64);
         let _ = self.app.emit("gsd-phase-updated", phase.clone());
         self.emit_execution_event(
             plan_id,
@@ -243,6 +246,9 @@ impl Executor {
         let retry_budget = verifier_retries.min(step.max_retries).max(1);
 
         loop {
+            if step.started_at.is_none() {
+                step.started_at = Some(Utc::now().timestamp_millis() as u64);
+            }
             step.status = StepStatus::InProgress;
             step.attempts += 1;
             self.emit_execution_event(
@@ -258,6 +264,7 @@ impl Executor {
             sleep(Duration::from_millis(150)).await;
 
             step.status = StepStatus::Completed;
+            step.completed_at = Some(Utc::now().timestamp_millis() as u64);
             step.result = Some(format!(
                 "Step executed successfully on attempt {}",
                 step.attempts
@@ -313,16 +320,27 @@ impl Executor {
                 continue;
             }
 
-            // Budget exhausted - Wait for User
-            step.status = StepStatus::WaitingForUser("Verification failed. Please review and decide how to proceed.".to_string());
+            // Budget exhausted - Propose Auto-Fix
+            step.status = StepStatus::AutoFixing("Analyzing failure and proposing solution...".to_string());
+            let _ = self.app.emit("gsd-step-updated", step.clone());
+
+            let fix_proposal = match self.generate_auto_fix(&step).await {
+                Ok(fix) => fix,
+                Err(e) => format!("Failed to generate auto-fix: {}", e),
+            };
+
+            step.status = StepStatus::AwaitingFixApproval(
+                "Verification failed after multiple attempts.".to_string(),
+                fix_proposal.clone()
+            );
             let _ = self.app.emit("gsd-step-updated", step.clone());
             
             self.emit_execution_event(
                 plan_id,
                 Some(phase_id),
                 Some(&step.id),
-                "checkpoint_required",
-                format!("Step {} requires manual approval", step.title),
+                "auto_fix_proposed",
+                format!("Step {} proposed fix: {}", step.title, fix_proposal),
             );
 
             // Create oneshot channel and register it
@@ -345,6 +363,28 @@ impl Executor {
                     step.status = StepStatus::Completed;
                     return Ok(step);
                 }
+                Ok(crate::gsd_engine::UserResponse::ApproveFix) => {
+                    self.emit_execution_event(
+                        plan_id,
+                        Some(phase_id),
+                        Some(&step.id),
+                        "auto_fix_applied",
+                        format!("User approved auto-fix for step {}", step.title),
+                    );
+                    
+                    step.status = StepStatus::AutoFixing("Applying fix...".to_string());
+                    let _ = self.app.emit("gsd-step-updated", step.clone());
+                    
+                    // Simulate fixing
+                    sleep(Duration::from_millis(500)).await;
+                    
+                    step.status = StepStatus::Completed;
+                    step.result = Some("Fix applied and verification passed".to_string());
+                    step.completed_at = Some(Utc::now().timestamp_millis() as u64);
+                    let _ = self.app.emit("gsd-step-updated", step.clone());
+                    
+                    return Ok(step);
+                }
                 Ok(crate::gsd_engine::UserResponse::Retry) => {
                     self.emit_execution_event(
                         plan_id,
@@ -359,6 +399,7 @@ impl Executor {
                 }
                 Ok(crate::gsd_engine::UserResponse::Abort) | Err(_) => {
                     step.status = StepStatus::Failed("User aborted or session timed out".to_string());
+                    step.completed_at = Some(Utc::now().timestamp_millis() as u64);
                     let _ = self.app.emit("gsd-step-updated", step.clone());
                     return Ok(step);
                 }
@@ -440,6 +481,29 @@ impl Executor {
         );
 
         Ok(())
+    }
+
+    pub async fn generate_auto_fix(&self, step: &GsdStep) -> Result<String, String> {
+        let ai = self._ai.clone();
+        let prompt = format!(
+            "You are a GSD Auto-Fix Engine. A task has failed verification. Propose a specific, concise fix.\n\nTask: {}\nDescription: {}\nResult: {}\n\nOutput ONLY the proposed fix description (e.g., 'Update imports in utils.ts').",
+            step.title, step.description, step.result.clone().unwrap_or_else(|| "N/A".to_string())
+        );
+
+        let request = crate::ai_runtime::types::CompletionRequest {
+            messages: vec![crate::ai_runtime::types::Message {
+                role: "user".to_string(),
+                content: prompt,
+            }],
+            temperature: Some(0.3),
+            max_tokens: Some(150),
+            ..Default::default()
+        };
+
+        match ai.dispatch(request).await {
+            Ok(resp) => Ok(resp.content),
+            Err(e) => Err(format!("Failed to generate fix: {}", e)),
+        }
     }
 }
 

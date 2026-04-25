@@ -11,10 +11,13 @@ import {
   ShieldCheck,
   History,
   FileCode,
-  AlertTriangle
+  AlertTriangle,
+  Search,
+  Brain,
+  Cpu
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
-import type { ProjectIntelligence, ProjectCapabilityScan, InitializationProposal, ProposalOperation, ExtendedApi, ProposalProgress } from '../../api/types'
+import type { ProjectIntelligence, ProjectCapabilityScan, InitializationProposal, ProposalOperation, ExtendedApi, ProposalProgress, VectorIndexStatus } from '../../api/types'
 
 interface IntelligenceSidebarProps {
   intelligence: ProjectIntelligence | null
@@ -24,7 +27,10 @@ interface IntelligenceSidebarProps {
   onClose: () => void
   onRefresh: () => void
   onDeepScan: () => void
+  onReindex: () => void
+  onOpenSearch: () => void
   onWidthChange: (width: number) => void
+  vectorStatus: VectorIndexStatus | null
   width: number
 }
 
@@ -36,8 +42,11 @@ export function IntelligenceSidebar({
   onClose, 
   onRefresh,
   onDeepScan,
+  onReindex,
+  onOpenSearch,
   onWidthChange,
-  width 
+  width,
+  vectorStatus
 }: IntelligenceSidebarProps) {
   const [isResizing, setIsResizing] = React.useState(false)
   const [showWizard, setShowWizard] = React.useState(false)
@@ -473,6 +482,77 @@ export function IntelligenceSidebar({
               <span>Git repository not detected or accessible</span>
             </div>
           )}
+        </section>
+
+        {/* Cognitive Context */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/40">Cognitive Context</h3>
+            <div className="flex items-center gap-1.5">
+              <Brain size={12} className="text-purple-400" />
+              <span className="text-[10px] text-purple-400/80 font-medium">Transwarp</span>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="bg-white/5 border border-white/5 rounded-xl p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Cpu size={14} className="text-purple-400" />
+                  <span className="text-xs text-white/90 font-medium">Vector Index</span>
+                </div>
+                {vectorStatus?.isIndexing && (
+                  <span className="flex items-center gap-1 text-[9px] text-purple-400 animate-pulse">
+                    <RefreshCw size={10} className="animate-spin" />
+                    Indexing...
+                  </span>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[10px] text-white/40">
+                  <span>Progress</span>
+                  <span>{vectorStatus?.indexedChunks ?? 0} / {vectorStatus?.totalChunks ?? 0}</span>
+                </div>
+                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.4)] transition-all duration-500"
+                    style={{ 
+                      width: `${vectorStatus?.totalChunks ? (vectorStatus.indexedChunks / vectorStatus.totalChunks) * 100 : 0}%` 
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button 
+                  onClick={onOpenSearch}
+                  className="flex-1 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Search size={12} />
+                  Semantic Search
+                </button>
+                <button 
+                  onClick={onReindex}
+                  disabled={vectorStatus?.isIndexing}
+                  className="px-2 py-1.5 bg-white/5 hover:bg-white/10 text-white/60 border border-white/10 rounded-lg text-[10px] transition-all disabled:opacity-50"
+                  title="Re-index Project"
+                >
+                  <RefreshCw size={12} className={cn(vectorStatus?.isIndexing && "animate-spin")} />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-2.5 rounded-lg bg-purple-500/5 border border-purple-500/10 flex items-start gap-2">
+              <Brain size={14} className="text-purple-400 shrink-0 mt-0.5" />
+              <div>
+                <div className="text-[11px] font-medium text-purple-400">Long-term Memory</div>
+                <p className="text-[10px] text-white/40 leading-normal">
+                  Vector index enables semantic codebase understanding and session recall.
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* GitNexus context */}

@@ -310,4 +310,14 @@ export const tauriIpc = {
     listen<any>('gsd-phase-updated', (event) => callback(event.payload)),
   onGsdStepUpdated: (callback: (step: any) => void): Promise<UnlistenFn> =>
     listen<any>('gsd-step-updated', (event) => callback(event.payload)),
+
+  // Vector Engine
+  vectorSearch: (query: string, limit?: number, projectPath?: string) =>
+    invoke<any[]>('vector_search', { query, limit, project_path: projectPath }),
+  vectorGetStatus: () =>
+    invoke<any>('vector_get_status'),
+  vectorAddChunks: (chunks: any[]) =>
+    invoke<{ success: boolean }>('vector_add_chunks', { chunks }),
+  vectorIndexProject: (projectPath: string) =>
+    invoke<{ success: boolean, error?: string }>('vector_index_project', { project_path: projectPath }),
 };

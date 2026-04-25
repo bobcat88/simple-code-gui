@@ -9,6 +9,8 @@ pub enum StepStatus {
     Failed(String),
     Skipped,
     WaitingForUser(String),
+    AutoFixing(String),
+    AwaitingFixApproval(String, String), // message, proposed_fix
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,6 +24,8 @@ pub struct GsdStep {
     pub attempts: u32,
     pub max_retries: u32,
     pub wave_index: Option<u32>,
+    pub started_at: Option<u64>,
+    pub completed_at: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -31,6 +35,8 @@ pub struct GsdPhase {
     pub title: String,
     pub steps: Vec<GsdStep>,
     pub status: StepStatus,
+    pub started_at: Option<u64>,
+    pub completed_at: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

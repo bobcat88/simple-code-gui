@@ -1,4 +1,4 @@
-use crate::ai_runtime::types::{CompletionRequest, CompletionResponse, ModelInfo, Usage};
+use crate::ai_runtime::types::{CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse, ModelInfo, Usage};
 use crate::ai_runtime::AIProvider;
 use serde_json::{json, Value};
 use reqwest::Client;
@@ -66,6 +66,53 @@ impl AIProvider for OllamaProvider {
             id: "ollama-resp".to_string(),
             model,
             content,
+            usage: Some(usage),
+        })
+    }
+
+    async fn embed(&self, request: EmbeddingRequest) -> Result<EmbeddingResponse, String> {
+        let url = format!("{}/api/embeddings", self.base_url);
+        let model = request.model.unwrap_or_else(|| "all-minilm".to_string());
+        
+        let mut embeddings = Vec::new();
+        let total_tokens = 0;
+
+        for text in request.input {
+            let response = self.client.post(&url)
+                .json(&json!({
+                    "model": &model,
+                    "prompt": text,
+                }))
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+
+            let status = response.status();
+            let body = response.text().await.map_err(|e| e.to_string())?;
+
+            if !status.is_success() {
+                return Err(format!("Ollama Embedding Error ({}): {}", status, body));
+            }
+
+            let json: Value = serde_json::from_str(&body).map_err(|e| e.to_string())?;
+            
+            if let Some(embedding_values) = json["embedding"].as_array() {
+                let vec: Vec<f32> = embedding_values
+                    .iter()
+                    .map(|v| v.as_f64().unwrap_or(0.0) as f32)
+                    .collect();
+                embeddings.push(vec);
+            }
+        }
+
+        let usage = Usage {
+            input_tokens: total_tokens,
+            ..Default::default()
+        };
+
+        Ok(EmbeddingResponse {
+            model,
+            embeddings,
             usage: Some(usage),
         })
     }

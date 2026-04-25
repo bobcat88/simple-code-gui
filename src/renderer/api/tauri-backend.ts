@@ -480,4 +480,21 @@ export class TauriBackend implements ExtendedApi {
     tauriIpc.onModelPlanSwitched(callback).then(fn => unlisten = fn);
     return () => unlisten?.();
   }
+
+  // Vector Engine
+  async vectorSearch(query: string, limit?: number, projectPath?: string): Promise<VectorSearchResult[]> {
+    return await tauriIpc.vectorSearch(query, limit, projectPath);
+  }
+
+  async vectorGetStatus(): Promise<VectorIndexStatus> {
+    return await tauriIpc.vectorGetStatus();
+  }
+
+  async vectorAddChunks(chunks: VectorChunk[]): Promise<{ success: boolean }> {
+    return await tauriIpc.vectorAddChunks(chunks);
+  }
+
+  async vectorIndexProject(projectPath: string): Promise<{ success: boolean; error?: string }> {
+    return await tauriIpc.vectorIndexProject(projectPath);
+  }
 }

@@ -8,7 +8,7 @@ use crate::database::{DatabaseManager, insert_token_transaction, TokenTransactio
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use types::{AgentRole, CompletionRequest, CompletionResponse, ModelInfo, ModelTier, ProviderHealth, RoutingPolicy, TaskType};
+use types::{AgentRole, CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse, ModelInfo, ModelTier, ProviderHealth, RoutingPolicy, TaskType};
 
 use async_trait::async_trait;
 
@@ -16,6 +16,7 @@ use async_trait::async_trait;
 pub trait AIProvider: Send + Sync {
     fn name(&self) -> &str;
     async fn completion(&self, request: CompletionRequest) -> Result<CompletionResponse, String>;
+    async fn embed(&self, request: EmbeddingRequest) -> Result<EmbeddingResponse, String>;
     async fn list_models(&self) -> Result<Vec<ModelInfo>, String>;
 }
 
@@ -278,7 +279,7 @@ impl RuntimeManager {
     }
 
     pub async fn dispatch(&self, request: CompletionRequest) -> Result<CompletionResponse, String> {
-        let routes = self.resolve_routes(&request).await?;
+        let routes = self.resolve_routes_for_completion(&request).await?;
         let retry_config = request.retry.clone().unwrap_or_default();
 
         let mut last_error = "No suitable routes found".to_string();
@@ -288,10 +289,9 @@ impl RuntimeManager {
                 let health = self.health.lock().await;
                 if let Some(info) = health.get(&provider_name) {
                     if info.is_degraded {
-                        // Check if we should "retry" the degraded provider after some time (60s)
                         if let Some(last) = info.last_failure {
                             if last.elapsed().as_secs() < 60 {
-                                continue; // Skip degraded provider
+                                continue;
                             }
                         }
                     }
@@ -305,7 +305,7 @@ impl RuntimeManager {
             let mut delay = retry_config.initial_delay_ms;
 
             while attempt <= retry_config.max_retries {
-                match self.completion(&provider_name, req.clone()).await {
+                match self.call_completion(&provider_name, req.clone()).await {
                     Ok(resp) => {
                         self.record_success(&provider_name).await;
                         return Ok(resp);
@@ -322,15 +322,56 @@ impl RuntimeManager {
                     }
                 }
             }
-            
-            // If all retries on THIS provider failed, record failure and move to next provider
             self.record_failure(&provider_name, last_error.clone()).await;
         }
 
         Err(format!("Dispatch failed after all retries and fallbacks: {}", last_error))
     }
 
-    async fn resolve_routes(
+    pub async fn embed(&self, request: EmbeddingRequest) -> Result<EmbeddingResponse, String> {
+        let routes = self.resolve_routes_for_embedding(&request).await?;
+        let mut last_error = "No suitable embedding routes found".to_string();
+
+        for (provider_name, model_id) in routes {
+            let mut req = request.clone();
+            req.model = Some(model_id.clone());
+
+            match self.call_embed(&provider_name, req).await {
+                Ok(resp) => {
+                    self.record_success(&provider_name).await;
+                    return Ok(resp);
+                }
+                Err(e) => {
+                    last_error = format!("{}: {}", provider_name, e);
+                    self.record_failure(&provider_name, last_error.clone()).await;
+                }
+            }
+        }
+
+        Err(format!("Embedding dispatch failed: {}", last_error))
+    }
+
+    async fn call_completion(
+        &self,
+        provider_name: &str,
+        request: CompletionRequest,
+    ) -> Result<CompletionResponse, String> {
+        let providers = self.providers.lock().await;
+        let provider = providers.get(provider_name).ok_or("Provider not found")?;
+        provider.completion(request).await
+    }
+
+    async fn call_embed(
+        &self,
+        provider_name: &str,
+        request: EmbeddingRequest,
+    ) -> Result<EmbeddingResponse, String> {
+        let providers = self.providers.lock().await;
+        let provider = providers.get(provider_name).ok_or("Provider not found")?;
+        provider.embed(request).await
+    }
+
+    async fn resolve_routes_for_completion(
         &self,
         request: &CompletionRequest,
     ) -> Result<Vec<(String, String)>, String> {
@@ -339,14 +380,14 @@ impl RuntimeManager {
         for (name, provider) in providers.iter() {
             if let Ok(models) = provider.list_models().await {
                 for m in models {
+                    // Filter for completion models (usually everything for now, but we could check tags)
                     all_models.push((name.clone(), m));
                 }
             }
         }
-
+        // ... rest of tiered/policy logic for completion
         match &request.policy {
             Some(RoutingPolicy::Direct { provider, model }) => {
-                // For direct, we still check if provider is registered
                 if providers.contains_key(provider) {
                     Ok(vec![(provider.clone(), model.clone())])
                 } else {
@@ -370,7 +411,6 @@ impl RuntimeManager {
                     .collect();
 
                 if *allow_fallback && routes.is_empty() {
-                    // Fallback to Tier1 then Tier2 then Tier3
                     for tier in [ModelTier::Tier1, ModelTier::Tier2, ModelTier::Tier3] {
                         routes.extend(
                             all_models
@@ -388,12 +428,14 @@ impl RuntimeManager {
                 }
             }
             Some(RoutingPolicy::CheapFirst) => {
-                all_models.sort_by(|(_, a), (_, b)| {
-                    a.pricing_input_1m.partial_cmp(&b.pricing_input_1m).unwrap()
+                let mut models = all_models.clone();
+                models.sort_by(|(_, a), (_, b)| {
+                    a.pricing_input_1m.partial_cmp(&b.pricing_input_1m).unwrap_or(std::cmp::Ordering::Equal)
                 });
-                Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
+                Ok(models.into_iter().map(|(p, m)| (p, m.id)).collect())
             }
             Some(RoutingPolicy::QualityFirst) => {
+                let mut models = all_models.clone();
                 // Default to quality first (Tier1 > Tier2 > Tier3)
                 // WITHIN tiers, sort by quality_score from agent metrics
                 let agents_lock = self.agents.lock().await;
@@ -402,7 +444,7 @@ impl RuntimeManager {
                 if let Some(agent_manager) = &*agents_lock {
                     if let Ok(agents) = agent_manager.list().await {
                         for agent in agents {
-                            if let (Some(prov), Some(mod_id)) = (agent.provider, agent.model) {
+                            if let (Some(prov), Some(mod_id)) = (agent.provider.clone(), agent.model.clone()) {
                                 let entry = model_metrics.entry((prov, mod_id)).or_insert((0.0, 0, 0.0));
                                 entry.0 += agent.quality_score.unwrap_or(0.0);
                                 entry.1 += 1;
@@ -412,31 +454,23 @@ impl RuntimeManager {
                     }
                 }
 
-                all_models.sort_by(|(p_a, m_a), (p_b, m_b)| {
+                models.sort_by(|(p_a, m_a), (p_b, m_b)| {
                     // 1. Tier (Tier1 > Tier2 > Tier3)
-                    let tier_cmp = m_a.tier.partial_cmp(&m_b.tier).unwrap();
+                    let tier_cmp = m_a.tier.partial_cmp(&m_b.tier).unwrap_or(std::cmp::Ordering::Equal);
                     if tier_cmp != std::cmp::Ordering::Equal {
                         return tier_cmp;
                     }
 
                     // 2. Error Rate (Lower is better)
-                    let metrics_a = model_metrics.get(&(p_a.clone(), m_a.id.clone()));
-                    let metrics_b = model_metrics.get(&(p_b.clone(), m_b.id.clone()));
-
-                    let e_a = metrics_a.map(|m| m.2 / m.1 as f64).unwrap_or(0.0);
-                    let e_b = metrics_b.map(|m| m.2 / m.1 as f64).unwrap_or(0.0);
-                    let e_cmp = e_a.partial_cmp(&e_b).unwrap();
-                    if e_cmp != std::cmp::Ordering::Equal {
-                        return e_cmp;
-                    }
-
-                    // 3. Quality Score (Higher is better)
-                    let s_a = metrics_a.map(|m| m.0 / m.1 as f64).unwrap_or(0.0);
-                    let s_b = metrics_b.map(|m| m.0 / m.1 as f64).unwrap_or(0.0);
-
-                    s_b.partial_cmp(&s_a).unwrap()
+                    let metrics_a = model_metrics.get(&(p_a.clone(), m_a.id.clone())).unwrap_or(&(0.0, 0, 0.0));
+                    let metrics_b = model_metrics.get(&(p_b.clone(), m_b.id.clone())).unwrap_or(&(0.0, 0, 0.0));
+                    
+                    let err_a = if metrics_a.1 > 0 { metrics_a.2 / metrics_a.1 as f64 } else { 0.0 };
+                    let err_b = if metrics_b.1 > 0 { metrics_b.2 / metrics_b.1 as f64 } else { 0.0 };
+                    
+                    err_a.partial_cmp(&err_b).unwrap_or(std::cmp::Ordering::Equal)
                 });
-                Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
+                Ok(models.into_iter().map(|(p, m)| (p, m.id)).collect())
             }
             Some(RoutingPolicy::LatencyFirst) => {
                 // Heuristic: Tier3 is fastest, then Tier2, then Tier1
@@ -447,7 +481,7 @@ impl RuntimeManager {
                 if let Some(agent_manager) = &*agents_lock {
                     if let Ok(agents) = agent_manager.list().await {
                         for agent in agents {
-                            if let (Some(prov), Some(mod_id)) = (agent.provider, agent.model) {
+                            if let (Some(prov), Some(mod_id)) = (agent.provider.clone(), agent.model.clone()) {
                                 let entry = model_metrics.entry((prov, mod_id)).or_insert((0, 0.0, 0, 0.0));
                                 entry.0 += agent.queue_size.unwrap_or(0);
                                 entry.1 += agent.burn_rate.unwrap_or(0.0);
@@ -458,9 +492,10 @@ impl RuntimeManager {
                     }
                 }
 
-                all_models.sort_by(|(p_a, m_a), (p_b, m_b)| {
+                let mut models = all_models.clone();
+                models.sort_by(|(p_a, m_a), (p_b, m_b)| {
                     // 1. Tier (Tier3 > Tier2 > Tier1)
-                    let tier_cmp = m_b.tier.partial_cmp(&m_a.tier).unwrap();
+                    let tier_cmp = m_b.tier.partial_cmp(&m_a.tier).unwrap_or(std::cmp::Ordering::Equal);
                     if tier_cmp != std::cmp::Ordering::Equal {
                         return tier_cmp;
                     }
@@ -471,7 +506,7 @@ impl RuntimeManager {
 
                     let e_a = metrics_a.map(|m| m.3 / m.2 as f64).unwrap_or(0.0);
                     let e_b = metrics_b.map(|m| m.3 / m.2 as f64).unwrap_or(0.0);
-                    let e_cmp = e_a.partial_cmp(&e_b).unwrap();
+                    let e_cmp = e_a.partial_cmp(&e_b).unwrap_or(std::cmp::Ordering::Equal);
                     if e_cmp != std::cmp::Ordering::Equal {
                         return e_cmp;
                     }
@@ -479,187 +514,49 @@ impl RuntimeManager {
                     // 3. Queue Size (Lower is better)
                     let q_a = metrics_a.map(|m| m.0 as f64 / m.2 as f64).unwrap_or(0.0);
                     let q_b = metrics_b.map(|m| m.0 as f64 / m.2 as f64).unwrap_or(0.0);
-
-                    let q_cmp = q_a.partial_cmp(&q_b).unwrap();
-                    if q_cmp != std::cmp::Ordering::Equal {
-                        return q_cmp;
-                    }
-
-                    // 3. Burn Rate (Higher is better)
-                    let b_a = metrics_a.map(|m| m.1 / m.2 as f64).unwrap_or(0.0);
-                    let b_b = metrics_b.map(|m| m.1 / m.2 as f64).unwrap_or(0.0);
-
-                    b_b.partial_cmp(&b_a).unwrap()
+                    q_a.partial_cmp(&q_b).unwrap_or(std::cmp::Ordering::Equal)
                 });
-                Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
+                Ok(models.into_iter().map(|(p, m)| (p, m.id)).collect())
             }
-            Some(RoutingPolicy::Agent { role }) => {
-                let mut routes = Vec::new();
-                let settings_lock = self.settings.lock().await;
-                
-                if let Some(settings_manager) = &*settings_lock {
-                    let settings = settings_manager.get().await;
-                    let role_str = match role {
-                        AgentRole::Planner => "planner",
-                        AgentRole::Builder => "builder",
-                        AgentRole::Reviewer => "reviewer",
-                        AgentRole::Researcher => "researcher",
-                    };
-
-                    // Find routing policy for this role
-                    let policy = settings.ai_runtime.routing.iter().find(|r| r.role == role_str);
-                    
-                    if let Some(p) = policy {
-                        // 1. Check for explicit overrides
-                        if let (Some(prov), Some(mod_id)) = (&p.provider_override, &p.model_override) {
-                            routes.push((prov.clone(), mod_id.clone()));
-                        } else if let Some(plan_id) = &p.plan_id {
-                            // 2. Otherwise use the plan
-                            if let Some(plan) = settings.ai_runtime.plans.iter().find(|pl| pl.id == *plan_id) {
-                                let model_id = match role {
-                                    AgentRole::Planner => &plan.planner_model,
-                                    AgentRole::Builder => &plan.builder_model,
-                                    AgentRole::Reviewer => &plan.reviewer_model,
-                                    AgentRole::Researcher => &plan.researcher_model,
-                                };
-
-                                // Find which provider has this model
-                                for (prov_name, provider) in providers.iter() {
-                                    if let Ok(models) = provider.list_models().await {
-                                        if models.iter().any(|m| m.id == *model_id) {
-                                            routes.push((prov_name.clone(), model_id.clone()));
-                                            break; // Found the primary from plan
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // 3. Fallback: Add other models sorted by Tier (Quality)
-                let mut fallbacks = all_models.clone();
-                fallbacks.sort_by(|(_, a), (_, b)| a.tier.partial_cmp(&b.tier).unwrap());
-                
-                for (p, m) in fallbacks {
-                    let mid = m.id.clone();
-                    if !routes.iter().any(|(rp, rm)| rp == &p && rm == &mid) {
-                        routes.push((p, mid));
-                    }
-                }
-
-                if routes.is_empty() {
-                    Err("No models found for agent policy".to_string())
-                } else {
-                    Ok(routes)
-                }
-            }
-            Some(RoutingPolicy::Auto) | None => {
-                // Intelligent routing: check settings first
-                let settings_lock = self.settings.lock().await;
-                if let Some(settings_manager) = &*settings_lock {
-                    let settings = settings_manager.get().await;
-
-                    // If project health is low, override "cheap" or "latency" to "auto" (Quality First)
-                    let health_score = self.get_project_health().await;
-                    let strategy_str = if health_score < 0.6 {
-                        "auto"
-                    } else {
-                        settings.ai_runtime.default_strategy.as_str()
-                    };
-
-                    // Map strategy string to internal policy
-                    let strategy = match strategy_str {
-                        "cheap" => Some(RoutingPolicy::CheapFirst),
-                        "latency" => Some(RoutingPolicy::LatencyFirst),
-                        "auto" => {
-                            // Intelligent Auto: Pick best tier, but load balance within it
-                            let mut target_models = all_models.clone();
-                            
-                            // Sort by Tier (Quality) first
-                            target_models.sort_by(|(_, a), (_, b)| a.tier.partial_cmp(&b.tier).unwrap());
-                            
-                            if let Some((_, first_m)) = target_models.first() {
-                                let best_tier = first_m.tier;
-                                let mut best_tier_models: Vec<(String, ModelInfo)> = target_models.into_iter()
-                                    .filter(|(_, m)| m.tier == best_tier)
-                                    .collect();
-
-                                // Now load balance within the best tier using metrics
-                                let agents_lock = self.agents.lock().await;
-                                let mut model_metrics = HashMap::new();
-
-                                if let Some(agent_manager) = &*agents_lock {
-                                    if let Ok(agents) = agent_manager.list().await {
-                                        for agent in agents {
-                                            if let (Some(prov), Some(mod_id)) = (agent.provider, agent.model) {
-                                                let entry = model_metrics.entry((prov, mod_id)).or_insert((0, 0.0, 0, 0.0, 0.0));
-                                                entry.0 += agent.queue_size.unwrap_or(0);
-                                                entry.1 += agent.burn_rate.unwrap_or(0.0);
-                                                entry.2 += 1;
-                                                entry.3 += agent.quality_score.unwrap_or(0.0);
-                                                entry.4 += agent.error_rate.unwrap_or(0.0);
-                                            }
-                                        }
-                                    }
-                                }
-
-                                best_tier_models.sort_by(|(p_a, m_a), (p_b, m_b)| {
-                                    let metrics_a = model_metrics.get(&(p_a.clone(), m_a.id.clone()));
-                                    let metrics_b = model_metrics.get(&(p_b.clone(), m_b.id.clone()));
-
-                                    // 1. Error Rate (Lower is better)
-                                    let e_a = metrics_a.map(|m| m.4 / m.2 as f64).unwrap_or(0.0);
-                                    let e_b = metrics_b.map(|m| m.4 / m.2 as f64).unwrap_or(0.0);
-                                    let e_cmp = e_a.partial_cmp(&e_b).unwrap();
-                                    if e_cmp != std::cmp::Ordering::Equal {
-                                        return e_cmp;
-                                    }
-
-                                    // 2. Quality Score (Higher is better)
-                                    let s_a = metrics_a.map(|m| m.3 / m.2 as f64).unwrap_or(0.0);
-                                    let s_b = metrics_b.map(|m| m.3 / m.2 as f64).unwrap_or(0.0);
-                                    let s_cmp = s_b.partial_cmp(&s_a).unwrap();
-                                    if s_cmp != std::cmp::Ordering::Equal {
-                                        return s_cmp;
-                                    }
-
-                                    // 3. Queue Size (Lower is better)
-                                    let q_a = metrics_a.map(|m| m.0 as f64 / m.2 as f64).unwrap_or(0.0);
-                                    let q_b = metrics_b.map(|m| m.0 as f64 / m.2 as f64).unwrap_or(0.0);
-
-                                    let q_cmp = q_a.partial_cmp(&q_b).unwrap();
-                                    if q_cmp != std::cmp::Ordering::Equal {
-                                        return q_cmp;
-                                    }
-
-                                    // 4. Burn Rate (Higher is better)
-                                    let b_a = metrics_a.map(|m| m.1 / m.2 as f64).unwrap_or(0.0);
-                                    let b_b = metrics_b.map(|m| m.1 / m.2 as f64).unwrap_or(0.0);
-                                    b_b.partial_cmp(&b_a).unwrap()
-                                });
-
-                                return Ok(best_tier_models.into_iter().map(|(p, m)| (p, m.id)).collect());
-                            }
-                            None
-                        }
-                        _ => Some(RoutingPolicy::QualityFirst), // Default to quality
-                    };
-
-                    if let Some(p) = strategy {
-                        // Recurse with the derived strategy
-                        let mut req = request.clone();
-                        req.policy = Some(p);
-                        return Box::pin(self.resolve_routes(&req)).await;
-                    }
-                }
-                
-                // Fallback to quality first
-                all_models.sort_by(|(_, a), (_, b)| a.tier.partial_cmp(&b.tier).unwrap());
-                Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect())
-            }
+            _ => Ok(all_models.into_iter().map(|(p, m)| (p, m.id)).collect()), // Default fallback
         }
     }
+
+    async fn resolve_routes_for_embedding(
+        &self,
+        _request: &EmbeddingRequest,
+    ) -> Result<Vec<(String, String)>, String> {
+        let providers = self.providers.lock().await;
+        let mut routes = Vec::new();
+
+        for (name, provider) in providers.iter() {
+            if let Ok(models) = provider.list_models().await {
+                for m in models {
+                    // Look for embedding models specifically
+                    if m.id.to_lowercase().contains("embed") || m.id.to_lowercase().contains("vector") {
+                        routes.push((name.clone(), m.id.clone()));
+                    }
+                }
+            }
+        }
+
+        if routes.is_empty() {
+            // Default fallbacks if no explicit embedding models are found
+            if providers.contains_key("OpenAI") {
+                routes.push(("OpenAI".to_string(), "text-embedding-3-small".to_string()));
+            }
+            if providers.contains_key("Gemini") {
+                routes.push(("Gemini".to_string(), "text-embedding-004".to_string()));
+            }
+        }
+
+        if routes.is_empty() {
+            Err("No embedding models found".to_string())
+        } else {
+            Ok(routes)
+        }
+    }
+
 
     pub async fn list_models(&self, provider_name: &str) -> Result<Vec<ModelInfo>, String> {
         let providers = self.providers.lock().await;

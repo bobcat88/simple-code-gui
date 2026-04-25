@@ -1,4 +1,4 @@
-use crate::ai_runtime::types::{CompletionRequest, CompletionResponse, ModelInfo, Usage};
+use crate::ai_runtime::types::{CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse, ModelInfo, Usage};
 use crate::ai_runtime::AIProvider;
 use serde_json::{json, Value};
 use reqwest::Client;
@@ -66,6 +66,10 @@ impl AIProvider for ClaudeProvider {
             content,
             usage: Some(usage),
         })
+    }
+
+    async fn embed(&self, _request: EmbeddingRequest) -> Result<EmbeddingResponse, String> {
+        Err("Claude does not support embeddings currently".to_string())
     }
 
     async fn list_models(&self) -> Result<Vec<ModelInfo>, String> {

@@ -1,5 +1,5 @@
 use crate::ai_runtime::types::{
-    CompletionRequest, CompletionResponse, Message, ModelInfo, ModelTier, Usage,
+    CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse, Message, ModelInfo, ModelTier, Usage,
 };
 use crate::ai_runtime::AIProvider;
 use async_trait::async_trait;
@@ -92,6 +92,61 @@ impl AIProvider for OpenAIProvider {
         })
     }
 
+    async fn embed(&self, request: EmbeddingRequest) -> Result<EmbeddingResponse, String> {
+        let model = request.model.unwrap_or_else(|| "text-embedding-3-small".to_string());
+        
+        let body = json!({
+            "model": model,
+            "input": request.input,
+        });
+
+        let response = self
+            .client
+            .post(format!(
+                "{}/embeddings",
+                self.base_url.trim_end_matches('/')
+            ))
+            .bearer_auth(&self.api_key)
+            .header("content-type", "application/json")
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let status = response.status();
+        let body = response.text().await.map_err(|e| e.to_string())?;
+
+        if !status.is_success() {
+            return Err(format!("OpenAI Embedding Error ({}): {}", status, body));
+        }
+
+        let json: Value = serde_json::from_str(&body).map_err(|e| e.to_string())?;
+        
+        let mut embeddings = Vec::new();
+        if let Some(data) = json["data"].as_array() {
+            for item in data {
+                if let Some(embedding_array) = item["embedding"].as_array() {
+                    let vec: Vec<f32> = embedding_array
+                        .iter()
+                        .map(|v| v.as_f64().unwrap_or(0.0) as f32)
+                        .collect();
+                    embeddings.push(vec);
+                }
+            }
+        }
+
+        let usage = Usage {
+            input_tokens: json["usage"]["total_tokens"].as_u64().unwrap_or(0) as u32,
+            ..Default::default()
+        };
+
+        Ok(EmbeddingResponse {
+            model,
+            embeddings,
+            usage: Some(usage),
+        })
+    }
+
     async fn list_models(&self) -> Result<Vec<ModelInfo>, String> {
         Ok(vec![
             ModelInfo {
@@ -117,6 +172,22 @@ impl AIProvider for OpenAIProvider {
                 context_window: 400_000,
                 pricing_input_1m: 0.05,
                 pricing_output_1m: 0.40,
+            },
+            ModelInfo {
+                id: "text-embedding-3-small".to_string(),
+                name: "Text Embedding 3 Small".to_string(),
+                tier: ModelTier::Tier3,
+                context_window: 8191,
+                pricing_input_1m: 0.02,
+                pricing_output_1m: 0.0,
+            },
+            ModelInfo {
+                id: "text-embedding-3-large".to_string(),
+                name: "Text Embedding 3 Large".to_string(),
+                tier: ModelTier::Tier2,
+                context_window: 8191,
+                pricing_input_1m: 0.13,
+                pricing_output_1m: 0.0,
             },
         ])
     }

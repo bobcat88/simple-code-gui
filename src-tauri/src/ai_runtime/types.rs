@@ -119,3 +119,17 @@ pub struct ProviderHealth {
     pub consecutive_failures: u32,
     pub last_failure_at: Option<u64>,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EmbeddingRequest {
+    pub input: Vec<String>,
+    pub model: Option<String>,
+    pub policy: Option<RoutingPolicy>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EmbeddingResponse {
+    pub embeddings: Vec<Vec<f32>>,
+    pub model: String,
+    pub usage: Option<Usage>,
+}

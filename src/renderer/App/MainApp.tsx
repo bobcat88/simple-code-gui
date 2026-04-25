@@ -36,6 +36,7 @@ import { Spotlight } from '../components/Spotlight'
 import { ProjectQuickSwitcher } from '../components/ProjectQuickSwitcher'
 import { IntelligenceSidebar } from '../components/intelligence/IntelligenceSidebar'
 import { useProjectIntelligence } from '../hooks/useProjectIntelligence'
+import { CognitiveSearchModal } from '../components/intelligence/CognitiveSearchModal'
 import { Activity } from 'lucide-react'
 import { TranscriptionOverlay } from '../components/voice/TranscriptionOverlay'
 
@@ -114,10 +115,29 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
     toggleViewMode
   } = useViewState()
 
-  const { intelligence, capabilityScan, loading: intelligenceLoading, refresh: refreshIntelligence } = useProjectIntelligence(
+  const [cognitiveSearchOpen, setCognitiveSearchOpen] = useState(false)
+
+  const { 
+    intelligence, 
+    capabilityScan, 
+    vectorStatus,
+    loading: intelligenceLoading, 
+    refresh: refreshIntelligence,
+    triggerDeepScan 
+  } = useProjectIntelligence(
     api as any,
     activeTab?.projectPath || null
   )
+
+  const handleReindex = useCallback(async () => {
+    if (!activeTab?.projectPath) return;
+    try {
+      await api.vectorIndexProject(activeTab.projectPath);
+      refreshIntelligence();
+    } catch (err) {
+      console.error('Failed to trigger re-index:', err);
+    }
+  }, [api, activeTab?.projectPath, refreshIntelligence]);
 
   // Workspace loader hook
   const {
@@ -489,11 +509,14 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
                 <IntelligenceSidebar
                   intelligence={intelligence}
                   capabilityScan={capabilityScan}
+                  vectorStatus={vectorStatus}
                   api={api as any}
                   loading={intelligenceLoading}
                   onClose={() => setIntelligenceCollapsed(true)}
                   onRefresh={refreshIntelligence}
                   onDeepScan={triggerDeepScan}
+                  onReindex={handleReindex}
+                  onOpenSearch={() => setCognitiveSearchOpen(true)}
                   onWidthChange={setIntelligenceWidth}
                   width={intelligenceWidth}
                 />
@@ -537,6 +560,13 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
           onSwitchToTab={setActiveTab}
         />
         <TranscriptionOverlay />
+
+        <CognitiveSearchModal
+          isOpen={cognitiveSearchOpen}
+          onClose={() => setCognitiveSearchOpen(false)}
+          api={api}
+          projectPath={activeTab?.projectPath || null}
+        />
       </div>
     </div>
   )

@@ -1,4 +1,4 @@
-use crate::ai_runtime::types::{CompletionRequest, CompletionResponse, ModelInfo, Usage};
+use crate::ai_runtime::types::{CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse, ModelInfo, Usage};
 use crate::ai_runtime::AIProvider;
 use serde_json::{json, Value};
 use reqwest::Client;
@@ -78,6 +78,62 @@ impl AIProvider for GeminiProvider {
         })
     }
 
+    async fn embed(&self, request: EmbeddingRequest) -> Result<EmbeddingResponse, String> {
+        let model = request.model.unwrap_or_else(|| "text-embedding-004".to_string());
+        let url = format!(
+            "https://generativelanguage.googleapis.com/v1beta/models/{}:embedContent?key={}",
+            model, self.api_key
+        );
+
+        // Gemini embedContent takes a single string or multiple. We'll handle the first input for now as a common pattern,
+        // or loop if there are multiple.
+        let mut embeddings = Vec::new();
+        let mut total_tokens = 0;
+
+        for text in request.input {
+            let response = self.client.post(&url)
+                .json(&json!({
+                    "content": {
+                        "parts": [{"text": text}]
+                    }
+                }))
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+
+            let status = response.status();
+            let body = response.text().await.map_err(|e| e.to_string())?;
+
+            if !status.is_success() {
+                return Err(format!("Gemini Embedding Error ({}): {}", status, body));
+            }
+
+            let json: Value = serde_json::from_str(&body).map_err(|e| e.to_string())?;
+            
+            if let Some(embedding_values) = json["embedding"]["values"].as_array() {
+                let vec: Vec<f32> = embedding_values
+                    .iter()
+                    .map(|v| v.as_f64().unwrap_or(0.0) as f32)
+                    .collect();
+                embeddings.push(vec);
+            }
+            
+            // Gemini doesn't always return token count in embedContent in the same way, 
+            // but we'll try to estimate or use what's there if present.
+        }
+
+        let usage = Usage {
+            input_tokens: total_tokens,
+            ..Default::default()
+        };
+
+        Ok(EmbeddingResponse {
+            model,
+            embeddings,
+            usage: Some(usage),
+        })
+    }
+
     async fn list_models(&self) -> Result<Vec<ModelInfo>, String> {
         use crate::ai_runtime::types::ModelTier;
         Ok(vec![
@@ -96,6 +152,14 @@ impl AIProvider for GeminiProvider {
                 context_window: 1000000,
                 pricing_input_1m: 0.075,
                 pricing_output_1m: 0.3,
+            },
+            ModelInfo {
+                id: "text-embedding-004".to_string(),
+                name: "Text Embedding 004".to_string(),
+                tier: ModelTier::Tier3,
+                context_window: 2048,
+                pricing_input_1m: 0.0,
+                pricing_output_1m: 0.0,
             }
         ])
     }

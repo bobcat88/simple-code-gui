@@ -12,14 +12,24 @@ import {
   GripVertical,
   X,
   PlusCircle,
-  AlertCircle
+  AlertCircle,
+  Wand2
 } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { Api, GsdPlan, GsdPhase, GsdStep, GsdExecutionEvent } from '../api/types';
+import { Api, GsdPlan, GsdPhase, GsdStep, GsdExecutionEvent, UserResponse } from '../api/types';
 
 interface GSDPlannerProps {
   projectPath: string | null;
   api: Api;
+}
+
+function formatDuration(start?: number, end?: number) {
+  if (!start) return '';
+  const durationMs = (end || Date.now()) - start;
+  const seconds = Math.floor(durationMs / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes}m ${seconds % 60}s`;
 }
 
 export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
@@ -177,7 +187,7 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
     }
   };
 
-  const handleRespondToCheckpoint = async (stepId: string, response: 'Approve' | 'Retry' | 'Abort') => {
+  const handleRespondToCheckpoint = async (stepId: string, response: UserResponse) => {
     try {
       await api.gsdRespondToCheckpoint(stepId, response);
     } catch (err) {
@@ -388,10 +398,29 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                             return Object.entries(waves).sort(([a], [b]) => Number(a) - Number(b)).map(([waveId, steps]) => (
                               <div key={waveId} className="space-y-2 relative">
                                 {waveId !== '0' && (
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <div className="h-px flex-1 bg-white/5" />
-                                    <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">Wave {waveId}</span>
-                                    <div className="h-px flex-1 bg-white/5" />
+                                  <div className="flex items-center justify-between gap-4 mb-2">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-bold text-primary uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded-md">Wave {waveId}</span>
+                                      <span className="text-[10px] font-medium text-muted-foreground/60 tabular-nums">
+                                        {formatDuration(
+                                          steps.reduce((min, s) => Math.min(min, s.startedAt || Infinity), Infinity),
+                                          steps.every(s => s.completedAt) ? steps.reduce((max, s) => Math.max(max, s.completedAt || 0), 0) : undefined
+                                        )}
+                                      </span>
+                                    </div>
+                                    <div className="flex-1 h-px bg-gradient-to-r from-primary/20 to-transparent" />
+                                    <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">
+                                      {steps.filter(s => s.status === 'Completed').length} / {steps.length} Complete
+                                    </div>
+                                  </div>
+                                )}
+                                {/* Wave Progress Bar */}
+                                {waveId !== '0' && steps.some(s => s.status === 'InProgress') && (
+                                  <div className="h-0.5 w-full bg-white/5 rounded-full overflow-hidden mb-3">
+                                    <div 
+                                      className="h-full bg-primary transition-all duration-500" 
+                                      style={{ width: `${(steps.filter(s => s.status === 'Completed').length / steps.length) * 100}%` }}
+                                    />
                                   </div>
                                 )}
                                 <div className={cn(
@@ -401,6 +430,8 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                                   {steps.map((step) => {
                                     const isWaiting = typeof step.status === 'object' && 'WaitingForUser' in step.status;
                                     const isFailed = typeof step.status === 'object' && 'Failed' in step.status;
+                                    const isAutoFixing = typeof step.status === 'object' && 'AutoFixing' in step.status;
+                                    const isAwaitingFix = typeof step.status === 'object' && 'AwaitingFixApproval' in step.status;
                                     
                                     return (
                                       <div 
@@ -410,6 +441,8 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                                           step.status === 'Completed' ? "bg-green-500/5 border-green-500/20" :
                                           step.status === 'InProgress' ? "bg-primary/5 border-primary/30 shadow-lg shadow-primary/5" :
                                           isWaiting ? "bg-amber-500/10 border-amber-500/40 shadow-lg shadow-amber-500/10 animate-pulse" :
+                                          isAutoFixing ? "bg-blue-500/10 border-blue-500/40 shadow-lg shadow-blue-500/10" :
+                                          isAwaitingFix ? "bg-indigo-500/10 border-indigo-500/40 shadow-lg shadow-indigo-500/10 animate-pulse" :
                                           isFailed ? "bg-red-500/5 border-red-500/20" :
                                           "bg-white/[0.02] border-white/5 hover:bg-white/[0.04]"
                                         )}
@@ -419,9 +452,9 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                                             <div className="flex items-center gap-2 mb-1">
                                               {step.status === 'Completed' ? (
                                                 <CheckCircle2 size={16} className="text-green-500 shrink-0" />
-                                              ) : step.status === 'InProgress' ? (
+                                              ) : step.status === 'InProgress' || isAutoFixing ? (
                                                 <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin shrink-0" />
-                                              ) : isWaiting ? (
+                                              ) : isWaiting || isAwaitingFix ? (
                                                 <AlertCircle size={16} className="text-amber-500 shrink-0" />
                                               ) : isFailed ? (
                                                 <X size={16} className="text-red-500 shrink-0" />
@@ -466,10 +499,61 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                                                 </div>
                                               </div>
                                             )}
+
+                                            {/* Auto-Fix Loading UI */}
+                                            {isAutoFixing && (
+                                              <div className="mt-4 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center gap-3">
+                                                <div className="w-4 h-4 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin shrink-0" />
+                                                <p className="text-[11px] font-medium text-blue-200/80">
+                                                  {(step.status as any).AutoFixing}
+                                                </p>
+                                              </div>
+                                            )}
+
+                                            {/* Fix Approval UI */}
+                                            {isAwaitingFix && (
+                                              <div className="mt-4 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 space-y-3">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                                                  <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Proposed Auto-Fix</span>
+                                                </div>
+                                                <p className="text-[11px] font-medium text-white/90 leading-relaxed italic">
+                                                  "{(step.status as any).AwaitingFixApproval[1]}"
+                                                </p>
+                                                <div className="flex flex-wrap gap-2 pt-1">
+                                                  <button
+                                                    onClick={() => handleRespondToCheckpoint(step.id, 'ApproveFix')}
+                                                    className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/20 flex items-center gap-1.5"
+                                                  >
+                                                    <Wand2 size={12} />
+                                                    Apply Fix
+                                                  </button>
+                                                  <button
+                                                    onClick={() => handleRespondToCheckpoint(step.id, 'Retry')}
+                                                    className="px-3 py-1.5 rounded-lg bg-white/10 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-white/20 transition-colors border border-white/10"
+                                                  >
+                                                    Manual Retry
+                                                  </button>
+                                                  <button
+                                                    onClick={() => handleRespondToCheckpoint(step.id, 'Abort')}
+                                                    className="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-wider hover:bg-red-500/30 transition-colors border border-red-500/30"
+                                                  >
+                                                    Abort
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            )}
                                           </div>
                                           {step.attempts > 0 && (
-                                            <div className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[9px] font-bold text-muted-foreground uppercase">
-                                              {step.attempts}x
+                                            <div className="flex flex-col items-end gap-1.5">
+                                              <div className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[9px] font-bold text-muted-foreground uppercase">
+                                                {step.attempts}x
+                                              </div>
+                                              {step.startedAt && (
+                                                <div className="text-[9px] font-medium text-muted-foreground/40 tabular-nums">
+                                                  {formatDuration(step.startedAt, step.completedAt)}
+                                                </div>
+                                              )}
                                             </div>
                                           )}
                                         </div>

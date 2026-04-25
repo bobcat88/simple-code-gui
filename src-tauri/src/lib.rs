@@ -20,6 +20,7 @@ mod voice_manager;
 mod workspace_manager;
 mod rtk_context;
 mod upgrade_manager;
+mod vector_engine;
 
 use database::{
     insert_token_transaction, query_token_history, DatabaseManager, TokenHistoryFilters,
@@ -371,6 +372,34 @@ fn report_ready() {
     println!("WEBVIEW_READY");
 }
 
+use vector_engine::{VectorEngine, vector_index_project};
+use vector_engine::types::{VectorChunk, VectorIndexStatus, VectorSearchResult};
+
+#[tauri::command]
+async fn vector_search(
+    query: String,
+    limit: usize,
+    state: State<'_, Arc<VectorEngine>>,
+) -> Result<Vec<VectorSearchResult>, String> {
+    state.search(query, limit).await
+}
+
+#[tauri::command]
+async fn vector_get_status(
+    state: State<'_, Arc<VectorEngine>>,
+) -> Result<VectorIndexStatus, String> {
+    Ok(state.get_status().await)
+}
+
+#[tauri::command]
+async fn vector_add_chunks(
+    chunks: Vec<VectorChunk>,
+    state: State<'_, Arc<VectorEngine>>,
+) -> Result<(), String> {
+    state.add_chunks(chunks).await;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -538,6 +567,9 @@ pub fn run() {
                 ));
                 ai_runtime.set_learning_manager(Arc::clone(&learning_manager)).await;
 
+                // Initialize Vector Engine
+                let vector_engine = Arc::new(vector_engine::VectorEngine::new(Arc::clone(&ai_runtime)));
+
                 app_handle.manage(db_arc);
                 app_handle.manage(settings_manager);
                 app_handle.manage(workspace_manager);
@@ -551,6 +583,7 @@ pub fn run() {
                 app_handle.manage(orchestration_state);
                 app_handle.manage(rtk_context_manager);
                 app_handle.manage(learning_manager);
+                app_handle.manage(vector_engine);
             });
 
             let pty_manager = PtyManager::new();
@@ -645,6 +678,10 @@ pub fn run() {
             mcp_read_resource,
             mcp_load_config,
             voice_save_settings,
+            vector_search,
+            vector_get_status,
+            vector_add_chunks,
+            vector_index_project,
             log_token_event,
             get_token_stats,
             get_token_history,

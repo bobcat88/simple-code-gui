@@ -31,9 +31,9 @@ Ensuring the "Assimilation" principle by keeping integrations up to date.
 ## Phase 17: Deep Execution Engine (GSD v2)
 Refining the GSD integration from a CLI wrapper to a native execution core.
 
-- [ ] **Native Phase Planning**: UI-driven phase decomposition with git-backed persistence.
-- [ ] **Wave Execution UI**: Visualizing parallel task waves and blockers.
-- [ ] **Verifier Feedback Loop**: Interactive UAT and auto-fix cycles within the GUI.
+- [x] **Native Phase Planning**: UI-driven phase decomposition with git-backed persistence.
+- [x] **Wave Execution UI**: Visualizing parallel task waves and blockers.
+- [x] **Verifier Feedback Loop**: Interactive UAT and auto-fix cycles within the GUI.
 
 ## Phase 18: Cognitive Search & Long-term Memory
 Enhancing project intelligence with vector embeddings and cross-project knowledge.

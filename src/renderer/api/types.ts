@@ -313,6 +313,32 @@ export interface TokenHistoryResponse {
   daily: TokenHistoryPoint[]
 }
 
+// ============================================================================
+// Vector Engine Types
+// ============================================================================
+
+export interface VectorChunk {
+  id: string
+  symbolName: string
+  projectPath: string
+  filePath: string
+  content: string
+  metadata: Record<string, string>
+  embedding?: number[]
+}
+
+export interface VectorIndexStatus {
+  totalChunks: number
+  indexedChunks: number
+  isIndexing: boolean
+  lastUpdated: number
+}
+
+export interface VectorSearchResult {
+  chunk: VectorChunk
+  score: number
+}
+
 /**
  * Core API interface for the renderer
  */
@@ -579,6 +605,14 @@ export interface Api {
   onGsdExecutionEvent?: (callback: (event: GsdExecutionEvent) => void) => Unsubscribe
   onGsdPhaseUpdated?: (callback: (phase: GsdPhase) => void) => Unsubscribe
   onGsdStepUpdated?: (callback: (step: GsdStep) => void) => Unsubscribe
+
+  // ==========================================================================
+  // Vector Engine
+  // ==========================================================================
+  vectorSearch?: (query: string, limit?: number, projectPath?: string) => Promise<VectorSearchResult[]>
+  vectorGetStatus?: () => Promise<VectorIndexStatus>
+  vectorAddChunks?: (chunks: VectorChunk[]) => Promise<{ success: boolean }>
+  vectorIndexProject?: (projectPath: string) => Promise<{ success: boolean; error?: string }>
 }
 
 // ============================================================================
@@ -680,6 +714,12 @@ export interface ExtendedApi extends Api {
   // Mobile/Connection
   mobileGetConnectionInfo?: () => Promise<{ host: string; port: number; token: string }>
   mobileRegenerateToken?: () => Promise<{ host: string; port: number; token: string }>
+
+  // Vector Engine (Desktop-specific overrides/extensions if needed)
+  vectorSearch: (query: string, limit?: number, projectPath?: string) => Promise<VectorSearchResult[]>
+  vectorGetStatus: () => Promise<VectorIndexStatus>
+  vectorAddChunks: (chunks: VectorChunk[]) => Promise<{ success: boolean }>
+  vectorIndexProject: (projectPath: string) => Promise<{ success: boolean; error?: string }>
 }
 
 // ============================================================================
@@ -833,9 +873,17 @@ export interface ProjectIntelligence {
 // GSD Engine Types
 // ============================================================================
 
-export type GsdStepStatus = 'Pending' | 'InProgress' | 'Completed' | { Failed: string } | 'Skipped' | { WaitingForUser: string };
+export type GsdStepStatus = 
+  | 'Pending' 
+  | 'InProgress' 
+  | 'Completed' 
+  | { Failed: string } 
+  | 'Skipped' 
+  | { WaitingForUser: string }
+  | { AutoFixing: string }
+  | { AwaitingFixApproval: [string, string] };
 
-export type UserResponse = 'Approve' | 'Retry' | 'Abort';
+export type UserResponse = 'Approve' | 'ApproveFix' | 'Retry' | 'Abort';
 
 export interface GsdStep {
   id: string
@@ -846,6 +894,8 @@ export interface GsdStep {
   attempts: number
   maxRetries: number
   waveIndex?: number
+  startedAt?: number
+  completedAt?: number
 }
 
 export interface GsdPhase {
@@ -853,6 +903,8 @@ export interface GsdPhase {
   title: string
   steps: GsdStep[]
   status: GsdStepStatus
+  startedAt?: number
+  completedAt?: number
 }
 
 export interface GsdPlan {
