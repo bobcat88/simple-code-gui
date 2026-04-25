@@ -16,7 +16,9 @@ pub struct TokenTransactionInput {
     pub backend: String,
     pub input_tokens: i64,
     pub output_tokens: i64,
+    pub saved_tokens: Option<i64>,
     pub cost_estimate: f64,
+    pub context_reuse_id: Option<String>,
     pub timestamp: Option<String>,
 }
 
@@ -87,8 +89,8 @@ pub async fn insert_token_transaction(
     // AC: @01KPNWTT ac-2
     sqlx::query(
         "INSERT INTO token_transactions
-            (session_id, agent_id, project_path, backend, input_tokens, output_tokens, cost_estimate, timestamp)
-         VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))",
+            (session_id, agent_id, project_path, backend, input_tokens, output_tokens, saved_tokens, cost_estimate, context_reuse_id, timestamp)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))",
     )
     .bind(&transaction.session_id)
     .bind(&transaction.agent_id)
@@ -96,7 +98,9 @@ pub async fn insert_token_transaction(
     .bind(&transaction.backend)
     .bind(transaction.input_tokens)
     .bind(transaction.output_tokens)
+    .bind(transaction.saved_tokens.unwrap_or(0))
     .bind(transaction.cost_estimate)
+    .bind(&transaction.context_reuse_id)
     .bind(&transaction.timestamp)
     .execute(pool)
     .await
@@ -400,13 +404,22 @@ impl DatabaseManager {
                 backend TEXT NOT NULL,
                 input_tokens INTEGER NOT NULL DEFAULT 0,
                 output_tokens INTEGER NOT NULL DEFAULT 0,
+                saved_tokens INTEGER NOT NULL DEFAULT 0,
                 cost_estimate REAL NOT NULL DEFAULT 0.0,
+                context_reuse_id TEXT,
                 timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
             )",
         )
         .execute(&self.pool)
         .await
         .map_err(|e| e.to_string())?;
+
+        let _ = sqlx::query("ALTER TABLE token_transactions ADD COLUMN saved_tokens INTEGER DEFAULT 0")
+            .execute(&self.pool)
+            .await;
+        let _ = sqlx::query("ALTER TABLE token_transactions ADD COLUMN context_reuse_id TEXT")
+            .execute(&self.pool)
+            .await;
 
         let _ = sqlx::query("ALTER TABLE token_transactions ADD COLUMN agent_id TEXT")
             .execute(&self.pool)
@@ -487,6 +500,8 @@ impl DatabaseManager {
                 error_rate REAL DEFAULT 0.0,
                 queue_size INTEGER DEFAULT 0,
                 active_task TEXT,
+                evolution_confidence REAL DEFAULT 0.0,
+                evolution_status TEXT DEFAULT 'stable',
                 last_active DATETIME DEFAULT CURRENT_TIMESTAMP
             )",
         )
@@ -516,6 +531,12 @@ impl DatabaseManager {
         let _ = sqlx::query("ALTER TABLE agents ADD COLUMN error_rate REAL DEFAULT 0.0")
             .execute(&self.pool)
             .await;
+        let _ = sqlx::query("ALTER TABLE agents ADD COLUMN evolution_confidence REAL DEFAULT 0.0")
+            .execute(&self.pool)
+            .await;
+        let _ = sqlx::query("ALTER TABLE agents ADD COLUMN evolution_status TEXT DEFAULT 'stable'")
+            .execute(&self.pool)
+            .await;
 
         // Health Logs Table
         sqlx::query(
@@ -525,6 +546,20 @@ impl DatabaseManager {
                 check_type TEXT NOT NULL,
                 status TEXT NOT NULL,
                 details TEXT
+            )",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+        
+        // RTK Assimilation: Context Signatures
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS context_signatures (
+                id TEXT PRIMARY KEY,
+                hash TEXT UNIQUE NOT NULL,
+                size_tokens INTEGER NOT NULL,
+                hits INTEGER DEFAULT 1,
+                last_used DATETIME DEFAULT CURRENT_TIMESTAMP
             )",
         )
         .execute(&self.pool)

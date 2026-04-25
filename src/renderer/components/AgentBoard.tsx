@@ -3,7 +3,18 @@ import { useAgentBoard } from '../hooks/useAgentBoard';
 import { User, Shield, PenTool, Search, GitBranch, Cpu, Activity, XCircle } from 'lucide-react';
 
 export const AgentBoard: React.FC = () => {
-  const { agents, providerHealth, loading, cancelTask } = useAgentBoard();
+  const { agents, providerHealth, loading, cancelTask, refresh } = useAgentBoard();
+  const [evolving, setEvolving] = React.useState(false);
+
+  const triggerEvolution = async () => {
+    setEvolving(true);
+    try {
+      await tauriIpc.ai_trigger_evolution();
+      await refresh();
+    } finally {
+      setEvolving(false);
+    }
+  };
 
   if (loading) {
     return <div className="p-4 text-zinc-500 animate-pulse">Loading agents...</div>;
@@ -30,6 +41,15 @@ export const AgentBoard: React.FC = () => {
     }
   };
 
+  const getEvolutionStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'stable': return 'text-zinc-400 border-zinc-800';
+      case 'learning': return 'text-blue-400 border-blue-500/20 bg-blue-500/5';
+      case 'optimized': return 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5';
+      default: return 'text-zinc-500 border-zinc-800';
+    }
+  };
+
   const getProviderHealthColor = (provider?: string) => {
     if (!provider) return 'bg-zinc-500';
     const isHealthy = providerHealth[provider.toLowerCase()];
@@ -44,7 +64,16 @@ export const AgentBoard: React.FC = () => {
           <Activity size={18} className="text-blue-400" />
           <h3 className="text-sm font-semibold text-zinc-100">Agent Coordination</h3>
         </div>
-        <span className="text-[10px] text-zinc-500 font-mono">{agents.length} Active</span>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={triggerEvolution}
+            disabled={evolving}
+            className={`text-[10px] font-bold px-2 py-1 rounded bg-white/5 border border-white/10 hover:bg-white/10 transition-all ${evolving ? 'opacity-50 cursor-wait' : ''}`}
+          >
+            {evolving ? 'Evolving...' : 'Trigger Evolution'}
+          </button>
+          <span className="text-[10px] text-zinc-500 font-mono">{agents.length} Active</span>
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {agents.map((agent) => (
@@ -88,6 +117,20 @@ export const AgentBoard: React.FC = () => {
                 <span className="text-zinc-300 font-mono truncate ml-2 max-w-[80px]" title={agent.model}>
                   {agent.model}
                 </span>
+              </div>
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-zinc-500">Evolution</span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-widest ${getEvolutionStatusColor(agent.evolution_status || 'stable')}`}>
+                    {agent.evolution_status || 'stable'}
+                  </span>
+                  <div className="w-16 h-1 bg-zinc-800 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-500 transition-all" 
+                      style={{ width: `${(agent.evolution_confidence || 0) * 100}%` }}
+                    />
+                  </div>
+                </div>
               </div>
               {agent.active_task && (
                 <div className="pt-2 mt-1 border-t border-white/5 group/task relative">

@@ -13,6 +13,8 @@ export interface Agent {
   quality_score: number;
   queue_size: number;
   active_task?: string;
+  evolution_confidence?: number;
+  evolution_status?: string;
 }
 
 export function useAgentBoard() {
@@ -67,7 +69,9 @@ export function useAgentBoard() {
         burn_rate: data.burn_rate,
         quality_score: data.quality_score,
         queue_size: data.queue_size,
-        active_task: data.active_task
+        active_task: data.active_task,
+        evolution_confidence: data.evolution_confidence,
+        evolution_status: data.evolution_status
       } : a));
     });
 

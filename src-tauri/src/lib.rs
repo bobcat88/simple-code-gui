@@ -18,6 +18,7 @@ mod session_manager;
 mod settings_manager;
 mod voice_manager;
 mod workspace_manager;
+mod rtk_context;
 
 use database::{
     insert_token_transaction, query_token_history, DatabaseManager, TokenHistoryFilters,
@@ -521,6 +522,17 @@ pub fn run() {
                     Arc::clone(&db_arc),
                 ));
 
+                // Initialize RTK Context Manager (Assimilation)
+                let rtk_context_manager = Arc::new(crate::rtk_context::RtkContextManager::new(Arc::clone(&db_arc)));
+                ai_runtime.set_rtk_context_manager(Arc::clone(&rtk_context_manager)).await;
+
+                // Initialize Learning Manager (Autonomous Loop)
+                let learning_manager = Arc::new(ai_runtime::learning::LearningManager::new(
+                    Arc::clone(&db_arc),
+                    Arc::clone(&agent_manager),
+                ));
+                ai_runtime.set_learning_manager(Arc::clone(&learning_manager)).await;
+
                 app_handle.manage(db_arc);
                 app_handle.manage(settings_manager);
                 app_handle.manage(workspace_manager);
@@ -532,6 +544,8 @@ pub fn run() {
                 app_handle.manage(health_manager);
                 app_handle.manage(diagnostic_manager);
                 app_handle.manage(orchestration_state);
+                app_handle.manage(rtk_context_manager);
+                app_handle.manage(learning_manager);
             });
 
             let pty_manager = PtyManager::new();
@@ -648,9 +662,9 @@ pub fn run() {
             gsd_engine::gsd_add_phase,
             gsd_engine::gsd_add_step,
             gsd_engine::gsd_execute_plan,
-            rtk_manager::rtk_check,
-            rtk_manager::rtk_get_stats,
-            rtk_manager::rtk_get_history,
+            rtk_check,
+            rtk_get_stats,
+            rtk_get_history,
             nexus_prune_context,
             jobs_manager::jobs_create,
             jobs_manager::jobs_get,
@@ -669,6 +683,8 @@ pub fn run() {
             claude_md_read,
             claude_md_save,
             orchestration::set_current_project,
+            rtk_context::rtk_optimize_context,
+            ai_runtime::learning::ai_trigger_evolution,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

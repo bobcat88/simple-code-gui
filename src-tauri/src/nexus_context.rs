@@ -25,11 +25,6 @@ struct GitNexusSymbol {
 }
 
 #[derive(Debug, Deserialize)]
-struct GitNexusProcess {
-    symbols: Vec<GitNexusSymbol>,
-}
-
-#[derive(Debug, Deserialize)]
 struct GitNexusQueryResult {
     process_symbols: Option<Vec<GitNexusSymbol>>,
     definitions: Option<Vec<GitNexusSymbol>>,

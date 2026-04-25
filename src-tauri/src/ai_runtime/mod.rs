@@ -1,5 +1,6 @@
-pub mod providers;
 pub mod types;
+pub mod learning;
+pub mod providers;
 
 use crate::database::{DatabaseManager, insert_token_transaction, TokenTransactionInput};
 use std::collections::HashMap;
@@ -32,6 +33,8 @@ pub struct RuntimeManager {
     activity: Arc<Mutex<Option<Arc<crate::activity_manager::ActivityManager>>>>,
     orchestration: Arc<Mutex<Option<Arc<crate::orchestration::OrchestrationState>>>>,
     health: Arc<Mutex<HashMap<String, HealthInfo>>>,
+    rtk_context: Arc<Mutex<Option<Arc<crate::rtk_context::RtkContextManager>>>>,
+    learning: Arc<Mutex<Option<Arc<learning::LearningManager>>>>,
 }
 
 impl RuntimeManager {
@@ -44,6 +47,8 @@ impl RuntimeManager {
             activity: Arc::new(Mutex::new(None)),
             orchestration: Arc::new(Mutex::new(None)),
             health: Arc::new(Mutex::new(HashMap::new())),
+            rtk_context: Arc::new(Mutex::new(None)),
+            learning: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -70,6 +75,16 @@ impl RuntimeManager {
     pub async fn set_agent_manager(&self, manager: Arc<crate::agent_manager::AgentManager>) {
         let mut agents = self.agents.lock().await;
         *agents = Some(manager);
+    }
+
+    pub async fn set_rtk_context_manager(&self, manager: Arc<crate::rtk_context::RtkContextManager>) {
+        let mut rtk = self.rtk_context.lock().await;
+        *rtk = Some(manager);
+    }
+
+    pub async fn set_learning_manager(&self, manager: Arc<learning::LearningManager>) {
+        let mut learning = self.learning.lock().await;
+        *learning = Some(manager);
     }
 
     pub async fn register_provider(&self, provider: Arc<dyn AIProvider>) {
@@ -219,10 +234,23 @@ impl RuntimeManager {
         }
 
         let model_id = req.model.clone().unwrap();
+        
+        // RTK Assimilation: Optimize Context
+        let mut rtk_result = None;
+        if let Some(rtk) = &*self.rtk_context.lock().await {
+            let full_context = request.messages.iter()
+                .map(|m| format!("{}: {}", m.role, m.content))
+                .collect::<Vec<_>>()
+                .join("\n");
+            if let Ok(res) = rtk.identify_and_optimize(&full_context).await {
+                rtk_result = Some(res);
+            }
+        }
+
         let mut resp = provider.completion(req).await?;
         
         // Finalize usage if success
-        self.finalize_usage(provider_name, &model_id, &mut resp, &request).await;
+        self.finalize_usage(provider_name, &model_id, &mut resp, &request, rtk_result).await;
         
         Ok(resp)
     }
@@ -630,6 +658,7 @@ impl RuntimeManager {
         model_id: &str,
         response: &mut CompletionResponse,
         request: &CompletionRequest,
+        rtk_result: Option<crate::rtk_context::OptimizationResult>,
     ) {
         if let Some(usage) = &mut response.usage {
             // 1. Get model info for pricing
@@ -661,7 +690,9 @@ impl RuntimeManager {
                     backend: provider_name.to_string(),
                     input_tokens: usage.input_tokens as i64,
                     output_tokens: usage.output_tokens as i64,
+                    saved_tokens: rtk_result.as_ref().map(|r| r.saved_tokens as i64),
                     cost_estimate: total_cost,
+                    context_reuse_id: rtk_result.map(|r| r.reuse_id).flatten(),
                     timestamp: None,
                 };
                 let _ = insert_token_transaction(&db.pool, &transaction).await;

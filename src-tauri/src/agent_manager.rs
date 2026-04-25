@@ -16,6 +16,8 @@ pub struct Agent {
     pub error_rate: Option<f64>,
     pub queue_size: Option<i32>,
     pub active_task: Option<String>,
+    pub evolution_confidence: Option<f64>,
+    pub evolution_status: Option<String>,
     pub last_active: Option<String>,
 }
 
@@ -30,8 +32,8 @@ impl AgentManager {
 
     pub async fn register(&self, app: &tauri::AppHandle, agent: Agent) -> Result<(), String> {
         sqlx::query(
-            "INSERT OR REPLACE INTO agents (id, name, role, status, model, provider, burn_rate, quality_score, error_rate, queue_size, active_task, last_active) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)"
+            "INSERT OR REPLACE INTO agents (id, name, role, status, model, provider, burn_rate, quality_score, error_rate, queue_size, active_task, evolution_confidence, evolution_status, last_active) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)"
         )
         .bind(&agent.id)
         .bind(&agent.name)
@@ -44,6 +46,8 @@ impl AgentManager {
         .bind(agent.error_rate.unwrap_or(0.0))
         .bind(agent.queue_size.unwrap_or(0))
         .bind(&agent.active_task)
+        .bind(agent.evolution_confidence.unwrap_or(0.0))
+        .bind(agent.evolution_status.as_deref().unwrap_or("stable"))
         .execute(&self.db.pool)
         .await
         .map_err(|e| e.to_string())?;
@@ -54,8 +58,8 @@ impl AgentManager {
     }
 
     pub async fn list(&self) -> Result<Vec<Agent>, String> {
-        let rows = sqlx::query_as::<_, (String, String, String, String, Option<String>, Option<String>, f64, f64, f64, i32, Option<String>, String)>(
-            "SELECT id, name, role, status, model, provider, burn_rate, quality_score, error_rate, queue_size, active_task, last_active FROM agents ORDER BY last_active DESC"
+        let rows = sqlx::query_as::<_, (String, String, String, String, Option<String>, Option<String>, f64, f64, f64, i32, Option<String>, f64, String, String)>(
+            "SELECT id, name, role, status, model, provider, burn_rate, quality_score, error_rate, queue_size, active_task, evolution_confidence, evolution_status, last_active FROM agents ORDER BY last_active DESC"
         )
         .fetch_all(&self.db.pool)
         .await
@@ -73,7 +77,9 @@ impl AgentManager {
             error_rate: Some(r.8),
             queue_size: Some(r.9),
             active_task: r.10,
-            last_active: Some(r.11),
+            evolution_confidence: Some(r.11),
+            evolution_status: Some(r.12),
+            last_active: Some(r.13),
         }).collect())
     }
 
@@ -102,13 +108,17 @@ impl AgentManager {
         error_rate: f64,
         queue_size: i32,
         active_task: Option<String>,
+        evolution_confidence: f64,
+        evolution_status: String,
     ) -> Result<(), String> {
-        sqlx::query("UPDATE agents SET burn_rate = ?, quality_score = ?, error_rate = ?, queue_size = ?, active_task = ?, last_active = CURRENT_TIMESTAMP WHERE id = ?")
+        sqlx::query("UPDATE agents SET burn_rate = ?, quality_score = ?, error_rate = ?, queue_size = ?, active_task = ?, evolution_confidence = ?, evolution_status = ?, last_active = CURRENT_TIMESTAMP WHERE id = ?")
             .bind(burn_rate)
             .bind(quality_score)
             .bind(error_rate)
             .bind(queue_size)
             .bind(&active_task)
+            .bind(evolution_confidence)
+            .bind(&evolution_status)
             .bind(&id)
             .execute(&self.db.pool)
             .await
@@ -120,7 +130,9 @@ impl AgentManager {
             "quality_score": quality_score,
             "error_rate": error_rate,
             "queue_size": queue_size,
-            "active_task": active_task
+            "active_task": active_task,
+            "evolution_confidence": evolution_confidence,
+            "evolution_status": evolution_status
         }));
 
         Ok(())
@@ -219,8 +231,10 @@ pub async fn agent_update_metrics(
     error_rate: f64,
     queue_size: i32,
     active_task: Option<String>,
+    evolution_confidence: f64,
+    evolution_status: String,
 ) -> Result<(), String> {
-    state.update_metrics(&app, id, burn_rate, quality_score, error_rate, queue_size, active_task).await
+    state.update_metrics(&app, id, burn_rate, quality_score, error_rate, queue_size, active_task, evolution_confidence, evolution_status).await
 }
 
 #[tauri::command]

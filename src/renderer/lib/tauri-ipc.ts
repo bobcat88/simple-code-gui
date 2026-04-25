@@ -242,10 +242,10 @@ export const tauriIpc = {
     listen<{ id: string, status: string }>('agent-status-changed', (event) => callback(event.payload)),
   onAgentRegistered: (callback: (agent: any) => void) =>
     listen<any>('agent-registered', (event) => callback(event.payload)),
-  agentUpdateMetrics: (id: string, burnRate: number, qualityScore: number, queueSize: number, activeTask?: string) =>
-    invoke<void>('agent_update_metrics', { id, burn_rate: burnRate, quality_score: qualityScore, queue_size: queueSize, active_task: activeTask }),
-  onAgentMetricsChanged: (callback: (data: { id: string, burn_rate: number, quality_score: number, queue_size: number, active_task?: string }) => void) =>
-    listen<{ id: string, burn_rate: number, quality_score: number, queue_size: number, active_task?: string }>('agent-metrics-changed', (event) => callback(event.payload)),
+  agentUpdateMetrics: (id: string, burnRate: number, qualityScore: number, errorRate: number, queueSize: number, evolutionConfidence: number, evolutionStatus: string, activeTask?: string) =>
+    invoke<void>('agent_update_metrics', { id, burn_rate: burnRate, quality_score: qualityScore, error_rate: errorRate, queue_size: queueSize, evolution_confidence: evolutionConfidence, evolution_status: evolutionStatus, active_task: activeTask }),
+  onAgentMetricsChanged: (callback: (data: { id: string, burn_rate: number, quality_score: number, error_rate: number, queue_size: number, evolution_confidence: number, evolution_status: string, active_task?: string }) => void) =>
+    listen<{ id: string, burn_rate: number, quality_score: number, error_rate: number, queue_size: number, evolution_confidence: number, evolution_status: string, active_task?: string }>('agent-metrics-changed', (event) => callback(event.payload)),
   agentRefreshBurnRates: () =>
     invoke<void>('agent_refresh_burn_rates'),
   agentCancelTask: (id: string) =>
@@ -272,4 +272,10 @@ export const tauriIpc = {
     invoke<any[]>('ai_list_models', { provider }),
   aiGetHealthStatus: () =>
     invoke<Record<string, any>>('ai_get_health_status'),
+
+  // Transwarp Nexus & Learning Loop
+  rtk_optimize_context: (prompt: string) => 
+    invoke<any>('rtk_optimize_context', { prompt }),
+  ai_trigger_evolution: () => 
+    invoke<any>('ai_trigger_evolution'),
 };
