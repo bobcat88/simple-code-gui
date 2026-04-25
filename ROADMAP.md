@@ -94,6 +94,15 @@ Visualizing and interacting with agent swarms and their collective intelligence.
 - [x] **Neural Insight Panel**: Actionable finding cards derived from cross-agent findings.
 - [x] **Agentic Tool Catalog**: Searchable registry of all available tools and their usage examples.
 
+## Phase 26: Brainstorm Companion & Collaborative Ideation
+Turning raw ideas into structured specs and visual mockups within the GUI.
+
+- [ ] **Ideation Canvas**: A dedicated node-based workspace for visual brainstorming (JSON Canvas integration).
+- [ ] **Agentic Sketching**: Native support for generating UI mockups and diagrams during brainstorming.
+- [ ] **Spec-to-Task Bridge**: Seamlessly promote approved brainstorm nodes to KSpec requirements or Beads tasks.
+- [ ] **Multi-Agent Design Review**: Automated "Architect" agent review of brainstormed concepts for feasibility and debt.
+
 ---
 
 *Last Updated: April 2026*
+
