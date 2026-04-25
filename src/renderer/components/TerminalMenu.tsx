@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import ReactDOM from 'react-dom'
 import { CommandMenuItem, getCommandMenuItems } from '../utils/backendCommands'
+import { useApi } from '../contexts/ApiContext'
 
 // Type guard for checking if event target is a valid Node for contains() check
 function isEventTargetNode(target: EventTarget | null): target is Node {

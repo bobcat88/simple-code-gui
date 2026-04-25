@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { tauriIpc } from '../lib/tauri-ipc';
 
 export interface Agent {
@@ -97,7 +98,7 @@ export function useAgentBoard() {
       } : a));
     });
 
-    const pTrace = tauriIpc.listen('agent-trace-added', (event: any) => {
+    const pTrace = listen('agent-trace-added', (event: any) => {
       // In a real app we might want to update a local trace cache
       // For now we'll just let the components re-fetch if they need to
       console.log('Trace added:', event.payload);
@@ -105,10 +106,10 @@ export function useAgentBoard() {
 
     return () => {
       clearInterval(interval);
-      pStatus.then(unsub => unsub());
-      pRegistered.then(unsub => unsub());
-      pMetrics.then(unsub => unsub());
-      pTrace.then(unsub => unsub());
+      pStatus.then((unsub: UnlistenFn) => unsub());
+      pRegistered.then((unsub: UnlistenFn) => unsub());
+      pMetrics.then((unsub: UnlistenFn) => unsub());
+      pTrace.then((unsub: UnlistenFn) => unsub());
     };
   }, [fetchAgents]);
 

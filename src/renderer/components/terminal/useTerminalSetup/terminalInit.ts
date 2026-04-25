@@ -549,6 +549,7 @@ export function handlePtyData(
   onSummaryChunk: (chunk: string) => void,
   onAutoWorkMarker: (chunk: string) => void,
   onTokenChunk: (chunk: string) => void,
+  api: UseTerminalSetupOptions['api'],
   state: InitState
 ): void {
   addToBuffer(ptyId, data)
@@ -595,7 +596,7 @@ export function handlePtyData(
     // When user is scrolled up, restore their relative scroll position
     if (userScrolledUpRef.current && preWriteSnap.baseY > 50 && postWriteSnap.baseY < preWriteSnap.baseY * 0.5) {
       // Buffer was cleared and is being rebuilt. Schedule a restore after redraw settles.
-      scrollDebug('write:SCREEN_CLEAR_DETECTED', { before: preWriteSnap, after: postWriteSnap }, options.api)
+      scrollDebug('write:SCREEN_CLEAR_DETECTED', { before: preWriteSnap, after: postWriteSnap }, api)
       if (!state.scrollRestorePending) {
         state.scrollRestorePending = true
         state.scrollRestoreTarget = preWriteSnap.viewportY
@@ -607,7 +608,7 @@ export function handlePtyData(
             const currentSnap = scrollSnapshot(terminal)
             // Restore to same absolute line, clamped to new buffer size
             const newPos = Math.min(state.scrollRestoreTarget, Math.max(0, currentSnap.baseY - terminal.rows))
-            scrollDebug('write:RESTORING_SCROLL', { newPos, currentSnap, originalTarget: state.scrollRestoreTarget, originalBaseY: state.scrollRestoreBaseY }, options.api)
+            scrollDebug('write:RESTORING_SCROLL', { newPos, currentSnap, originalTarget: state.scrollRestoreTarget, originalBaseY: state.scrollRestoreBaseY }, api)
             terminal.scrollToLine(newPos)
           }
         }, 100)
@@ -615,7 +616,7 @@ export function handlePtyData(
     }
 
     if (preWriteSnap.viewportY !== postWriteSnap.viewportY) {
-      scrollDebug('write:scrollMoved', { before: preWriteSnap, after: postWriteSnap, userScrolledUp: userScrolledUpRef.current }, options.api)
+      scrollDebug('write:scrollMoved', { before: preWriteSnap, after: postWriteSnap, userScrolledUp: userScrolledUpRef.current }, api)
     }
   })
 
@@ -631,12 +632,12 @@ export function handlePtyData(
         terminal.scrollToBottom()
         const afterSnap = scrollSnapshot(terminal)
         if (beforeSnap.viewportY !== afterSnap.viewportY) {
-          scrollDebug('debounce:scrollToBottom', { before: beforeSnap, after: afterSnap }, options.api)
+          scrollDebug('debounce:scrollToBottom', { before: beforeSnap, after: afterSnap }, api)
         }
       }
     }, 32)
   } else {
-    scrollDebug('ptyData:skippedScroll', { userScrolledUp: true, ...preWriteSnap, dataLen: displayData.length }, options.api)
+    scrollDebug('ptyData:skippedScroll', { userScrolledUp: true, ...preWriteSnap, dataLen: displayData.length }, api)
   }
 
   if (state.firstData) {

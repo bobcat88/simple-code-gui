@@ -30,8 +30,7 @@ import type {
   ExtendedApi, 
   ProposalProgress, 
   VectorIndexStatus,
-  GsdSeed,
-  KSpecDraft
+  OpenTab
 } from '../../api/types'
 import { BrainstormTab } from './BrainstormTab'
 
@@ -49,6 +48,8 @@ interface IntelligenceSidebarProps {
   onWidthChange: (width: number) => void
   vectorStatus: VectorIndexStatus | null
   width: number
+  gitnexus?: ProjectIntelligence['gitnexus']
+  activeTab?: OpenTab | null
 }
 
 export function IntelligenceSidebar({ 

@@ -56,7 +56,7 @@ export function CognitiveSearchModal({
     const handler = setTimeout(async () => {
       setIsSearching(true)
       try {
-        const searchResults = await api.vectorSearch(query, 10)
+        const searchResults = api.vectorSearch ? await api.vectorSearch(query, 10, projectPath) : []
         // Filter by project path if needed (though backend currently search all or you can filter here)
         setResults(searchResults)
       } catch (err) {
@@ -88,7 +88,7 @@ export function CognitiveSearchModal({
 
   const handleOpenResult = (result: VectorSearchResult) => {
     // Open file at line if possible
-    api.openFile(result.chunk.filePath)
+    api.openFile?.(result.chunk.filePath)
     onClose()
   }
 

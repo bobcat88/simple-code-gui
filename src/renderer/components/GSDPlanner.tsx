@@ -155,7 +155,7 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
   };
 
   const handleAddStep = async (phaseId: string) => {
-    if (!plan || !projectPath) return;
+    if (!plan || !projectPath || !api.gsdAddStep) return;
     const title = prompt('Step Title:');
     if (!title) return;
     const description = prompt('Step Description (Command):');
@@ -181,7 +181,7 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
   };
 
   const handleExecute = async () => {
-    if (!plan || !projectPath || executing) return;
+    if (!plan || !projectPath || executing || !api.gsdExecutePlan) return;
     try {
       setExecuting(true);
       await api.gsdExecutePlan(plan.id);
@@ -193,6 +193,7 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
 
   const handleRespondToCheckpoint = async (stepId: string, response: UserResponse) => {
     try {
+      if (!api.gsdRespondToCheckpoint) return;
       await api.gsdRespondToCheckpoint(stepId, response);
     } catch (err) {
       console.error('Failed to respond to checkpoint:', err);

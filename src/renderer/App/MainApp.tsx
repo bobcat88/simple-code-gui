@@ -271,7 +271,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
   // Sync current project with backend for background orchestration
   useEffect(() => {
     if (isTauri && (api as any).setCurrentProject) {
-      (api as any).setCurrentProject(activeTab?.projectPath || null).catch(err => {
+      (api as any).setCurrentProject(activeTab?.projectPath || null).catch((err: unknown) => {
         console.error('Failed to set current project on backend:', err);
       });
     }
@@ -542,7 +542,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
           isOpen={projectWizardOpen}
           onClose={closeProjectWizard}
           onProjectCreated={handleProjectCreated}
-          api={api}
+          api={api as any}
         />
 
         <Spotlight 
@@ -554,7 +554,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
           onOpenSettings={openSettings}
           onOpenProjectWizard={openProjectWizard}
           onSwitchToTab={setActiveTab}
-          api={api}
+          api={api as any}
         />
         <TranscriptionOverlay />
         <NeuralHUD />

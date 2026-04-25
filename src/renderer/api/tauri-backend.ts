@@ -19,7 +19,12 @@ import {
   TokenHistoryResponse,
   TokenTransactionInput,
   GsdSeed,
-  KSpecDraft
+  KSpecDraft,
+  GsdStep,
+  UserResponse,
+  VectorSearchResult,
+  VectorIndexStatus,
+  VectorChunk
 } from './types'
 import { tauriIpc } from '../lib/tauri-ipc'
 import { check } from '@tauri-apps/plugin-updater'
@@ -83,8 +88,8 @@ export class TauriBackend implements ExtendedApi {
     await tauriIpc.setPtyBackend(id, backend);
   }
 
-  setAutoAccept(id: string, enabled: boolean): void {
-    tauriIpc.setAutoAccept(id, enabled);
+  async setAutoAccept(id: string, enabled: boolean): Promise<void> {
+    await tauriIpc.setAutoAccept(id, enabled);
   }
 
   async getAutoAcceptStatus(id: string): Promise<boolean> {
@@ -334,8 +339,8 @@ export class TauriBackend implements ExtendedApi {
     await tauriIpc.setCurrentProject(path);
   }
 
-  async vectorIndexSession(summary: string, ptyId: string, projectPath?: string): Promise<{ success: boolean }> {
-    return await tauriIpc.vectorIndexSession(summary, ptyId, projectPath);
+  async vectorIndexSession(summary: string, ptyId: string, projectPath?: string): Promise<{ success: boolean; error?: string }> {
+    return await tauriIpc.vectorIndexSession(summary, ptyId, projectPath) as { success: boolean; error?: string };
   }
 
   onProjectInitializationProgress(callback: (progress: any) => void): Unsubscribe {

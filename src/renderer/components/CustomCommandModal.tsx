@@ -59,7 +59,7 @@ export function CustomCommandModal({ isOpen, onClose, projectPath }: CustomComma
         trimmedName,
         commandContent,
         scope === 'project' ? projectPath! : null
-      )
+      ) ?? { success: false, error: 'Custom command saving is unavailable' }
 
       if (result.success) {
         onClose()

@@ -54,6 +54,7 @@ export interface Settings {
   defaultProjectDir: string
   theme: string
   themeCustomization?: ThemeCustomization | null
+  aiRuntime?: any
   voiceOutputEnabled?: boolean
   voiceVolume?: number
   voiceSpeed?: number
@@ -269,6 +270,7 @@ export interface TokenHistoryFilters {
   endDate?: string
   projectPath?: string
   backend?: BackendId
+  sessionId?: string
   nexusSessionId?: string
 }
 
@@ -333,8 +335,10 @@ export interface GsdSeed {
   slug: string
   why: string
   whenToSurface: string
+  when_to_surface?: string
   status: 'planted' | 'sprouted' | 'archived'
   timestamp: number
+  createdAt?: string
 }
 
 export interface KSpecDraft {
@@ -342,6 +346,9 @@ export interface KSpecDraft {
   title: string
   content: string
   lastModified: number
+  last_modified?: number
+  moduleId?: string
+  updatedAt?: number
 }
 
 export interface VectorIndexStatus {
@@ -369,8 +376,8 @@ export interface Api {
   voiceImportCustom?: () => Promise<{ success: boolean; error?: string }>
   voiceOpenCustomFolder?: () => Promise<void>
   
-  vectorIndexKnowledge: () => Promise<number>
-  vectorIndexSession: (summary: string, ptyId: string, projectPath?: string) => Promise<void>
+  vectorIndexKnowledge: () => Promise<{ success: boolean; error?: string }>
+  vectorIndexSession: (summary: string, ptyId: string, projectPath?: string) => Promise<{ success: boolean; error?: string }>
   xttsGetVoices?: () => Promise<any[]>
   xttsGetSampleVoices?: () => Promise<any[]>
   xttsGetLanguages?: () => Promise<any[]>
@@ -634,6 +641,7 @@ export interface Api {
   vectorGetStatus?: () => Promise<VectorIndexStatus>
   vectorAddChunks?: (chunks: VectorChunk[]) => Promise<{ success: boolean }>
   vectorIndexProject?: (projectPath: string) => Promise<{ success: boolean; error?: string }>
+  openFile?: (path: string) => void | Promise<void>
 
   // Brainstorm Companion
   gsdListSeeds?: (cwd: string) => Promise<GsdSeed[]>
@@ -721,7 +729,7 @@ export interface ExtendedApi extends Api {
   diagnosticsGenerateBundle: () => Promise<DiagnosticResult>
 
   // Custom Commands
-  commandsSave?: (path: string, commands: any[]) => Promise<{ success: boolean; error?: string }>
+  commandsSave?: (name: string, content: string, scopePath: string | null) => Promise<{ success: boolean; error?: string }>
   aiSaveKey?: (provider: string, key: string, baseUrl?: string) => Promise<void>
 
   // Voice (Extended/Desktop)
@@ -979,8 +987,12 @@ export interface ToolInfo {
   description: string;
   category: string;
   usageCount: number;
+  usage_count?: number;
   successRate: number;
   parametersSchema: string;
+  is_enabled?: boolean;
+  version?: string;
+  avg_latency_ms?: number;
 }
 
 export interface DiagnosticResult {

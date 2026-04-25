@@ -13,6 +13,7 @@ import type {
   UpdateTaskParams,
   TaskStatus
 } from './types.js'
+import type { Api } from '../../../api/types.js'
 
 function normalizeStatus(status: string): TaskStatus {
   switch (status) {

@@ -7,6 +7,7 @@ import type { Api } from '../../api/types.js'
 export interface TerminalGlobals {
   __TERMINAL_BUFFERS__?: Map<string, string[]>
   __XTERM_ERROR_HANDLER__?: boolean
+  api?: Api
 }
 
 // Props for the Terminal component

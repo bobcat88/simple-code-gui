@@ -83,11 +83,11 @@ export function Spotlight({
       try {
         const results = await api.vectorSearch(query, 5)
         const neuralItems: SpotlightResult[] = results.map((res: VectorSearchResult) => ({
-          id: `neural-${res.id}`,
-          title: res.text.length > 60 ? res.text.substring(0, 60) + '...' : res.text,
-          subtitle: `${res.metadata?.file_path || 'Global Knowledge'} • ${Math.round(res.score * 100)}% match`,
+          id: `neural-${res.chunk.id}`,
+          title: res.chunk.content.length > 60 ? res.chunk.content.substring(0, 60) + '...' : res.chunk.content,
+          subtitle: `${res.chunk.metadata?.file_path || res.chunk.filePath || 'Global Knowledge'} • ${Math.round(res.score * 100)}% match`,
           type: 'neural' as const,
-          icon: res.metadata?.file_path ? <FileText size={16} /> : <Brain size={16} />,
+          icon: (res.chunk.metadata?.file_path || res.chunk.filePath) ? <FileText size={16} /> : <Brain size={16} />,
           action: () => {
             // If it's a file, we could potentially open it in the future
             // For now, just log it or show a toast

@@ -122,6 +122,7 @@ export function useTerminalSetup(options: UseTerminalSetupOptions): UseTerminalS
         onSummaryChunk,
         onAutoWorkMarker,
         onTokenChunk,
+        options.api,
         state
       )
     })

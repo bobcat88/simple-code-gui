@@ -19,9 +19,9 @@ describe('HealthDashboard', () => {
       threads: 12,
       status: 'Warning',
       services: [
-        { id: 'database', name: 'Database', status: 'Healthy', detail: 'Connection ready' },
-        { id: 'extensions', name: 'Extension Store', status: 'Healthy', detail: '2 installed extensions, 2 enabled, 1 MCP, 1 plugin' },
-        { id: 'mcp_config', name: 'MCP Config', status: 'Warning', detail: 'No mcp_config.json found for 1 installed MCP' },
+        { id: 'database', name: 'Database', status: 'Healthy', detail: 'Connection ready', diagnostics: [] },
+        { id: 'extensions', name: 'Extension Store', status: 'Healthy', detail: '2 installed extensions, 2 enabled, 1 MCP, 1 plugin', diagnostics: [] },
+        { id: 'mcp_config', name: 'MCP Config', status: 'Warning', detail: 'No mcp_config.json found for 1 installed MCP', diagnostics: [] },
       ],
       installed_extensions: [
         {

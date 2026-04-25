@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
+import type { BackendId } from '../api/types';
 
 export interface SessionInfo {
   id: String;
@@ -47,8 +48,8 @@ export const tauriIpc = {
   onPtyExit: (id: string, callback: (code: number) => void): Promise<UnlistenFn> => 
     listen<number>(`pty-exit-${id}`, (event) => callback(event.payload)),
     
-  onPtyRecreated: (callback: (data: { oldId: string, newId: string, backend: string }) => void): Promise<UnlistenFn> => 
-    listen<{ oldId: string, newId: string, backend: string }>('pty-recreated', (event) => callback(event.payload)),
+  onPtyRecreated: (callback: (data: { oldId: string, newId: string, backend: BackendId }) => void): Promise<UnlistenFn> => 
+    listen<{ oldId: string, newId: string, backend: BackendId }>('pty-recreated', (event) => callback(event.payload)),
     
   onPtyTitle: (id: string, callback: (title: string) => void): Promise<UnlistenFn> => 
     listen<string>(`pty-title-${id}`, (event) => callback(event.payload)),
@@ -327,7 +328,7 @@ export const tauriIpc = {
   vectorIndexKnowledge: () =>
     invoke<{ success: boolean, error?: string }>('vector_index_knowledge'),
   vectorIndexSession: (summary: string, ptyId: string, projectPath?: string) =>
-    invoke('vector_index_session', { summary, ptyId, projectPath }),
+    invoke<{ success: boolean; error?: string }>('vector_index_session', { summary, ptyId, projectPath }),
 
   // Swarm Messaging
   broadcastAgentMessage: (message: any) =>

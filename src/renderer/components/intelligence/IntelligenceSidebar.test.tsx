@@ -33,6 +33,9 @@ const baseCapabilityScan: ProjectCapabilityScan = {
   warnings: [],
   blockers: [],
   upgradeInputs: {
+    canProposeMinimal: true,
+    canProposeStandard: true,
+    canProposeFull: true,
     recommendedPreset: 'Standard',
     createCandidates: [],
     modifyCandidates: [],
@@ -54,7 +57,12 @@ function renderSidebar(capabilityScan: ProjectCapabilityScan | null) {
       loading={false}
       onClose={vi.fn()}
       onRefresh={vi.fn()}
+      onDeepScan={vi.fn()}
+      onReindex={vi.fn()}
+      onSyncMemory={vi.fn()}
+      onOpenSearch={vi.fn()}
       onWidthChange={vi.fn()}
+      vectorStatus={null}
       width={320}
     />
   )

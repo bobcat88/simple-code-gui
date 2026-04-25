@@ -109,13 +109,13 @@ export class HttpBackend implements Api {
 
   spawnPty(
     cwd: string,
-    backend: BackendId,
     sessionId?: string,
-    slug?: string,
+    model?: string,
+    backend?: BackendId,
     rows?: number,
     cols?: number
   ): Promise<string> {
-    return this.ptyApi.spawnPty(cwd, backend, sessionId, slug, rows, cols)
+    return this.ptyApi.spawnPty(cwd, sessionId, model, backend ?? 'claude', rows, cols)
   }
 
   writePty(id: string, data: string): void {
@@ -239,6 +239,18 @@ export class HttpBackend implements Api {
       port: this.port,
       token: this.connection.getToken()
     }
+  }
+
+  async vectorIndexKnowledge(): Promise<{ success: boolean; error?: string }> {
+    return { success: false, error: 'Knowledge indexing is only available in the desktop backend' }
+  }
+
+  async vectorIndexSession(
+    _summary: string,
+    _ptyId: string,
+    _projectPath?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    return { success: false, error: 'Session indexing is only available in the desktop backend' }
   }
 
   async testConnection(): Promise<{ success: boolean; error?: string }> {

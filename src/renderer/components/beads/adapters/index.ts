@@ -11,4 +11,4 @@ export type {
 
 export { BeadsAdapter } from './beads-adapter.js'
 export { KspecAdapter } from './kspec-adapter.js'
-export { detectBackend, getAdapter, getAdapterForProject, beadsAdapter, kspecAdapter } from './detect.js'
+export { detectBackend, getAdapter, getAdapterForProject } from './detect.js'

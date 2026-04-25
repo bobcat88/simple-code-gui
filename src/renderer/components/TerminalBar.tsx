@@ -85,7 +85,7 @@ export function TerminalBar({
       setAutoAccept(false)
       return
     }
-    api.getAutoAcceptStatus(ptyId).then((enabled: boolean) => {
+    api.getAutoAcceptStatus?.(ptyId).then((enabled: boolean) => {
       setAutoAccept(enabled)
     })
   }, [ptyId])
@@ -93,7 +93,7 @@ export function TerminalBar({
   const handleToggleAutoAccept = useCallback(() => {
     const newState = !autoAccept
     setAutoAccept(newState)
-    api.setAutoAccept(ptyId, newState)
+    api.setAutoAccept?.(ptyId, newState)
   }, [autoAccept, ptyId, api])
 
   // Auto work options state

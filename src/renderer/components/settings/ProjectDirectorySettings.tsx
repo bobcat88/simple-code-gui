@@ -23,7 +23,7 @@ export function ProjectDirectorySettings({ value, onChange }: ProjectDirectorySe
       <div className="input-with-button">
         <input
           type="text"
-          value={defaultProjectDir}
+          value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Select a directory..."
           readOnly

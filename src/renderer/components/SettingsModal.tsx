@@ -30,7 +30,7 @@ import type {
   SettingsModalProps,
   ThemeCustomization,
 } from './settings/settingsTypes'
-import { Settings, Palette, Cpu, Volume2, Info, ChevronRight, Save } from 'lucide-react'
+import { Settings, Palette, Cpu, Volume2, Info, ChevronRight, Save, Coins } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 // Migrate old slider-based customization to new color-based format
@@ -299,7 +299,7 @@ export function SettingsModal({
                   <section>
                     <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Workspace</h3>
                     <ProjectDirectorySettings 
-                      defaultProjectDir={general.defaultProjectDir}
+                      value={general.defaultProjectDir}
                       onChange={(dir) => setGeneral(prev => ({ ...prev, defaultProjectDir: dir }))}
                     />
                   </section>

@@ -66,7 +66,9 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
       name: 'New Plan',
       description: 'Custom model orchestration plan',
       plannerModel: 'claude-3-5-sonnet-latest',
-      builderModel: 'claude-3-5-sonnet-latest'
+      builderModel: 'claude-3-5-sonnet-latest',
+      reviewerModel: 'claude-3-5-sonnet-latest',
+      researcherModel: 'claude-3-5-sonnet-latest'
     }
     setEditingPlan(newPlan)
     setIsNewPlan(true)

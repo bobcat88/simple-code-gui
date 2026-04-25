@@ -252,11 +252,21 @@ export interface UpdateStatus {
   error?: string
 }
 
+export interface SavedSettings {
+  defaultProjectDir: string
+  theme: string
+  themeCustomization?: ThemeCustomization
+  autoAcceptTools?: string[]
+  permissionMode?: string
+  backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider'
+  aiRuntime?: AiRuntimeSettings
+}
+
 export interface SettingsModalProps {
   isOpen: boolean
   onClose: () => void
   onThemeChange: (theme: Theme) => void
-  onSaved?: (settings: { defaultProjectDir: string; theme: string; themeCustomization?: ThemeCustomization; autoAcceptTools?: string[]; permissionMode?: string; backend?: 'default' | 'claude' | 'gemini' | 'codex' | 'opencode' | 'aider' }) => void
+  onSaved?: (settings: SavedSettings) => void
   appVersion?: string
   updateStatus?: UpdateStatus
   onDownloadUpdate?: () => void
@@ -267,4 +277,3 @@ export interface SettingsModalProps {
   initialCategory?: string
   api: Api
 }
-

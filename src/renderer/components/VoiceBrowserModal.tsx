@@ -15,6 +15,7 @@ import type {
   CombinedVoice,
   ModelFilter
 } from './VoiceBrowserTypes.js'
+import type { ExtendedApi } from '../api/types.js'
 
 interface VoiceBrowserModalProps {
   isOpen: boolean
@@ -24,7 +25,7 @@ interface VoiceBrowserModalProps {
 
 export function VoiceBrowserModal({ isOpen, onClose, onVoiceSelect }: VoiceBrowserModalProps): React.ReactElement | null {
   const { volume: voiceVolume } = useVoice()
-  const api = useApi()
+  const api = useApi() as Required<ExtendedApi>
   const [catalog, setCatalog] = useState<VoiceCatalogEntry[]>([])
   const [installed, setInstalled] = useState<InstalledVoice[]>([])
   const [xttsVoices, setXttsVoices] = useState<XTTSVoice[]>([])

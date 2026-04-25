@@ -90,11 +90,16 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
     setDraftContent(draft.content || '')
   }
 
+  const getDraftModuleId = (draft: KSpecDraft) => draft.moduleId || draft.id
+  const getDraftUpdatedAt = (draft: KSpecDraft) => draft.updatedAt || draft.lastModified || draft.last_modified || Date.now()
+  const getSeedCreatedAt = (seed: GsdSeed) => seed.createdAt || seed.timestamp * 1000 || Date.now()
+  const getSeedSurface = (seed: GsdSeed) => seed.whenToSurface || seed.when_to_surface || 'Next Milestone'
+
   const handleSaveDraft = async () => {
     if (!selectedDraft) return
     setIsSavingDraft(true)
     try {
-      await api.kspecWriteDraft(projectPath, selectedDraft.moduleId, draftContent)
+      await api.kspecWriteDraft(projectPath, getDraftModuleId(selectedDraft), draftContent)
       refresh()
       setSelectedDraft(null)
     } catch (err) {
@@ -131,7 +136,7 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
             >
               <ArrowLeft size={16} />
             </button>
-            <h3 className="text-sm font-bold text-white/90">{selectedDraft.moduleId}</h3>
+            <h3 className="text-sm font-bold text-white/90">{getDraftModuleId(selectedDraft)}</h3>
           </div>
           <div className="flex items-center gap-2">
             <button 
@@ -283,12 +288,12 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
                         )}
                       </div>
                       <div className="text-[9px] font-mono text-white/20 shrink-0">
-                        {new Date(seed.createdAt).toLocaleDateString()}
+                        {new Date(getSeedCreatedAt(seed)).toLocaleDateString()}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-3">
                       <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 text-[8px] font-bold uppercase tracking-tight border border-indigo-500/10">
-                        {seed.whenToSurface}
+                        {getSeedSurface(seed)}
                       </span>
                       <button className="ml-auto text-[9px] text-white/30 hover:text-white/60 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                         Promote to Task <ChevronRight size={10} />
@@ -369,10 +374,10 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-xs font-semibold text-white/90 truncate group-hover:text-purple-300 transition-colors">
-                          {draft.moduleId}
+                          {getDraftModuleId(draft)}
                         </div>
                         <div className="text-[9px] text-white/30 flex items-center gap-2">
-                          <span>{new Date(draft.updatedAt).toLocaleTimeString()}</span>
+                          <span>{new Date(getDraftUpdatedAt(draft)).toLocaleTimeString()}</span>
                           <span className="w-1 h-1 rounded-full bg-white/10" />
                           <span>YAML Spec</span>
                         </div>

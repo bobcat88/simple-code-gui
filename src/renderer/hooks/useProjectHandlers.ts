@@ -138,6 +138,7 @@ export function useProjectHandlers({
 
       // Retrieve nexus session ID from storage
       const nexusSessionId = sessionStorage.getItem('transwarp-session-id') || undefined;
+      const { rows, cols } = calculatePtyDimensions(window.innerWidth, window.innerHeight)
 
       const ptyId = await api.spawnPty(projectPath, sessionId, undefined, effectiveBackend, rows, cols, nexusSessionId)
 

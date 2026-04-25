@@ -12,7 +12,8 @@ import {
   Grid,
   List,
   Filter,
-  ExternalLink
+  ExternalLink,
+  Activity
 } from 'lucide-react';
 import { useApi } from '../../contexts/ApiContext';
 import { cn } from '../../lib/utils';
