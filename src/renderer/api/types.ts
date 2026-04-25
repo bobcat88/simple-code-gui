@@ -841,6 +841,7 @@ export interface GsdStep {
   result?: string
   attempts: number
   maxRetries: number
+  waveIndex?: number
 }
 
 export interface GsdPhase {

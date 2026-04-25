@@ -148,7 +148,10 @@ impl Executor {
             let mut join_set = JoinSet::new();
 
             for step_index in batch.iter().copied() {
-                let step = phase.steps[step_index].clone();
+                let mut step = phase.steps[step_index].clone();
+                step.wave_index = Some(wave_index as u32 + 1);
+                phase.steps[step_index] = step.clone();
+                
                 let executor = self.clone();
                 let plan_id = plan_id.to_string();
                 let phase_id = phase.id.clone();

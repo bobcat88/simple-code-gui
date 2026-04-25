@@ -98,6 +98,7 @@ pub async fn gsd_add_step(
         result: None,
         attempts: 0,
         max_retries: 3,
+        wave_index: None,
     };
 
     phase.steps.push(step.clone());

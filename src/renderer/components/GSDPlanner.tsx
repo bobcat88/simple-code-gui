@@ -178,6 +178,12 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
         </div>
 
         <div className="flex items-center gap-3">
+          {executing && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest animate-pulse">
+              <Milestone size={12} />
+              Active Wave
+            </div>
+          )}
           <button
             onClick={handleExecute}
             disabled={executing || !plan || plan.phases.length === 0}
@@ -228,7 +234,7 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                   className={cn(
                     "absolute left-0 top-0 w-12 h-12 rounded-2xl flex items-center justify-center border-2 transition-all duration-300 z-10",
                     phase.status === 'Completed' ? "bg-green-500/20 border-green-500 text-green-500 shadow-lg shadow-green-500/20" :
-                    phase.status === 'Executing' ? "bg-orange-500/20 border-orange-500 text-orange-500 shadow-lg shadow-orange-500/20 animate-pulse" :
+                    phase.status === 'InProgress' ? "bg-primary/20 border-primary text-primary shadow-lg shadow-primary/20 animate-pulse" :
                     "bg-white/5 border-white/10 text-muted-foreground hover:border-primary/50"
                   )}
                   onClick={() => togglePhase(phase.id)}
@@ -240,14 +246,14 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                 <div className="group rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-all overflow-hidden shadow-sm hover:shadow-md">
                   <div className="p-5 flex items-center justify-between cursor-pointer" onClick={() => togglePhase(phase.id)}>
                     <div className="flex items-center gap-4">
-                      <h3 className="text-lg font-bold text-white/90">{phase.name}</h3>
+                      <h3 className="text-lg font-bold text-white/90">{phase.title}</h3>
                       <div className={cn(
                         "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
                         phase.status === 'Completed' ? "bg-green-500/20 text-green-400" :
-                        phase.status === 'Executing' ? "bg-orange-500/20 text-orange-400" :
+                        phase.status === 'InProgress' ? "bg-primary/20 text-primary" :
                         "bg-white/5 text-muted-foreground"
                       )}>
-                        {phase.status}
+                        {phase.status === 'InProgress' ? 'In Progress' : phase.status}
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -263,30 +269,66 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
 
                   {expandedPhases[phase.id] && (
                     <div className="px-5 pb-5 animate-in slide-in-from-top-2 duration-200">
-                      <div className="space-y-3 pt-2">
+                      <div className="space-y-4 pt-2">
                         {phase.steps.length === 0 ? (
                           <div className="py-4 text-center border-2 border-dashed border-white/5 rounded-2xl">
                             <p className="text-sm text-muted-foreground italic">No steps defined for this phase.</p>
                           </div>
                         ) : (
-                          phase.steps.map((step) => (
-                            <div 
-                              key={step.id} 
-                              className="flex items-center gap-4 p-3 rounded-2xl bg-white/[0.02] border border-white/5 group/step hover:bg-white/[0.05] transition-all"
-                            >
-                              <div className="text-primary/40 group-hover/step:text-primary transition-colors">
-                                {step.status === 'Completed' ? <CheckCircle2 size={16} className="text-green-500" /> :
-                                 step.status === 'Executing' ? <Clock size={16} className="text-orange-400 animate-spin-slow" /> :
-                                 <Circle size={16} />}
+                          (() => {
+                            const waves: Record<number, GsdStep[]> = {};
+                            phase.steps.forEach(s => {
+                              const w = s.waveIndex || 0;
+                              if (!waves[w]) waves[w] = [];
+                              waves[w].push(s);
+                            });
+                            
+                            return Object.entries(waves).sort(([a], [b]) => Number(a) - Number(b)).map(([waveId, steps]) => (
+                              <div key={waveId} className="space-y-2 relative">
+                                {waveId !== '0' && (
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <div className="h-px flex-1 bg-white/5" />
+                                    <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">Wave {waveId}</span>
+                                    <div className="h-px flex-1 bg-white/5" />
+                                  </div>
+                                )}
+                                <div className={cn(
+                                  "grid gap-3",
+                                  steps.length > 1 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"
+                                )}>
+                                  {steps.map((step) => (
+                                    <div 
+                                      key={step.id} 
+                                      className={cn(
+                                        "flex items-start gap-4 p-3 rounded-2xl bg-white/[0.02] border border-white/5 group/step hover:bg-white/[0.05] transition-all",
+                                        step.status === 'InProgress' && "bg-primary/5 border-primary/20 shadow-sm shadow-primary/5"
+                                      )}
+                                    >
+                                      <div className="mt-1">
+                                        {step.status === 'Completed' ? <CheckCircle2 size={16} className="text-green-500" /> :
+                                         step.status === 'InProgress' ? <Clock size={16} className="text-primary animate-spin-slow" /> :
+                                         step.status === 'Pending' ? <Circle size={16} className="text-muted-foreground/40" /> :
+                                         <AlertCircle size={16} className="text-red-500" />}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between gap-2 mb-1">
+                                          <span className="text-[10px] font-bold text-white/40 truncate">{step.title}</span>
+                                          {step.attempts > 0 && (
+                                            <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-white/5 text-muted-foreground">
+                                              Try {step.attempts}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <code className="text-[11px] text-white/70 block truncate bg-black/40 p-2 rounded-lg border border-white/5 font-mono group-hover/step:text-white transition-colors">
+                                          {step.description}
+                                        </code>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <code className="text-xs text-white/70 block truncate bg-black/20 p-1.5 rounded-lg border border-white/5 font-mono">
-                                  {step.command}
-                                </code>
-                                {step.notes && <p className="text-[10px] text-muted-foreground mt-1">{step.notes}</p>}
-                              </div>
-                            </div>
-                          ))
+                            ));
+                          })()
                         )}
                       </div>
                     </div>

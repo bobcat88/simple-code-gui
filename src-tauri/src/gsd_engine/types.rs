@@ -20,6 +20,7 @@ pub struct GsdStep {
     pub result: Option<String>,
     pub attempts: u32,
     pub max_retries: u32,
+    pub wave_index: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
