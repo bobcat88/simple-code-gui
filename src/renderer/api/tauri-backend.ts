@@ -388,12 +388,16 @@ export class TauriBackend implements ExtendedApi {
     return await tauriIpc.gsdAddPhase(planId, title);
   }
 
-  async gsdAddStep(planId: string, phaseId: string, title: string, description: string): Promise<any> {
+  async gsdAddStep(planId: string, phaseId: string, title: string, description: string): Promise<GsdStep> {
     return await tauriIpc.gsdAddStep(planId, phaseId, title, description);
   }
 
   async gsdExecutePlan(planId: string): Promise<void> {
     await tauriIpc.gsdExecutePlan(planId);
+  }
+
+  async gsdRespondToCheckpoint(stepId: string, response: UserResponse): Promise<void> {
+    await tauriIpc.gsdRespondToCheckpoint(stepId, response);
   }
 
   onGsdExecutionEvent(callback: (event: any) => void): Unsubscribe {

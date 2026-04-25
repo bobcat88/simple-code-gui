@@ -12,13 +12,22 @@ pub mod types;
 
 pub struct GsdEngine {
     pub active_plans: Arc<Mutex<HashMap<String, GsdPlan>>>,
+    pub pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<UserResponse>>>>,
     pub db: Arc<DatabaseManager>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub enum UserResponse {
+    Approve,
+    Retry,
+    Abort,
 }
 
 impl GsdEngine {
     pub fn new(db: Arc<DatabaseManager>) -> Self {
         Self {
             active_plans: Arc::new(Mutex::new(HashMap::new())),
+            pending_responses: Arc::new(Mutex::new(HashMap::new())),
             db,
         }
     }
@@ -125,7 +134,7 @@ pub async fn gsd_execute_plan(
     let app_handle = app.clone();
 
     tauri::async_runtime::spawn(async move {
-        let executor = executor::Executor::new(ai, engine.db.clone(), app_handle.clone());
+        let executor = executor::Executor::new(ai, engine.db.clone(), app_handle.clone(), engine.pending_responses.clone());
         let max_phase_step_count = plan
             .phases
             .iter()
@@ -164,4 +173,19 @@ pub async fn gsd_execute_plan(
     });
 
     Ok(())
+}
+
+#[tauri::command]
+pub async fn gsd_respond_to_checkpoint(
+    state: State<'_, Arc<GsdEngine>>,
+    step_id: String,
+    response: UserResponse,
+) -> Result<(), String> {
+    let mut pending = state.pending_responses.lock().await;
+    if let Some(sender) = pending.remove(&step_id) {
+        let _ = sender.send(response);
+        Ok(())
+    } else {
+        Err("No pending checkpoint for this step".to_string())
+    }
 }

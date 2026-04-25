@@ -8,6 +8,7 @@ pub enum StepStatus {
     Completed,
     Failed(String),
     Skipped,
+    WaitingForUser(String),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

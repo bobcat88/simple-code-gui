@@ -831,7 +831,9 @@ export interface ProjectIntelligence {
 // GSD Engine Types
 // ============================================================================
 
-export type GsdStepStatus = 'Pending' | 'InProgress' | 'Completed' | { Failed: string } | 'Skipped'
+export type GsdStepStatus = 'Pending' | 'InProgress' | 'Completed' | { Failed: string } | 'Skipped' | { WaitingForUser: string };
+
+export type UserResponse = 'Approve' | 'Retry' | 'Abort';
 
 export interface GsdStep {
   id: string

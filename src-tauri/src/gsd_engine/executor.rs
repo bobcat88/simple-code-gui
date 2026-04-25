@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::process::Command;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
+use tokio::sync::Mutex;
 use tokio::task::JoinSet;
 use tokio::time::{sleep, Duration};
 
@@ -87,11 +88,22 @@ pub struct Executor {
     pub _ai: Arc<RuntimeManager>,
     pub _db: Arc<DatabaseManager>,
     pub app: AppHandle,
+    pub pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<crate::gsd_engine::UserResponse>>>>,
 }
 
 impl Executor {
-    pub fn new(ai: Arc<RuntimeManager>, db: Arc<DatabaseManager>, app: AppHandle) -> Self {
-        Self { _ai: ai, _db: db, app }
+    pub fn new(
+        ai: Arc<RuntimeManager>,
+        db: Arc<DatabaseManager>,
+        app: AppHandle,
+        pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<crate::gsd_engine::UserResponse>>>>,
+    ) -> Self {
+        Self {
+            _ai: ai,
+            _db: db,
+            app,
+            pending_responses,
+        }
     }
 
     fn emit_execution_event(
@@ -242,6 +254,7 @@ impl Executor {
             );
             let _ = self.app.emit("gsd-step-updated", step.clone());
 
+            // TODO: Replace with real RuntimeManager call
             sleep(Duration::from_millis(150)).await;
 
             step.status = StepStatus::Completed;
@@ -285,32 +298,71 @@ impl Executor {
                 return Ok(step);
             }
 
-            if step.attempts >= retry_budget {
-                step.status = StepStatus::Failed("Verifier loop exhausted".to_string());
+            // Verification failed - Check for retry budget or enter interactive mode
+            if step.attempts < retry_budget {
+                step.status = StepStatus::Pending;
+                step.result = Some("Verification failed; retrying automatically".to_string());
                 let _ = self.app.emit("gsd-step-updated", step.clone());
                 self.emit_execution_event(
                     plan_id,
                     Some(phase_id),
                     Some(&step.id),
-                    "step_failed",
-                    format!(
-                        "Step {} failed verification after {} attempt(s)",
-                        step.title, step.attempts
-                    ),
+                    "step_retrying",
+                    format!("Retrying step {} automatically (attempt {}/{})", step.title, step.attempts, retry_budget),
                 );
-                return Ok(step);
+                continue;
             }
 
-            step.status = StepStatus::Pending;
-            step.result = Some("Verification failed; retrying".to_string());
+            // Budget exhausted - Wait for User
+            step.status = StepStatus::WaitingForUser("Verification failed. Please review and decide how to proceed.".to_string());
             let _ = self.app.emit("gsd-step-updated", step.clone());
+            
             self.emit_execution_event(
                 plan_id,
                 Some(phase_id),
                 Some(&step.id),
-                "step_retrying",
-                format!("Retrying step {} after verifier rejection", step.title),
+                "checkpoint_required",
+                format!("Step {} requires manual approval", step.title),
             );
+
+            // Create oneshot channel and register it
+            let (tx, rx) = tokio::sync::oneshot::channel();
+            {
+                let mut pending = self.pending_responses.lock().await;
+                pending.insert(step.id.clone(), tx);
+            }
+
+            // Wait for user response
+            match rx.await {
+                Ok(crate::gsd_engine::UserResponse::Approve) => {
+                    self.emit_execution_event(
+                        plan_id,
+                        Some(phase_id),
+                        Some(&step.id),
+                        "user_approved",
+                        format!("User manually approved step {}", step.title),
+                    );
+                    step.status = StepStatus::Completed;
+                    return Ok(step);
+                }
+                Ok(crate::gsd_engine::UserResponse::Retry) => {
+                    self.emit_execution_event(
+                        plan_id,
+                        Some(phase_id),
+                        Some(&step.id),
+                        "user_requested_retry",
+                        format!("User requested retry for step {}", step.title),
+                    );
+                    // Reset attempts if user wants to retry manually? 
+                    // Let's keep it as is for now.
+                    continue;
+                }
+                Ok(crate::gsd_engine::UserResponse::Abort) | Err(_) => {
+                    step.status = StepStatus::Failed("User aborted or session timed out".to_string());
+                    let _ = self.app.emit("gsd-step-updated", step.clone());
+                    return Ok(step);
+                }
+            }
         }
     }
 

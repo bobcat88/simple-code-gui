@@ -34,9 +34,7 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
     if (!projectPath) return;
     setLoading(true);
     try {
-      // For now, we create a new plan or it would be loaded from git-backed persistence
-      // The backend should eventually handle "getPlan" but for now we create one to start
-      const newPlan = await api.gsdCreatePlan(projectPath);
+      const newPlan = await api.gsdCreatePlan(projectPath, "Project Plan");
       setPlan(newPlan);
       setError(null);
     } catch (err) {
@@ -55,15 +53,12 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
   useEffect(() => {
     if (!api.onGsdExecutionEvent) return;
 
-    const unsubscribe = api.onGsdExecutionEvent((event: GsdExecutionEvent) => {
-      if (event.type === 'PlanStarted') {
+    const unsubscribe = api.onGsdExecutionEvent((event: any) => {
+      if (event.type === 'gsd-execution-started') {
         setExecuting(true);
-      } else if (event.type === 'PlanCompleted' || event.type === 'PlanFailed') {
+      } else if (event.type === 'gsd-execution-completed' || event.type === 'gsd-execution-failed') {
         setExecuting(false);
       }
-      
-      // Update plan state based on events if necessary
-      // For now, we rely on phase/step update events which are separate
     });
 
     const unsubscribePhase = api.onGsdPhaseUpdated?.((updatedPhase: GsdPhase) => {
@@ -102,13 +97,15 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
     if (!name) return;
 
     try {
-      const updatedPlan = await api.gsdAddPhase(projectPath, name);
-      setPlan(updatedPlan);
-      // Auto-expand new phase
-      const newPhase = updatedPlan.phases[updatedPlan.phases.length - 1];
-      if (newPhase) {
-        setExpandedPhases(prev => ({ ...prev, [newPhase.id]: true }));
-      }
+      const newPhase = await api.gsdAddPhase(plan.id, name);
+      setPlan(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          phases: [...prev.phases, newPhase]
+        };
+      });
+      setExpandedPhases(prev => ({ ...prev, [newPhase.id]: true }));
     } catch (err) {
       setError('Failed to add phase.');
     }
@@ -116,12 +113,25 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
 
   const handleAddStep = async (phaseId: string) => {
     if (!plan || !projectPath) return;
-    const command = prompt('Step Command:');
-    if (!command) return;
+    const title = prompt('Step Title:');
+    if (!title) return;
+    const description = prompt('Step Description (Command):');
+    if (!description) return;
 
     try {
-      const updatedPlan = await api.gsdAddStep(projectPath, phaseId, command);
-      setPlan(updatedPlan);
+      const newStep = await api.gsdAddStep(plan.id, phaseId, title, description);
+      setPlan(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          phases: prev.phases.map(p => {
+            if (p.id === phaseId) {
+              return { ...p, steps: [...p.steps, newStep] };
+            }
+            return p;
+          })
+        };
+      });
     } catch (err) {
       setError('Failed to add step.');
     }
@@ -131,10 +141,19 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
     if (!plan || !projectPath || executing) return;
     try {
       setExecuting(true);
-      await api.gsdExecutePlan(projectPath);
+      await api.gsdExecutePlan(plan.id);
     } catch (err) {
       setError('Execution failed to start.');
       setExecuting(false);
+    }
+  };
+
+  const handleRespondToCheckpoint = async (stepId: string, response: 'Approve' | 'Retry' | 'Abort') => {
+    try {
+      await api.gsdRespondToCheckpoint(stepId, response);
+    } catch (err) {
+      console.error('Failed to respond to checkpoint:', err);
+      setError('Failed to send response to engine.');
     }
   };
 
@@ -232,7 +251,7 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                 {/* Phase Marker */}
                 <div 
                   className={cn(
-                    "absolute left-0 top-0 w-12 h-12 rounded-2xl flex items-center justify-center border-2 transition-all duration-300 z-10",
+                    "absolute left-0 top-0 w-12 h-12 rounded-2xl flex items-center justify-center border-2 transition-all duration-300 z-10 cursor-pointer",
                     phase.status === 'Completed' ? "bg-green-500/20 border-green-500 text-green-500 shadow-lg shadow-green-500/20" :
                     phase.status === 'InProgress' ? "bg-primary/20 border-primary text-primary shadow-lg shadow-primary/20 animate-pulse" :
                     "bg-white/5 border-white/10 text-muted-foreground hover:border-primary/50"
@@ -253,7 +272,7 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                         phase.status === 'InProgress' ? "bg-primary/20 text-primary" :
                         "bg-white/5 text-muted-foreground"
                       )}>
-                        {phase.status === 'InProgress' ? 'In Progress' : phase.status}
+                        {typeof phase.status === 'string' ? (phase.status === 'InProgress' ? 'In Progress' : phase.status) : 'Failed'}
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -296,35 +315,84 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                                   "grid gap-3",
                                   steps.length > 1 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"
                                 )}>
-                                  {steps.map((step) => (
-                                    <div 
-                                      key={step.id} 
-                                      className={cn(
-                                        "flex items-start gap-4 p-3 rounded-2xl bg-white/[0.02] border border-white/5 group/step hover:bg-white/[0.05] transition-all",
-                                        step.status === 'InProgress' && "bg-primary/5 border-primary/20 shadow-sm shadow-primary/5"
-                                      )}
-                                    >
-                                      <div className="mt-1">
-                                        {step.status === 'Completed' ? <CheckCircle2 size={16} className="text-green-500" /> :
-                                         step.status === 'InProgress' ? <Clock size={16} className="text-primary animate-spin-slow" /> :
-                                         step.status === 'Pending' ? <Circle size={16} className="text-muted-foreground/40" /> :
-                                         <AlertCircle size={16} className="text-red-500" />}
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <div className="flex items-center justify-between gap-2 mb-1">
-                                          <span className="text-[10px] font-bold text-white/40 truncate">{step.title}</span>
+                                  {steps.map((step) => {
+                                    const isWaiting = typeof step.status === 'object' && 'WaitingForUser' in step.status;
+                                    const isFailed = typeof step.status === 'object' && 'Failed' in step.status;
+                                    
+                                    return (
+                                      <div 
+                                        key={step.id}
+                                        className={cn(
+                                          "p-4 rounded-2xl border transition-all relative group/step",
+                                          step.status === 'Completed' ? "bg-green-500/5 border-green-500/20" :
+                                          step.status === 'InProgress' ? "bg-primary/5 border-primary/30 shadow-lg shadow-primary/5" :
+                                          isWaiting ? "bg-amber-500/10 border-amber-500/40 shadow-lg shadow-amber-500/10 animate-pulse" :
+                                          isFailed ? "bg-red-500/5 border-red-500/20" :
+                                          "bg-white/[0.02] border-white/5 hover:bg-white/[0.04]"
+                                        )}
+                                      >
+                                        <div className="flex items-start justify-between gap-3">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1">
+                                              {step.status === 'Completed' ? (
+                                                <CheckCircle2 size={16} className="text-green-500 shrink-0" />
+                                              ) : step.status === 'InProgress' ? (
+                                                <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin shrink-0" />
+                                              ) : isWaiting ? (
+                                                <AlertCircle size={16} className="text-amber-500 shrink-0" />
+                                              ) : isFailed ? (
+                                                <X size={16} className="text-red-500 shrink-0" />
+                                              ) : (
+                                                <Circle size={16} className="text-muted-foreground/30 shrink-0" />
+                                              )}
+                                              <h4 className="text-sm font-semibold truncate text-white/80">{step.title}</h4>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground/80 line-clamp-2 leading-relaxed">{step.description}</p>
+                                            
+                                            {step.result && (
+                                              <div className="mt-2 p-2 rounded-lg bg-black/20 border border-white/5 text-[10px] font-mono text-muted-foreground/70 break-all max-h-20 overflow-y-auto">
+                                                {step.result}
+                                              </div>
+                                            )}
+
+                                            {/* Checkpoint UI */}
+                                            {isWaiting && (
+                                              <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-3">
+                                                <p className="text-[11px] font-medium text-amber-200/80 leading-snug">
+                                                  {(step.status as any).WaitingForUser}
+                                                </p>
+                                                <div className="flex flex-wrap gap-2">
+                                                  <button
+                                                    onClick={() => handleRespondToCheckpoint(step.id, 'Approve')}
+                                                    className="px-3 py-1.5 rounded-lg bg-green-500 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-green-600 transition-colors shadow-sm"
+                                                  >
+                                                    Approve
+                                                  </button>
+                                                  <button
+                                                    onClick={() => handleRespondToCheckpoint(step.id, 'Retry')}
+                                                    className="px-3 py-1.5 rounded-lg bg-white/10 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-white/20 transition-colors border border-white/10"
+                                                  >
+                                                    Retry
+                                                  </button>
+                                                  <button
+                                                    onClick={() => handleRespondToCheckpoint(step.id, 'Abort')}
+                                                    className="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-wider hover:bg-red-500/30 transition-colors border border-red-500/30"
+                                                  >
+                                                    Abort
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
                                           {step.attempts > 0 && (
-                                            <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-white/5 text-muted-foreground">
-                                              Try {step.attempts}
-                                            </span>
+                                            <div className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[9px] font-bold text-muted-foreground uppercase">
+                                              {step.attempts}x
+                                            </div>
                                           )}
                                         </div>
-                                        <code className="text-[11px] text-white/70 block truncate bg-black/40 p-2 rounded-lg border border-white/5 font-mono group-hover/step:text-white transition-colors">
-                                          {step.description}
-                                        </code>
                                       </div>
-                                    </div>
-                                  ))}
+                                    );
+                                  })}
                                 </div>
                               </div>
                             ));

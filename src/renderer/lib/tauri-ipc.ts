@@ -302,6 +302,8 @@ export const tauriIpc = {
     invoke<any>('gsd_add_step', { planId, phaseId, title, description }),
   gsdExecutePlan: (planId: string) =>
     invoke<void>('gsd_execute_plan', { planId }),
+  gsdRespondToCheckpoint: (stepId: string, response: string) =>
+    invoke<void>('gsd_respond_to_checkpoint', { stepId, response }),
   onGsdExecutionEvent: (callback: (event: any) => void): Promise<UnlistenFn> =>
     listen<any>('gsd-execution-event', (event) => callback(event.payload)),
   onGsdPhaseUpdated: (callback: (phase: any) => void): Promise<UnlistenFn> =>
