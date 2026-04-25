@@ -82,9 +82,11 @@ export function useTokenMeter({ ptyId, api, projectPath, backend }: UseTokenMete
         
         // Log to database
         if ((api as ExtendedApi)?.logTokenEvent) {
+          const nexusSessionId = sessionStorage.getItem('transwarp-session-id') || 'default';
           (api as ExtendedApi).logTokenEvent(
             {
               sessionId: ptyId,
+              nexusSessionId, // Include nexus session id for global tracking
               projectPath: projectPath || 'unknown',
               backend: !backend || backend === 'default' ? 'claude' : backend,
               inputTokens,

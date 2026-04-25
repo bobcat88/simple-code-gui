@@ -18,6 +18,7 @@ pub struct SessionInfo {
     pub cwd: String,
     pub backend: String,
     pub session_id: Option<String>,
+    pub nexus_session_id: Option<String>,
     pub spawned_at: u64,
 }
 
@@ -152,6 +153,7 @@ impl PtyManager {
         args: Vec<String>,
         rows: u16,
         cols: u16,
+        nexus_session_id: Option<String>,
     ) -> Result<String, String> {
         let id = Uuid::new_v4().to_string();
         let pty_system = native_pty_system();
@@ -179,6 +181,9 @@ impl PtyManager {
             cmd.env("Path", &enhanced_path);
         }
         cmd.env("SIMPLE_CODE_GUI", "1");
+        if let Some(nexus_id) = nexus_session_id {
+            cmd.env("RTK_AI_NEXUS_SESSION_ID", nexus_id);
+        }
 
         println!("[PTY] Spawning command in {}", cwd);
         let child = pair.slave.spawn_command(cmd).map_err(|e: anyhow::Error| {
@@ -394,6 +399,7 @@ impl PtyManager {
             cwd: "".to_string(),
             backend: s.backend.clone(),
             session_id: None,
+            nexus_session_id: None,
             spawned_at: 0,
         }).collect()
     }

@@ -149,6 +149,15 @@ fn default_ai_runtime() -> AiRuntimeSettings {
                 reviewer_model: "claude-3-haiku".to_string(),
                 researcher_model: "gemini-1.5-flash".to_string(),
             },
+            ModelPlan {
+                id: "robust".to_string(),
+                name: "Robust (High Quality)".to_string(),
+                description: "Maximum reasoning power for critical projects.".to_string(),
+                planner_model: "claude-3-opus".to_string(),
+                builder_model: "claude-3-5-sonnet".to_string(),
+                reviewer_model: "claude-3-opus".to_string(),
+                researcher_model: "gemini-1.5-pro".to_string(),
+            },
         ],
         routing: vec![
             AgentRoutingPolicy { role: "planner".to_string(), plan_id: Some("balanced".to_string()), model_override: None, provider_override: None },

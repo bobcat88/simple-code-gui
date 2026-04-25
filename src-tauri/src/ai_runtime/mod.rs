@@ -252,6 +252,9 @@ impl RuntimeManager {
         // Finalize usage if success
         self.finalize_usage(provider_name, &model_id, &mut resp, &request, rtk_result).await;
         
+        // After completion, evaluate if we need to switch plans based on new state
+        self.evaluate_plan_switching().await;
+
         Ok(resp)
     }
 
@@ -685,6 +688,7 @@ impl RuntimeManager {
             if let Some(db) = &*db_lock {
                 let transaction = TokenTransactionInput {
                     session_id: request.session_id.clone().unwrap_or_else(|| "default".to_string()),
+                    nexus_session_id: request.nexus_session_id.clone(),
                     agent_id: request.agent_id.clone(),
                     project_path: request.project_path.clone().unwrap_or_else(|| "none".to_string()),
                     backend: provider_name.to_string(),
@@ -724,6 +728,47 @@ impl RuntimeManager {
             );
         }
         status
+    }
+
+    async fn evaluate_plan_switching(&self) {
+        let health_score = self.get_project_health().await;
+        
+        // Get settings manager
+        let settings_lock = self.settings.lock().await;
+        if let Some(manager) = settings_lock.as_ref() {
+            let mut settings = manager.get().await;
+            let current_plan = settings.ai_runtime.active_plan_id.clone();
+            let mut target_plan = current_plan.clone();
+
+            // Thresholds for dynamic switching
+            if health_score < 0.5 {
+                // Critical health: switch to Robust for maximum intelligence
+                target_plan = "robust".to_string();
+            } else if health_score > 0.8 && current_plan == "robust" {
+                // Good health: switch back to Balanced to save costs
+                target_plan = "balanced".to_string();
+            }
+
+            // Check if plan exists before switching
+            if target_plan != current_plan && settings.ai_runtime.plans.iter().any(|p| p.id == target_plan) {
+                settings.ai_runtime.active_plan_id = target_plan.clone();
+                
+                // Update all role policies that use the old plan
+                for policy in &mut settings.ai_runtime.routing {
+                    if policy.plan_id.as_ref() == Some(&current_plan) {
+                        policy.plan_id = Some(target_plan.clone());
+                    }
+                }
+
+                if let Ok(_) = manager.save(settings).await {
+                    println!("Dynamic Plan Switch: {} -> {} (Health: {})", current_plan, target_plan, health_score);
+                    
+                    // We need AppHandle to emit. We don't have it here easily, but we can emit later or
+                    // use a global event bus if we had one. 
+                    // For now, we'll rely on the next frontend sync.
+                }
+            }
+        }
     }
 }
 
@@ -796,6 +841,37 @@ pub async fn ai_save_key(
     Ok(())
 }
 
+#[tauri::command]
+pub async fn ai_switch_model_plan(
+    runtime: tauri::State<'_, Arc<RuntimeManager>>,
+    plan_id: String,
+) -> Result<(), String> {
+    let settings_lock = runtime.settings.lock().await;
+    if let Some(manager) = settings_lock.as_ref() {
+        let mut settings = manager.get().await;
+        
+        // Verify plan exists
+        if !settings.ai_runtime.plans.iter().any(|p| p.id == plan_id) {
+            return Err(format!("Plan {} not found", plan_id));
+        }
+
+        let old_plan = settings.ai_runtime.active_plan_id.clone();
+        settings.ai_runtime.active_plan_id = plan_id.clone();
+        
+        // Update all role policies that use the old plan to use the new one
+        for policy in &mut settings.ai_runtime.routing {
+            if policy.plan_id.as_ref() == Some(&old_plan) {
+                policy.plan_id = Some(plan_id.clone());
+            }
+        }
+
+        manager.save(settings).await?;
+        Ok(())
+    } else {
+        Err("Settings manager not initialized".into())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -825,7 +901,12 @@ mod tests {
                 id: format!("{}-response", self.name),
                 model: request.model.unwrap_or_else(|| "missing".to_string()),
                 content: self.name.clone(),
-                usage: Some(Usage::default()),
+                usage: Some(Usage {
+                    input_tokens: 100,
+                    output_tokens: 50,
+                    saved_tokens: 0,
+                    cost_estimate: Some(0.012),
+                }),
             })
         }
 
@@ -971,6 +1052,7 @@ mod tests {
             let mut health = manager.health.lock().await;
             health.insert("provider1".to_string(), HealthInfo {
                 last_failure: Some(std::time::Instant::now()),
+                last_error: Some("mock error".into()),
                 consecutive_failures: 5,
                 is_degraded: true,
             });

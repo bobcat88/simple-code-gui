@@ -136,10 +136,10 @@ export function useProjectHandlers({
     try {
       await api.ttsInstallInstructions?.(projectPath)
 
-      // Use window size as a fallback estimate for initial spawning
-      const { cols, rows } = calculatePtyDimensions(window.innerWidth, window.innerHeight)
+      // Retrieve nexus session ID from storage
+      const nexusSessionId = sessionStorage.getItem('transwarp-session-id') || undefined;
 
-      const ptyId = await api.spawnPty(projectPath, sessionId, undefined, effectiveBackend, rows, cols)
+      const ptyId = await api.spawnPty(projectPath, sessionId, undefined, effectiveBackend, rows, cols, nexusSessionId)
 
       // Add leaf to tree — single operation, no race condition
       const currentTree = tileTreeRef.current
@@ -195,7 +195,8 @@ export function useProjectHandlers({
       // Calculate approximate rows/cols from containerSize
       const { cols, rows } = calculatePtyDimensions(containerSize.width, containerSize.height)
 
-      const ptyId = await api.spawnPty(projectPath, undefined, undefined, effectiveBackend, rows, cols)
+      const nexusSessionId = sessionStorage.getItem('transwarp-session-id') || undefined;
+      const ptyId = await api.spawnPty(projectPath, undefined, undefined, effectiveBackend, rows, cols, nexusSessionId)
 
       let newTree: TileNode
 
@@ -263,7 +264,8 @@ export function useProjectHandlers({
       // Use window size as a fallback estimate for initial spawning
       const { cols, rows } = calculatePtyDimensions(window.innerWidth, window.innerHeight)
 
-      const ptyId = await api.spawnPty(projectPath, undefined, undefined, effectiveBackend, rows, cols)
+      const nexusSessionId = sessionStorage.getItem('transwarp-session-id') || undefined;
+      const ptyId = await api.spawnPty(projectPath, undefined, undefined, effectiveBackend, rows, cols, nexusSessionId)
 
       const currentTree = tileTreeRef.current
       if (currentTree) {

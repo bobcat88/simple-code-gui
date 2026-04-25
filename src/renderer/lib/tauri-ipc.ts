@@ -6,12 +6,13 @@ export interface SessionInfo {
   cwd: String;
   backend: String;
   session_id?: String;
+  nexus_session_id?: String;
   spawned_at: number;
 }
 
 export const tauriIpc = {
-  spawnSession: (cwd: string, backend: string, sessionId?: string, slug?: string, rows?: number, cols?: number) => 
-    invoke<string>('spawn_session', { cwd, backend, session_id: sessionId, slug, rows, cols }),
+  spawnSession: (cwd: string, backend: string, sessionId?: string, slug?: string, rows?: number, cols?: number, nexusSessionId?: string) => 
+    invoke<string>('spawn_session', { cwd, backend, session_id: sessionId, slug, rows, cols, nexus_session_id: nexusSessionId }),
     
   writeToPty: (id: string, data: string) => 
     invoke<void>('write_to_pty', { id, data }),
@@ -250,6 +251,14 @@ export const tauriIpc = {
     invoke<void>('agent_refresh_burn_rates'),
   agentCancelTask: (id: string) =>
     invoke<void>('agent_cancel_task', { id }),
+  agentListTasks: (agentId: string) =>
+    invoke<any[]>('agent_list_tasks', { agent_id: agentId }),
+  agentUpdateTaskPriority: (taskId: string, priority: number) =>
+    invoke<void>('agent_update_task_priority', { task_id: taskId, priority }),
+  agentListTraces: (agentId: string) =>
+    invoke<any[]>('agent_list_traces', { agent_id: agentId }),
+  agentAddTrace: (trace: any) =>
+    invoke<void>('agent_add_trace', trace),
 
   // Health & Diagnostics
   healthGetStatus: () =>
@@ -278,4 +287,6 @@ export const tauriIpc = {
     invoke<any>('rtk_optimize_context', { prompt }),
   ai_trigger_evolution: () => 
     invoke<any>('ai_trigger_evolution'),
+  aiSwitchModelPlan: (planId: string) =>
+    invoke<void>('ai_switch_model_plan', { plan_id: planId }),
 };

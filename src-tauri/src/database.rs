@@ -11,6 +11,7 @@ pub struct DatabaseManager {
 #[serde(rename_all = "camelCase")]
 pub struct TokenTransactionInput {
     pub session_id: String,
+    pub nexus_session_id: Option<String>,
     pub agent_id: Option<String>,
     pub project_path: String,
     pub backend: String,
@@ -29,6 +30,8 @@ pub struct TokenHistoryFilters {
     pub end_date: Option<String>,
     pub project_path: Option<String>,
     pub backend: Option<String>,
+    pub session_id: Option<String>,
+    pub nexus_session_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -89,10 +92,11 @@ pub async fn insert_token_transaction(
     // AC: @01KPNWTT ac-2
     sqlx::query(
         "INSERT INTO token_transactions
-            (session_id, agent_id, project_path, backend, input_tokens, output_tokens, saved_tokens, cost_estimate, context_reuse_id, timestamp)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))",
+            (session_id, nexus_session_id, agent_id, project_path, backend, input_tokens, output_tokens, saved_tokens, cost_estimate, context_reuse_id, timestamp)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))",
     )
     .bind(&transaction.session_id)
+    .bind(&transaction.nexus_session_id)
     .bind(&transaction.agent_id)
     .bind(&transaction.project_path)
     .bind(&transaction.backend)
@@ -118,6 +122,8 @@ pub async fn query_token_history(
     let backend = filters.backend.as_deref();
     let start_date = filters.start_date.as_deref();
     let end_date = filters.end_date.as_deref();
+    let session_id = filters.session_id.as_deref();
+    let nexus_session_id = filters.nexus_session_id.as_deref();
 
     let totals = sqlx::query_as::<_, (i64, i64, f64, i64)>(
         "SELECT
@@ -129,7 +135,9 @@ pub async fn query_token_history(
          WHERE (? IS NULL OR project_path = ?)
            AND (? IS NULL OR backend = ?)
            AND (? IS NULL OR timestamp >= ?)
-           AND (? IS NULL OR timestamp <= ?)",
+           AND (? IS NULL OR timestamp <= ?)
+           AND (? IS NULL OR session_id = ?)
+           AND (? IS NULL OR nexus_session_id = ?)",
     )
     .bind(project_path)
     .bind(project_path)
@@ -139,6 +147,10 @@ pub async fn query_token_history(
     .bind(start_date)
     .bind(end_date)
     .bind(end_date)
+    .bind(session_id)
+    .bind(session_id)
+    .bind(nexus_session_id)
+    .bind(nexus_session_id)
     .fetch_one(pool)
     .await
     .map_err(|e| e.to_string())?;
@@ -160,6 +172,8 @@ pub async fn query_token_history(
                AND (? IS NULL OR backend = ?)
                AND (? IS NULL OR timestamp >= ?)
                AND (? IS NULL OR timestamp <= ?)
+               AND (? IS NULL OR session_id = ?)
+               AND (? IS NULL OR nexus_session_id = ?)
              GROUP BY session_id, project_path, backend
              ORDER BY MAX(timestamp) DESC",
         )
@@ -171,6 +185,10 @@ pub async fn query_token_history(
         .bind(start_date)
         .bind(end_date)
         .bind(end_date)
+        .bind(session_id)
+        .bind(session_id)
+        .bind(nexus_session_id)
+        .bind(nexus_session_id)
         .fetch_all(pool)
         .await
         .map_err(|e| e.to_string())?
@@ -425,6 +443,10 @@ impl DatabaseManager {
             .execute(&self.pool)
             .await;
 
+        let _ = sqlx::query("ALTER TABLE token_transactions ADD COLUMN nexus_session_id TEXT")
+            .execute(&self.pool)
+            .await;
+
         sqlx::query(
             "CREATE INDEX IF NOT EXISTS idx_token_transactions_filters
              ON token_transactions (timestamp, project_path, backend)",
@@ -566,6 +588,43 @@ impl DatabaseManager {
         .await
         .map_err(|e| e.to_string())?;
 
+        // Agent Tasks Queue Table
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS agent_tasks (
+                id TEXT PRIMARY KEY,
+                agent_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT,
+                priority INTEGER NOT NULL DEFAULT 0,
+                status TEXT NOT NULL DEFAULT 'queued',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(agent_id) REFERENCES agents(id)
+            )",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        // Agent Execution Traces
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS agent_traces (
+                id TEXT PRIMARY KEY,
+                agent_id TEXT NOT NULL,
+                task_id TEXT,
+                step_name TEXT NOT NULL,
+                details TEXT,
+                status TEXT NOT NULL,
+                duration_ms INTEGER,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(agent_id) REFERENCES agents(id),
+                FOREIGN KEY(task_id) REFERENCES agent_tasks(id)
+            )",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
         Ok(())
     }
 }
@@ -621,6 +680,8 @@ mod tests {
                 input_tokens: 120,
                 output_tokens: 40,
                 cost_estimate: 0.012,
+                saved_tokens: Some(0),
+                context_reuse_id: None,
                 timestamp: Some("2026-04-21 10:00:00".into()),
             },
         )
@@ -658,6 +719,8 @@ mod tests {
                 input_tokens: 100,
                 output_tokens: 50,
                 cost_estimate: 0.01,
+                saved_tokens: Some(0),
+                context_reuse_id: None,
                 timestamp: Some("2026-04-20 08:00:00".into()),
             },
             TokenTransactionInput {
@@ -668,6 +731,8 @@ mod tests {
                 input_tokens: 40,
                 output_tokens: 10,
                 cost_estimate: 0.004,
+                saved_tokens: Some(0),
+                context_reuse_id: None,
                 timestamp: Some("2026-04-21 09:00:00".into()),
             },
             TokenTransactionInput {
@@ -678,6 +743,8 @@ mod tests {
                 input_tokens: 999,
                 output_tokens: 1,
                 cost_estimate: 1.0,
+                saved_tokens: Some(0),
+                context_reuse_id: None,
                 timestamp: Some("2026-04-21 09:00:00".into()),
             },
         ] {

@@ -17,6 +17,28 @@ export interface Agent {
   evolution_status?: string;
 }
 
+export interface AgentTask {
+  id: string;
+  agentId: string;
+  title: string;
+  description?: string;
+  priority: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AgentTrace {
+  id: string;
+  agentId: string;
+  taskId?: string;
+  step_name: string;
+  details?: string;
+  status: string;
+  duration_ms?: number;
+  timestamp: string;
+}
+
 export function useAgentBoard() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [providerHealth, setProviderHealth] = useState<Record<string, string>>({});
@@ -75,11 +97,18 @@ export function useAgentBoard() {
       } : a));
     });
 
+    const pTrace = tauriIpc.listen('agent-trace-added', (event: any) => {
+      // In a real app we might want to update a local trace cache
+      // For now we'll just let the components re-fetch if they need to
+      console.log('Trace added:', event.payload);
+    });
+
     return () => {
       clearInterval(interval);
       pStatus.then(unsub => unsub());
       pRegistered.then(unsub => unsub());
       pMetrics.then(unsub => unsub());
+      pTrace.then(unsub => unsub());
     };
   }, [fetchAgents]);
 
@@ -93,5 +122,25 @@ export function useAgentBoard() {
     await fetchAgents();
   };
 
-  return { agents, providerHealth, loading, updateStatus, cancelTask, refresh: fetchAgents, refreshBurnRates };
+  const listTasks = useCallback(async (agentId: string) => {
+    return await tauriIpc.agentListTasks(agentId);
+  }, []);
+
+  const updateTaskPriority = async (taskId: string, priority: number) => {
+    await tauriIpc.agentUpdateTaskPriority(taskId, priority);
+  };
+
+  return { 
+    agents, 
+    providerHealth, 
+    loading, 
+    updateStatus, 
+    cancelTask, 
+    listTasks, 
+    updateTaskPriority,
+    listTraces: async (agentId: string) => await tauriIpc.agentListTraces(agentId),
+    addTrace: async (trace: any) => await tauriIpc.agentAddTrace(trace),
+    refresh: fetchAgents, 
+    refreshBurnRates 
+  };
 }

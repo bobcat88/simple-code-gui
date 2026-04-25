@@ -1,6 +1,7 @@
 import React from 'react';
 import { useHealthStatus } from '../hooks/useHealthStatus';
-import { Activity, AlertCircle, AlertTriangle, ChevronDown, ChevronUp, Cpu, Database, Info, Server } from 'lucide-react';
+import { Activity, AlertCircle, AlertTriangle, ChevronDown, ChevronUp, Cpu, Database, Info, Server, ShieldCheck } from 'lucide-react';
+import { UpgradePanel } from './upgrade/UpgradePanel';
 
 export const HealthDashboard: React.FC = () => {
   const { status, loading } = useHealthStatus();
@@ -235,6 +236,8 @@ export const HealthDashboard: React.FC = () => {
 
       <div className="flex-1 space-y-5 overflow-y-auto pr-1 custom-scrollbar">
         <HealthExplainer />
+
+        <UpgradePanel />
 
         <section className="space-y-3">
           <div className="flex items-center justify-between border-b border-white/5 pb-2">

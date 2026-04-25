@@ -25,8 +25,8 @@ import { relaunch } from '@tauri-apps/plugin-process'
 
 export class TauriBackend implements ExtendedApi {
   // PTY Management
-  async spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId, rows?: number, cols?: number): Promise<string> {
-    return tauriIpc.spawnSession(cwd, backend || 'claude', sessionId, model, rows, cols);
+  async spawnPty(cwd: string, sessionId?: string, model?: string, backend?: BackendId, rows?: number, cols?: number, nexusSessionId?: string): Promise<string> {
+    return tauriIpc.spawnSession(cwd, backend || 'claude', sessionId, model, rows, cols, nexusSessionId);
   }
 
   killPty(id: string): void {

@@ -19,6 +19,7 @@ mod settings_manager;
 mod voice_manager;
 mod workspace_manager;
 mod rtk_context;
+mod upgrade_manager;
 
 use database::{
     insert_token_transaction, query_token_history, DatabaseManager, TokenHistoryFilters,
@@ -70,8 +71,9 @@ async fn spawn_session(
     slug: Option<String>,
     rows: u16,
     cols: u16,
+    nexus_session_id: Option<String>,
 ) -> Result<String, String> {
-    println!("[spawn_session] project: {}, backend: {}", cwd, backend);
+    println!("[spawn_session] project: {}, backend: {}, nexus_session_id: {:?}", cwd, backend, nexus_session_id);
 
     // Validate CWD
     let path = std::path::Path::new(&cwd);
@@ -104,7 +106,7 @@ async fn spawn_session(
         // Aider specific args if needed
     }
 
-    state.spawn(app, cwd, cmd_name, args, rows, cols)
+    state.spawn(app, cwd, cmd_name, args, rows, cols, nexus_session_id)
 }
 
 #[tauri::command]
@@ -177,8 +179,8 @@ async fn log_token_event(
     insert_token_transaction(&db.pool, &transaction).await?;
 
     sqlx::query(
-        "INSERT INTO token_events (project_id, task_id, model, input_tokens, output_tokens, saved_tokens, cost_est)
-         VALUES (?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO token_events (project_id, task_id, model, input_tokens, output_tokens, saved_tokens, cost_est, nexus_session_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
     )
     .bind(Some(transaction.project_path))
     .bind(Some(transaction.session_id))
@@ -187,6 +189,7 @@ async fn log_token_event(
     .bind(transaction.output_tokens)
     .bind(saved_tokens.unwrap_or(0))
     .bind(transaction.cost_estimate)
+    .bind(transaction.nexus_session_id)
     .execute(&db.pool)
     .await
     .map_err(|e| e.to_string())?;
@@ -677,6 +680,10 @@ pub fn run() {
             agent_manager::agent_update_metrics,
             agent_manager::agent_refresh_burn_rates,
             agent_manager::agent_cancel_task,
+            agent_manager::agent_list_tasks,
+            agent_manager::agent_update_task_priority,
+            agent_manager::agent_list_traces,
+            agent_manager::agent_add_trace,
             health_manager::health_get_status,
             health_manager::health_log_check,
             diagnostic_manager::diagnostics_generate_bundle,
@@ -685,6 +692,10 @@ pub fn run() {
             orchestration::set_current_project,
             rtk_context::rtk_optimize_context,
             ai_runtime::learning::ai_trigger_evolution,
+            upgrade_manager::project_analyze_upgrade,
+            upgrade_manager::project_upgrade_dependency,
+            upgrade_manager::project_rollback_dependency,
+            ai_runtime::ai_switch_model_plan
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

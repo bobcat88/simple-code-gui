@@ -21,6 +21,30 @@ pub struct Agent {
     pub last_active: Option<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AgentTask {
+    pub id: String,
+    pub agent_id: String,
+    pub title: String,
+    pub description: Option<String>,
+    pub priority: i32,
+    pub status: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AgentTrace {
+    pub id: String,
+    pub agent_id: String,
+    pub task_id: Option<String>,
+    pub step_name: String,
+    pub details: Option<String>,
+    pub status: String,
+    pub duration_ms: Option<i64>,
+    pub timestamp: String,
+}
+
 pub struct AgentManager {
     db: Arc<DatabaseManager>,
 }
@@ -192,6 +216,105 @@ impl AgentManager {
 
         Ok(())
     }
+
+    pub async fn list_tasks(&self, agent_id: String) -> Result<Vec<AgentTask>, String> {
+        let rows = sqlx::query_as::<_, (String, String, String, Option<String>, i32, String, String, String)>(
+            "SELECT id, agent_id, title, description, priority, status, created_at, updated_at FROM agent_tasks WHERE agent_id = ? ORDER BY priority DESC, created_at ASC"
+        )
+        .bind(agent_id)
+        .fetch_all(&self.db.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        Ok(rows.into_iter().map(|r| AgentTask {
+            id: r.0,
+            agent_id: r.1,
+            title: r.2,
+            description: r.3,
+            priority: r.4,
+            status: r.5,
+            created_at: r.6,
+            updated_at: r.7,
+        }).collect())
+    }
+
+    pub async fn update_task_priority(&self, app: &tauri::AppHandle, task_id: String, priority: i32) -> Result<(), String> {
+        sqlx::query("UPDATE agent_tasks SET priority = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+            .bind(priority)
+            .bind(&task_id)
+            .execute(&self.db.pool)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let _ = app.emit("agent-task-updated", serde_json::json!({
+            "id": task_id,
+            "priority": priority
+        }));
+
+        Ok(())
+    }
+
+    pub async fn list_traces(&self, agent_id: String) -> Result<Vec<AgentTrace>, String> {
+        let rows = sqlx::query_as::<_, (String, String, Option<String>, String, Option<String>, String, Option<i64>, String)>(
+            "SELECT id, agent_id, task_id, step_name, details, status, duration_ms, timestamp FROM agent_traces WHERE agent_id = ? ORDER BY timestamp DESC LIMIT 50"
+        )
+        .bind(agent_id)
+        .fetch_all(&self.db.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        Ok(rows.into_iter().map(|r| AgentTrace {
+            id: r.0,
+            agent_id: r.1,
+            task_id: r.2,
+            step_name: r.3,
+            details: r.4,
+            status: r.5,
+            duration_ms: r.6,
+            timestamp: r.7,
+        }).collect())
+    }
+
+    pub async fn add_trace(
+        &self, 
+        app: &tauri::AppHandle, 
+        agent_id: String, 
+        task_id: Option<String>, 
+        step_name: String, 
+        details: Option<String>, 
+        status: String, 
+        duration_ms: Option<i64>
+    ) -> Result<(), String> {
+        let id = uuid::Uuid::new_v4().to_string();
+        sqlx::query(
+            "INSERT INTO agent_traces (id, agent_id, task_id, step_name, details, status, duration_ms) 
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .bind(&id)
+        .bind(&agent_id)
+        .bind(&task_id)
+        .bind(&step_name)
+        .bind(&details)
+        .bind(&status)
+        .bind(duration_ms)
+        .execute(&self.db.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        let _ = app.emit("agent-trace-added", serde_json::json!({
+            "agent_id": agent_id,
+            "trace": {
+                "id": id,
+                "task_id": task_id,
+                "step_name": step_name,
+                "details": details,
+                "status": status,
+                "duration_ms": duration_ms
+            }
+        }));
+
+        Ok(())
+    }
 }
 
 // Tauri Commands
@@ -252,4 +375,44 @@ pub async fn agent_cancel_task(
     id: String,
 ) -> Result<(), String> {
     state.cancel_task(&app, id).await
+}
+
+#[tauri::command]
+pub async fn agent_list_tasks(
+    state: tauri::State<'_, Arc<AgentManager>>,
+    agent_id: String,
+) -> Result<Vec<AgentTask>, String> {
+    state.list_tasks(agent_id).await
+}
+
+#[tauri::command]
+pub async fn agent_update_task_priority(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, Arc<AgentManager>>,
+    task_id: String,
+    priority: i32,
+) -> Result<(), String> {
+    state.update_task_priority(&app, task_id, priority).await
+}
+
+#[tauri::command]
+pub async fn agent_list_traces(
+    state: tauri::State<'_, Arc<AgentManager>>,
+    agent_id: String,
+) -> Result<Vec<AgentTrace>, String> {
+    state.list_traces(agent_id).await
+}
+
+#[tauri::command]
+pub async fn agent_add_trace(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, Arc<AgentManager>>,
+    agent_id: String,
+    task_id: Option<String>,
+    step_name: String,
+    details: Option<String>,
+    status: String,
+    duration_ms: Option<i64>,
+) -> Result<(), String> {
+    state.add_trace(&app, agent_id, task_id, step_name, details, status, duration_ms).await
 }

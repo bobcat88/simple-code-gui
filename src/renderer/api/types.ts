@@ -260,6 +260,7 @@ export interface TokenTransactionInput {
   inputTokens: number
   outputTokens: number
   costEstimate: number
+  nexusSessionId?: string
   timestamp?: string
 }
 
@@ -268,6 +269,7 @@ export interface TokenHistoryFilters {
   endDate?: string
   projectPath?: string
   backend?: BackendId
+  nexusSessionId?: string
 }
 
 export interface TokenHistoryTotals {
@@ -433,7 +435,7 @@ export interface Api {
    * @param model Optional model override
    * @param backend Optional backend override ('claude', 'gemini', etc.)
    */
-  spawnPty: (cwd: string, sessionId?: string, model?: string, backend?: BackendId, rows?: number, cols?: number) => Promise<string>
+  spawnPty: (cwd: string, sessionId?: string, model?: string, backend?: BackendId, rows?: number, cols?: number, nexusSessionId?: string) => Promise<string>
 
   /**
    * Write data to a PTY

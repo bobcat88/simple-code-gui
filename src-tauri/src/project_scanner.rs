@@ -115,6 +115,7 @@ pub struct DetectedMarker {
     pub status: MarkerStatus,
     pub mtime: Option<u64>,
     pub checksum: Option<String>,
+    pub version: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -195,6 +196,19 @@ pub struct ProjectCapabilityScan {
     pub total_file_count: u32,
     pub scan_duration_ms: u64,
     pub project_health_score: f32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpgradeImpactReport {
+    pub dependency: String,
+    pub current_version: String,
+    pub target_version: Option<String>,
+    pub affected_files: Vec<String>,
+    pub affected_symbols: Vec<String>,
+    pub risk_level: String, // "LOW", "MEDIUM", "HIGH"
+    pub blast_radius_summary: String,
+    pub recommendation: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -294,8 +308,41 @@ pub fn scan_project(root_path: &str, options: &ScanOptions) -> ProjectCapability
         mode: if has("rtk_config") && rtk_cli_present { CapabilityMode::Full } else if has("rtk_rules") { CapabilityMode::InstructionOnly } else { CapabilityMode::Disabled },
         health: if rtk_installed && rtk_cli_present { HealthStatus::Healthy } else if rtk_installed { HealthStatus::Warning } else { HealthStatus::Unknown },
         health_score: if rtk_installed && rtk_cli_present { 1.0 } else if rtk_installed { 0.5 } else { 0.0 },
-        version: None,
+        version: get_marker_version(&markers, "rtk_cli"),
         marker_ids: vec!["rtk_config".into(), "rtk_rules".into(), "rtk_cli".into()],
+    });
+
+    // GitNexus
+    let gitnexus_present = has("gitnexus_dir");
+    let gitnexus_cli_present = has("gitnexus_cli");
+    capabilities.push(CapabilityScanResult {
+        id: "gitnexus_intelligence".into(),
+        kind: CapabilityKind::RepoIntelligence,
+        source_system: SourceSystem::Gitnexus,
+        installed: gitnexus_cli_present,
+        initialized: gitnexus_present,
+        enabled: gitnexus_present || gitnexus_cli_present,
+        mode: if gitnexus_present && gitnexus_cli_present { CapabilityMode::Full } else if gitnexus_present || gitnexus_cli_present { CapabilityMode::Partial } else { CapabilityMode::Disabled },
+        health: if gitnexus_present && gitnexus_cli_present { HealthStatus::Healthy } else if gitnexus_cli_present { HealthStatus::Warning } else { HealthStatus::Unknown },
+        health_score: if gitnexus_present && gitnexus_cli_present { 1.0 } else if gitnexus_cli_present { 0.7 } else if gitnexus_present { 0.3 } else { 0.0 },
+        version: get_marker_version(&markers, "gitnexus_cli"),
+        marker_ids: vec!["gitnexus_dir".into(), "gitnexus_cli".into()],
+    });
+
+    // GSD
+    let gsd_present = has("planning_dir");
+    capabilities.push(CapabilityScanResult {
+        id: "gsd_execution_workflow".into(),
+        kind: CapabilityKind::ExecutionWorkflow,
+        source_system: SourceSystem::Gsd,
+        installed: true, // Internal execution support
+        initialized: gsd_present,
+        enabled: gsd_present,
+        mode: if gsd_present { CapabilityMode::Full } else { CapabilityMode::Disabled },
+        health: if gsd_present { HealthStatus::Healthy } else { HealthStatus::Unknown },
+        health_score: if gsd_present { 1.0 } else { 0.0 },
+        version: None,
+        marker_ids: vec!["planning_dir".into()],
     });
 
     // ── Generate warnings ──
@@ -455,6 +502,7 @@ fn walk_and_detect(
                 ".git" => add_marker(markers, "git_repo", &path, &rel_str, MarkerKind::Directory, SourceSystem::Git),
                 ".planning" => add_marker(markers, "planning_dir", &path, &rel_str, MarkerKind::Directory, SourceSystem::Gsd),
                 ".rtk" => add_marker(markers, "rtk_config", &path, &rel_str, MarkerKind::Directory, SourceSystem::Rtk),
+                ".gitnexus" => add_marker(markers, "gitnexus_dir", &path, &rel_str, MarkerKind::Directory, SourceSystem::Gitnexus),
                 _ => {}
             }
 
@@ -483,7 +531,8 @@ fn add_marker(
         confidence: Confidence::High,
         status: MarkerStatus::Present,
         mtime,
-        checksum: None, // Checksum calculation deferred for performance
+        checksum: None,
+        version: None,
     });
 }
 
@@ -493,14 +542,23 @@ fn check_cli_health(markers: &mut Vec<DetectedMarker>) {
         ("kspec", "kspec_cli", SourceSystem::Kspec),
         ("rtk", "rtk_cli", SourceSystem::Rtk),
         ("git", "git_cli", SourceSystem::Git),
+        ("gsd", "gsd_cli", SourceSystem::Gsd),
+        ("gitnexus", "gitnexus_cli", SourceSystem::Gitnexus),
     ];
 
     for (bin, id, system) in clis {
-        let status = if std::process::Command::new(bin).arg("--version").output().is_ok() {
-            MarkerStatus::Present
+        let (status, version) = if let Ok(output) = std::process::Command::new(bin).arg("--version").output() {
+            let v = String::from_utf8_lossy(&output.stdout)
+                .trim()
+                .replace("bd version ", "")
+                .split_whitespace()
+                .next()
+                .map(|s| s.to_string());
+            (MarkerStatus::Present, v)
         } else {
-            MarkerStatus::Missing
+            (MarkerStatus::Missing, None)
         };
+
         markers.push(DetectedMarker {
             id: id.to_string(),
             kind: MarkerKind::Command,
@@ -510,8 +568,15 @@ fn check_cli_health(markers: &mut Vec<DetectedMarker>) {
             status,
             mtime: None,
             checksum: None,
+            version,
         });
     }
+}
+
+fn get_marker_version(markers: &[DetectedMarker], id: &str) -> Option<String> {
+    markers.iter()
+        .find(|m| m.id == id)
+        .and_then(|m| m.version.clone())
 }
 
 fn marker_present(markers: &[DetectedMarker], id: &str) -> bool {
