@@ -48,7 +48,9 @@ export function IntelligenceSidebar({
   onOpenSearch,
   onWidthChange,
   width,
-  vectorStatus
+  vectorStatus,
+  gitnexus,
+  activeTab
 }: IntelligenceSidebarProps) {
   const [isResizing, setIsResizing] = React.useState(false)
   const [showWizard, setShowWizard] = React.useState(false)
@@ -57,7 +59,30 @@ export function IntelligenceSidebar({
   const [applying, setApplying] = React.useState(false)
   const [applyResult, setApplyResult] = React.useState<string[] | null>(null)
   const [progress, setProgress] = React.useState<ProposalProgress | null>(null)
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const healthScore = Math.round(capabilityScan?.projectHealthScore ?? 0)
+
+  useEffect(() => {
+    if (!activeTab?.projectPath) {
+      setSuggestions([])
+      return
+    }
+
+    const fetchSuggestions = async () => {
+      setIsLoadingSuggestions(true)
+      try {
+        const results = await api.vectorSearch(activeTab.projectPath, 3)
+        setSuggestions(results)
+      } catch (err) {
+        console.error('Failed to fetch neural suggestions:', err)
+      } finally {
+        setIsLoadingSuggestions(false)
+      }
+    }
+
+    fetchSuggestions()
+  }, [activeTab?.projectPath, api])
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -104,7 +129,7 @@ export function IntelligenceSidebar({
     )
   }
 
-  const { git, stacks, health, gitnexus } = intelligence || {}
+  const { git, stacks, health } = intelligence || {}
 
   return (
     <div 
@@ -115,7 +140,6 @@ export function IntelligenceSidebar({
       )}
       style={{ width }}
     >
-      {/* Resize Handle */}
       <div 
         className={cn(
           "absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-indigo-500/30 transition-colors z-30",
@@ -154,7 +178,6 @@ export function IntelligenceSidebar({
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
-        {/* Nerve Center Commander (Project Initialization) */}
         <section className="bg-indigo-500/5 rounded-xl border border-indigo-500/10 p-3 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -221,7 +244,7 @@ export function IntelligenceSidebar({
                     const p = await api.projectGenerateProposal(
                       capabilityScan, 
                       selectedPreset, 
-                      "Project", // Should get real name
+                      "Project",
                       "beads"
                     )
                     setProposal(p)
@@ -334,7 +357,7 @@ export function IntelligenceSidebar({
                               message: 'Starting project initialization...'
                             })
 
-                            const unsubscribe = api.onProjectInitializationProgress?.((p) => {
+                            const unsubscribe = api.onProjectInitializationProgress?.((p: any) => {
                               setProgress(p)
                             })
 
@@ -383,7 +406,6 @@ export function IntelligenceSidebar({
           )}
         </section>
 
-        {/* Repo Health Score */}
         <section>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/40">Repo Health</h3>
@@ -408,11 +430,10 @@ export function IntelligenceSidebar({
           </div>
         </section>
 
-        {/* Detected Stacks */}
         <section>
           <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/40 mb-3">Detected Stacks</h3>
           <div className="space-y-2">
-            {stacks && stacks.length > 0 ? stacks.map((stack, i) => (
+            {stacks && stacks.length > 0 ? stacks.map((stack: any, i: number) => (
               <div 
                 key={i} 
                 className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 transition-colors group"
@@ -437,7 +458,6 @@ export function IntelligenceSidebar({
           </div>
         </section>
 
-        {/* Git State */}
         <section>
           <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/40 mb-3">Git Context</h3>
           {git ? (
@@ -470,7 +490,7 @@ export function IntelligenceSidebar({
                 <div className="text-[10px] text-white/40 uppercase font-bold px-1 flex items-center gap-1">
                   <History size={10} /> Recent Changes
                 </div>
-                {git.recentCommits.map((commit, i) => (
+                {git.recentCommits.map((commit: any, i: number) => (
                   <div key={i} className="text-[11px] leading-relaxed border-l-2 border-white/10 pl-3 py-1 group hover:border-indigo-500/50 transition-colors">
                     <div className="text-white/80 line-clamp-1 group-hover:text-white">{commit.message}</div>
                     <div className="text-white/30 text-[9px] mt-0.5">{commit.author} • {new Date(commit.date).toLocaleDateString()}</div>
@@ -486,7 +506,6 @@ export function IntelligenceSidebar({
           )}
         </section>
 
-        {/* Cognitive Context */}
         <section>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/40">Cognitive Context</h3>
@@ -563,10 +582,45 @@ export function IntelligenceSidebar({
                 Sync Global Knowledge (Borg)
               </button>
             </div>
+
+            {activeTab && (
+              <div className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={14} className="text-pink-400" />
+                  <span className="text-xs text-white/90 font-medium">Neural Suggestions</span>
+                </div>
+                
+                {isLoadingSuggestions ? (
+                  <div className="space-y-2 py-1">
+                    <div className="h-10 bg-white/5 rounded-lg animate-pulse" />
+                    <div className="h-10 bg-white/5 rounded-lg animate-pulse" />
+                  </div>
+                ) : suggestions.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {suggestions.map((s, i) => (
+                      <button 
+                        key={i}
+                        className="w-full p-2 text-left bg-white/5 hover:bg-white/10 rounded-lg border border-transparent hover:border-white/10 transition-all group"
+                      >
+                        <div className="text-[10px] text-white/80 font-medium truncate group-hover:text-pink-300 transition-colors">
+                          {s.text.length > 40 ? s.text.substring(0, 40) + '...' : s.text}
+                        </div>
+                        <div className="text-[9px] text-white/25 truncate mt-0.5">
+                          {s.metadata?.file_path || 'Borg Knowledge'}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-[10px] text-white/20 italic text-center py-2">
+                    No related context found.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </section>
 
-        {/* GitNexus context */}
         <section>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/40">Architectural Context</h3>
@@ -635,11 +689,11 @@ function HealthItem({ label, active }: { label: string; active?: boolean }) {
   )
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="bg-white/5 border border-white/5 rounded-codex p-3 flex flex-col items-center justify-center gap-1 hover:bg-white/10 hover:border-white/10 transition-all cursor-default group">
       <div className="text-sm font-bold text-white group-hover:scale-110 transition-transform tabular-nums">
-        {value > 1000 ? `${(value/1000).toFixed(1)}k` : value}
+        {typeof value === 'number' && value > 1000 ? `${(value/1000).toFixed(1)}k` : value}
       </div>
       <div className="text-[9px] text-white/30 uppercase tracking-widest font-bold">{label}</div>
     </div>

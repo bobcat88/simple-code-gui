@@ -372,7 +372,7 @@ fn report_ready() {
     println!("WEBVIEW_READY");
 }
 
-use vector_engine::{VectorEngine, vector_index_project, vector_index_knowledge};
+use vector_engine::{VectorEngine, vector_index_project, vector_index_knowledge, vector_index_session};
 use vector_engine::types::{VectorChunk, VectorIndexStatus, VectorSearchResult};
 
 #[tauri::command]
@@ -683,6 +683,7 @@ pub fn run() {
             vector_add_chunks,
             vector_index_project,
             vector_index_knowledge,
+            vector_index_session,
             log_token_event,
             get_token_stats,
             get_token_history,

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
-import { Search, Terminal, Settings, Plus, LayoutGrid, Command as CommandIcon } from 'lucide-react'
+import { Search, Terminal, Settings, Plus, LayoutGrid, Command as CommandIcon, Brain, Sparkles, FileText } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { Project } from '../stores/workspace'
+import { ExtendedApi, VectorSearchResult } from '../api/types'
 
 interface SpotlightProps {
   isOpen: boolean
@@ -12,16 +13,18 @@ interface SpotlightProps {
   onOpenSettings: () => void
   onOpenProjectWizard: () => void
   onSwitchToTab: (id: string) => void
+  api: ExtendedApi
 }
 
 interface SpotlightResult {
   id: string
   title: string
   subtitle?: string
-  type: 'command' | 'project' | 'tab' | 'mcp'
+  type: 'command' | 'project' | 'tab' | 'mcp' | 'neural'
   icon: React.ReactNode
   action: () => void
   shortcut?: string
+  score?: number
 }
 
 export function Spotlight({ 
@@ -32,12 +35,16 @@ export function Spotlight({
   onOpenSession, 
   onOpenSettings, 
   onOpenProjectWizard,
-  onSwitchToTab
+  onSwitchToTab,
+  api
 }: SpotlightProps) {
   const [query, setQuery] = useState('')
+  const [semanticResults, setSemanticResults] = useState<SpotlightResult[]>([])
+  const [isSearchingSemantic, setIsSearchingSemantic] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     if (isOpen) {
@@ -61,6 +68,45 @@ export function Spotlight({
     }
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isOpen, onClose])
+
+  // Semantic Search Effect
+  useEffect(() => {
+    if (!query || query.length < 3) {
+      setSemanticResults([])
+      return
+    }
+
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      setIsSearchingSemantic(true)
+      try {
+        const results = await api.vectorSearch(query, 5)
+        const neuralItems: SpotlightResult[] = results.map((res: VectorSearchResult) => ({
+          id: `neural-${res.id}`,
+          title: res.text.length > 60 ? res.text.substring(0, 60) + '...' : res.text,
+          subtitle: `${res.metadata?.file_path || 'Global Knowledge'} • ${Math.round(res.score * 100)}% match`,
+          type: 'neural' as const,
+          icon: res.metadata?.file_path ? <FileText size={16} /> : <Brain size={16} />,
+          action: () => {
+            // If it's a file, we could potentially open it in the future
+            // For now, just log it or show a toast
+            console.log('Selected semantic result:', res)
+          },
+          score: res.score
+        }))
+        setSemanticResults(neuralItems)
+      } catch (err) {
+        console.error('Spotlight semantic search failed:', err)
+      } finally {
+        setIsSearchingSemantic(false)
+      }
+    }, 300)
+
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+    }
+  }, [query, api])
 
   const results = useMemo(() => {
     const q = query.toLowerCase()
@@ -102,7 +148,10 @@ export function Spotlight({
         type: 'tab' as const,
         icon: <Terminal size={16} />,
         action: () => onSwitchToTab(t.id)
-      }))
+      })),
+
+      // Neural Results
+      ...semanticResults
     ]
     
     if (!q) return allItems.slice(0, 8) // Show defaults if no query
@@ -118,7 +167,7 @@ export function Spotlight({
       if (!aTitleMatch && bTitleMatch) return 1
       return 0
     })
-  }, [query, projects, openTabs, onOpenProjectWizard, onOpenSettings, onOpenSession, onSwitchToTab])
+  }, [query, projects, openTabs, onOpenProjectWizard, onOpenSettings, onOpenSession, onSwitchToTab, semanticResults])
 
   // Update selected index when results change
   useEffect(() => {
@@ -156,9 +205,12 @@ export function Spotlight({
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search projects, tabs, or commands..."
+            placeholder="Search projects, tabs, or ask a question..."
             className="flex-1 bg-transparent border-none text-xl outline-none text-white placeholder:text-white/10"
           />
+          {isSearchingSemantic && (
+            <Sparkles size={18} className="text-purple-400 animate-pulse mr-4" />
+          )}
           <div className="flex items-center gap-1 ml-4 opacity-40">
             <CommandIcon size={14} />
             <span className="text-xs font-bold">K</span>
@@ -196,6 +248,7 @@ export function Spotlight({
                         "text-[9px] px-1.5 py-0.5 rounded uppercase font-bold tracking-tighter",
                         result.type === 'command' ? "bg-blue-500/20 text-blue-400" :
                         result.type === 'project' ? "bg-purple-500/20 text-purple-400" :
+                        result.type === 'neural' ? "bg-pink-500/20 text-pink-400" :
                         "bg-emerald-500/20 text-emerald-400"
                       )}>
                         {result.type}

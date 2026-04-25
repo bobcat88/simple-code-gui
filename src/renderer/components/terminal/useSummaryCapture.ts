@@ -61,6 +61,11 @@ export function useSummaryCapture({
         capturingSummaryRef.current = false
         summaryBufferRef.current = ''
         setPendingSummary(summary)
+
+        // Phase 21: Neural Session Indexing
+        api?.vectorIndexSession(summary, ptyId).catch(err => {
+          console.error('Failed to index terminal session:', err)
+        })
       }
     }
 

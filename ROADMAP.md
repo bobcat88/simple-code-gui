@@ -55,6 +55,13 @@ Bridging global knowledge into the UI and backend indexing loop.
 - [x] **Frontend Bridge**: UI triggers for "Sync Global Knowledge" in the Intelligence Sidebar.
 - [x] **Unified Search**: Seamless semantic search across project and global memory.
 
+## Phase 21: Neural UI Navigation (In Progress)
+Making project intelligence actionable through the user interface.
+
+- [x] **Neural Spotlight**: Unified semantic search (Cmd+K) using vector embeddings.
+- [x] **Contextual Quick Actions**: Smart suggestions based on the current active file.
+- [x] **Session Re-threading**: Semantic context restoration for PTY sessions.
+
 ---
 
 *Last Updated: April 2026*

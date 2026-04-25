@@ -352,6 +352,8 @@ export interface Api {
   voiceImportCustom?: () => Promise<{ success: boolean; error?: string }>
   voiceOpenCustomFolder?: () => Promise<void>
   
+  vectorIndexKnowledge: () => Promise<number>
+  vectorIndexSession: (summary: string, ptyId: string, projectPath?: string) => Promise<void>
   xttsGetVoices?: () => Promise<any[]>
   xttsGetSampleVoices?: () => Promise<any[]>
   xttsGetLanguages?: () => Promise<any[]>

@@ -322,4 +322,6 @@ export const tauriIpc = {
     invoke<{ success: boolean, error?: string }>('vector_index_project', { project_path: projectPath }),
   vectorIndexKnowledge: () =>
     invoke<{ success: boolean, error?: string }>('vector_index_knowledge'),
+  vectorIndexSession: (summary: string, ptyId: string, projectPath?: string) =>
+    invoke('vector_index_session', { summary, ptyId, projectPath }),
 };

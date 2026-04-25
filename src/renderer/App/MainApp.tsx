@@ -512,6 +512,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
                   onOpenSearch={() => setCognitiveSearchOpen(true)}
                   onWidthChange={setIntelligenceWidth}
                   width={intelligenceWidth}
+                  activeTab={activeTab}
                 />
               )}
             </>
@@ -551,6 +552,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
           onOpenSettings={openSettings}
           onOpenProjectWizard={openProjectWizard}
           onSwitchToTab={setActiveTab}
+          api={api}
         />
         <TranscriptionOverlay />
 

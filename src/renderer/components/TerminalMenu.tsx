@@ -57,6 +57,26 @@ export function TerminalMenu({ ptyId, onCommand, currentBackend, onBackendChange
   const containerRef = useRef<HTMLDivElement>(null)
   const categoryRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const [recentSessions, setRecentSessions] = useState<any[]>([])
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false)
+  const api = useApi() as any
+
+  useEffect(() => {
+    if (openDropdown === 'neural') {
+      const fetchSessions = async () => {
+        setIsLoadingSessions(true)
+        try {
+          const results = await api.vectorSearch('session context recovery', 5)
+          setRecentSessions(results.filter((r: any) => r.metadata?.kind === 'session'))
+        } catch (err) {
+          console.error('Failed to fetch recent sessions:', err)
+        } finally {
+          setIsLoadingSessions(false)
+        }
+      }
+      fetchSessions()
+    }
+  }, [openDropdown, api])
 
   // Auto work options state
   const [autoWorkOptions, setAutoWorkOptions] = useState<AutoWorkOptions>(() => {
@@ -144,6 +164,17 @@ export function TerminalMenu({ ptyId, onCommand, currentBackend, onBackendChange
         { id: 'aider', label: 'Aider' },
       ],
     },
+    {
+      id: 'neural',
+      label: 'Neural',
+      items: [
+        { id: 'restore-context', label: 'Restore Context', disabled: isLoadingSessions },
+        ...(recentSessions.map(s => ({
+          id: `restore:${s.id}`,
+          label: s.text.substring(0, 30) + '...'
+        })))
+      ]
+    }
   ]
 
   // Close dropdown (not the bar) when clicking outside
@@ -221,6 +252,24 @@ export function TerminalMenu({ ptyId, onCommand, currentBackend, onBackendChange
       }))
       return
     }
+
+    if (item.id.startsWith('restore:')) {
+       const sessionId = item.id.replace('restore:', '')
+       const session = recentSessions.find(s => s.id === sessionId)
+       if (session) {
+         onCommand(session.text)
+       }
+       setOpenDropdown(null)
+       return
+     }
+
+     if (item.id === 'restore-context') {
+       if (recentSessions.length > 0) {
+         onCommand(recentSessions[0].text)
+       }
+       setOpenDropdown(null)
+       return
+     }
 
     setOpenDropdown(null)  // Close dropdown but keep bar expanded
 

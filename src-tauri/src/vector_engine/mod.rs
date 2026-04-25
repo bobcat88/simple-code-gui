@@ -199,6 +199,31 @@ pub async fn vector_index_knowledge(
     
     Ok(count)
 }
+#[tauri::command]
+pub async fn vector_index_session(
+    engine: tauri::State<'_, Arc<VectorEngine>>,
+    summary: String,
+    pty_id: String,
+    project_path: Option<String>
+) -> Result<(), String> {
+    let chunk = VectorChunk {
+        id: uuid::Uuid::new_v4().to_string(),
+        symbol_name: format!("session:{}", pty_id),
+        project_path: project_path.unwrap_or_default(),
+        file_path: format!("session/{}", pty_id),
+        content: summary.clone(),
+        metadata: {
+            let mut m = std::collections::HashMap::new();
+            m.insert("kind".to_string(), "session".to_string());
+            m.insert("pty_id".to_string(), pty_id);
+            m
+        },
+        embedding: None,
+    };
+
+    engine.add_chunks(vec![chunk]).await;
+    Ok(())
+}
 
 fn cosine_similarity(v1: &[f32], v2: &[f32]) -> f32 {
     if v1.len() != v2.len() {

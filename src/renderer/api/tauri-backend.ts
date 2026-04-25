@@ -332,6 +332,10 @@ export class TauriBackend implements ExtendedApi {
     await tauriIpc.setCurrentProject(path);
   }
 
+  async vectorIndexSession(summary: string, ptyId: string, projectPath?: string): Promise<{ success: boolean }> {
+    return await tauriIpc.vectorIndexSession(summary, ptyId, projectPath);
+  }
+
   onProjectInitializationProgress(callback: (progress: any) => void): Unsubscribe {
     let unlisten: (() => void) | undefined;
     tauriIpc.onProjectInitializationProgress(callback).then(fn => unlisten = fn);
