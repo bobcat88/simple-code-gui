@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::path::Path;
 use std::process::Command;
+use std::sync::Arc;
 use tauri::{AppHandle, Manager};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -122,6 +123,21 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
                     read_last_lines(&crash_path, limit)
                 }
                 _ => Err(format!("Unknown log source: {}", source)),
+            }
+        }
+        "check_health" => {
+            let component = args["component"].as_str();
+            match component {
+                Some("ai_runtime") => {
+                    let ai = app.state::<Arc<crate::ai_runtime::RuntimeManager>>();
+                    let status = ai.get_health().await;
+                    Ok(serde_json::to_string(&status).unwrap_or_default())
+                }
+                _ => {
+                    let health = app.state::<Arc<crate::health_manager::HealthManager>>();
+                    let status = health.get_status().await;
+                    Ok(serde_json::to_string(&status).unwrap_or_default())
+                }
             }
         }
         _ => Err(format!("Unknown tool: {}", name)),
@@ -277,6 +293,16 @@ pub fn get_gsd_tools() -> Vec<crate::ai_runtime::types::ToolDefinition> {
                 "properties": {
                     "source": { "type": "string", "enum": ["app", "crash"], "description": "The log source to read (defaults to app)" },
                     "limit": { "type": "integer", "description": "Max lines to read (defaults to 50)" }
+                }
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "check_health".to_string(),
+            description: "Check the health status of application components".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "component": { "type": "string", "enum": ["ai_runtime", "system"], "description": "The component to check (defaults to system)" }
                 }
             }),
         },

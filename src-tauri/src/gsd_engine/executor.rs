@@ -5,7 +5,7 @@ use chrono::Utc;
 use std::collections::HashMap;
 use std::process::Command;
 use std::sync::Arc;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::Mutex;
 use tokio::task::JoinSet;
 use crate::gsd_engine::tools::{execute_tool, get_gsd_tools};
@@ -265,11 +265,26 @@ impl Executor {
             );
             let _ = self.app.emit("gsd-step-updated", step.clone());
 
-            // Real Execution Loop
-            let system_prompt = "You are a Transwarp Nexus GSD (Get Stuff Done) Agent. \
+            // Select System Prompt based on task type
+            let base_prompt = "You are a Transwarp Nexus GSD (Get Stuff Done) Agent. \
                 Your goal is to complete the technical task described. \
                 Use the provided tools to read/write files and run commands. \
-                Be concise and efficient. When the task is finished, provide a brief summary of what you accomplished.";
+                Be concise and efficient.";
+            
+            let forensic_prompt = "You are the Forensic Nexus Agent. Your goal is to identify the root cause of a technical failure. \
+                Follow a systematic debugging workflow:\n\
+                1. OBSERVATION: Use `read_logs`, `list_dir`, and `read_file` to understand the current failure state.\n\
+                2. HYPOTHESIS: Formulate a clear hypothesis about the root cause based on your observations.\n\
+                3. EXPERIMENT: Use `inject_trace` or `run_bash` to test your hypothesis. Verify if your assumptions hold.\n\
+                4. ANALYSIS: Evaluate the results. If the hypothesis is confirmed, proceed to fix. If not, refine and repeat.\n\
+                5. RESOLUTION: Once the root cause is verified, implement the fix and verify it with tests.\n\n\
+                Use `git_diff` and `git_log` to identify regressions if applicable.";
+
+            let system_prompt = if step.description.contains("[forensic]") {
+                forensic_prompt
+            } else {
+                base_prompt
+            };
             
             let mut messages = vec![
                 Message { 
@@ -332,7 +347,22 @@ impl Executor {
 
                         let tool_result = match execute_tool(&tc.name, &tc.arguments, &self.project_path, &self.app).await {
                             Ok(res) => res,
-                            Err(e) => format!("Error: {}", e),
+                            Err(e) => {
+                                // Error IPC Bridge: Automatically check logs on tool failure
+                                let app_dir = self.app.path().app_data_dir().unwrap_or_default();
+                                let log_path = app_dir.join("app.log");
+                                let log_context = if log_path.exists() {
+                                    std::fs::read_to_string(&log_path)
+                                        .map(|c| {
+                                            let lines: Vec<&str> = c.lines().rev().take(10).collect();
+                                            format!("\n\n[Recent Log Context]:\n{}", lines.into_iter().rev().collect::<Vec<_>>().join("\n"))
+                                        })
+                                        .unwrap_or_default()
+                                } else {
+                                    String::new()
+                                };
+                                format!("Error: {}{}", e, log_context)
+                            }
                         };
 
                         messages.push(Message {

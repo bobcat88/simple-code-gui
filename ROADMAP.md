@@ -75,8 +75,8 @@ Enabling agents to perform root-cause analysis and systematic debugging.
 
 - [x] **Systematic Debugging Toolset**: Trace-point injection and log analysis tools for agents.
 - [x] **Git History Awareness**: Reading and comparing git diffs to identify regressions.
-- [ ] **Forensic Triage**: Automated hypothesis testing for bug reports.
-- [ ] **Error IPC Bridge**: Streaming real-time backend errors directly to the agent runtime.
+- [x] **Forensic Triage**: Automated hypothesis testing for bug reports via specialized agent prompts and health checks.
+- [x] **Error IPC Bridge**: Streaming real-time backend log context directly to the agent on failure.
 
 ---
 
