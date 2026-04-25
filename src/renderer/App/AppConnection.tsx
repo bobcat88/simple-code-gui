@@ -4,6 +4,8 @@ import { MainApp } from './MainApp'
 import type { Api, HttpBackend } from '../api'
 import { isTauriEnvironment, initializeApi } from '../api'
 import { ApiProvider } from '../contexts/ApiContext'
+import { VoiceProvider } from '../contexts/VoiceContext'
+import { ModalProvider } from '../contexts/ModalContext'
 
 // Check if running in Capacitor native app
 export function isCapacitorApp(): boolean {
@@ -118,7 +120,11 @@ export function AppConnection(): React.ReactElement | null {
       connectionState={isConnected ? 'connected' : 'disconnected'}
       reconnect={handleDisconnect}
     >
-      <MainApp api={api} isElectron={false} isTauri={isTauri} onDisconnect={handleDisconnect} />
+      <VoiceProvider>
+        <ModalProvider>
+          <MainApp api={api} isElectron={false} isTauri={isTauri} onDisconnect={handleDisconnect} />
+        </ModalProvider>
+      </VoiceProvider>
     </ApiProvider>
   )
 }

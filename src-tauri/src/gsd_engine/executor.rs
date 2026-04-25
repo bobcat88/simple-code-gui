@@ -374,6 +374,176 @@ impl Executor {
                             }
                         };
 
+                        // INTERCEPT: Peer Review Conflict
+                        if tool_result.starts_with("__GSD_PEER_REVIEW_CONFLICT__") {
+                            let r1_marker = "__GSD_PEER_REVIEW_CONFLICT__\nR1: ";
+                            let r2_marker = "\n---R1_END---\nR2: ";
+                            let end_marker = "\n---R2_END---";
+
+                            let r1 = tool_result
+                                .split(r2_marker)
+                                .next()
+                                .map(|s| s.replace(r1_marker, ""))
+                                .unwrap_or_default();
+                            
+                            let r2 = tool_result
+                                .split(r2_marker)
+                                .nth(1)
+                                .map(|s| s.replace(end_marker, ""))
+                                .unwrap_or_default();
+
+                            step.status = StepStatus::Conflict(
+                                "Peer review conflict: Reviewers disagree on the verdict.".to_string(),
+                                r1.clone(),
+                                r2.clone()
+                            );
+                            let _ = self.app.emit("gsd-step-updated", step.clone());
+                            
+                            // Wait for user resolution
+                            let (tx, rx) = tokio::sync::oneshot::channel();
+                            {
+                                let mut pending = self.pending_responses.lock().await;
+                                pending.insert(step.id.clone(), tx);
+                            }
+
+                            match rx.await {
+                                Ok(crate::gsd_engine::UserResponse::ResolveR1) => {
+                                    messages.push(Message {
+                                        role: "tool".to_string(),
+                                        content: format!("CONFLICT RESOLVED by user. Accepted Reviewer 1's Findings:\n{}", r1),
+                                        tool_calls: None,
+                                        tool_call_id: Some(tc.id),
+                                    });
+                                    step.status = StepStatus::InProgress;
+                                    let _ = self.app.emit("gsd-step-updated", step.clone());
+                                    continue;
+                                }
+                                Ok(crate::gsd_engine::UserResponse::ResolveR2) => {
+                                    messages.push(Message {
+                                        role: "tool".to_string(),
+                                        content: format!("CONFLICT RESOLVED by user. Accepted Reviewer 2's Findings:\n{}", r2),
+                                        tool_calls: None,
+                                        tool_call_id: Some(tc.id),
+                                    });
+                                    step.status = StepStatus::InProgress;
+                                    let _ = self.app.emit("gsd-step-updated", step.clone());
+                                    continue;
+                                }
+                                Ok(crate::gsd_engine::UserResponse::Abort) | Err(_) => {
+                                    step.status = StepStatus::Failed("User aborted at conflict resolution".to_string());
+                                    let _ = self.app.emit("gsd-step-updated", step.clone());
+                                    return Ok(step);
+                                }
+                                _ => {
+                                    // Fallback for unexpected response
+                                    step.status = StepStatus::Failed("Invalid response for conflict resolution".to_string());
+                                    let _ = self.app.emit("gsd-step-updated", step.clone());
+                                    return Ok(step);
+                                }
+                            }
+                        }
+
+                        // INTERCEPT: Delegation Approval
+                        if tool_result.starts_with("__GSD_DELEGATION_PENDING__") {
+                            let role = tool_result.lines()
+                                .find(|l| l.starts_with("Role: "))
+                                .map(|l| l.replace("Role: ", ""))
+                                .unwrap_or_else(|| "specialized_agent".to_string());
+                            
+                            let task = tool_result.lines()
+                                .find(|l| l.starts_with("Task: "))
+                                .map(|l| l.replace("Task: ", ""))
+                                .unwrap_or_else(|| "N/A".to_string());
+
+                            step.status = StepStatus::AwaitingDelegationApproval(task.clone(), role.clone());
+                            let _ = self.app.emit("gsd-step-updated", step.clone());
+                            
+                            // Wait for user approval
+                            let (tx, rx) = tokio::sync::oneshot::channel();
+                            {
+                                let mut pending = self.pending_responses.lock().await;
+                                pending.insert(step.id.clone(), tx);
+                            }
+
+                            match rx.await {
+                                Ok(crate::gsd_engine::UserResponse::ApproveDelegation) => {
+                                    // Actually execute the delegation now
+                                    self.emit_execution_event(
+                                        plan_id,
+                                        Some(phase_id),
+                                        Some(&step.id),
+                                        "delegation_approved",
+                                        format!("User approved delegation to {} for task: {}", role, task),
+                                    );
+                                    
+                                    step.status = StepStatus::InProgress;
+                                    let _ = self.app.emit("gsd-step-updated", step.clone());
+                                    
+                                    // Now call the actual logic (which we previously removed from tools.rs)
+                                    let ai = self.ai.clone();
+                                    let system_prompt = match role.as_str() {
+                                        "rust_expert" => "You are a Rust Expert Agent. You specialize in safe, efficient, and idiomatic Rust code.",
+                                        "frontend_dev" => "You are a Frontend Developer Agent. You specialize in modern web technologies, React, and CSS.",
+                                        "qa_specialist" => "You are a QA Specialist Agent. Your goal is to find bugs, verify functionality, and ensure code quality.",
+                                        "researcher" => "You are a Research Agent. Your goal is to gather information and provide detailed reports on technical topics.",
+                                        _ => "You are a specialized GSD Agent. Complete the task as requested.",
+                                    };
+
+                                    let request = crate::ai_runtime::types::CompletionRequest {
+                                        messages: vec![
+                                            crate::ai_runtime::types::Message {
+                                                role: "system".to_string(),
+                                                content: system_prompt.to_string(),
+                                                tool_calls: None,
+                                                tool_call_id: None,
+                                            },
+                                            crate::ai_runtime::types::Message {
+                                                role: "user".to_string(),
+                                                content: task.to_string(),
+                                                tool_calls: None,
+                                                tool_call_id: None,
+                                            },
+                                        ],
+                                        tools: Some(crate::gsd_engine::tools::get_gsd_tools()), 
+                                        tool_choice: Some("auto".to_string()),
+                                        project_path: self.project_path.clone(),
+                                        ..Default::default()
+                                    };
+
+                                    let response = ai.dispatch(request).await.map_err(|e| e.to_string())?;
+                                    
+                                    messages.push(Message {
+                                        role: "tool".to_string(),
+                                        content: format!("Delegated Task Result ({}):\n{}", role, response.content),
+                                        tool_calls: None,
+                                        tool_call_id: Some(tc.id),
+                                    });
+                                    continue;
+                                }
+                                Ok(crate::gsd_engine::UserResponse::RejectDelegation) => {
+                                    messages.push(Message {
+                                        role: "tool".to_string(),
+                                        content: "Delegation REJECTED by user. You must complete the task yourself or find another way.".to_string(),
+                                        tool_calls: None,
+                                        tool_call_id: Some(tc.id),
+                                    });
+                                    step.status = StepStatus::InProgress;
+                                    let _ = self.app.emit("gsd-step-updated", step.clone());
+                                    continue;
+                                }
+                                Ok(crate::gsd_engine::UserResponse::Abort) | Err(_) => {
+                                    step.status = StepStatus::Failed("User aborted at delegation approval".to_string());
+                                    let _ = self.app.emit("gsd-step-updated", step.clone());
+                                    return Ok(step);
+                                }
+                                _ => {
+                                    step.status = StepStatus::Failed("Invalid response for delegation approval".to_string());
+                                    let _ = self.app.emit("gsd-step-updated", step.clone());
+                                    return Ok(step);
+                                }
+                            }
+                        }
+
                         messages.push(Message {
                             role: "tool".to_string(),
                             content: tool_result,
@@ -545,6 +715,11 @@ impl Executor {
                 Ok(crate::gsd_engine::UserResponse::Abort) | Err(_) => {
                     step.status = StepStatus::Failed("User aborted or session timed out".to_string());
                     step.completed_at = Some(Utc::now().timestamp_millis() as u64);
+                    let _ = self.app.emit("gsd-step-updated", step.clone());
+                    return Ok(step);
+                }
+                _ => {
+                    step.status = StepStatus::Failed("Invalid response for fix approval".to_string());
                     let _ = self.app.emit("gsd-step-updated", step.clone());
                     return Ok(step);
                 }

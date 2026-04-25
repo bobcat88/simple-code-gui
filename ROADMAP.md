@@ -86,6 +86,14 @@ Enabling multiple agents to work together on complex tasks with shared memory an
 - [x] **Cross-Agent Messaging**: Native IPC channel for agent communication.
 - [x] **Automated Peer Review**: Supervisor-driven consensus protocol for validating sub-agent output.
 
+## Phase 25: Swarm Observability & Neural UI Feedback (Complete)
+Visualizing and interacting with agent swarms and their collective intelligence.
+
+- [x] **Swarm Activity Stream**: Live dashboard for real-time message bus and sub-agent status.
+- [x] **Interactive Consensus UI**: Resolve peer-review conflicts and approve supervisor delegations.
+- [x] **Neural Insight Panel**: Actionable finding cards derived from cross-agent findings.
+- [x] **Agentic Tool Catalog**: Searchable registry of all available tools and their usage examples.
+
 ---
 
 *Last Updated: April 2026*

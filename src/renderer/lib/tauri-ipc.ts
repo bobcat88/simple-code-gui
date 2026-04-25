@@ -310,6 +310,10 @@ export const tauriIpc = {
     listen<any>('gsd-phase-updated', (event) => callback(event.payload)),
   onGsdStepUpdated: (callback: (step: any) => void): Promise<UnlistenFn> =>
     listen<any>('gsd-step-updated', (event) => callback(event.payload)),
+  onGsdInsight: (callback: (insight: any) => void): Promise<UnlistenFn> =>
+    listen<any>('gsd-insight', (event) => callback(event.payload)),
+  gsdListTools: () =>
+    invoke<any[]>('gsd_list_tools'),
 
   // Vector Engine
   vectorSearch: (query: string, limit?: number, projectPath?: string) =>
@@ -324,4 +328,12 @@ export const tauriIpc = {
     invoke<{ success: boolean, error?: string }>('vector_index_knowledge'),
   vectorIndexSession: (summary: string, ptyId: string, projectPath?: string) =>
     invoke('vector_index_session', { summary, ptyId, projectPath }),
+
+  // Swarm Messaging
+  broadcastAgentMessage: (message: any) =>
+    invoke<void>('broadcast_agent_message', { message }),
+  getAgentMessages: (limit?: number) =>
+    invoke<any[]>('get_agent_messages', { limit }),
+  onAgentMessage: (callback: (message: any) => void): Promise<UnlistenFn> =>
+    listen<any>('agent-message', (event) => callback(event.payload)),
 };

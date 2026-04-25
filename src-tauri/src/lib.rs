@@ -709,6 +709,7 @@ pub fn run() {
             gsd_engine::gsd_list_plans,
             gsd_engine::gsd_execute_plan,
             gsd_engine::gsd_respond_to_checkpoint,
+            gsd_engine::gsd_list_tools,
             rtk_check,
             rtk_get_stats,
             rtk_get_history,

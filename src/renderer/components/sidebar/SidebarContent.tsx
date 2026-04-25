@@ -16,7 +16,9 @@ import { TokenBurnHistory } from '../orchestration/TokenBurnHistory.js'
 import { ActivityFeed } from '../ActivityFeed'
 import { JobMonitor } from '../JobMonitor'
 import { AgentBoard } from '../AgentBoard'
+import { SwarmActivityStream } from '../orchestration/SwarmActivityStream'
 import { HealthDashboard } from '../HealthDashboard'
+import { ToolCatalog } from '../gsd/ToolCatalog'
 import {
   getCategoryGradient,
   ProjectItem,
@@ -438,6 +440,13 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
               <AgentBoard />
             </div>
           </section>
+
+          <section className="space-y-3 pt-4 border-t border-white/5 h-[300px] flex flex-col">
+            <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Swarm Stream</h4>
+            <div className="flex-1 p-1 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
+              <SwarmActivityStream />
+            </div>
+          </section>
           
           <section className="space-y-3 pt-4 border-t border-white/5">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Job Monitor</h4>
@@ -460,53 +469,10 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
       <div className="flex flex-col h-full glass-sidebar animate-in slide-in-from-left duration-200">
         <div className="p-4 border-b border-white/5 font-semibold flex items-center gap-2 bg-white/5 backdrop-blur-md">
           <Cpu size={18} />
-          Plugins & Extensions
+          Tools & Capabilities
         </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <div className="p-6 rounded-2xl bg-muted/30 border border-white/5 text-center">
-            <Cpu size={40} className="mx-auto mb-4 text-primary opacity-50" />
-            <h3 className="text-lg font-semibold mb-2">Extension Engine</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Expand your capabilities with specialized tools and agents.
-            </p>
-            <button 
-              onClick={() => setExtensionBrowserModal({ project: projects[0] || { path: '', name: 'Global' } })}
-              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all"
-            >
-              Browse Extensions
-            </button>
-          </div>
-          
-          <div className="space-y-2">
-            <h4 className="px-2 text-xs font-bold uppercase text-muted-foreground tracking-widest">Active Plugins</h4>
-            <div className="p-3 rounded-xl bg-muted/20 border border-white/5 flex items-center justify-between group">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center text-green-500">
-                  <Zap size={16} />
-                </div>
-                <div>
-                  <div className="text-sm font-semibold">Tauri Backend</div>
-                  <div className="text-[10px] text-muted-foreground uppercase">Core System</div>
-                </div>
-              </div>
-            </div>
-
-            <button 
-              onClick={() => setMcpBrowserOpen(true)}
-              className="w-full p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 flex items-center justify-between group transition-all"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
-                  <Cpu size={16} />
-                </div>
-                <div className="text-left">
-                  <div className="text-sm font-semibold">MCP Browser</div>
-                  <div className="text-[10px] text-muted-foreground uppercase">Tools & Resources</div>
-                </div>
-              </div>
-              <ChevronRight size={14} className="text-muted-foreground group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
+        <div className="flex-1 overflow-hidden p-2">
+          <ToolCatalog />
         </div>
       </div>
     )

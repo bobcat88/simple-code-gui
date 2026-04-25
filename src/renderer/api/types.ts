@@ -603,10 +603,12 @@ export interface Api {
   gsdAddPhase?: (planId: string, title: string) => Promise<GsdPhase>
   gsdAddStep?: (planId: string, phaseId: string, title: string, description: string) => Promise<GsdStep>
   gsdExecutePlan?: (planId: string) => Promise<void>
-  gsdRespondToCheckpoint?: (stepId: string, response: 'Approve' | 'Retry' | 'Abort') => Promise<void>
+  gsdRespondToCheckpoint?: (stepId: string, response: UserResponse) => Promise<void>
   onGsdExecutionEvent?: (callback: (event: GsdExecutionEvent) => void) => Unsubscribe
+  onGsdInsight?: (callback: (insight: NeuralInsight) => void) => Unsubscribe
   onGsdPhaseUpdated?: (callback: (phase: GsdPhase) => void) => Unsubscribe
   onGsdStepUpdated?: (callback: (step: GsdStep) => void) => Unsubscribe
+  gsdListTools?: () => Promise<ToolInfo[]>
 
   // ==========================================================================
   // Vector Engine
@@ -884,9 +886,11 @@ export type GsdStepStatus =
   | 'Skipped' 
   | { WaitingForUser: string }
   | { AutoFixing: string }
-  | { AwaitingFixApproval: [string, string] };
+  | { AwaitingFixApproval: [string, string] }
+  | { Conflict: [string, string, string] }
+  | { AwaitingDelegationApproval: [string, string] };
 
-export type UserResponse = 'Approve' | 'ApproveFix' | 'Retry' | 'Abort';
+export type UserResponse = 'Approve' | 'ApproveFix' | 'ResolveR1' | 'ResolveR2' | 'ApproveDelegation' | 'RejectDelegation' | 'Retry' | 'Abort';
 
 export interface GsdStep {
   id: string
@@ -925,6 +929,29 @@ export interface GsdExecutionEvent {
   eventType: string
   message: string
   timestamp: number
+}
+
+export type InsightSeverity = 'high' | 'medium' | 'low';
+export type InsightType = 'technical' | 'architectural' | 'optimization';
+
+export interface NeuralInsight {
+  id: string;
+  severity: InsightSeverity;
+  insightType: InsightType;
+  message: string;
+  details?: string;
+  actionLabel?: string;
+  actionCommand?: string;
+  timestamp: number;
+}
+
+export interface ToolInfo {
+  name: string;
+  description: string;
+  category: string;
+  usageCount: number;
+  successRate: number;
+  parametersSchema: string;
 }
 
 export interface DiagnosticResult {

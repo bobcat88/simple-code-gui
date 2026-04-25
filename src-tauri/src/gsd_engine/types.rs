@@ -11,6 +11,8 @@ pub enum StepStatus {
     WaitingForUser(String),
     AutoFixing(String),
     AwaitingFixApproval(String, String), // message, proposed_fix
+    Conflict(String, String, String), // message, r1_content, r2_content
+    AwaitingDelegationApproval(String, String), // task, role
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -47,6 +49,46 @@ pub struct GsdPlan {
     pub task_id: String,
     pub phases: Vec<GsdPhase>,
     pub metadata: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum InsightSeverity {
+    High,
+    Medium,
+    Low,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum InsightType {
+    Technical,
+    Architectural,
+    Optimization,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NeuralInsight {
+    pub id: String,
+    pub severity: InsightSeverity,
+    pub insight_type: InsightType,
+    pub message: String,
+    pub details: Option<String>,
+    pub action_label: Option<String>,
+    pub action_command: Option<String>,
+    pub timestamp: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ToolInfo {
+    pub name: String,
+    pub description: String,
+    pub category: String,
+    pub usage_count: u32,
+    pub success_rate: f32,
+    pub parameters_schema: String, // JSON schema string
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

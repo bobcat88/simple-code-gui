@@ -22,6 +22,10 @@ pub struct GsdEngine {
 pub enum UserResponse {
     Approve,
     ApproveFix,
+    ResolveR1,
+    ResolveR2,
+    ApproveDelegation,
+    RejectDelegation,
     Retry,
     Abort,
 }
@@ -309,4 +313,20 @@ pub async fn gsd_respond_to_checkpoint(
     } else {
         Err("No pending checkpoint for this step".to_string())
     }
+}
+
+#[tauri::command]
+pub async fn gsd_list_tools() -> Result<Vec<crate::gsd_engine::types::ToolInfo>, String> {
+    let tools = tools::get_gsd_tools();
+    let tool_infos = tools.into_iter().map(|t| {
+        crate::gsd_engine::types::ToolInfo {
+            name: t.name,
+            description: t.description,
+            category: "General".to_string(),
+            usage_count: 0,
+            success_rate: 1.0,
+            parameters_schema: t.parameters.to_string(),
+        }
+    }).collect();
+    Ok(tool_infos)
 }

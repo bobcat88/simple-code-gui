@@ -39,6 +39,8 @@ import { useProjectIntelligence } from '../hooks/useProjectIntelligence'
 import { CognitiveSearchModal } from '../components/intelligence/CognitiveSearchModal'
 import { Activity } from 'lucide-react'
 import { TranscriptionOverlay } from '../components/voice/TranscriptionOverlay'
+import { NeuralHUD } from '../components/gsd/NeuralHUD'
+import { ConsensusOverlay } from '../components/orchestration/ConsensusOverlay'
 
 export interface MainAppProps {
   api: Api
@@ -555,6 +557,8 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
           api={api}
         />
         <TranscriptionOverlay />
+        <NeuralHUD />
+        <ConsensusOverlay />
 
         <CognitiveSearchModal
           isOpen={cognitiveSearchOpen}

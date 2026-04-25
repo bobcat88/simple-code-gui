@@ -421,6 +421,16 @@ export class TauriBackend implements ExtendedApi {
     tauriIpc.onGsdStepUpdated(callback).then(fn => unlisten = fn);
     return () => unlisten?.();
   }
+  
+  onGsdInsight(callback: (insight: any) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onGsdInsight(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  async gsdListTools(): Promise<any[]> {
+    return await tauriIpc.gsdListTools();
+  }
 
   // Background Jobs
   async jobsCreate(jobType: string, payload: any): Promise<string> { return await tauriIpc.jobsCreate(jobType, payload); }

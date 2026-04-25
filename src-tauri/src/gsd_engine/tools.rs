@@ -141,45 +141,10 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
             }
         }
         "delegate_task" => {
-            let task = args["task"].as_str().ok_or("Missing task argument")?;
             let role = args["role"].as_str().ok_or("Missing role argument")?;
-            
-            let ai = app.state::<Arc<crate::ai_runtime::RuntimeManager>>();
-            
-            let system_prompt = match role {
-                "rust_expert" => "You are a Rust Expert Agent. You specialize in safe, efficient, and idiomatic Rust code.",
-                "frontend_dev" => "You are a Frontend Developer Agent. You specialize in modern web technologies, React, and CSS.",
-                "qa_specialist" => "You are a QA Specialist Agent. Your goal is to find bugs, verify functionality, and ensure code quality.",
-                "researcher" => "You are a Research Agent. Your goal is to gather information and provide detailed reports on technical topics.",
-                _ => "You are a specialized GSD Agent. Complete the task as requested.",
-            };
-
-            let request = crate::ai_runtime::types::CompletionRequest {
-                messages: vec![
-                    crate::ai_runtime::types::Message {
-                        role: "system".to_string(),
-                        content: system_prompt.to_string(),
-                        tool_calls: None,
-                        tool_call_id: None,
-                    },
-                    crate::ai_runtime::types::Message {
-                        role: "user".to_string(),
-                        content: task.to_string(),
-                        tool_calls: None,
-                        tool_call_id: None,
-                    },
-                ],
-                // Sub-agents can use tools too!
-                tools: Some(get_gsd_tools()), 
-                tool_choice: Some("auto".to_string()),
-                project_path: project_path.clone(),
-                ..Default::default()
-            };
-
-            // Recursive dispatch
-            let response = ai.dispatch(request).await.map_err(|e| e.to_string())?;
-            
-            Ok(response.content)
+            let task = args["task"].as_str().ok_or("Missing task argument")?;
+            // Return a signal that this delegation needs approval
+            Ok(format!("__GSD_DELEGATION_PENDING__\nRole: {}\nTask: {}", role, task))
         }
         "vector_query" => {
             let query = args["query"].as_str().ok_or("Missing query argument")?;
@@ -275,7 +240,7 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
             } else if !approved1 && !approved2 {
                 format!("Consensus reached: REJECTED.\n\nReviewer 1:\n{}\n\nReviewer 2:\n{}", r1.content, r2.content)
             } else {
-                format!("Conflict detected: One reviewer approved, one rejected. Manual resolution required.\n\nReviewer 1:\n{}\n\nReviewer 2:\n{}", r1.content, r2.content)
+                format!("__GSD_PEER_REVIEW_CONFLICT__\nR1: {}\n---R1_END---\nR2: {}\n---R2_END---", r1.content, r2.content)
             };
             
             Ok(result)
@@ -492,6 +457,22 @@ pub fn get_gsd_tools() -> Vec<crate::ai_runtime::types::ToolDefinition> {
                     "criteria": { "type": "string", "description": "The criteria or instructions for the review" }
                 },
                 "required": ["content", "criteria"]
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "generate_neural_insight".to_string(),
+            description: "Push a high-value finding or actionable insight to the user's Neural HUD. Use this for significant cross-agent consensus or critical warnings.".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "message": { "type": "string", "description": "The summary of the insight" },
+                    "severity": { "type": "string", "enum": ["high", "medium", "low"], "description": "The severity of the insight" },
+                    "insight_type": { "type": "string", "enum": ["technical", "architectural", "optimization"], "description": "The type of intelligence" },
+                    "details": { "type": "string", "description": "Additional context or reasoning" },
+                    "action_label": { "type": "string", "description": "Label for an action button (e.g., 'Apply Refactor')" },
+                    "action_command": { "type": "string", "description": "Command to run if the action is selected" }
+                },
+                "required": ["message"]
             }),
         },
     ]

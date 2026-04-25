@@ -14,9 +14,11 @@ import {
   AlertTriangle,
   Search,
   Brain,
-  Cpu
+  Cpu,
+  Users
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import { SwarmActivityStream } from '../orchestration/SwarmActivityStream'
 import type { ProjectIntelligence, ProjectCapabilityScan, InitializationProposal, ProposalOperation, ExtendedApi, ProposalProgress, VectorIndexStatus } from '../../api/types'
 
 interface IntelligenceSidebarProps {
@@ -655,6 +657,17 @@ export function IntelligenceSidebar({
               <p className="text-[10px] text-white/30 max-w-[140px]">Initialize GitNexus to see architectural insights and blast radius.</p>
             </div>
           )}
+        </section>
+
+        <section className="flex-1 min-h-[400px] flex flex-col">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/40">Swarm Intelligence</h3>
+            <div className="flex items-center gap-1.5">
+              <Users size={12} className="text-blue-400" />
+              <span className="text-[10px] text-blue-400/80 font-medium">Live Stream</span>
+            </div>
+          </div>
+          <SwarmActivityStream />
         </section>
       </div>
 

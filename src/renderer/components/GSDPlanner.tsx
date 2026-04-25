@@ -13,7 +13,11 @@ import {
   X,
   PlusCircle,
   AlertCircle,
-  Wand2
+  Wand2,
+  Users,
+  Scale,
+  ShieldCheck,
+  UserCheck
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Api, GsdPlan, GsdPhase, GsdStep, GsdExecutionEvent, UserResponse } from '../api/types';
@@ -432,6 +436,8 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                                     const isFailed = typeof step.status === 'object' && 'Failed' in step.status;
                                     const isAutoFixing = typeof step.status === 'object' && 'AutoFixing' in step.status;
                                     const isAwaitingFix = typeof step.status === 'object' && 'AwaitingFixApproval' in step.status;
+                                    const isConflict = typeof step.status === 'object' && 'Conflict' in step.status;
+                                    const isAwaitingDelegation = typeof step.status === 'object' && 'AwaitingDelegationApproval' in step.status;
                                     
                                     return (
                                       <div 
@@ -443,6 +449,8 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                                           isWaiting ? "bg-amber-500/10 border-amber-500/40 shadow-lg shadow-amber-500/10 animate-pulse" :
                                           isAutoFixing ? "bg-blue-500/10 border-blue-500/40 shadow-lg shadow-blue-500/10" :
                                           isAwaitingFix ? "bg-indigo-500/10 border-indigo-500/40 shadow-lg shadow-indigo-500/10 animate-pulse" :
+                                          isConflict ? "bg-purple-500/10 border-purple-500/40 shadow-lg shadow-purple-500/10 animate-pulse" :
+                                          isAwaitingDelegation ? "bg-cyan-500/10 border-cyan-500/40 shadow-lg shadow-cyan-500/10 animate-pulse" :
                                           isFailed ? "bg-red-500/5 border-red-500/20" :
                                           "bg-white/[0.02] border-white/5 hover:bg-white/[0.04]"
                                         )}
@@ -454,7 +462,7 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                                                 <CheckCircle2 size={16} className="text-green-500 shrink-0" />
                                               ) : step.status === 'InProgress' || isAutoFixing ? (
                                                 <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin shrink-0" />
-                                              ) : isWaiting || isAwaitingFix ? (
+                                              ) : isWaiting || isAwaitingFix || isConflict || isAwaitingDelegation ? (
                                                 <AlertCircle size={16} className="text-amber-500 shrink-0" />
                                               ) : isFailed ? (
                                                 <X size={16} className="text-red-500 shrink-0" />
@@ -539,6 +547,95 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                                                     className="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-wider hover:bg-red-500/30 transition-colors border border-red-500/30"
                                                   >
                                                     Abort
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            )}
+
+                                            {/* Conflict Resolution UI */}
+                                            {isConflict && (
+                                              <div className="mt-4 p-3 rounded-xl bg-purple-500/10 border border-purple-500/40 shadow-lg shadow-purple-500/10 animate-pulse space-y-3">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                  <Scale size={14} className="text-purple-400" />
+                                                  <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Consensus Conflict</span>
+                                                </div>
+                                                <p className="text-[11px] font-medium text-white/90 leading-relaxed italic">
+                                                  "{(step.status as any).Conflict[0]}"
+                                                </p>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                  <div className="p-2 rounded-lg bg-black/30 border border-white/5 space-y-2">
+                                                    <div className="text-[9px] font-bold text-muted-foreground/60 uppercase">Reviewer 1 Findings</div>
+                                                    <div className="text-[10px] text-muted-foreground/80 line-clamp-3 leading-snug">
+                                                      {(step.status as any).Conflict[1]}
+                                                    </div>
+                                                    <button
+                                                      onClick={() => handleRespondToCheckpoint(step.id, 'ResolveR1')}
+                                                      className="w-full py-1.5 rounded-md bg-purple-600/20 text-purple-300 text-[9px] font-bold uppercase hover:bg-purple-600/40 transition-colors border border-purple-500/30"
+                                                    >
+                                                      Pick R1 Findings
+                                                    </button>
+                                                  </div>
+                                                  <div className="p-2 rounded-lg bg-black/30 border border-white/5 space-y-2">
+                                                    <div className="text-[9px] font-bold text-muted-foreground/60 uppercase">Reviewer 2 Findings</div>
+                                                    <div className="text-[10px] text-muted-foreground/80 line-clamp-3 leading-snug">
+                                                      {(step.status as any).Conflict[2]}
+                                                    </div>
+                                                    <button
+                                                      onClick={() => handleRespondToCheckpoint(step.id, 'ResolveR2')}
+                                                      className="w-full py-1.5 rounded-md bg-purple-600/20 text-purple-300 text-[9px] font-bold uppercase hover:bg-purple-600/40 transition-colors border border-purple-500/30"
+                                                    >
+                                                      Pick R2 Findings
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                                <div className="flex justify-end gap-2 pt-1 border-t border-white/5 mt-2">
+                                                   <button
+                                                     onClick={() => handleRespondToCheckpoint(step.id, 'Retry')}
+                                                     className="px-3 py-1 text-white/40 text-[9px] font-bold uppercase hover:text-white transition-colors"
+                                                   >
+                                                     Manual Retry
+                                                   </button>
+                                                   <button
+                                                     onClick={() => handleRespondToCheckpoint(step.id, 'Abort')}
+                                                     className="px-3 py-1 text-red-500/40 text-[9px] font-bold uppercase hover:text-red-500 transition-colors"
+                                                   >
+                                                     Abort
+                                                   </button>
+                                                </div>
+                                              </div>
+                                            )}
+
+                                            {/* Delegation Approval UI */}
+                                            {isAwaitingDelegation && (
+                                              <div className="mt-4 p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/40 shadow-lg shadow-cyan-500/10 animate-pulse space-y-3">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                  <UserCheck size={14} className="text-cyan-400" />
+                                                  <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Delegation Request</span>
+                                                </div>
+                                                <div className="p-3 rounded-lg bg-black/30 border border-white/5">
+                                                  <div className="text-[9px] font-bold text-cyan-400/60 uppercase mb-1">Target Specialist</div>
+                                                  <div className="text-[11px] font-bold text-white mb-2 flex items-center gap-2">
+                                                    <Users size={12} className="text-cyan-500" />
+                                                    {(step.status as any).AwaitingDelegationApproval[1]}
+                                                  </div>
+                                                  <div className="text-[9px] font-bold text-muted-foreground/60 uppercase mb-1">Delegated Task</div>
+                                                  <p className="text-[11px] text-white/90 leading-relaxed font-mono">
+                                                    {(step.status as any).AwaitingDelegationApproval[0]}
+                                                  </p>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                  <button
+                                                    onClick={() => handleRespondToCheckpoint(step.id, 'ApproveDelegation')}
+                                                    className="flex-1 py-2 rounded-lg bg-cyan-600 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-cyan-700 transition-colors shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2"
+                                                  >
+                                                    <ShieldCheck size={12} />
+                                                    Approve Swarm
+                                                  </button>
+                                                  <button
+                                                    onClick={() => handleRespondToCheckpoint(step.id, 'RejectDelegation')}
+                                                    className="px-4 py-2 rounded-lg bg-white/5 text-white/60 text-[10px] font-bold uppercase tracking-wider hover:bg-white/10 transition-colors border border-white/10"
+                                                  >
+                                                    Reject
                                                   </button>
                                                 </div>
                                               </div>
