@@ -379,6 +379,41 @@ export class TauriBackend implements ExtendedApi {
     return await tauriIpc.getPendingApprovals(cwd);
   }
 
+  // GSD Engine Implementation
+  async gsdCreatePlan(taskId: string, title: string): Promise<any> {
+    return await tauriIpc.gsdCreatePlan(taskId, title);
+  }
+
+  async gsdAddPhase(planId: string, title: string): Promise<any> {
+    return await tauriIpc.gsdAddPhase(planId, title);
+  }
+
+  async gsdAddStep(planId: string, phaseId: string, title: string, description: string): Promise<any> {
+    return await tauriIpc.gsdAddStep(planId, phaseId, title, description);
+  }
+
+  async gsdExecutePlan(planId: string): Promise<void> {
+    await tauriIpc.gsdExecutePlan(planId);
+  }
+
+  onGsdExecutionEvent(callback: (event: any) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onGsdExecutionEvent(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  onGsdPhaseUpdated(callback: (phase: any) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onGsdPhaseUpdated(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  onGsdStepUpdated(callback: (step: any) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onGsdStepUpdated(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
   // Background Jobs
   async jobsCreate(jobType: string, payload: any): Promise<string> { return await tauriIpc.jobsCreate(jobType, payload); }
   async jobsGet(id: string): Promise<any> { return await tauriIpc.jobsGet(id); }
@@ -434,5 +469,11 @@ export class TauriBackend implements ExtendedApi {
 
   async claudeMdSave(projectPath: string, content: string): Promise<{ success: boolean; error?: string }> {
     return await tauriIpc.claudeMdSave(projectPath, content);
+  }
+
+  onModelPlanSwitched(callback: (event: { old_plan: string; new_plan: string; health_score: number }) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onModelPlanSwitched(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
   }
 }

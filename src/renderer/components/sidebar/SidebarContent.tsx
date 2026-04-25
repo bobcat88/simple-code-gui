@@ -1,10 +1,11 @@
 import React from 'react'
 import { Project, useWorkspaceStore } from '../../stores/workspace.js'
 import { Api, type ApprovalRequest } from '../../api/types.js'
-import { Settings, LayoutGrid, Terminal, Plus, FolderPlus, FolderSearch, Zap, ChevronRight, Cpu, MessageSquare, Activity } from 'lucide-react'
+import { Settings, LayoutGrid, Terminal, Plus, FolderPlus, FolderSearch, Zap, ChevronRight, Cpu, MessageSquare, Activity, Milestone } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { BeadsPanel } from '../BeadsPanel.js'
 import { GSDStatus } from '../GSDStatus.js'
+import { GSDPlanner } from '../GSDPlanner.js'
 import { ExtensionBrowser } from '../ExtensionBrowser.js'
 import { ClaudeMdEditor } from '../ClaudeMdEditor.js'
 import { McpPanel } from '../McpPanel.js'
@@ -331,6 +332,15 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
             </div>
           )}
         </div>
+      </div>
+    )
+  } else if (activeSection === 'gsd') {
+    return (
+      <div className="flex flex-col h-full glass-sidebar animate-in slide-in-from-left duration-200">
+        <GSDPlanner 
+          projectPath={beadsProjectPath} 
+          api={api} 
+        />
       </div>
     )
   } else if (activeSection === 'orchestration') {

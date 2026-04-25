@@ -78,4 +78,23 @@ export function useApiListeners({
     })
     return unsubscribe
   }, [api, updateTab, setActiveTab])
+
+  // Listen for model plan switches (Dynamic Plan Switching)
+  useEffect(() => {
+    if (!api.onModelPlanSwitched) return
+
+    const unsubscribe = api.onModelPlanSwitched(({ old_plan, new_plan, health_score }) => {
+      console.log(`[DynamicPlanSwitching] Plan switched from ${old_plan} to ${new_plan} (Health: ${health_score.toFixed(2)})`)
+      // You could trigger a toast here if a notification system was available
+      // For now, logging to activity feed via API if supported, or just console
+      if (api.activityLogInfo) {
+        api.activityLogInfo(
+          'System', 
+          `Dynamic Plan Switching: Switched to ${new_plan} plan (Health Score: ${health_score.toFixed(2)})`,
+          JSON.stringify({ old_plan, new_plan, health_score })
+        )
+      }
+    })
+    return unsubscribe
+  }, [api])
 }

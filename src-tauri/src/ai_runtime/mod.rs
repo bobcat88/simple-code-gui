@@ -2,6 +2,8 @@ pub mod types;
 pub mod learning;
 pub mod providers;
 
+use tauri::Emitter;
+
 use crate::database::{DatabaseManager, insert_token_transaction, TokenTransactionInput};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -35,6 +37,7 @@ pub struct RuntimeManager {
     health: Arc<Mutex<HashMap<String, HealthInfo>>>,
     rtk_context: Arc<Mutex<Option<Arc<crate::rtk_context::RtkContextManager>>>>,
     learning: Arc<Mutex<Option<Arc<learning::LearningManager>>>>,
+    app_handle: Arc<Mutex<Option<tauri::AppHandle>>>,
 }
 
 impl RuntimeManager {
@@ -49,7 +52,23 @@ impl RuntimeManager {
             health: Arc::new(Mutex::new(HashMap::new())),
             rtk_context: Arc::new(Mutex::new(None)),
             learning: Arc::new(Mutex::new(None)),
+            app_handle: Arc::new(Mutex::new(None)),
         }
+    }
+
+    pub async fn set_app_handle(&self, handle: tauri::AppHandle) {
+        let mut app_handle = self.app_handle.lock().await;
+        *app_handle = Some(handle);
+    }
+
+    pub fn start_background_tasks(self: Arc<Self>) {
+        let manager = Arc::clone(&self);
+        tauri::async_runtime::spawn(async move {
+            loop {
+                manager.evaluate_plan_switching().await;
+                tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+            }
+        });
     }
 
     pub async fn set_orchestration_state(&self, manager: Arc<crate::orchestration::OrchestrationState>) {
@@ -763,9 +782,17 @@ impl RuntimeManager {
                 if let Ok(_) = manager.save(settings).await {
                     println!("Dynamic Plan Switch: {} -> {} (Health: {})", current_plan, target_plan, health_score);
                     
-                    // We need AppHandle to emit. We don't have it here easily, but we can emit later or
-                    // use a global event bus if we had one. 
-                    // For now, we'll rely on the next frontend sync.
+                    // Emit event if app handle is set
+                    let app_handle = self.app_handle.lock().await;
+                    if let Some(app) = &*app_handle {
+                        let _ = app.emit("model-plan-switched", serde_json::json!({
+                            "old_plan": current_plan,
+                            "new_plan": target_plan,
+                            "health_score": health_score
+                        }));
+                        
+                        let _ = app.emit("settings-changed", manager.get().await);
+                    }
                 }
             }
         }

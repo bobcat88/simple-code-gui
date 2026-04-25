@@ -1,0 +1,329 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  Milestone, 
+  Plus, 
+  Trash2, 
+  Play, 
+  CheckCircle2, 
+  Circle, 
+  Clock, 
+  ChevronDown, 
+  ChevronRight,
+  GripVertical,
+  X,
+  PlusCircle,
+  AlertCircle
+} from 'lucide-react';
+import { cn } from '../lib/utils';
+import { Api, GsdPlan, GsdPhase, GsdStep, GsdExecutionEvent } from '../api/types';
+
+interface GSDPlannerProps {
+  projectPath: string | null;
+  api: Api;
+}
+
+export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
+  const [plan, setPlan] = useState<GsdPlan | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [executing, setExecuting] = useState(false);
+  const [expandedPhases, setExpandedPhases] = useState<Record<string, boolean>>({});
+
+  // Initialize/Load plan
+  const loadPlan = useCallback(async () => {
+    if (!projectPath) return;
+    setLoading(true);
+    try {
+      // For now, we create a new plan or it would be loaded from git-backed persistence
+      // The backend should eventually handle "getPlan" but for now we create one to start
+      const newPlan = await api.gsdCreatePlan(projectPath);
+      setPlan(newPlan);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to load GSD plan:', err);
+      setError('Failed to initialize planner.');
+    } finally {
+      setLoading(false);
+    }
+  }, [api, projectPath]);
+
+  useEffect(() => {
+    loadPlan();
+  }, [loadPlan]);
+
+  // Listen for execution events
+  useEffect(() => {
+    if (!api.onGsdExecutionEvent) return;
+
+    const unsubscribe = api.onGsdExecutionEvent((event: GsdExecutionEvent) => {
+      if (event.type === 'PlanStarted') {
+        setExecuting(true);
+      } else if (event.type === 'PlanCompleted' || event.type === 'PlanFailed') {
+        setExecuting(false);
+      }
+      
+      // Update plan state based on events if necessary
+      // For now, we rely on phase/step update events which are separate
+    });
+
+    const unsubscribePhase = api.onGsdPhaseUpdated?.((updatedPhase: GsdPhase) => {
+      setPlan(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          phases: prev.phases.map(p => p.id === updatedPhase.id ? updatedPhase : p)
+        };
+      });
+    });
+
+    const unsubscribeStep = api.onGsdStepUpdated?.((updatedStep: GsdStep) => {
+      setPlan(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          phases: prev.phases.map(p => ({
+            ...p,
+            steps: p.steps.map(s => s.id === updatedStep.id ? updatedStep : s)
+          }))
+        };
+      });
+    });
+
+    return () => {
+      unsubscribe?.();
+      unsubscribePhase?.();
+      unsubscribeStep?.();
+    };
+  }, [api]);
+
+  const handleAddPhase = async () => {
+    if (!plan || !projectPath) return;
+    const name = prompt('Phase Name:');
+    if (!name) return;
+
+    try {
+      const updatedPlan = await api.gsdAddPhase(projectPath, name);
+      setPlan(updatedPlan);
+      // Auto-expand new phase
+      const newPhase = updatedPlan.phases[updatedPlan.phases.length - 1];
+      if (newPhase) {
+        setExpandedPhases(prev => ({ ...prev, [newPhase.id]: true }));
+      }
+    } catch (err) {
+      setError('Failed to add phase.');
+    }
+  };
+
+  const handleAddStep = async (phaseId: string) => {
+    if (!plan || !projectPath) return;
+    const command = prompt('Step Command:');
+    if (!command) return;
+
+    try {
+      const updatedPlan = await api.gsdAddStep(projectPath, phaseId, command);
+      setPlan(updatedPlan);
+    } catch (err) {
+      setError('Failed to add step.');
+    }
+  };
+
+  const handleExecute = async () => {
+    if (!plan || !projectPath || executing) return;
+    try {
+      setExecuting(true);
+      await api.gsdExecutePlan(projectPath);
+    } catch (err) {
+      setError('Execution failed to start.');
+      setExecuting(false);
+    }
+  };
+
+  const togglePhase = (phaseId: string) => {
+    setExpandedPhases(prev => ({ ...prev, [phaseId]: !prev[phaseId] }));
+  };
+
+  if (!projectPath) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+        <AlertCircle size={48} className="text-muted-foreground/20 mb-4" />
+        <h3 className="text-lg font-semibold text-muted-foreground">No Project Selected</h3>
+        <p className="text-sm text-muted-foreground/60 max-w-xs mt-2">
+          Select a project in the sidebar to use the GSD Planner.
+        </p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full space-y-4">
+        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <span className="text-sm font-medium text-muted-foreground">Initializing Deep Engine...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="p-6 border-b border-white/5 bg-white/5 backdrop-blur-xl flex items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-primary shadow-lg shadow-primary/10">
+            <Milestone size={24} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold tracking-tight">Transwarp Planner</h2>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">Phase 17 Deep Execution Engine</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExecute}
+            disabled={executing || !plan || plan.phases.length === 0}
+            className={cn(
+              "px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg",
+              executing 
+                ? "bg-orange-500/20 text-orange-400 border border-orange-500/30 cursor-not-allowed"
+                : "bg-primary text-primary-foreground shadow-primary/20 hover:scale-105 active:scale-95"
+            )}
+          >
+            {executing ? (
+              <>
+                <div className="w-4 h-4 border-2 border-orange-400/30 border-t-orange-400 rounded-full animate-spin" />
+                Executing...
+              </>
+            ) : (
+              <>
+                <Play size={16} fill="currentColor" />
+                Execute Plan
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+        {error && (
+          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-3">
+            <AlertCircle size={18} />
+            {error}
+            <button onClick={() => setError(null)} className="ml-auto hover:text-red-300">
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
+        {/* Phases List */}
+        <div className="relative">
+          {/* Vertical line connecting phases */}
+          <div className="absolute left-[23px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-primary/50 via-primary/20 to-transparent" />
+
+          <div className="space-y-6">
+            {plan?.phases.map((phase, idx) => (
+              <div key={phase.id} className="relative pl-12">
+                {/* Phase Marker */}
+                <div 
+                  className={cn(
+                    "absolute left-0 top-0 w-12 h-12 rounded-2xl flex items-center justify-center border-2 transition-all duration-300 z-10",
+                    phase.status === 'Completed' ? "bg-green-500/20 border-green-500 text-green-500 shadow-lg shadow-green-500/20" :
+                    phase.status === 'Executing' ? "bg-orange-500/20 border-orange-500 text-orange-500 shadow-lg shadow-orange-500/20 animate-pulse" :
+                    "bg-white/5 border-white/10 text-muted-foreground hover:border-primary/50"
+                  )}
+                  onClick={() => togglePhase(phase.id)}
+                >
+                  <span className="text-lg font-bold">{idx + 1}</span>
+                </div>
+
+                {/* Phase Card */}
+                <div className="group rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-all overflow-hidden shadow-sm hover:shadow-md">
+                  <div className="p-5 flex items-center justify-between cursor-pointer" onClick={() => togglePhase(phase.id)}>
+                    <div className="flex items-center gap-4">
+                      <h3 className="text-lg font-bold text-white/90">{phase.name}</h3>
+                      <div className={cn(
+                        "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                        phase.status === 'Completed' ? "bg-green-500/20 text-green-400" :
+                        phase.status === 'Executing' ? "bg-orange-500/20 text-orange-400" :
+                        "bg-white/5 text-muted-foreground"
+                      )}>
+                        {phase.status}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleAddStep(phase.id); }}
+                        className="p-2 rounded-lg hover:bg-white/5 text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        <PlusCircle size={18} />
+                      </button>
+                      {expandedPhases[phase.id] ? <ChevronDown size={20} className="text-muted-foreground" /> : <ChevronRight size={20} className="text-muted-foreground" />}
+                    </div>
+                  </div>
+
+                  {expandedPhases[phase.id] && (
+                    <div className="px-5 pb-5 animate-in slide-in-from-top-2 duration-200">
+                      <div className="space-y-3 pt-2">
+                        {phase.steps.length === 0 ? (
+                          <div className="py-4 text-center border-2 border-dashed border-white/5 rounded-2xl">
+                            <p className="text-sm text-muted-foreground italic">No steps defined for this phase.</p>
+                          </div>
+                        ) : (
+                          phase.steps.map((step) => (
+                            <div 
+                              key={step.id} 
+                              className="flex items-center gap-4 p-3 rounded-2xl bg-white/[0.02] border border-white/5 group/step hover:bg-white/[0.05] transition-all"
+                            >
+                              <div className="text-primary/40 group-hover/step:text-primary transition-colors">
+                                {step.status === 'Completed' ? <CheckCircle2 size={16} className="text-green-500" /> :
+                                 step.status === 'Executing' ? <Clock size={16} className="text-orange-400 animate-spin-slow" /> :
+                                 <Circle size={16} />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <code className="text-xs text-white/70 block truncate bg-black/20 p-1.5 rounded-lg border border-white/5 font-mono">
+                                  {step.command}
+                                </code>
+                                {step.notes && <p className="text-[10px] text-muted-foreground mt-1">{step.notes}</p>}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Add Phase Button */}
+            <div className="pl-12">
+              <button
+                onClick={handleAddPhase}
+                className="w-full p-4 rounded-2xl border-2 border-dashed border-white/5 hover:border-primary/30 hover:bg-primary/5 text-muted-foreground hover:text-primary transition-all flex items-center justify-center gap-2 group"
+              >
+                <Plus size={20} className="group-hover:scale-110 transition-transform" />
+                <span className="font-bold text-sm uppercase tracking-widest">Add Next Phase</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Info */}
+      <div className="p-4 border-t border-white/5 bg-black/20 backdrop-blur-md flex items-center justify-between text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            Deep Engine Online
+          </span>
+          <span className="flex items-center gap-1.5">
+            Git Persistence: Enabled
+          </span>
+        </div>
+        <div>
+          GSD v2.0-ALFA
+        </div>
+      </div>
+    </div>
+  );
+}

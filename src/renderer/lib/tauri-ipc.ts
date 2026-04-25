@@ -289,4 +289,23 @@ export const tauriIpc = {
     invoke<any>('ai_trigger_evolution'),
   aiSwitchModelPlan: (planId: string) =>
     invoke<void>('ai_switch_model_plan', { plan_id: planId }),
+
+  onModelPlanSwitched: (callback: (event: { old_plan: string; new_plan: string; health_score: number }) => void): Promise<UnlistenFn> =>
+    listen<{ old_plan: string; new_plan: string; health_score: number }>('model-plan-switched', (event) => callback(event.payload)),
+
+  // GSD Engine
+  gsdCreatePlan: (taskId: string, title: string) =>
+    invoke<any>('gsd_create_plan', { taskId, title }),
+  gsdAddPhase: (planId: string, title: string) =>
+    invoke<any>('gsd_add_phase', { planId, title }),
+  gsdAddStep: (planId: string, phaseId: string, title: string, description: string) =>
+    invoke<any>('gsd_add_step', { planId, phaseId, title, description }),
+  gsdExecutePlan: (planId: string) =>
+    invoke<void>('gsd_execute_plan', { planId }),
+  onGsdExecutionEvent: (callback: (event: any) => void): Promise<UnlistenFn> =>
+    listen<any>('gsd-execution-event', (event) => callback(event.payload)),
+  onGsdPhaseUpdated: (callback: (phase: any) => void): Promise<UnlistenFn> =>
+    listen<any>('gsd-phase-updated', (event) => callback(event.payload)),
+  onGsdStepUpdated: (callback: (step: any) => void): Promise<UnlistenFn> =>
+    listen<any>('gsd-step-updated', (event) => callback(event.payload)),
 };

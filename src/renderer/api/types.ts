@@ -561,6 +561,22 @@ export interface Api {
   // Project Initialization
   // ==========================================================================
   onProjectInitializationProgress?: (callback: (progress: ProposalProgress) => void) => Unsubscribe
+
+  /**
+   * Subscribe to model plan switched events (Dynamic Plan Switching)
+   */
+  onModelPlanSwitched?: (callback: (event: { old_plan: string; new_plan: string; health_score: number }) => void) => Unsubscribe
+
+  // ==========================================================================
+  // GSD Engine
+  // ==========================================================================
+  gsdCreatePlan?: (taskId: string, title: string) => Promise<GsdPlan>
+  gsdAddPhase?: (planId: string, title: string) => Promise<GsdPhase>
+  gsdAddStep?: (planId: string, phaseId: string, title: string, description: string) => Promise<GsdStep>
+  gsdExecutePlan?: (planId: string) => Promise<void>
+  onGsdExecutionEvent?: (callback: (event: GsdExecutionEvent) => void) => Unsubscribe
+  onGsdPhaseUpdated?: (callback: (phase: GsdPhase) => void) => Unsubscribe
+  onGsdStepUpdated?: (callback: (step: GsdStep) => void) => Unsubscribe
 }
 
 // ============================================================================
@@ -809,6 +825,45 @@ export interface ProjectIntelligence {
     processes: number
     stale: boolean
   }
+}
+
+// ============================================================================
+// GSD Engine Types
+// ============================================================================
+
+export type GsdStepStatus = 'Pending' | 'InProgress' | 'Completed' | { Failed: string } | 'Skipped'
+
+export interface GsdStep {
+  id: string
+  title: string
+  description: string
+  status: GsdStepStatus
+  result?: string
+  attempts: number
+  maxRetries: number
+}
+
+export interface GsdPhase {
+  id: string
+  title: string
+  steps: GsdStep[]
+  status: GsdStepStatus
+}
+
+export interface GsdPlan {
+  id: string
+  taskId: string
+  phases: GsdPhase[]
+  metadata: Record<string, string>
+}
+
+export interface GsdExecutionEvent {
+  planId: string
+  phaseId?: string
+  stepId?: string
+  eventType: string
+  message: string
+  timestamp: number
 }
 
 export interface DiagnosticResult {

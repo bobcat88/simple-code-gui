@@ -452,8 +452,10 @@ pub fn run() {
 
                 // Initialize AI Runtime
                 let ai_runtime = Arc::new(ai_runtime::RuntimeManager::new());
+                ai_runtime.set_app_handle(app_handle.clone()).await;
                 ai_runtime.set_settings_manager(Arc::clone(&settings_manager)).await;
                 ai_runtime.set_database_manager(Arc::clone(&db_arc)).await;
+                ai_runtime.clone().start_background_tasks();
 
                 // Initialize Activity Manager
                 let activity_manager =

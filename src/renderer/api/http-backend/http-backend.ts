@@ -278,4 +278,8 @@ export class HttpBackend implements Api {
   async mcpGetServers(): Promise<any[]> {
     return []
   }
+
+  onModelPlanSwitched(_callback: (event: { old_plan: string; new_plan: string; health_score: number }) => void): Unsubscribe {
+    return () => {}
+  }
 }

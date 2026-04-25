@@ -11,6 +11,7 @@ pub enum StepStatus {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GsdStep {
     pub id: String,
     pub title: String,
@@ -22,6 +23,7 @@ pub struct GsdStep {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GsdPhase {
     pub id: String,
     pub title: String,
@@ -30,6 +32,7 @@ pub struct GsdPhase {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GsdPlan {
     pub id: String,
     pub task_id: String,
@@ -38,6 +41,7 @@ pub struct GsdPlan {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ExecutionEvent {
     pub plan_id: String,
     pub phase_id: Option<String>,

@@ -2,7 +2,7 @@
 
 This document outlines the strategic roadmap for the **simple-code-gui** (Transwarp Nexus) evolution.
 
-## Phase 14: AI Runtime Orchestration (Current)
+## Phase 14: AI Runtime Orchestration (Complete)
 Implementing the foundational multi-provider execution layer.
 
 - [x] **Provider Abstraction**: Unified interface for Claude, Gemini, OpenAI, and Ollama.
@@ -10,15 +10,15 @@ Implementing the foundational multi-provider execution layer.
 - [x] **Routing Infrastructure**: Intelligent dispatching based on quality, cost, and latency.
 - [x] **RTK Integration**: Context hashing and token savings tracking.
 - [x] **Autonomous Learning**: Background metric evolution for agent performance.
-- [ ] **Dynamic Plan Switching**: Live switching between model plans based on project health.
+- [x] **Dynamic Plan Switching**: Live switching between model plans based on project health.
 
-## Phase 15: Agent Board Evolution (In Progress)
+## Phase 15: Agent Board Evolution (Complete)
 Visualizing the orchestration layer and agent performance.
 
 - [x] **Real-time Metrics**: Visualizing `burn_rate`, `quality_score`, and `evolution_status` on agent cards.
-- [ ] **Queue Management**: Active task queue visualization and manual re-prioritization.
-- [ ] **Live Trace**: Step-by-step execution trace for active agent workflows.
-- [ ] **Cost HUD**: Real-time session and task cost estimation in the header.
+- [x] **Queue Management**: Active task queue visualization and manual re-prioritization.
+- [x] **Live Trace**: Step-by-step execution trace for active agent workflows.
+- [x] **Cost HUD**: Real-time session and task cost estimation in the header.
 
 ## Phase 16: Dependency Scanning & Auto-Upgrade
 Ensuring the "Assimilation" principle by keeping integrations up to date.
@@ -26,7 +26,7 @@ Ensuring the "Assimilation" principle by keeping integrations up to date.
 - [x] **Integration Scanner**: Detecting local versions of RTK, GSD, GitNexus, and Kspec.
 - [x] **Upgrade Impact Analysis**: Predicting the "blast radius" of updating a dependency.
 - [x] **One-Click Update**: Automated download and verification of dependency binaries.
-- [ ] **Rollback Infrastructure**: Snapshot-based rollback for failed upgrades.
+- [x] **Rollback Infrastructure**: Version-based rollback for dependency upgrades.
 
 ## Phase 17: Deep Execution Engine (GSD v2)
 Refining the GSD integration from a CLI wrapper to a native execution core.
