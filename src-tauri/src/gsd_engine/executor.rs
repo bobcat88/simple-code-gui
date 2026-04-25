@@ -330,7 +330,7 @@ impl Executor {
                             format!("Agent invoked {}({})", tc.name, tc.arguments),
                         );
 
-                        let tool_result = match execute_tool(&tc.name, &tc.arguments, &self.project_path).await {
+                        let tool_result = match execute_tool(&tc.name, &tc.arguments, &self.project_path, &self.app).await {
                             Ok(res) => res,
                             Err(e) => format!("Error: {}", e),
                         };

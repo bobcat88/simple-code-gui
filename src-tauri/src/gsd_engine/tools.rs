@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::path::Path;
 use std::process::Command;
+use tauri::{AppHandle, Manager};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(dead_code)]
@@ -11,7 +12,7 @@ pub struct Tool {
     pub parameters: Value,
 }
 
-pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<String>) -> Result<String, String> {
+pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<String>, app: &AppHandle) -> Result<String, String> {
     let args: Value = serde_json::from_str(arguments).map_err(|e| e.to_string())?;
 
     match name {
@@ -81,8 +82,57 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
             cmd.arg("-r").arg("-n").arg(query).arg(path);
             run_command(&mut cmd, project_path)
         }
+        "inject_trace" => {
+            let path = args["path"].as_str().ok_or("Missing path argument")?;
+            let line = args["line"].as_u64().ok_or("Missing line argument")? as usize;
+            let content = args["content"].as_str().ok_or("Missing content argument")?;
+            let full_path = resolve_path(path, project_path)?;
+            
+            let file_content = std::fs::read_to_string(&full_path).map_err(|e| e.to_string())?;
+            let mut lines: Vec<String> = file_content.lines().map(|s| s.to_string()).collect();
+            
+            if line > lines.len() {
+                lines.push(content.to_string());
+            } else {
+                lines.insert(line - 1, content.to_string());
+            }
+            
+            std::fs::write(full_path, lines.join("\n")).map_err(|e| e.to_string())?;
+            Ok("Trace point injected successfully".to_string())
+        }
+        "read_logs" => {
+            let source = args["source"].as_str().unwrap_or("app");
+            let limit = args["limit"].as_u64().unwrap_or(50) as usize;
+            
+            let app_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+            
+            match source {
+                "app" => {
+                    let log_path = app_dir.join("app.log");
+                    if !log_path.exists() {
+                        return Ok("App log file not found".to_string());
+                    }
+                    read_last_lines(&log_path, limit)
+                }
+                "crash" => {
+                    let crash_path = app_dir.join("crash.log");
+                    if !crash_path.exists() {
+                        return Ok("Crash log file not found".to_string());
+                    }
+                    read_last_lines(&crash_path, limit)
+                }
+                _ => Err(format!("Unknown log source: {}", source)),
+            }
+        }
         _ => Err(format!("Unknown tool: {}", name)),
     }
+}
+
+fn read_last_lines(path: &std::path::Path, limit: usize) -> Result<String, String> {
+    let content = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
+    let lines: Vec<&str> = content.lines().collect();
+    let start = if lines.len() > limit { lines.len() - limit } else { 0 };
+    Ok(lines[start..].join("\n"))
 }
 
 fn run_command(cmd: &mut Command, project_path: &Option<String>) -> Result<String, String> {
@@ -97,7 +147,6 @@ fn run_command(cmd: &mut Command, project_path: &Option<String>) -> Result<Strin
     if output.status.success() {
         Ok(stdout)
     } else {
-        // grep returns non-zero if no matches found
         if cmd.get_program() == "grep" && output.status.code() == Some(1) {
             return Ok("No matches found".to_string());
         }
@@ -205,6 +254,30 @@ pub fn get_gsd_tools() -> Vec<crate::ai_runtime::types::ToolDefinition> {
                     "path": { "type": "string", "description": "The path to search in (defaults to .)" }
                 },
                 "required": ["query"]
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "inject_trace".to_string(),
+            description: "Inject a temporary trace/log point at a specific line in a file".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "path": { "type": "string", "description": "The path to the file" },
+                    "line": { "type": "integer", "description": "The 1-indexed line number to insert before" },
+                    "content": { "type": "string", "description": "The log/trace statement to inject" }
+                },
+                "required": ["path", "line", "content"]
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "read_logs".to_string(),
+            description: "Read the latest lines from application or crash logs".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "source": { "type": "string", "enum": ["app", "crash"], "description": "The log source to read (defaults to app)" },
+                    "limit": { "type": "integer", "description": "Max lines to read (defaults to 50)" }
+                }
             }),
         },
     ]

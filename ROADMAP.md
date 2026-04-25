@@ -73,8 +73,8 @@ Replacing mock execution with real AI-driven tool calling and provider orchestra
 ## Phase 23: Autonomous Debugging & Forensics
 Enabling agents to perform root-cause analysis and systematic debugging.
 
-- [ ] **Systematic Debugging Toolset**: Trace-point injection and log analysis tools for agents.
-- [ ] **Git History Awareness**: Reading and comparing git diffs to identify regressions.
+- [x] **Systematic Debugging Toolset**: Trace-point injection and log analysis tools for agents.
+- [x] **Git History Awareness**: Reading and comparing git diffs to identify regressions.
 - [ ] **Forensic Triage**: Automated hypothesis testing for bug reports.
 - [ ] **Error IPC Bridge**: Streaming real-time backend errors directly to the agent runtime.
 
