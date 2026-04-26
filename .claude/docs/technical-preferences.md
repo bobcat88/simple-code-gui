@@ -39,7 +39,12 @@
 | capabilities/*.json | tauri-specialist |
 
 ## Performance Budgets
-- [TO BE CONFIGURED]
+- **Target shell interaction latency**: keep keyboard-driven terminal and sidebar actions under 100ms on a warm desktop session.
+- **Project scan latency**: root-level capability scans should complete under 250ms for ordinary repositories; deeper health checks should remain explicit or backgrounded.
+- **Frontend production bundle budget**: the Tauri desktop app may ship one primary renderer chunk up to 1.4 MB minified / 400 kB gzip while the app remains mostly monolithic.
+- **CSS bundle budget**: renderer CSS should stay under 330 kB minified / 55 kB gzip.
+- **Follow-up trigger**: if the primary renderer chunk exceeds 1.4 MB minified or 400 kB gzip, split high-cost panels with dynamic imports before adding more feature surface.
+- **Current baseline (2026-04-26)**: `bun run build:frontend` produced `index-BM-aCb0e.js` at 1,314.07 kB minified / 356.32 kB gzip and `index-B54ABH4C.css` at 307.12 kB minified / 44.07 kB gzip.
 
 ## Testing
 - **Frontend**: Vitest (React Testing Library)

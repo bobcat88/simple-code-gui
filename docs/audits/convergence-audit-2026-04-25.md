@@ -13,6 +13,24 @@ The app should enter a convergence phase before more feature work. Fix gates in
 order: task/spec integrity, TypeScript contracts, test harness/runtime mocks,
 Rust test drift, then Phase 26 product completion.
 
+## 2026-04-26 Convergence Addendum
+
+The convergence run closed the original high-risk gate failures:
+
+- KSpec references are valid; remaining alignment/completeness warnings are
+  accepted in `docs/audits/kspec-validation-accepted-warnings-2026-04-26.md`.
+- `bunx tsc --noEmit` passes.
+- `bun run test` passes.
+- `cargo test --manifest-path src-tauri/Cargo.toml` passes.
+- Phase 26 now has a working sidebar seed/draft and seed-to-KSpec/Beads bridge;
+  larger canvas/sketch/review scope is tracked separately as `simple-code-gui-51q`.
+- Frontend bundle size is explicitly budgeted in
+  `.claude/docs/technical-preferences.md`, and Vite warns at the 1.4 MB desktop
+  renderer budget instead of the generic 500 kB web default.
+
+The remaining ready work after this addendum should be tracked by Beads rather
+than inferred from this historical audit snapshot.
+
 ## Tracker And Planning State
 
 ### Beads
@@ -247,4 +265,3 @@ Exit criteria:
 - Planning docs match the code and trackers.
 - Frontend build warnings are either resolved or explicitly accepted with a
   budget note.
-

@@ -20,7 +20,7 @@ Visualizing the orchestration layer and agent performance.
 - [x] **Live Trace**: Step-by-step execution trace for active agent workflows.
 - [x] **Cost HUD**: Real-time session and task cost estimation in the header.
 
-## Phase 16: Dependency Scanning & Auto-Upgrade
+## Phase 16: Dependency Scanning & Auto-Upgrade (Complete)
 Ensuring the "Assimilation" principle by keeping integrations up to date.
 
 - [x] **Integration Scanner**: Detecting local versions of RTK, GSD, GitNexus, and Kspec.
@@ -28,7 +28,7 @@ Ensuring the "Assimilation" principle by keeping integrations up to date.
 - [x] **One-Click Update**: Automated download and verification of dependency binaries.
 - [x] **Rollback Infrastructure**: Version-based rollback for dependency upgrades.
 
-## Phase 17: Deep Execution Engine (GSD v2)
+## Phase 17: Deep Execution Engine (GSD v2) (Complete)
 Refining the GSD integration from a CLI wrapper to a native execution core.
 
 - [x] **Native Phase Planning**: UI-driven phase decomposition with git-backed persistence.
@@ -70,7 +70,7 @@ Replacing mock execution with real AI-driven tool calling and provider orchestra
 - [x] **Hardened Execution Loop**: Multi-turn agentic reasoning in GsdExecutor.
 - [x] **Context-Aware Path Resolution**: Automatic project-root mapping for tools.
 
-## Phase 23: Autonomous Debugging & Forensics
+## Phase 23: Autonomous Debugging & Forensics (Complete)
 Enabling agents to perform root-cause analysis and systematic debugging.
 
 - [x] **Systematic Debugging Toolset**: Trace-point injection and log analysis tools for agents.
@@ -94,7 +94,7 @@ Visualizing and interacting with agent swarms and their collective intelligence.
 - [x] **Neural Insight Panel**: Actionable finding cards derived from cross-agent findings.
 - [x] **Agentic Tool Catalog**: Searchable registry of all available tools and their usage examples.
 
-## Phase 26: Brainstorm Companion & Collaborative Ideation
+## Phase 26: Brainstorm Companion & Collaborative Ideation (Convergence Complete)
 Turning raw ideas into structured specs and visual mockups within the GUI.
 
 - [~] **Ideation Canvas**: Descoped to a follow-up visual workspace task; Phase 26 now uses a sidebar-based seed and draft workspace.
