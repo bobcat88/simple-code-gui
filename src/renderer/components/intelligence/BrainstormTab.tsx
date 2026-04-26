@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react'
 import { 
+  ArrowLeft,
+  Brain,
+  Check,
   Lightbulb, 
   Plus, 
   FileEdit, 
   Send, 
-  Search, 
   ChevronRight, 
   History,
   CheckCircle2,
   AlertCircle,
+  FileCode,
+  RefreshCw,
+  Save,
   Sparkles,
+  X,
   Zap
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
@@ -28,6 +34,8 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
   const [drafts, setDrafts] = useState<KSpecDraft[]>([])
   const [loading, setLoading] = useState(false)
   const [isPlanting, setIsPlanting] = useState(false)
+  const [promotionSeedId, setPromotionSeedId] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   
   // Spec Editor State
   const [selectedDraft, setSelectedDraft] = useState<KSpecDraft | null>(null)
@@ -94,9 +102,28 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
   const getDraftUpdatedAt = (draft: KSpecDraft) => draft.updatedAt || draft.lastModified || draft.last_modified || Date.now()
   const getSeedCreatedAt = (seed: GsdSeed) => seed.createdAt || seed.timestamp * 1000 || Date.now()
   const getSeedSurface = (seed: GsdSeed) => seed.whenToSurface || seed.when_to_surface || 'Next Milestone'
+  const getSeedId = (seed: GsdSeed) => seed.id || seed.slug || seed.title
+
+  const validateDraftContent = (content: string): string[] => {
+    const trimmed = content.trim()
+    const errors: string[] = []
+    if (!trimmed) errors.push('Draft content is empty.')
+    if (!/^title:\s+\S+/m.test(trimmed)) errors.push('Missing top-level title.')
+    if (!/^type:\s+\S+/m.test(trimmed)) errors.push('Missing top-level type.')
+    if (!/^status:\s*$/m.test(trimmed) && !/^status:\s+\S+/m.test(trimmed)) errors.push('Missing status block.')
+    if (!/acceptance_criteria:/m.test(trimmed)) errors.push('Missing acceptance_criteria section.')
+    return errors
+  }
+
+  const draftValidation = validateDraftContent(draftContent)
 
   const handleSaveDraft = async () => {
     if (!selectedDraft) return
+    if (draftValidation.length > 0) {
+      setErrorMessage(draftValidation[0])
+      return
+    }
+    setErrorMessage(null)
     setIsSavingDraft(true)
     try {
       await api.kspecWriteDraft(projectPath, getDraftModuleId(selectedDraft), draftContent)
@@ -113,7 +140,7 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
     if (!newDraftModuleId.trim()) return
     setIsSavingDraft(true)
     try {
-      const initialContent = `module: ${newDraftModuleId}\nrequirements:\n  - title: Initial Requirement\n    description: Drafting in progress...`
+      const initialContent = `slugs:\n  - ${newDraftModuleId}\ntitle: ${newDraftModuleId.replace(/[-_]/g, ' ')}\ntype: module\ndescription: Drafting in progress.\nstatus:\n  maturity: draft\n  implementation: not_started\nacceptance_criteria:\n  - id: ac-1\n    given: the feature is implemented\n    when: the user exercises the workflow\n    then: the expected outcome is observable\n`
       await api.kspecWriteDraft(projectPath, newDraftModuleId, initialContent)
       setNewDraftModuleId('')
       setShowDraftForm(false)
@@ -122,6 +149,43 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
       console.error('Failed to create draft:', err)
     } finally {
       setIsSavingDraft(false)
+    }
+  }
+
+  const handleSeedToDraft = async (seed: GsdSeed) => {
+    const moduleId = (seed.slug || seed.title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'brainstorm-seed'
+    setPromotionSeedId(getSeedId(seed))
+    setErrorMessage(null)
+    try {
+      const content = `slugs:\n  - ${moduleId}\ntitle: ${seed.title}\ntype: module\ndescription: ${seed.why || 'Draft created from a brainstorm seed.'}\nstatus:\n  maturity: draft\n  implementation: not_started\nacceptance_criteria:\n  - id: ac-1\n    given: ${seed.title}\n    when: this seed is promoted into implementation work\n    then: the desired outcome is specified and testable\n`
+      await api.kspecWriteDraft(projectPath, moduleId, content)
+      setActiveView('drafts')
+      await refresh()
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to promote seed to KSpec draft.')
+    } finally {
+      setPromotionSeedId(null)
+    }
+  }
+
+  const handleSeedToTask = async (seed: GsdSeed) => {
+    setPromotionSeedId(getSeedId(seed))
+    setErrorMessage(null)
+    try {
+      const description = [
+        seed.why ? `Seed rationale: ${seed.why}` : 'Created from a Brainstorm Companion seed.',
+        `When to surface: ${getSeedSurface(seed)}`,
+        `Source seed: ${seed.slug || seed.id || seed.title}`,
+      ].join('\n\n')
+      const result = await api.beadsCreate(projectPath, seed.title, description, 2, 'task', 'brainstorm,seed')
+      if (result?.success === false) {
+        throw new Error(result.error || 'Beads task creation failed.')
+      }
+      await refresh()
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to promote seed to Beads task.')
+    } finally {
+      setPromotionSeedId(null)
     }
   }
 
@@ -157,7 +221,15 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
         </div>
         
         <div className="flex-1 min-h-0 flex flex-col gap-2">
-          <label className="text-[10px] font-bold text-white/20 uppercase tracking-widest">YAML Specification</label>
+          <div className="flex items-center justify-between">
+            <label className="text-[10px] font-bold text-white/20 uppercase tracking-widest">YAML Specification</label>
+            <span className={cn(
+              "text-[9px] font-bold uppercase tracking-wider",
+              draftValidation.length === 0 ? "text-emerald-400" : "text-amber-400"
+            )}>
+              {draftValidation.length === 0 ? 'Valid draft shape' : `${draftValidation.length} validation issue${draftValidation.length === 1 ? '' : 's'}`}
+            </span>
+          </div>
           <div className="flex-1 brainstorm-card p-4">
             <textarea
               autoFocus
@@ -169,12 +241,22 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
         </div>
         
         <div className="p-3 bg-purple-500/5 rounded-xl border border-purple-500/10 flex items-start gap-2">
-          <AlertCircle size={14} className="text-purple-400 shrink-0 mt-0.5" />
+          {draftValidation.length === 0 ? (
+            <CheckCircle2 size={14} className="text-emerald-400 shrink-0 mt-0.5" />
+          ) : (
+            <AlertCircle size={14} className="text-amber-400 shrink-0 mt-0.5" />
+          )}
           <p className="text-[10px] text-white/40 leading-normal">
-            Saving this draft updates the local <code className="text-purple-300/60">.kspec/modules/drafts/</code> file. 
-            Use <code className="text-purple-300/60">kspec agent dispatch</code> to finalize.
+            {draftValidation.length === 0
+              ? 'Saving this draft updates the local .kspec/modules/drafts/ file.'
+              : draftValidation.join(' ')}
           </p>
         </div>
+        {errorMessage && (
+          <div className="text-[10px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg p-2">
+            {errorMessage}
+          </div>
+        )}
       </div>
     )
   }
@@ -210,6 +292,11 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1">
+        {errorMessage && (
+          <div className="text-[10px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg p-2">
+            {errorMessage}
+          </div>
+        )}
         {activeView === 'inbox' ? (
           <div className="space-y-4">
             {/* Quick Capture */}
@@ -295,8 +382,19 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
                       <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 text-[8px] font-bold uppercase tracking-tight border border-indigo-500/10">
                         {getSeedSurface(seed)}
                       </span>
-                      <button className="ml-auto text-[9px] text-white/30 hover:text-white/60 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                        Promote to Task <ChevronRight size={10} />
+                      <button
+                        onClick={() => handleSeedToDraft(seed)}
+                        disabled={promotionSeedId === getSeedId(seed)}
+                        className="ml-auto text-[9px] text-white/30 hover:text-purple-300 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
+                      >
+                        Draft Spec <FileEdit size={10} />
+                      </button>
+                      <button
+                        onClick={() => handleSeedToTask(seed)}
+                        disabled={promotionSeedId === getSeedId(seed)}
+                        className="text-[9px] text-white/30 hover:text-indigo-300 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
+                      >
+                        Promote <ChevronRight size={10} />
                       </button>
                     </div>
                   </div>
@@ -418,6 +516,3 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
     </div>
   )
 }
-
-// Sub-components
-import { X, RefreshCw, FileCode, Brain, ArrowLeft, Save, Check } from 'lucide-react'

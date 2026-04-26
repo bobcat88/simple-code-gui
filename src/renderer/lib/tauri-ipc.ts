@@ -198,6 +198,8 @@ export const tauriIpc = {
     invoke<{ success: boolean; error?: string }>('kspec_dispatch_stop', { cwd }),
   beadsList: (cwd: string) =>
     invoke<any>('beads_list', { cwd }),
+  beadsCreate: (cwd: string, title: string, description?: string, priority?: number, taskType?: string, tags?: string) =>
+    invoke<any>('beads_create', { cwd, title, description, priority, task_type: taskType, tags }),
   beadsStart: (cwd: string, taskId: string) =>
     invoke<any>('beads_start', { cwd, task_id: taskId }),
   beadsComplete: (cwd: string, taskId: string) =>

@@ -17,22 +17,52 @@ pub struct BeadTask {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct GsdSeed {
+    #[serde(default)]
     pub id: String,
     pub title: String,
+    #[serde(default)]
     pub slug: String,
+    #[serde(default)]
     pub why: String,
+    #[serde(default)]
     pub when_to_surface: String,
+    #[serde(default = "default_seed_status")]
     pub status: String,
+    #[serde(default)]
     pub timestamp: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct KSpecDraft {
     pub id: String,
     pub title: String,
     pub content: String,
     pub last_modified: u64,
+}
+
+fn default_seed_status() -> String {
+    "planted".to_string()
+}
+
+fn slugify_filename(input: &str) -> String {
+    let slug = input
+        .to_lowercase()
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
+        .collect::<String>()
+        .split('-')
+        .filter(|part| !part.is_empty())
+        .collect::<Vec<_>>()
+        .join("-");
+
+    if slug.is_empty() {
+        "untitled-seed".to_string()
+    } else {
+        slug
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -848,7 +878,8 @@ pub async fn gsd_list_seeds(cwd: String) -> Result<Vec<GsdSeed>, String> {
             
             let mut title = filename.to_string();
             let mut why = String::new();
-            let mut when_to_surface = String::new();
+            let mut when_to_surface = "Next Milestone".to_string();
+            let mut status = "planted".to_string();
             
             for line in content.lines() {
                 if line.starts_with("# ") {
@@ -857,6 +888,8 @@ pub async fn gsd_list_seeds(cwd: String) -> Result<Vec<GsdSeed>, String> {
                     why = line[5..].to_string();
                 } else if line.starts_with("whenToSurface: ") {
                     when_to_surface = line[15..].to_string();
+                } else if line.starts_with("status: ") {
+                    status = line[8..].to_string();
                 }
             }
 
@@ -866,7 +899,7 @@ pub async fn gsd_list_seeds(cwd: String) -> Result<Vec<GsdSeed>, String> {
                 slug: filename.to_string(),
                 why,
                 when_to_surface,
-                status: "planted".to_string(),
+                status,
                 timestamp: entry.metadata().and_then(|m| m.modified()).map(|t| t.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs()).unwrap_or(0),
             });
         }
@@ -880,16 +913,21 @@ pub async fn gsd_plant_seed(cwd: String, seed: GsdSeed) -> Result<(), String> {
     let seeds_dir = std::path::Path::new(&cwd).join(".planning").join("seeds");
     std::fs::create_dir_all(&seeds_dir).map_err(|e| e.to_string())?;
 
-    let filename = if seed.slug.is_empty() {
-        seed.title.to_lowercase().replace(" ", "-")
+    let filename = if seed.slug.trim().is_empty() {
+        slugify_filename(&seed.title)
     } else {
-        seed.slug.clone()
+        slugify_filename(&seed.slug)
     };
     
     let path = seeds_dir.join(format!("{}.md", filename));
+    let when_to_surface = if seed.when_to_surface.trim().is_empty() {
+        "Next Milestone"
+    } else {
+        seed.when_to_surface.as_str()
+    };
     let content = format!(
         "# {}\n\nwhy: {}\nwhenToSurface: {}\nstatus: planted\n",
-        seed.title, seed.why, seed.when_to_surface
+        seed.title, seed.why, when_to_surface
     );
 
     std::fs::write(path, content).map_err(|e| e.to_string())?;

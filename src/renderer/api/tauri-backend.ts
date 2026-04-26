@@ -362,6 +362,9 @@ export class TauriBackend implements ExtendedApi {
   async beadsList(cwd: string): Promise<any> {
     return await tauriIpc.beadsList(cwd);
   }
+  async beadsCreate(cwd: string, title: string, description?: string, priority?: number, type?: string, labels?: string): Promise<any> {
+    return await tauriIpc.beadsCreate(cwd, title, description, priority, type, labels);
+  }
   async beadsStart(cwd: string, taskId: string): Promise<any> {
     return await tauriIpc.beadsStart(cwd, taskId);
   }

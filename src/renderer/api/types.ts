@@ -713,6 +713,7 @@ export interface ExtendedApi extends Api {
   apiStatus?: (projectPath: string) => Promise<{ running: boolean; port?: number }>,
   beadsCheck?: (cwd: string) => Promise<{ installed: boolean; initialized: boolean }>,
   beadsList: (cwd: string) => Promise<any>,
+  beadsCreate: (cwd: string, title: string, description?: string, priority?: number, type?: string, labels?: string) => Promise<any>,
   beadsStart: (cwd: string, task_id: string) => Promise<any>,
   beadsComplete: (cwd: string, task_id: string) => Promise<any>,
 
