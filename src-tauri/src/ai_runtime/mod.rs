@@ -825,11 +825,29 @@ mod tests {
                 id: format!("{}-response", self.name),
                 model: request.model.unwrap_or_else(|| "missing".to_string()),
                 content: self.name.clone(),
+                tool_calls: None,
                 usage: Some(Usage {
                     input_tokens: 100,
                     output_tokens: 50,
                     saved_tokens: 0,
                     cost_estimate: Some(0.012),
+                }),
+            })
+        }
+
+        async fn embed(&self, request: EmbeddingRequest) -> Result<EmbeddingResponse, String> {
+            if self.fail {
+                return Err(format!("{} failed", self.name));
+            }
+
+            Ok(EmbeddingResponse {
+                embeddings: request.input.iter().map(|_| vec![0.1, 0.2, 0.3]).collect(),
+                model: request.model.unwrap_or_else(|| "missing".to_string()),
+                usage: Some(Usage {
+                    input_tokens: request.input.len() as u32,
+                    output_tokens: 0,
+                    saved_tokens: 0,
+                    cost_estimate: Some(0.0),
                 }),
             })
         }
@@ -855,13 +873,18 @@ mod tests {
             messages: vec![Message {
                 role: "user".to_string(),
                 content: "hello".to_string(),
+                tool_calls: None,
+                tool_call_id: None,
             }],
             model: None,
             policy,
             project_path: None,
             session_id: None,
+            nexus_session_id: None,
             agent_id: None,
             retry: None,
+            tools: None,
+            tool_choice: None,
             temperature: None,
             max_tokens: None,
             stream: None,
@@ -1013,7 +1036,7 @@ mod tests {
 
         // Request Tier1 with fallback
         let routes = manager
-            .resolve_routes(&request(Some(RoutingPolicy::Tiered {
+            .resolve_routes_for_completion(&request(Some(RoutingPolicy::Tiered {
                 task: TaskType::Reasoning,
                 allow_fallback: true,
             })))

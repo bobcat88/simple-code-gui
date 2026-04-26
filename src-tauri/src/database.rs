@@ -745,11 +745,15 @@ mod tests {
             "CREATE TABLE token_transactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 session_id TEXT NOT NULL,
+                nexus_session_id TEXT,
+                agent_id TEXT,
                 project_path TEXT NOT NULL,
                 backend TEXT NOT NULL,
                 input_tokens INTEGER NOT NULL DEFAULT 0,
                 output_tokens INTEGER NOT NULL DEFAULT 0,
+                saved_tokens INTEGER NOT NULL DEFAULT 0,
                 cost_estimate REAL NOT NULL DEFAULT 0.0,
+                context_reuse_id TEXT,
                 timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
             )",
         )
@@ -768,6 +772,7 @@ mod tests {
             &pool,
             &TokenTransactionInput {
                 session_id: "pty-1".into(),
+                nexus_session_id: None,
                 agent_id: Some("agent-1".into()),
                 project_path: "/repo".into(),
                 backend: "codex".into(),
@@ -807,6 +812,7 @@ mod tests {
         for transaction in [
             TokenTransactionInput {
                 session_id: "s1".into(),
+                nexus_session_id: None,
                 agent_id: None,
                 project_path: "/repo-a".into(),
                 backend: "codex".into(),
@@ -819,6 +825,7 @@ mod tests {
             },
             TokenTransactionInput {
                 session_id: "s1".into(),
+                nexus_session_id: None,
                 agent_id: None,
                 project_path: "/repo-a".into(),
                 backend: "codex".into(),
@@ -831,6 +838,7 @@ mod tests {
             },
             TokenTransactionInput {
                 session_id: "s2".into(),
+                nexus_session_id: None,
                 agent_id: None,
                 project_path: "/repo-b".into(),
                 backend: "claude".into(),
@@ -852,6 +860,8 @@ mod tests {
                 end_date: Some("2026-04-21 23:59:59".into()),
                 project_path: Some("/repo-a".into()),
                 backend: Some("codex".into()),
+                session_id: None,
+                nexus_session_id: None,
             },
         )
         .await
