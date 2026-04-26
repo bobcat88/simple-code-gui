@@ -118,6 +118,10 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
   const getCanvasNodeType = (node: BrainstormCanvasNode) => node.nodeType || node.node_type || 'seed'
   const getCanvasNodeSourceId = (node: BrainstormCanvasNode) => node.sourceId || node.source_id
   const selectedCanvasNode = canvas.nodes.find(node => node.id === selectedCanvasNodeId) || null
+  const latestSeed = seeds.reduce<GsdSeed | null>((latest, seed) => {
+    if (!latest) return seed
+    return getSeedCreatedAt(seed) > getSeedCreatedAt(latest) ? seed : latest
+  }, null)
 
   const validateDraftContent = (content: string): string[] => {
     const trimmed = content.trim()
@@ -155,11 +159,18 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
     if (!newDraftModuleId.trim()) return
     setIsSavingDraft(true)
     try {
-      const initialContent = `slugs:\n  - ${newDraftModuleId}\ntitle: ${newDraftModuleId.replace(/[-_]/g, ' ')}\ntype: module\ndescription: Drafting in progress.\nstatus:\n  maturity: draft\n  implementation: not_started\nacceptance_criteria:\n  - id: ac-1\n    given: the feature is implemented\n    when: the user exercises the workflow\n    then: the expected outcome is observable\n`
-      await api.kspecWriteDraft(projectPath, newDraftModuleId, initialContent)
+      const moduleId = newDraftModuleId.trim()
+      const initialContent = `slugs:\n  - ${moduleId}\ntitle: ${moduleId.replace(/[-_]/g, ' ')}\ntype: module\ndescription: Drafting in progress.\nstatus:\n  maturity: draft\n  implementation: not_started\nacceptance_criteria:\n  - id: ac-1\n    given: the feature is implemented\n    when: the user exercises the workflow\n    then: the expected outcome is observable\n`
+      await api.kspecWriteDraft(projectPath, moduleId, initialContent)
       setNewDraftModuleId('')
       setShowDraftForm(false)
-      refresh()
+      await refresh()
+      handleOpenDraft({
+        id: moduleId,
+        title: moduleId,
+        content: initialContent,
+        lastModified: Date.now(),
+      })
     } catch (err) {
       console.error('Failed to create draft:', err)
     } finally {
@@ -176,6 +187,12 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
       await api.kspecWriteDraft(projectPath, moduleId, content)
       setActiveView('drafts')
       await refresh()
+      handleOpenDraft({
+        id: moduleId,
+        title: seed.title,
+        content,
+        lastModified: Date.now(),
+      })
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Failed to promote seed to KSpec draft.')
     } finally {
@@ -668,20 +685,24 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
               )}
             </div>
 
-            {/* AI Assistant Hook */}
+            {/* Draft starter */}
             <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-purple-500/20 space-y-2 relative overflow-hidden">
                <div className="absolute top-0 right-0 p-2 opacity-10">
                  <Brain size={48} />
                </div>
                <h4 className="text-xs font-bold text-white/90 flex items-center gap-2">
                  <Sparkles size={14} className="text-purple-400" />
-                 Draft with AI
+                 Draft from latest seed
                </h4>
                <p className="text-[10px] text-white/60 leading-relaxed">
-                 Use the Neural Assistant to generate KSpec YAML drafts from natural language descriptions.
+                 Start a KSpec module from the newest captured idea, then refine its acceptance criteria.
                </p>
-               <button className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-white/80 transition-all">
-                 Launch Drafting Agent
+               <button
+                 onClick={() => latestSeed ? handleSeedToDraft(latestSeed) : setShowDraftForm(true)}
+                 disabled={Boolean(latestSeed && promotionSeedId === getSeedId(latestSeed))}
+                 className="w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-white/80 transition-all disabled:opacity-50"
+               >
+                 {latestSeed ? 'Use Latest Seed' : 'Create Blank Draft'}
                </button>
             </div>
           </div>
