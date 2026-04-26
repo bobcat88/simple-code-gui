@@ -12,21 +12,24 @@ import {
   CheckCircle2,
   AlertCircle,
   FileCode,
+  Network,
+  Palette,
   RefreshCw,
   Save,
+  ShieldCheck,
   Sparkles,
   X,
   Zap
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
-import type { ExtendedApi, GsdSeed, KSpecDraft } from '../../api/types'
+import type { BrainstormCanvas, BrainstormCanvasNode, ExtendedApi, GsdSeed, KSpecDraft } from '../../api/types'
 
 interface BrainstormTabProps {
   api: ExtendedApi
   projectPath: string
 }
 
-type BrainstormView = 'inbox' | 'drafts'
+type BrainstormView = 'inbox' | 'drafts' | 'canvas'
 
 export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
   const [activeView, setActiveView] = useState<BrainstormView>('inbox')
@@ -36,6 +39,9 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
   const [isPlanting, setIsPlanting] = useState(false)
   const [promotionSeedId, setPromotionSeedId] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [canvas, setCanvas] = useState<BrainstormCanvas>({ nodes: [], edges: [] })
+  const [isSavingCanvas, setIsSavingCanvas] = useState(false)
+  const [selectedCanvasNodeId, setSelectedCanvasNodeId] = useState<string | null>(null)
   
   // Spec Editor State
   const [selectedDraft, setSelectedDraft] = useState<KSpecDraft | null>(null)
@@ -60,8 +66,14 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
         api.gsdListSeeds(projectPath),
         api.kspecListDrafts(projectPath)
       ])
+      const loadedCanvas = await api.brainstormLoadCanvas(projectPath)
       setSeeds(s)
       setDrafts(d)
+      setCanvas({
+        nodes: loadedCanvas.nodes || [],
+        edges: loadedCanvas.edges || [],
+        updatedAt: loadedCanvas.updatedAt || loadedCanvas.updated_at,
+      })
     } catch (err) {
       console.error('Failed to refresh brainstorm data:', err)
     } finally {
@@ -103,6 +115,9 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
   const getSeedCreatedAt = (seed: GsdSeed) => seed.createdAt || seed.timestamp * 1000 || Date.now()
   const getSeedSurface = (seed: GsdSeed) => seed.whenToSurface || seed.when_to_surface || 'Next Milestone'
   const getSeedId = (seed: GsdSeed) => seed.id || seed.slug || seed.title
+  const getCanvasNodeType = (node: BrainstormCanvasNode) => node.nodeType || node.node_type || 'seed'
+  const getCanvasNodeSourceId = (node: BrainstormCanvasNode) => node.sourceId || node.source_id
+  const selectedCanvasNode = canvas.nodes.find(node => node.id === selectedCanvasNodeId) || null
 
   const validateDraftContent = (content: string): string[] => {
     const trimmed = content.trim()
@@ -187,6 +202,121 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
     } finally {
       setPromotionSeedId(null)
     }
+  }
+
+  const buildCanvasFromCurrentData = (): BrainstormCanvas => {
+    const seedNodes: BrainstormCanvasNode[] = seeds.map((seed, index) => ({
+      id: `seed-${getSeedId(seed)}`,
+      nodeType: 'seed',
+      title: seed.title,
+      content: seed.why || 'Captured brainstorm seed.',
+      x: 16 + (index % 2) * 180,
+      y: 16 + Math.floor(index / 2) * 118,
+      width: 156,
+      height: 88,
+      sourceId: getSeedId(seed),
+    }))
+
+    const draftNodes: BrainstormCanvasNode[] = drafts.map((draft, index) => ({
+      id: `draft-${getDraftModuleId(draft)}`,
+      nodeType: 'draft',
+      title: getDraftModuleId(draft),
+      content: draft.content.split('\n').slice(0, 4).join('\n'),
+      x: 384,
+      y: 16 + index * 118,
+      width: 164,
+      height: 88,
+      sourceId: getDraftModuleId(draft),
+    }))
+
+    const edges = seedNodes.flatMap(seedNode => {
+      const draft = draftNodes.find(draftNode => draftNode.sourceId === seedNode.sourceId)
+      return draft ? [{
+        id: `${seedNode.id}-${draft.id}`,
+        fromNode: seedNode.id,
+        toNode: draft.id,
+        label: 'promotes',
+      }] : []
+    })
+
+    const extraNodes = canvas.nodes.filter(node => ['sketch', 'review'].includes(getCanvasNodeType(node)))
+    return { nodes: [...seedNodes, ...draftNodes, ...extraNodes], edges }
+  }
+
+  const saveCanvas = async (nextCanvas: BrainstormCanvas) => {
+    setIsSavingCanvas(true)
+    setErrorMessage(null)
+    try {
+      await api.brainstormSaveCanvas(projectPath, nextCanvas)
+      setCanvas(nextCanvas)
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to save brainstorm canvas.')
+    } finally {
+      setIsSavingCanvas(false)
+    }
+  }
+
+  const handleGenerateCanvas = async () => {
+    await saveCanvas(buildCanvasFromCurrentData())
+  }
+
+  const handleGenerateSketch = async () => {
+    if (!selectedCanvasNode) return
+    const baseId = selectedCanvasNode.id
+    const sketchNode: BrainstormCanvasNode = {
+      id: `sketch-${baseId}`,
+      nodeType: 'sketch',
+      title: `Sketch: ${selectedCanvasNode.title}`,
+      content: [
+        `Primary surface: ${selectedCanvasNode.title}`,
+        'Layout: compact sidebar workflow with visible state, source artifact, and one primary action.',
+        'Interaction: select a node, inspect rationale, then promote or review without leaving the Brainstorm tab.',
+      ].join('\n'),
+      x: selectedCanvasNode.x,
+      y: selectedCanvasNode.y + 108,
+      width: 178,
+      height: 96,
+      sourceId: baseId,
+    }
+    const nextCanvas = {
+      nodes: [...canvas.nodes.filter(node => node.id !== sketchNode.id), sketchNode],
+      edges: [
+        ...canvas.edges.filter(edge => edge.toNode !== sketchNode.id),
+        { id: `${baseId}-${sketchNode.id}`, fromNode: baseId, toNode: sketchNode.id, label: 'sketches' },
+      ],
+    }
+    await saveCanvas(nextCanvas)
+    setSelectedCanvasNodeId(sketchNode.id)
+  }
+
+  const handleArchitectReview = async () => {
+    if (!selectedCanvasNode) return
+    const baseId = selectedCanvasNode.id
+    const type = getCanvasNodeType(selectedCanvasNode)
+    const reviewNode: BrainstormCanvasNode = {
+      id: `review-${baseId}`,
+      nodeType: 'review',
+      title: `Review: ${selectedCanvasNode.title}`,
+      content: [
+        `Architect verdict: ${type === 'draft' ? 'ready for KSpec hardening' : 'needs acceptance criteria before implementation'}.`,
+        `Debt check: keep source artifact linked as ${getCanvasNodeSourceId(selectedCanvasNode) || baseId}.`,
+        'Next action: either draft spec details or promote to tracked Beads work with validation evidence.',
+      ].join('\n'),
+      x: selectedCanvasNode.x + 190,
+      y: selectedCanvasNode.y + 108,
+      width: 190,
+      height: 106,
+      sourceId: baseId,
+    }
+    const nextCanvas = {
+      nodes: [...canvas.nodes.filter(node => node.id !== reviewNode.id), reviewNode],
+      edges: [
+        ...canvas.edges.filter(edge => edge.toNode !== reviewNode.id),
+        { id: `${baseId}-${reviewNode.id}`, fromNode: baseId, toNode: reviewNode.id, label: 'reviews' },
+      ],
+    }
+    await saveCanvas(nextCanvas)
+    setSelectedCanvasNodeId(reviewNode.id)
   }
 
   if (selectedDraft) {
@@ -288,6 +418,18 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
         >
           <FileEdit size={12} />
           Spec Drafts
+        </button>
+        <button
+          onClick={() => setActiveView('canvas')}
+          className={cn(
+            "flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-[10px] font-bold transition-all",
+            activeView === 'canvas' 
+              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm" 
+              : "text-white/30 hover:text-white/60 hover:bg-white/5 border border-transparent"
+          )}
+        >
+          <Network size={12} />
+          Canvas
         </button>
       </div>
 
@@ -409,7 +551,7 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
               )}
             </div>
           </div>
-        ) : (
+        ) : activeView === 'drafts' ? (
           <div className="space-y-4">
              {/* Spec Drafts List */}
              <div className="space-y-2">
@@ -510,6 +652,101 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
                  Launch Drafting Agent
                </button>
             </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <h4 className="text-[10px] font-bold uppercase tracking-wider text-white/30 flex items-center gap-1.5">
+                <Network size={10} />
+                Node Workspace
+              </h4>
+              <button
+                onClick={handleGenerateCanvas}
+                disabled={isSavingCanvas}
+                className="px-2 py-1 rounded bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 text-[9px] font-bold transition-all disabled:opacity-50"
+              >
+                {isSavingCanvas ? 'Saving...' : 'Sync Canvas'}
+              </button>
+            </div>
+
+            <div className="brainstorm-canvas">
+              {canvas.edges.map(edge => {
+                const from = canvas.nodes.find(node => node.id === edge.fromNode || node.id === edge.from_node)
+                const to = canvas.nodes.find(node => node.id === edge.toNode || node.id === edge.to_node)
+                if (!from || !to) return null
+                return (
+                  <div
+                    key={edge.id}
+                    className="brainstorm-edge"
+                    style={{
+                      left: Math.min(from.x + from.width, to.x) - 4,
+                      top: Math.min(from.y + 38, to.y + 38),
+                      width: Math.max(Math.abs(to.x - from.x - from.width), 24),
+                    }}
+                  />
+                )
+              })}
+              {canvas.nodes.length > 0 ? (
+                canvas.nodes.map(node => {
+                  const type = getCanvasNodeType(node)
+                  return (
+                    <button
+                      key={node.id}
+                      onClick={() => setSelectedCanvasNodeId(node.id)}
+                      className={cn(
+                        "brainstorm-node",
+                        selectedCanvasNodeId === node.id && "brainstorm-node-selected",
+                        type === 'draft' && "brainstorm-node-draft",
+                        type === 'sketch' && "brainstorm-node-sketch",
+                        type === 'review' && "brainstorm-node-review"
+                      )}
+                      style={{ left: node.x, top: node.y, width: node.width, height: node.height }}
+                    >
+                      <span className="brainstorm-node-type">{type}</span>
+                      <span className="brainstorm-node-title">{node.title}</span>
+                      <span className="brainstorm-node-body">{node.content}</span>
+                    </button>
+                  )
+                })
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <Network size={28} className="text-white/10 mb-2" />
+                  <p className="text-[10px] text-white/30 leading-relaxed">
+                    No canvas nodes yet.<br />Sync seeds and drafts into a file-backed workspace.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={handleGenerateSketch}
+                disabled={!selectedCanvasNode || isSavingCanvas}
+                className="py-2 px-2 bg-cyan-500/10 hover:bg-cyan-500/20 disabled:opacity-40 border border-cyan-500/20 rounded-lg text-[10px] font-bold text-cyan-300 flex items-center justify-center gap-1.5"
+              >
+                <Palette size={12} />
+                Sketch Brief
+              </button>
+              <button
+                onClick={handleArchitectReview}
+                disabled={!selectedCanvasNode || isSavingCanvas}
+                className="py-2 px-2 bg-amber-500/10 hover:bg-amber-500/20 disabled:opacity-40 border border-amber-500/20 rounded-lg text-[10px] font-bold text-amber-300 flex items-center justify-center gap-1.5"
+              >
+                <ShieldCheck size={12} />
+                Architect Review
+              </button>
+            </div>
+
+            {selectedCanvasNode && (
+              <div className="p-3 brainstorm-card space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] uppercase tracking-wider text-white/30 font-bold">{getCanvasNodeType(selectedCanvasNode)}</span>
+                  <span className="text-[9px] text-white/20">{getCanvasNodeSourceId(selectedCanvasNode) || selectedCanvasNode.id}</span>
+                </div>
+                <div className="text-xs font-bold text-white/90">{selectedCanvasNode.title}</div>
+                <pre className="whitespace-pre-wrap text-[10px] leading-relaxed text-white/50 font-sans">{selectedCanvasNode.content}</pre>
+              </div>
+            )}
           </div>
         )}
       </div>

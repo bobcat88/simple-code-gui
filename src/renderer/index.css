@@ -385,7 +385,49 @@
   @apply bg-purple-500/30;
 }
 
+.brainstorm-canvas {
+  @apply relative overflow-auto rounded-2xl border border-white/5 bg-black/30;
+  height: 360px;
+  min-width: 100%;
+}
+
+.brainstorm-edge {
+  @apply absolute border-t border-dashed border-white/15 pointer-events-none;
+}
+
+.brainstorm-node {
+  @apply absolute flex flex-col items-start overflow-hidden rounded-lg border border-indigo-500/20 bg-indigo-500/10 p-2 text-left transition-all;
+}
+
+.brainstorm-node:hover,
+.brainstorm-node-selected {
+  @apply border-white/30 bg-white/10;
+}
+
+.brainstorm-node-draft {
+  @apply border-purple-500/25 bg-purple-500/10;
+}
+
+.brainstorm-node-sketch {
+  @apply border-cyan-500/25 bg-cyan-500/10;
+}
+
+.brainstorm-node-review {
+  @apply border-amber-500/25 bg-amber-500/10;
+}
+
+.brainstorm-node-type {
+  @apply text-[8px] font-bold uppercase tracking-wider text-white/30;
+}
+
+.brainstorm-node-title {
+  @apply mt-1 max-w-full truncate text-[11px] font-bold text-white/90;
+}
+
+.brainstorm-node-body {
+  @apply mt-1 line-clamp-3 text-[9px] leading-snug text-white/45;
+}
+
 .glass-sidebar {
   @apply bg-codex-sidebar/60 backdrop-blur-2xl border-l border-white/5;
 }
-

@@ -37,7 +37,7 @@ use orchestration::{
     kspec_dispatch_status, kspec_dispatch_stop, kspec_ensure_daemon, kspec_init, kspec_list,
     kspec_show, kspec_start, kspec_unwatch, kspec_update, kspec_watch, respond_to_approval,
     submit_approval_request, sync_workflow, OrchestrationState,
-    broadcast_agent_message, get_agent_messages,
+    brainstorm_load_canvas, brainstorm_save_canvas, broadcast_agent_message, get_agent_messages,
     gsd_list_seeds, gsd_plant_seed, kspec_list_drafts, kspec_write_draft,
 };
 use pty_manager::PtyManager;
@@ -747,7 +747,9 @@ pub fn run() {
             gsd_list_seeds,
             gsd_plant_seed,
             kspec_list_drafts,
-            kspec_write_draft
+            kspec_write_draft,
+            brainstorm_load_canvas,
+            brainstorm_save_canvas
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -97,10 +97,10 @@ Visualizing and interacting with agent swarms and their collective intelligence.
 ## Phase 26: Brainstorm Companion & Collaborative Ideation (Convergence Complete)
 Turning raw ideas into structured specs and visual mockups within the GUI.
 
-- [~] **Ideation Canvas**: Descoped to a follow-up visual workspace task; Phase 26 now uses a sidebar-based seed and draft workspace.
-- [~] **Agentic Sketching**: Descoped to follow-up product expansion.
+- [x] **Ideation Canvas**: File-backed sidebar node workspace persists JSON Canvas-compatible brainstorm nodes under `.kspec/brainstorm/`.
+- [x] **Agentic Sketching**: Generate deterministic sketch briefs from selected brainstorm nodes.
 - [x] **Spec-to-Task Bridge**: Promote brainstorm seeds to KSpec draft modules or Beads tasks.
-- [~] **Multi-Agent Design Review**: Descoped to follow-up product expansion.
+- [x] **Multi-Agent Design Review**: Generate architect review notes from selected brainstorm nodes.
 
 ---
 

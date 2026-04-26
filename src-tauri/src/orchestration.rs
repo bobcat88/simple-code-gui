@@ -43,6 +43,42 @@ pub struct KSpecDraft {
     pub last_modified: u64,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct BrainstormCanvas {
+    #[serde(default)]
+    pub nodes: Vec<BrainstormCanvasNode>,
+    #[serde(default)]
+    pub edges: Vec<BrainstormCanvasEdge>,
+    #[serde(default)]
+    pub updated_at: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct BrainstormCanvasNode {
+    pub id: String,
+    pub node_type: String,
+    pub title: String,
+    pub content: String,
+    pub x: i32,
+    pub y: i32,
+    pub width: i32,
+    pub height: i32,
+    #[serde(default)]
+    pub source_id: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct BrainstormCanvasEdge {
+    pub id: String,
+    pub from_node: String,
+    pub to_node: String,
+    #[serde(default)]
+    pub label: Option<String>,
+}
+
 fn default_seed_status() -> String {
     "planted".to_string()
 }
@@ -969,6 +1005,38 @@ pub async fn kspec_write_draft(cwd: String, module_id: String, content: String) 
     std::fs::create_dir_all(&draft_dir).map_err(|e| e.to_string())?;
 
     let path = draft_dir.join(format!("{}.yaml", module_id));
+    std::fs::write(path, content).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn brainstorm_load_canvas(cwd: String) -> Result<BrainstormCanvas, String> {
+    let path = std::path::Path::new(&cwd)
+        .join(".kspec")
+        .join("brainstorm")
+        .join("canvas.json");
+
+    if !path.exists() {
+        return Ok(BrainstormCanvas::default());
+    }
+
+    let content = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
+    serde_json::from_str(&content).map_err(|e| format!("Failed to parse brainstorm canvas: {}", e))
+}
+
+#[tauri::command]
+pub async fn brainstorm_save_canvas(cwd: String, mut canvas: BrainstormCanvas) -> Result<(), String> {
+    let canvas_dir = std::path::Path::new(&cwd).join(".kspec").join("brainstorm");
+    std::fs::create_dir_all(&canvas_dir).map_err(|e| e.to_string())?;
+
+    canvas.updated_at = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+
+    let path = canvas_dir.join("canvas.json");
+    let content = serde_json::to_string_pretty(&canvas)
+        .map_err(|e| format!("Failed to serialize brainstorm canvas: {}", e))?;
     std::fs::write(path, content).map_err(|e| e.to_string())?;
     Ok(())
 }

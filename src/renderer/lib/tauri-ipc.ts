@@ -349,4 +349,8 @@ export const tauriIpc = {
     invoke<any[]>('kspec_list_drafts', { cwd }),
   kspecWriteDraft: (cwd: string, moduleId: string, content: string) =>
     invoke<void>('kspec_write_draft', { cwd, module_id: moduleId, content }),
+  brainstormLoadCanvas: (cwd: string) =>
+    invoke<any>('brainstorm_load_canvas', { cwd }),
+  brainstormSaveCanvas: (cwd: string, canvas: any) =>
+    invoke<void>('brainstorm_save_canvas', { cwd, canvas }),
 };

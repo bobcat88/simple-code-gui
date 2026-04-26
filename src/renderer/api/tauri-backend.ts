@@ -20,6 +20,7 @@ import {
   TokenTransactionInput,
   GsdSeed,
   KSpecDraft,
+  BrainstormCanvas,
   GsdStep,
   UserResponse,
   VectorSearchResult,
@@ -540,5 +541,13 @@ export class TauriBackend implements ExtendedApi {
 
   async kspecWriteDraft(cwd: string, moduleId: string, content: string): Promise<void> {
     await tauriIpc.kspecWriteDraft(cwd, moduleId, content);
+  }
+
+  async brainstormLoadCanvas(cwd: string): Promise<BrainstormCanvas> {
+    return await tauriIpc.brainstormLoadCanvas(cwd);
+  }
+
+  async brainstormSaveCanvas(cwd: string, canvas: BrainstormCanvas): Promise<void> {
+    await tauriIpc.brainstormSaveCanvas(cwd, canvas);
   }
 }

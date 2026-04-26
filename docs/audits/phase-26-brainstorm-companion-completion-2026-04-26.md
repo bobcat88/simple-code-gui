@@ -14,19 +14,16 @@ The Brainstorm Companion now has a working convergence-level flow:
 - Seeds can be promoted to Beads tasks through the registered `beads_create`
   Tauri command.
 
-## Explicitly Descoped From This Convergence Wave
+## Follow-Up Completed
 
-The original Phase 26 roadmap also named a JSON Canvas workspace, agentic
-sketching, and multi-agent design review. Those are not prerequisites for the
-spec-to-task bridge and remain product expansion work rather than convergence
-work.
+The original convergence wave intentionally deferred the larger visual workflow.
+That follow-up is now implemented as a pragmatic sidebar node workspace:
 
-The follow-up scope should be handled as its own Beads issue:
-
-- File-backed JSON Canvas or node workspace for visual idea clustering.
-- UI mockup/diagram generation from brainstorm nodes.
-- Architect/design-review agent workflow for brainstormed concepts.
-- KSpec shadow-branch commits for finalized brainstorm artifacts.
+- File-backed brainstorm canvas data is stored in `.kspec/brainstorm/canvas.json`.
+- The Canvas tab syncs current seeds and KSpec drafts into positioned nodes.
+- Selected nodes can generate sketch brief nodes for UI/mockup planning.
+- Selected nodes can generate architect review nodes for feasibility and debt review.
+- Canvas artifacts live under `.kspec/` so agents can inspect them alongside spec drafts.
 
 ## Verification
 

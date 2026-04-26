@@ -351,6 +351,36 @@ export interface KSpecDraft {
   updatedAt?: number
 }
 
+export interface BrainstormCanvas {
+  nodes: BrainstormCanvasNode[]
+  edges: BrainstormCanvasEdge[]
+  updatedAt?: number
+  updated_at?: number
+}
+
+export interface BrainstormCanvasNode {
+  id: string
+  nodeType: 'seed' | 'draft' | 'sketch' | 'review'
+  node_type?: 'seed' | 'draft' | 'sketch' | 'review'
+  title: string
+  content: string
+  x: number
+  y: number
+  width: number
+  height: number
+  sourceId?: string
+  source_id?: string
+}
+
+export interface BrainstormCanvasEdge {
+  id: string
+  fromNode: string
+  from_node?: string
+  toNode: string
+  to_node?: string
+  label?: string
+}
+
 export interface VectorIndexStatus {
   totalChunks: number
   indexedChunks: number
@@ -648,6 +678,8 @@ export interface Api {
   gsdPlantSeed?: (cwd: string, seed: GsdSeed) => Promise<void>
   kspecListDrafts?: (cwd: string) => Promise<KSpecDraft[]>
   kspecWriteDraft?: (cwd: string, moduleId: string, content: string) => Promise<void>
+  brainstormLoadCanvas?: (cwd: string) => Promise<BrainstormCanvas>
+  brainstormSaveCanvas?: (cwd: string, canvas: BrainstormCanvas) => Promise<void>
 }
 
 // ============================================================================
@@ -763,6 +795,8 @@ export interface ExtendedApi extends Api {
   gsdPlantSeed: (cwd: string, seed: GsdSeed) => Promise<void>
   kspecListDrafts: (cwd: string) => Promise<KSpecDraft[]>
   kspecWriteDraft: (cwd: string, moduleId: string, content: string) => Promise<void>
+  brainstormLoadCanvas: (cwd: string) => Promise<BrainstormCanvas>
+  brainstormSaveCanvas: (cwd: string, canvas: BrainstormCanvas) => Promise<void>
 }
 
 // ============================================================================
