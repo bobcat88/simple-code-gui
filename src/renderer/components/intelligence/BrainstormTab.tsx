@@ -205,6 +205,20 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
   }
 
   const buildCanvasFromCurrentData = (): BrainstormCanvas => {
+    const savedNodesById = new Map(canvas.nodes.map(node => [node.id, node]))
+    const withSavedLayout = (node: BrainstormCanvasNode): BrainstormCanvasNode => {
+      const savedNode = savedNodesById.get(node.id)
+      if (!savedNode) return node
+
+      return {
+        ...node,
+        x: savedNode.x,
+        y: savedNode.y,
+        width: savedNode.width || node.width,
+        height: savedNode.height || node.height,
+      }
+    }
+
     const seedNodes: BrainstormCanvasNode[] = seeds.map((seed, index) => ({
       id: `seed-${getSeedId(seed)}`,
       nodeType: 'seed',
@@ -215,7 +229,7 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
       width: 156,
       height: 88,
       sourceId: getSeedId(seed),
-    }))
+    })).map(withSavedLayout)
 
     const draftNodes: BrainstormCanvasNode[] = drafts.map((draft, index) => ({
       id: `draft-${getDraftModuleId(draft)}`,
@@ -227,9 +241,9 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
       width: 164,
       height: 88,
       sourceId: getDraftModuleId(draft),
-    }))
+    })).map(withSavedLayout)
 
-    const edges = seedNodes.flatMap(seedNode => {
+    const promoteEdges = seedNodes.flatMap(seedNode => {
       const draft = draftNodes.find(draftNode => draftNode.sourceId === seedNode.sourceId)
       return draft ? [{
         id: `${seedNode.id}-${draft.id}`,
@@ -240,7 +254,25 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
     })
 
     const extraNodes = canvas.nodes.filter(node => ['sketch', 'review'].includes(getCanvasNodeType(node)))
-    return { nodes: [...seedNodes, ...draftNodes, ...extraNodes], edges }
+    const nextNodes = [...seedNodes, ...draftNodes, ...extraNodes]
+    const nextNodeIds = new Set(nextNodes.map(node => node.id))
+    const promoteEdgeIds = new Set(promoteEdges.map(edge => edge.id))
+    const preservedEdges = canvas.edges
+      .map(edge => ({
+        id: edge.id,
+        fromNode: edge.fromNode || edge.from_node || '',
+        toNode: edge.toNode || edge.to_node || '',
+        label: edge.label,
+      }))
+      .filter(edge =>
+        edge.fromNode &&
+        edge.toNode &&
+        nextNodeIds.has(edge.fromNode) &&
+        nextNodeIds.has(edge.toNode) &&
+        !promoteEdgeIds.has(edge.id)
+      )
+
+    return { nodes: nextNodes, edges: [...promoteEdges, ...preservedEdges] }
   }
 
   const saveCanvas = async (nextCanvas: BrainstormCanvas) => {
