@@ -1,0 +1,17 @@
+_ulid: 01KQB2RFS22ZAQ1C4C0RNT48N0
+slugs:
+  - task-foundation-tasks
+title: "Foundation: Task Lifecycle"
+type: task
+spec_ref: "@01KK67BEXPK9TT6168Q1FM5PYD"
+meta_ref: null
+plan_ref: null
+status: pending
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-04-28T22:18:37.217Z
+todos: []
