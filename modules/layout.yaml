@@ -1,9 +1,10 @@
 _ulid: 01KK67BC64PX1P0T8AQG7P1Y1A
 slugs:
-  - layout
+- layout
 title: Layout & Navigation
 type: module
-description: Tiled and tabbed terminal layout, sidebar navigation, project management UI
+description: Tiled and tabbed terminal layout, sidebar navigation, project management
+  UI
 status:
   maturity: draft
   implementation: not_started
@@ -13,172 +14,242 @@ relates_to: []
 tests: []
 traits: []
 tags:
-  - ui
+- ui
 features:
-  - _ulid: 01KK67C21DPVGAHNPTREZFH029
-    slugs:
-      - tiled-layout
-    title: Tiled Terminal Layout
-    type: feature
-    description: Flexible grid layout where terminals are positioned as tiles using percentage-based
-      coordinates. Supports splitting, swapping, and multi-tab tiles on a pannable canvas.
+- _ulid: 01KK67C21DPVGAHNPTREZFH029
+  slugs:
+  - tiled-layout
+  title: Tiled Terminal Layout
+  type: feature
+  description: Flexible grid layout where terminals are positioned as tiles using
+    percentage-based coordinates. Supports splitting, swapping, and multi-tab tiles
+    on a pannable canvas.
+  status:
+    maturity: draft
+    implementation: implemented
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  acceptance_criteria:
+  - given: user is in tiled view mode
+    id: ac-1
+    then: a new tile is added to the layout with percentage-based coordinates and
+      the terminal renders inside it
+    when: a new session is opened
+  - given: multiple tiles exist on the canvas
+    id: ac-2
+    then: the tile divides into two tiles in the specified direction (top/bottom/left/right)
+      each getting half the space
+    when: a tile is split
+  tags: []
+  created: 2026-03-08T08:00:13.357Z
+  notes: []
+- _ulid: 01KK67C43QN01EYHYHABV8BBVE
+  slugs:
+  - tile-drag-drop
+  title: Tile Drag & Drop
+  type: feature
+  description: Drag projects from sidebar or tabs between tiles. Drop zones support
+    swap, split-top/bottom/left/right. Visual preview during drag.
+  status:
+    maturity: draft
+    implementation: implemented
+  acceptance_criteria:
+  - id: ac-drag-1
+    given: multiple tiles open
+    when: a tile is dragged to a new position
+    then: the layout updates to reflect the new order
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  tags: []
+  created: 2026-03-08T08:00:15.480Z
+  notes: []
+- _ulid: 01KK67C5G8P9DBB3ZC020NS5MQ
+  slugs:
+  - tile-resizing
+  title: Tile Resizing
+  type: feature
+  description: Resize tiles by dragging edges. Proportional resizing spreads width/height
+    among adjacent tiles. Visual edge highlighting on hover.
+  status:
+    maturity: draft
+    implementation: implemented
+  acceptance_criteria:
+  - id: ac-resize-1
+    given: a tiled layout
+    when: a tile border is dragged
+    then: the adjacent tiles resize proportionally
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  tags: []
+  created: 2026-03-08T08:00:16.905Z
+  notes: []
+- _ulid: 01KK67C74KF39CXGH08EAA3089
+  slugs:
+  - canvas-panning
+  title: Canvas Panning
+  type: feature
+  description: Middle-mouse-button horizontal panning across a virtual canvas wider
+    than the viewport. 3px threshold before drag starts, suppresses paste during panning.
+  status:
+    maturity: draft
+    implementation: implemented
+  acceptance_criteria:
+  - id: ac-pan-1
+    given: a large canvas layout
+    when: the user pans the canvas
+    then: the view shifts smoothly with no rendering artifacts
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  tags: []
+  created: 2026-03-08T08:00:18.579Z
+  notes: []
+- _ulid: 01KK67C9AQPXS2BZXTN88KXCNT
+  slugs:
+  - sidebar
+  title: Sidebar Navigation
+  type: feature
+  description: 'Project tree with categories, session lists, inline rename, drag-to-reorder,
+    context menus. Desktop: collapsible left panel with resize handle. Mobile: drawer
+    overlay with hamburger toggle.'
+  status:
+    maturity: draft
+    implementation: implemented
+  acceptance_criteria:
+  - id: ac-sidebar-1
+    given: the application is open
+    when: the user clicks sidebar icons
+    then: the corresponding panels open or close with smooth transitions
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  tags: []
+  created: 2026-03-08T08:00:20.824Z
+  notes: []
+- _ulid: 01KK67CAKFEEA1S2W21BYEESQA
+  slugs:
+  - tabbed-view
+  title: Tabbed View Mode
+  type: feature
+  description: Traditional tab-based terminal switching as alternative to tiled layout.
+    Supports undo close tab.
+  status:
+    maturity: draft
+    implementation: implemented
+  acceptance_criteria:
+  - id: ac-tabbed-1
+    given: multiple sessions active
+    when: tabbed view mode is selected
+    then: sessions are organized into tabs instead of tiles
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  tags: []
+  created: 2026-03-08T08:00:22.127Z
+  notes: []
+- _ulid: 01KPNWWWEZYCZCYNWMBNYWJWWN
+  slugs:
+  - workspace-control
+  title: Advanced Workspace Control
+  type: feature
+  description: Enhanced project switcher and home screen with usage summaries and
+    alerts.
+  status:
+    maturity: draft
+    implementation: implemented
+  acceptance_criteria:
+  - id: ac-workspace-1
+    given: multiple projects
+    when: managing workspaces
+    then: project switching and organization is fast and intuitive
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  tags: []
+  requirements:
+  - _ulid: 01KPNWYGEC5WX1JKYWJ2WF0YB0
+    slugs: []
+    title: Project Quick-Switcher
+    type: requirement
+    description: Global hotkey or UI element to jump between recent workspaces.
     status:
       maturity: draft
       implementation: implemented
-    depends_on: []
-    implements: []
-    relates_to: []
-    tests: []
-    traits: []
     acceptance_criteria:
-      - given: user is in tiled view mode
-        id: ac-1
-        then: a new tile is added to the layout with percentage-based coordinates and the terminal renders
-          inside it
-        when: a new session is opened
-      - given: multiple tiles exist on the canvas
-        id: ac-2
-        then: the tile divides into two tiles in the specified direction (top/bottom/left/right) each
-          getting half the space
-        when: a tile is split
-    tags: []
-    created: 2026-03-08T08:00:13.357Z
-    notes: []
-  - _ulid: 01KK67C43QN01EYHYHABV8BBVE
-    slugs:
-      - tile-drag-drop
-    title: Tile Drag & Drop
-    type: feature
-    description: Drag projects from sidebar or tabs between tiles. Drop zones support swap,
-      split-top/bottom/left/right. Visual preview during drag.
-    status:
-      implementation: implemented
+    - id: ac-gen-1
+      given: the Project Quick-Switcher is implemented
+      when: it is used
+      then: it works as expected
+  - id: ac-switcher-1
+    given: many recent projects
+    when: quick-switcher is invoked
+    then: the user can jump to any project with a few keystrokes
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
     tags: []
-    created: 2026-03-08T08:00:15.480Z
+    created: 2026-04-20T16:52:59.980Z
     notes: []
-  - _ulid: 01KK67C5G8P9DBB3ZC020NS5MQ
-    slugs:
-      - tile-resizing
-    title: Tile Resizing
-    type: feature
-    description: Resize tiles by dragging edges. Proportional resizing spreads width/height among
-      adjacent tiles. Visual edge highlighting on hover.
-    status:
-      implementation: implemented
-    depends_on: []
-    implements: []
-    relates_to: []
-    tests: []
-    traits: []
-    tags: []
-    created: 2026-03-08T08:00:16.905Z
-    notes: []
-  - _ulid: 01KK67C74KF39CXGH08EAA3089
-    slugs:
-      - canvas-panning
-    title: Canvas Panning
-    type: feature
-    description: Middle-mouse-button horizontal panning across a virtual canvas wider than the viewport.
-      3px threshold before drag starts, suppresses paste during panning.
-    status:
-      implementation: implemented
-    depends_on: []
-    implements: []
-    relates_to: []
-    tests: []
-    traits: []
-    tags: []
-    created: 2026-03-08T08:00:18.579Z
-    notes: []
-  - _ulid: 01KK67C9AQPXS2BZXTN88KXCNT
-    slugs:
-      - sidebar
-    title: Sidebar Navigation
-    type: feature
-    description: "Project tree with categories, session lists, inline rename, drag-to-reorder, context
-      menus. Desktop: collapsible left panel with resize handle. Mobile: drawer overlay with
-      hamburger toggle."
     status:
       maturity: draft
       implementation: implemented
-    depends_on: []
-    implements: []
-    relates_to: []
-    tests: []
-    traits: []
-    tags: []
-    created: 2026-03-08T08:00:20.824Z
-    notes: []
-  - _ulid: 01KK67CAKFEEA1S2W21BYEESQA
-    slugs:
-      - tabbed-view
-    title: Tabbed View Mode
-    type: feature
-    description: Traditional tab-based terminal switching as alternative to tiled layout. Supports undo
-      close tab.
-    status:
-      implementation: implemented
-    depends_on: []
-    implements: []
-    relates_to: []
-    tests: []
-    traits: []
-    tags: []
-    created: 2026-03-08T08:00:22.127Z
-    notes: []
-  - _ulid: 01KPNWWWEZYCZCYNWMBNYWJWWN
-    slugs:
-      - workspace-control
-    title: Advanced Workspace Control
-    type: feature
-    description: Enhanced project switcher and home screen with usage summaries and alerts.
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the feature is implemented
+      when: it is used
+      then: it works as expected
+  - _ulid: 01KPNWYJ0X2PM2NVYDP2C4VQBJ
+    slugs: []
+    title: Home Usage Summary
+    type: requirement
+    description: Dashboard view of total token usage and activity across all projects.
     status:
       maturity: draft
       implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the Home Usage Summary is implemented
+      when: it is used
+      then: it works as expected
+  - id: ac-summary-1
+    given: multiple active tasks
+    when: viewing the home screen
+    then: a consolidated summary of usage and activity is shown
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
     tags: []
-    requirements:
-      - _ulid: 01KPNWYGEC5WX1JKYWJ2WF0YB0
-        slugs: []
-        title: Project Quick-Switcher
-        type: requirement
-        description: Global hotkey or UI element to jump between recent workspaces.
-        status:
-          maturity: draft
-          implementation: implemented
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:52:59.980Z
-        notes: []
-      - _ulid: 01KPNWYJ0X2PM2NVYDP2C4VQBJ
-        slugs: []
-        title: Home Usage Summary
-        type: requirement
-        description: Dashboard view of total token usage and activity across all projects.
-        status:
-          maturity: draft
-          implementation: implemented
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:53:01.597Z
-        notes: []
-    created: 2026-04-20T16:52:06.752Z
+    created: 2026-04-20T16:53:01.597Z
     notes: []
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the feature is implemented
+      when: it is used
+      then: it works as expected
+  created: 2026-04-20T16:52:06.752Z
+  notes: []
 notes: []

@@ -1,15 +1,15 @@
 _ulid: 01KK67BGNHP8DWNG777BRMSR8A
 slugs:
-  - connectivity
+- connectivity
 title: Connectivity
 type: module
 status:
   maturity: draft
   implementation: not_started
-description: HTTP API server for prompt injection, mobile WebSocket server, and MCP orchestrator for
-  cross-session control
+description: HTTP API server for prompt injection, mobile WebSocket server, and MCP
+  orchestrator for cross-session control
 tags:
-  - feature
+- feature
 depends_on: []
 implements: []
 relates_to: []
@@ -17,114 +17,131 @@ tests: []
 traits: []
 notes: []
 features:
-  - _ulid: 01KK67DB6KDCNTJXZ88124DXNB
-    slugs:
-      - prompt-api
-    title: HTTP Prompt API
-    type: feature
-    tags: []
-    description: "Per-project HTTP server for external prompt injection. Session modes: existing (reuse
-      terminal), new-keep (spawn and keep), new-close (spawn and auto-close). Rate limited to 10
-      req/60s per IP."
-    depends_on: []
-    implements: []
-    relates_to: []
-    tests: []
-    traits: []
-    notes: []
-    created: 2026-03-08T08:00:55.507Z
-    status:
-      implementation: implemented
-  - _ulid: 01KK67DDQ2F5G1QH5Q04JRF943
-    slugs:
-      - orchestrator
-    title: MCP Orchestrator
-    type: feature
-    tags: []
-    description: Localhost HTTP API (port 19836) enabling MCP-based cross-session control. List
-      sessions, read output (last N lines), send input to any PTY. Companion MCP server script for
-      Claude CLI integration.
-    depends_on: []
-    implements: []
-    relates_to: []
-    tests: []
-    traits: []
-    notes: []
-    created: 2026-03-08T08:00:58.082Z
-    acceptance_criteria:
-      - id: ac-1
-        given: multiple PTY sessions are running
-        when: GET /sessions is called on localhost:19836
-        then: a JSON array of all sessions is returned with id, cwd, backend, projectPath, projectName, and
-          spawnedAt
-      - id: ac-2
-        given: a PTY session exists
-        when: POST /sessions/{id}/input is called with text
-        then: the text followed by carriage return is written to the PTY, simulating user keyboard input
-    status:
-      maturity: draft
-      implementation: implemented
-  - _ulid: 01KK67DFJH7RN2ATAG7E69AZVN
-    slugs:
-      - mobile-server
-    title: Mobile Server
-    type: feature
-    tags: []
-    description: WebSocket + HTTP server for mobile app connectivity. Token-based auth, IP whitelisting,
-      device fingerprinting, rate limiting, nonce-based CSRF protection. Streams terminal data,
-      supports file transfer.
-    depends_on: []
-    implements: []
-    relates_to: []
-    tests: []
-    traits: []
-    notes: []
-    created: 2026-03-08T08:00:59.986Z
-    acceptance_criteria:
-      - id: ac-1
-        given: the mobile server is running
-        when: a connection attempt is made without a valid token
-        then: the connection is rejected with 401 unauthorized
-    status:
-      implementation: implemented
-  - _ulid: 01KK67DHDD4MZ13MB7CKSBGPMP
-    slugs:
-      - dual-env
-    title: Dual Environment Support
-    type: feature
-    tags: []
-    description: Same UI works in Electron (IPC) and browser/mobile (HTTP+WebSocket). Factory pattern
-      returns ElectronBackend or HttpBackend implementing the same Api interface.
-    depends_on: []
-    implements: []
-    relates_to: []
-    tests: []
-    traits: []
-    notes: []
-    created: 2026-03-08T08:01:01.869Z
-    acceptance_criteria:
-      - id: ac-1
-        given: the app is running in a browser (no window.electronAPI)
-        when: the user connects with host, port, and token
-        then: HttpBackend is created using WebSocket for PTY data and HTTP for all other operations,
-          providing the same Api interface as ElectronBackend
-    status:
-      implementation: implemented
+- _ulid: 01KK67DB6KDCNTJXZ88124DXNB
+  slugs:
+  - prompt-api
+  title: HTTP Prompt API
+  type: feature
+  tags: []
+  description: 'Per-project HTTP server for external prompt injection. Session modes:
+    existing (reuse terminal), new-keep (spawn and keep), new-close (spawn and auto-close).
+    Rate limited to 10 req/60s per IP.'
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  notes: []
+  created: 2026-03-08T08:00:55.507Z
+  status:
+    maturity: draft
+    implementation: implemented
+  acceptance_criteria:
+  - id: ac-prompt-1
+    given: the prompt API is active
+    when: an external request is made to the project-specific endpoint
+    then: the prompt is injected into the target terminal session according to the
+      specified mode
+- _ulid: 01KK67DDQ2F5G1QH5Q04JRF943
+  slugs:
+  - orchestrator
+  title: MCP Orchestrator
+  type: feature
+  tags: []
+  description: Localhost HTTP API (port 19836) enabling MCP-based cross-session control.
+    List sessions, read output (last N lines), send input to any PTY. Companion MCP
+    server script for Claude CLI integration.
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  notes: []
+  created: 2026-03-08T08:00:58.082Z
+  acceptance_criteria:
+  - id: ac-1
+    given: multiple PTY sessions are running
+    when: GET /sessions is called on localhost:19836
+    then: a JSON array of all sessions is returned with id, cwd, backend, projectPath,
+      projectName, and spawnedAt
+  - id: ac-2
+    given: a PTY session exists
+    when: POST /sessions/{id}/input is called with text
+    then: the text followed by carriage return is written to the PTY, simulating user
+      keyboard input
+  status:
+    maturity: draft
+    implementation: implemented
+- _ulid: 01KK67DFJH7RN2ATAG7E69AZVN
+  slugs:
+  - mobile-server
+  title: Mobile Server
+  type: feature
+  tags: []
+  description: WebSocket + HTTP server for mobile app connectivity. Token-based auth,
+    IP whitelisting, device fingerprinting, rate limiting, nonce-based CSRF protection.
+    Streams terminal data, supports file transfer.
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  notes: []
+  created: 2026-03-08T08:00:59.986Z
+  acceptance_criteria:
+  - id: ac-1
+    given: the mobile server is running
+    when: a connection attempt is made without a valid token
+    then: the connection is rejected with 401 unauthorized
+  status:
+    implementation: implemented
+    maturity: draft
+- _ulid: 01KK67DHDD4MZ13MB7CKSBGPMP
+  slugs:
+  - dual-env
+  title: Dual Environment Support
+  type: feature
+  tags: []
+  description: Same UI works in Electron (IPC) and browser/mobile (HTTP+WebSocket).
+    Factory pattern returns ElectronBackend or HttpBackend implementing the same Api
+    interface.
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  notes: []
+  created: 2026-03-08T08:01:01.869Z
+  acceptance_criteria:
+  - id: ac-1
+    given: the app is running in a browser (no window.electronAPI)
+    when: the user connects with host, port, and token
+    then: HttpBackend is created using WebSocket for PTY data and HTTP for all other
+      operations, providing the same Api interface as ElectronBackend
+  status:
+    implementation: implemented
+    maturity: draft
 constraints:
-  - _ulid: 01KK67F4TXEGT9PY2C2KGSNBW2
-    slugs:
-      - orchestrator-localhost
-    title: Localhost-Only Orchestrator
-    type: constraint
-    tags: []
-    description: Orchestrator API only accepts connections from localhost (127.0.0.1, ::1,
-      ::ffff:127.0.0.1). No external network access.
-    depends_on: []
-    implements: []
-    relates_to: []
-    tests: []
-    traits: []
-    notes: []
-    created: 2026-03-08T08:01:54.525Z
-    status:
-      implementation: implemented
+- _ulid: 01KK67F4TXEGT9PY2C2KGSNBW2
+  slugs:
+  - orchestrator-localhost
+  title: Localhost-Only Orchestrator
+  type: constraint
+  tags: []
+  description: Orchestrator API only accepts connections from localhost (127.0.0.1,
+    ::1, ::ffff:127.0.0.1). No external network access.
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  notes: []
+  created: 2026-03-08T08:01:54.525Z
+  status:
+    maturity: draft
+    implementation: implemented
+  acceptance_criteria:
+  - id: ac-localhost-1
+    given: the orchestrator is running
+    when: a connection attempt is made from a non-localhost IP
+    then: the connection is rejected at the network layer or by the server middleware

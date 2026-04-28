@@ -1,9 +1,10 @@
 _ulid: 01KPNWQND5PA8ZVZEEWXQXK7GH
 slugs:
-  - ai-core
+- ai-core
 title: AI Intelligence & Orchestration
 type: module
-description: Everything related to model providers, agent execution, and repository intelligence.
+description: Everything related to model providers, agent execution, and repository
+  intelligence.
 status:
   maturity: draft
   implementation: not_started
@@ -14,152 +15,329 @@ tests: []
 traits: []
 tags: []
 features:
-  - _ulid: 01KPNWR72BE4HPN4TY5W0X3R88
-    slugs:
-      - ai-runtime
-    title: Multi-Provider AI Runtime
-    type: feature
-    description: Abstraction layer and routing for Claude, OpenAI, Gemini, and Ollama providers.
-    status:
-      maturity: draft
-      implementation: implemented
+- _ulid: 01KPNWR72BE4HPN4TY5W0X3R88
+  slugs:
+  - ai-runtime
+  title: Multi-Provider AI Runtime
+  type: feature
+  description: Abstraction layer and routing for Claude, OpenAI, Gemini, and Ollama
+    providers.
+  status:
+    maturity: draft
+    implementation: implemented
+  acceptance_criteria:
+  - id: ac-runtime-1
+    given: configured model providers
+    when: a request is routed
+    then: the runtime selects the optimal provider based on cost and capability
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  tags: []
+  requirements:
+  - _ulid: 01KPNWT9DJJYXS5J0HCP3WJ0R6
+    slugs: []
+    title: Provider Abstraction Interface
+    type: requirement
+    description: Unified trait/interface for different LLM providers (Claude, OpenAI,
+      Gemini, Ollama).
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
     tags: []
-    requirements:
-      - _ulid: 01KPNWT9DJJYXS5J0HCP3WJ0R6
-        slugs: []
-        title: Provider Abstraction Interface
-        type: requirement
-        description: Unified trait/interface for different LLM providers (Claude, OpenAI, Gemini, Ollama).
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:50:41.714Z
-        notes: []
-      - _ulid: 01KPNWTB6935QVDS6ANRD4PQ9M
-        slugs: []
-        title: Auth & API Key Management
-        type: requirement
-        description: Secure storage and retrieval of provider credentials in SQLite.
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:50:43.529Z
-        notes: []
-      - _ulid: 01KPNWTCV0CY2KPET8VX2X699P
-        slugs: []
-        title: Model Routing Policies
-        type: requirement
-        description: System for selecting models based on task type (planning, patching, summarization).
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:50:45.216Z
-        notes: []
-      - _ulid: 01KPNWTEKMYMVHRE4AB0AE6EF5
-        slugs: []
-        title: Named Model Plans
-        type: requirement
-        description: User-definable presets for cost/quality balance (e.g., Budget, High-Quality).
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:50:47.028Z
-        notes: []
-    created: 2026-04-20T16:49:33.771Z
+    created: 2026-04-20T16:50:41.714Z
     notes: []
-  - _ulid: 01KPNWR8R0ZM1G5XD8NWD50KJX
-    slugs:
-      - gsd-engine
-    title: GSD Execution Engine
-    type: feature
-    description: Phase-based agent execution engine with verifier loops and wave-based orchestration.
     status:
       maturity: draft
       implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the Provider Abstraction Interface is implemented
+      when: it is used
+      then: it works as expected
+  - _ulid: 01KPNWTB6935QVDS6ANRD4PQ9M
+    slugs: []
+    title: Auth & API Key Management
+    type: requirement
+    description: Secure storage and retrieval of provider credentials in SQLite.
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
     tags: []
-    requirements:
-      - _ulid: 01KPNWTGE0H4SR3YYF0YNTHT2D
-        slugs: []
-        title: Phase-based Decomposition
-        type: requirement
-        description: Logic to break large tasks into sequential, manageable phases.
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:50:48.896Z
-        notes: []
-      - _ulid: 01KPNWTJ4624RN9A805Q6P3GDN
-        slugs: []
-        title: Wave-based Execution
-        type: requirement
-        description: Orchestrator for executing task waves with dependency awareness.
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:50:50.631Z
-        notes: []
-      - _ulid: 01KPNWTKQVEQPD9KC2V24BVMS7
-        slugs: []
-        title: Verification & Retry Loop
-        type: requirement
-        description: Automated quality checks and retry logic for failed agent actions.
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:50:52.284Z
-        notes: []
-      - _ulid: 01KPNWTNCEYS2WKY5VPT18MZTH
-        slugs: []
-        title: Execution State Persistence
-        type: requirement
-        description: Tracking and resuming long-running agent sessions across app restarts.
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:50:53.966Z
-        notes: []
-    created: 2026-04-20T16:49:35.488Z
+    created: 2026-04-20T16:50:43.529Z
     notes: []
-  - _ulid: 01KPNWRA78HGZ4D06Q26CY9FKY
-    slugs:
-      - token-economics
-    title: Token Economics & Telemetry
-    type: feature
-    description: Real-time tracking of token consumption and cost savings from RTK/MCP/GitNexus.
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the Auth & API Key Management is implemented
+      when: it is used
+      then: it works as expected
+  - _ulid: 01KPNWTCV0CY2KPET8VX2X699P
+    slugs: []
+    title: Model Routing Policies
+    type: requirement
+    description: System for selecting models based on task type (planning, patching,
+      summarization).
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-04-20T16:50:45.216Z
+    notes: []
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the Model Routing Policies is implemented
+      when: it is used
+      then: it works as expected
+  - _ulid: 01KPNWTEKMYMVHRE4AB0AE6EF5
+    slugs: []
+    title: Named Model Plans
+    type: requirement
+    description: User-definable presets for cost/quality balance (e.g., Budget, High-Quality).
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-04-20T16:50:47.028Z
+    notes: []
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the Named Model Plans is implemented
+      when: it is used
+      then: it works as expected
+  created: 2026-04-20T16:49:33.771Z
+  notes: []
+- _ulid: 01KPNWR8R0ZM1G5XD8NWD50KJX
+  slugs:
+  - gsd-engine
+  title: GSD Execution Engine
+  type: feature
+  description: Phase-based agent execution engine with verifier loops and wave-based
+    orchestration.
+  status:
+    maturity: draft
+    implementation: implemented
+  acceptance_criteria:
+  - id: ac-gsd-1
+    given: a multi-phase plan
+    when: the GSD engine executes it
+    then: it follows the phase sequence with verification loops and wave orchestration
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  tags: []
+  requirements:
+  - _ulid: 01KPNWTGE0H4SR3YYF0YNTHT2D
+    slugs: []
+    title: Phase-based Decomposition
+    type: requirement
+    description: Logic to break large tasks into sequential, manageable phases.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-04-20T16:50:48.896Z
+    notes: []
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the Phase-based Decomposition is implemented
+      when: it is used
+      then: it works as expected
+  - _ulid: 01KPNWTJ4624RN9A805Q6P3GDN
+    slugs: []
+    title: Wave-based Execution
+    type: requirement
+    description: Orchestrator for executing task waves with dependency awareness.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-04-20T16:50:50.631Z
+    notes: []
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the Wave-based Execution is implemented
+      when: it is used
+      then: it works as expected
+  - _ulid: 01KPNWTKQVEQPD9KC2V24BVMS7
+    slugs: []
+    title: Verification & Retry Loop
+    type: requirement
+    description: Automated quality checks and retry logic for failed agent actions.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-04-20T16:50:52.284Z
+    notes: []
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the Verification & Retry Loop is implemented
+      when: it is used
+      then: it works as expected
+  - _ulid: 01KPNWTNCEYS2WKY5VPT18MZTH
+    slugs: []
+    title: Execution State Persistence
+    type: requirement
+    description: Tracking and resuming long-running agent sessions across app restarts.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-04-20T16:50:53.966Z
+    notes: []
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the Execution State Persistence is implemented
+      when: it is used
+      then: it works as expected
+  created: 2026-04-20T16:49:35.488Z
+  notes: []
+- _ulid: 01KPNWRA78HGZ4D06Q26CY9FKY
+  slugs:
+  - token-economics
+  title: Token Economics & Telemetry
+  type: feature
+  description: Real-time tracking of token consumption and cost savings from RTK/MCP/GitNexus.
+  status:
+    maturity: draft
+    implementation: implemented
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  acceptance_criteria:
+  - given: A terminal session is running an AI backend (Claude, Gemini, etc.)
+    id: ac-1
+    then: The system parses and stores token counts per session in the telemetry store
+    when: Token usage data appears in terminal output
+  - given: Token data has been collected for one or more sessions
+    id: ac-2
+    then: Session token totals, estimated cost, and cumulative totals are displayed
+    when: The user views the telemetry panel
+  - given: RTK is installed and available
+    id: ac-3
+    then: RTK savings data from rtk gain is displayed alongside raw token usage
+    when: The telemetry panel renders
+  - given: Multiple terminal sessions are active
+    id: ac-4
+    then: Per-session and aggregate totals update in real-time without page refresh
+    when: Token data updates in any session
+  tags: []
+  requirements:
+  - _ulid: 01KPNWTQ5WY2JVHCYXXKDFCKQ6
+    slugs: []
+    title: Live Token/Cost HUD
+    type: requirement
+    description: Real-time UI component showing current session burn and budget status.
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the Live Token/Cost HUD is implemented
+      when: it is used
+      then: it works as expected
+  - id: ac-hud-1
+    given: active token consumption
+    when: viewing the HUD
+    then: real-time usage and cost data is displayed
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-04-20T16:50:55.804Z
+    notes: []
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the feature is implemented
+      when: it is used
+      then: it works as expected
+  - _ulid: 01KPNWTRXKAQ76CQYFP8CA18X9
+    slugs: []
+    title: Savings Telemetry (RTK/MCP)
+    type: requirement
+    description: Calculation and display of tokens saved by using RTK, MCP, and local
+      intelligence.
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the Savings Telemetry (RTK/MCP) is implemented
+      when: it is used
+      then: it works as expected
+  - id: ac-savings-1
+    given: RTK/MCP optimizations active
+    when: measuring savings
+    then: the telemetry correctly reports the token reduction achieved
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-04-20T16:50:57.587Z
+    notes: []
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the feature is implemented
+      when: it is used
+      then: it works as expected
+  - _ulid: 01KPNWTTH2GSHV3Q4W2W7F7KV8
+    slugs: []
+    title: Token Burn History
+    type: requirement
+    description: SQLite-backed logging of all token transactions for historical analysis.
     status:
       maturity: draft
       implementation: implemented
@@ -169,108 +347,62 @@ features:
     tests: []
     traits: []
     acceptance_criteria:
-      - given: A terminal session is running an AI backend (Claude, Gemini, etc.)
-        id: ac-1
-        then: The system parses and stores token counts per session in the telemetry store
-        when: Token usage data appears in terminal output
-      - given: Token data has been collected for one or more sessions
-        id: ac-2
-        then: Session token totals, estimated cost, and cumulative totals are displayed
-        when: The user views the telemetry panel
-      - given: RTK is installed and available
-        id: ac-3
-        then: RTK savings data from rtk gain is displayed alongside raw token usage
-        when: The telemetry panel renders
-      - given: Multiple terminal sessions are active
-        id: ac-4
-        then: Per-session and aggregate totals update in real-time without page refresh
-        when: Token data updates in any session
+    - given: The application starts
+      id: ac-1
+      then: A SQLite database is created/opened at the user data directory with a
+        token_transactions table
+      when: The token burn history module initializes
+    - given: A terminal session produces token usage data (input/output tokens)
+      id: ac-2
+      then: A transaction record is inserted into SQLite with session_id, project_path,
+        backend, input_tokens, output_tokens, cost_estimate, and timestamp
+      when: The token data is received by the main process
+    - given: Token transactions have been logged
+      id: ac-3
+      then: Aggregated and per-session token data is returned with filtering by date
+        range, project, and backend
+      when: The renderer requests history via IPC
+    - given: The renderer has received token history data
+      id: ac-4
+      then: A historical view shows token usage over time with charts, totals, and
+        breakdown by project/backend
+      when: The Token Burn History UI component renders
     tags: []
-    requirements:
-      - _ulid: 01KPNWTQ5WY2JVHCYXXKDFCKQ6
-        slugs: []
-        title: Live Token/Cost HUD
-        type: requirement
-        description: Real-time UI component showing current session burn and budget status.
-        status:
-          maturity: draft
-          implementation: implemented
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:50:55.804Z
-        notes: []
-      - _ulid: 01KPNWTRXKAQ76CQYFP8CA18X9
-        slugs: []
-        title: Savings Telemetry (RTK/MCP)
-        type: requirement
-        description: Calculation and display of tokens saved by using RTK, MCP, and local intelligence.
-        status:
-          maturity: draft
-          implementation: implemented
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:50:57.587Z
-        notes: []
-      - _ulid: 01KPNWTTH2GSHV3Q4W2W7F7KV8
-        slugs: []
-        title: Token Burn History
-        type: requirement
-        description: SQLite-backed logging of all token transactions for historical analysis.
-        status:
-          maturity: draft
-          implementation: implemented
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        acceptance_criteria:
-          - given: The application starts
-            id: ac-1
-            then: A SQLite database is created/opened at the user data directory with a token_transactions table
-            when: The token burn history module initializes
-          - given: A terminal session produces token usage data (input/output tokens)
-            id: ac-2
-            then: A transaction record is inserted into SQLite with session_id, project_path, backend,
-              input_tokens, output_tokens, cost_estimate, and timestamp
-            when: The token data is received by the main process
-          - given: Token transactions have been logged
-            id: ac-3
-            then: Aggregated and per-session token data is returned with filtering by date range, project, and
-              backend
-            when: The renderer requests history via IPC
-          - given: The renderer has received token history data
-            id: ac-4
-            then: A historical view shows token usage over time with charts, totals, and breakdown by
-              project/backend
-            when: The Token Burn History UI component renders
-        tags: []
-        created: 2026-04-20T16:50:59.235Z
-        notes: []
-      - _ulid: 01KPNWTW6207547YKZBEXCN1R1
-        slugs: []
-        title: Budget & Rate Limits
-        type: requirement
-        description: Configurable caps on token usage per task or session.
-        status:
-          maturity: draft
-          implementation: implemented
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:51:00.931Z
-        notes: []
-    created: 2026-04-20T16:49:37.000Z
+    created: 2026-04-20T16:50:59.235Z
     notes: []
+  - _ulid: 01KPNWTW6207547YKZBEXCN1R1
+    slugs: []
+    title: Budget & Rate Limits
+    type: requirement
+    description: Configurable caps on token usage per task or session.
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the Budget & Rate Limits is implemented
+      when: it is used
+      then: it works as expected
+  - id: ac-budget-1
+    given: a defined budget
+    when: consumption reaches limits
+    then: alerts are triggered and routing policies are enforced
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-04-20T16:51:00.931Z
+    notes: []
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the feature is implemented
+      when: it is used
+      then: it works as expected
+  created: 2026-04-20T16:49:37Z
+  notes: []
 notes: []

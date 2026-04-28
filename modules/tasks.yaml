@@ -1,9 +1,10 @@
 _ulid: 01KK67BEXPK9TT6168Q1FM5PYD
 slugs:
-  - tasks
+- tasks
 title: Task Management
 type: module
-description: Integrated task tracking via Beads and Kspec backends with unified adapter pattern
+description: Integrated task tracking via Beads and Kspec backends with unified adapter
+  pattern
 status:
   maturity: draft
   implementation: not_started
@@ -13,167 +14,264 @@ relates_to: []
 tests: []
 traits: []
 tags:
-  - feature
+- feature
 features:
-  - _ulid: 01KK67D0FDNH5K951SXXWFSQYM
-    slugs:
-      - beads-backend
-    title: Beads Task Backend
-    type: feature
-    description: Task CRUD via Beads CLI (bd command). File watchers on .beads/ directory with 500ms
-      debounce. Task ID validation, shell injection prevention via spawn().
-    status:
-      implementation: implemented
-    depends_on: []
-    implements: []
-    relates_to: []
-    tests: []
-    traits: []
-    tags: []
-    created: 2026-03-08T08:00:44.525Z
-    notes: []
-  - _ulid: 01KK67D2TP6ANDE0XJR4WWXKAF
-    slugs:
-      - kspec-backend
-    title: Kspec Task Backend
-    type: feature
-    description: Spec-driven task management via kspec CLI. Daemon lifecycle management, auto-injection
-      of task instructions into CLAUDE.md, dispatch for autonomous agents.
-    status:
-      implementation: implemented
-    depends_on: []
-    implements: []
-    relates_to: []
-    tests: []
-    traits: []
-    tags: []
-    created: 2026-03-08T08:00:46.934Z
-    notes: []
-  - _ulid: 01KK67D43YDQQSPB0N6QEN22Q4
-    slugs:
-      - task-adapter
-    title: Unified Task Adapter
-    type: feature
-    description: Adapter pattern abstracting Beads and Kspec backends behind a unified TaskAdapter
-      interface. Auto-detection of initialized backend, transparent routing, migration support.
+- _ulid: 01KK67D0FDNH5K951SXXWFSQYM
+  slugs:
+  - beads-backend
+  title: Beads Task Backend
+  type: feature
+  description: Task CRUD via Beads CLI (bd command). File watchers on .beads/ directory
+    with 500ms debounce. Task ID validation, shell injection prevention via spawn().
+  status:
+    maturity: draft
+    implementation: implemented
+  acceptance_criteria:
+  - id: ac-beads-1
+    given: a Beads project
+    when: queried
+    then: the adapter correctly interface with the Beads issue tracker
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  tags: []
+  created: 2026-03-08T08:00:44.525Z
+  notes: []
+- _ulid: 01KK67D2TP6ANDE0XJR4WWXKAF
+  slugs:
+  - kspec-backend
+  title: Kspec Task Backend
+  type: feature
+  description: Spec-driven task management via kspec CLI. Daemon lifecycle management,
+    auto-injection of task instructions into CLAUDE.md, dispatch for autonomous agents.
+  status:
+    maturity: draft
+    implementation: implemented
+  acceptance_criteria:
+  - id: ac-kspec-1
+    given: a Kspec project
+    when: queried
+    then: the adapter correctly interfaces with the Kspec spec and task system
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  tags: []
+  created: 2026-03-08T08:00:46.934Z
+  notes: []
+- _ulid: 01KK67D43YDQQSPB0N6QEN22Q4
+  slugs:
+  - task-adapter
+  title: Unified Task Adapter
+  type: feature
+  description: Adapter pattern abstracting Beads and Kspec backends behind a unified
+    TaskAdapter interface. Auto-detection of initialized backend, transparent routing,
+    migration support.
+  status:
+    maturity: draft
+    implementation: implemented
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  acceptance_criteria:
+  - given: a project has kspec initialized
+    id: ac-1
+    then: the kspec adapter is auto-detected and used for all task operations transparently
+    when: the task panel loads
+  - given: a project has beads initialized
+    id: ac-2
+    then: tasks are migrated from beads to kspec format and the adapter switches to
+      kspec backend
+    when: user clicks upgrade to kspec
+  tags: []
+  created: 2026-03-08T08:00:48.254Z
+  notes: []
+- _ulid: 01KK67D5YWCHVC8RJGVH5MGVKD
+  slugs:
+  - task-panel
+  title: Task Panel UI
+  type: feature
+  description: "Collapsible bottom panel showing task list with filtering, sorting,\
+    \ inline editing, status cycling, create/detail modals, and resizable height.\
+    \ State machine: loading \u2192 not_installed \u2192 not_initialized \u2192 ready."
+  status:
+    maturity: draft
+    implementation: implemented
+  acceptance_criteria:
+  - id: ac-panel-1
+    given: active tasks
+    when: opening the task panel
+    then: tasks are listed with status, priority, and links to specs
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  tags: []
+  created: 2026-03-08T08:00:50.140Z
+  notes: []
+- _ulid: 01KPNWWTJ4QM238RFJP3APGK9P
+  slugs:
+  - orchestration-ui
+  title: Advanced Orchestration UI
+  type: feature
+  description: High-fidelity dashboard for agent status, activity feeds, and approval
+    workflows.
+  status:
+    maturity: draft
+    implementation: implemented
+  acceptance_criteria:
+  - id: ac-orchestrator-ui-1
+    given: an orchestration session
+    when: viewing the UI
+    then: the phase tree and execution state are visualized in real-time
+  depends_on: []
+  implements: []
+  relates_to: []
+  tests: []
+  traits: []
+  tags: []
+  requirements:
+  - _ulid: 01KPNWY9P99S2EB736NTXXJM4V
+    slugs: []
+    title: Real-time Activity Feed
+    type: requirement
+    description: Visual log of all system and agent activities across the current
+      session.
     status:
       maturity: draft
       implementation: implemented
-    depends_on: []
-    implements: []
-    relates_to: []
-    tests: []
-    traits: []
     acceptance_criteria:
-      - given: a project has kspec initialized
-        id: ac-1
-        then: the kspec adapter is auto-detected and used for all task operations transparently
-        when: the task panel loads
-      - given: a project has beads initialized
-        id: ac-2
-        then: tasks are migrated from beads to kspec format and the adapter switches to kspec backend
-        when: user clicks upgrade to kspec
-    tags: []
-    created: 2026-03-08T08:00:48.254Z
-    notes: []
-  - _ulid: 01KK67D5YWCHVC8RJGVH5MGVKD
-    slugs:
-      - task-panel
-    title: Task Panel UI
-    type: feature
-    description: "Collapsible bottom panel showing task list with filtering, sorting, inline editing,
-      status cycling, create/detail modals, and resizable height. State machine: loading →
-      not_installed → not_initialized → ready."
-    status:
-      implementation: implemented
+    - id: ac-gen-1
+      given: the Real-time Activity Feed is implemented
+      when: it is used
+      then: it works as expected
+  - id: ac-feed-1
+    given: orchestrator activity
+    when: checking the feed
+    then: all events are streamed and displayed chronologically
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
     tags: []
-    created: 2026-03-08T08:00:50.140Z
+    created: 2026-04-20T16:52:53.066Z
     notes: []
-  - _ulid: 01KPNWWTJ4QM238RFJP3APGK9P
-    slugs:
-      - orchestration-ui
-    title: Advanced Orchestration UI
-    type: feature
-    description: High-fidelity dashboard for agent status, activity feeds, and approval workflows.
     status:
       maturity: draft
       implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the feature is implemented
+      when: it is used
+      then: it works as expected
+  - _ulid: 01KPNWYBDWVTS6N37AHF3MWPW6
+    slugs: []
+    title: Agent Status Cards
+    type: requirement
+    description: Detailed status display for individual agents (Planner, Builder,
+      Reviewer).
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the Agent Status Cards is implemented
+      when: it is used
+      then: it works as expected
+  - id: ac-agent-cards-1
+    given: multiple agents active
+    when: viewing the dashboard
+    then: each agent's status and current task are shown in a card
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
     tags: []
-    requirements:
-      - _ulid: 01KPNWY9P99S2EB736NTXXJM4V
-        slugs: []
-        title: Real-time Activity Feed
-        type: requirement
-        description: Visual log of all system and agent activities across the current session.
-        status:
-          maturity: draft
-          implementation: implemented
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:52:53.066Z
-        notes: []
-      - _ulid: 01KPNWYBDWVTS6N37AHF3MWPW6
-        slugs: []
-        title: Agent Status Cards
-        type: requirement
-        description: Detailed status display for individual agents (Planner, Builder, Reviewer).
-        status:
-          maturity: draft
-          implementation: implemented
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:52:54.844Z
-        notes: []
-      - _ulid: 01KPNWYD38HED3GG5Y9BMWS814
-        slugs: []
-        title: Approval Workflow UI
-        type: requirement
-        description: Interactive prompts for user review of proposed agent modifications.
-        status:
-          maturity: draft
-          implementation: implemented
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:52:56.553Z
-        notes: []
-      - _ulid: 01KPNWYETJGSJZF1EGYXTBK7QD
-        slugs: []
-        title: Task Assignment View
-        type: requirement
-        description: Management view for assigning agents to specific repositories or tasks.
-        status:
-          maturity: draft
-          implementation: implemented
-        depends_on: []
-        implements: []
-        relates_to: []
-        tests: []
-        traits: []
-        tags: []
-        created: 2026-04-20T16:52:58.322Z
-        notes: []
-    created: 2026-04-20T16:52:04.804Z
+    created: 2026-04-20T16:52:54.844Z
     notes: []
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the feature is implemented
+      when: it is used
+      then: it works as expected
+  - _ulid: 01KPNWYD38HED3GG5Y9BMWS814
+    slugs: []
+    title: Approval Workflow UI
+    type: requirement
+    description: Interactive prompts for user review of proposed agent modifications.
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the Approval Workflow UI is implemented
+      when: it is used
+      then: it works as expected
+  - id: ac-workflow-ui-1
+    given: a pending approval
+    when: the user interacts with the workflow UI
+    then: the execution resumes or cancels based on the input
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-04-20T16:52:56.553Z
+    notes: []
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the feature is implemented
+      when: it is used
+      then: it works as expected
+  - _ulid: 01KPNWYETJGSJZF1EGYXTBK7QD
+    slugs: []
+    title: Task Assignment View
+    type: requirement
+    description: Management view for assigning agents to specific repositories or
+      tasks.
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the Task Assignment View is implemented
+      when: it is used
+      then: it works as expected
+  - id: ac-assign-1
+    given: a task needing an agent
+    when: assigning it
+    then: the UI reflects the assignment and the agent picks up the task
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-04-20T16:52:58.322Z
+    notes: []
+    status:
+      maturity: draft
+      implementation: implemented
+    acceptance_criteria:
+    - id: ac-gen-1
+      given: the feature is implemented
+      when: it is used
+      then: it works as expected
+  created: 2026-04-20T16:52:04.804Z
+  notes: []
 notes: []
