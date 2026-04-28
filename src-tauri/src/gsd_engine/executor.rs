@@ -88,7 +88,7 @@ pub(crate) fn verification_outcome(description: &str, attempts: u32) -> bool {
 #[derive(Clone)]
 pub struct Executor {
     pub ai: Arc<RuntimeManager>,
-    pub db: Arc<DatabaseManager>,
+    pub _db: Arc<DatabaseManager>,
     pub app: AppHandle,
     pub pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<crate::gsd_engine::UserResponse>>>>,
     pub project_path: Option<String>,
@@ -104,7 +104,7 @@ impl Executor {
     ) -> Self {
         Self {
             ai,
-            db,
+            _db: db,
             app,
             pending_responses,
             project_path,

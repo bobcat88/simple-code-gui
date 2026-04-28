@@ -1,5 +1,5 @@
 use crate::ai_runtime::types::{
-    CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse, Message, ModelInfo, ModelTier, Usage,
+    CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse, ModelInfo, ModelTier, Usage,
 };
 use crate::ai_runtime::AIProvider;
 use async_trait::async_trait;

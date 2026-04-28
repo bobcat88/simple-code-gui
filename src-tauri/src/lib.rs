@@ -39,6 +39,7 @@ use orchestration::{
     submit_approval_request, sync_workflow, OrchestrationState,
     brainstorm_load_canvas, brainstorm_save_canvas, broadcast_agent_message, get_agent_messages,
     gsd_list_seeds, gsd_plant_seed, kspec_list_drafts, kspec_write_draft,
+    brainstorm_agentic_sketch, brainstorm_architect_review,
 };
 use pty_manager::PtyManager;
 use settings_manager::{AppSettings, SettingsManager};
@@ -749,7 +750,9 @@ pub fn run() {
             kspec_list_drafts,
             kspec_write_draft,
             brainstorm_load_canvas,
-            brainstorm_save_canvas
+            brainstorm_save_canvas,
+            brainstorm_agentic_sketch,
+            brainstorm_architect_review
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

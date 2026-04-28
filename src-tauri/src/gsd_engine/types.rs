@@ -51,6 +51,7 @@ pub struct GsdPlan {
     pub metadata: HashMap<String, String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum InsightSeverity {
@@ -59,6 +60,7 @@ pub enum InsightSeverity {
     Low,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum InsightType {
@@ -67,6 +69,7 @@ pub enum InsightType {
     Optimization,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NeuralInsight {

@@ -550,4 +550,12 @@ export class TauriBackend implements ExtendedApi {
   async brainstormSaveCanvas(cwd: string, canvas: BrainstormCanvas): Promise<void> {
     await tauriIpc.brainstormSaveCanvas(cwd, canvas);
   }
+
+  async brainstormAgenticSketch(cwd: string, baseId: string, baseTitle: string, baseContent: string): Promise<BrainstormCanvasNode> {
+    return await tauriIpc.brainstormAgenticSketch(cwd, baseId, baseTitle, baseContent);
+  }
+
+  async brainstormArchitectReview(cwd: string, baseId: string, baseType: string, baseTitle: string, baseContent: string): Promise<BrainstormCanvasNode> {
+    return await tauriIpc.brainstormArchitectReview(cwd, baseId, baseType, baseTitle, baseContent);
+  }
 }

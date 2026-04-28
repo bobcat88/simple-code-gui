@@ -21,7 +21,7 @@ describe('TokenBudgetHud', () => {
       />,
     )
 
-    expect(screen.getByTitle('Current session burn')).toHaveTextContent('1.5K tokens')
+    expect(screen.getByTitle('Current session burn').textContent).toMatch(/Burn\s*1[.,]5\s*k\s*tokens/i)
     expect(screen.getByTitle('Estimated session cost')).toHaveTextContent('$0.045')
     expect(screen.getByTitle('Budget status').textContent).toContain('Near budget')
     expect(screen.getByRole('status')).toBeInTheDocument()

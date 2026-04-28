@@ -72,7 +72,7 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
       setCanvas({
         nodes: loadedCanvas.nodes || [],
         edges: loadedCanvas.edges || [],
-        updatedAt: loadedCanvas.updatedAt || loadedCanvas.updated_at,
+        updatedAt: loadedCanvas.updatedAt,
       })
     } catch (err) {
       console.error('Failed to refresh brainstorm data:', err)
@@ -111,12 +111,12 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
   }
 
   const getDraftModuleId = (draft: KSpecDraft) => draft.moduleId || draft.id
-  const getDraftUpdatedAt = (draft: KSpecDraft) => draft.updatedAt || draft.lastModified || draft.last_modified || Date.now()
+  const getDraftUpdatedAt = (draft: KSpecDraft) => draft.updatedAt || draft.lastModified || Date.now()
   const getSeedCreatedAt = (seed: GsdSeed) => seed.createdAt || seed.timestamp * 1000 || Date.now()
-  const getSeedSurface = (seed: GsdSeed) => seed.whenToSurface || seed.when_to_surface || 'Next Milestone'
+  const getSeedSurface = (seed: GsdSeed) => seed.whenToSurface || 'Next Milestone'
   const getSeedId = (seed: GsdSeed) => seed.id || seed.slug || seed.title
-  const getCanvasNodeType = (node: BrainstormCanvasNode) => node.nodeType || node.node_type || 'seed'
-  const getCanvasNodeSourceId = (node: BrainstormCanvasNode) => node.sourceId || node.source_id
+  const getCanvasNodeType = (node: BrainstormCanvasNode) => node.nodeType || 'seed'
+  const getCanvasNodeSourceId = (node: BrainstormCanvasNode) => node.sourceId
   const selectedCanvasNode = canvas.nodes.find(node => node.id === selectedCanvasNodeId) || null
   const latestSeed = seeds.reduce<GsdSeed | null>((latest, seed) => {
     if (!latest) return seed
@@ -204,11 +204,21 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
     setPromotionSeedId(getSeedId(seed))
     setErrorMessage(null)
     try {
+      const associatedDrafts = drafts.filter(draft => {
+        const sourceId = getDraftSourceId(draft)
+        const slugs = draft.slugs || []
+        return sourceId === seed.id || sourceId === seed.slug || slugs.includes(seed.slug || '') || draft.title === seed.title
+      })
+
+      const draftRefs = associatedDrafts.map(d => `- Draft: ${getDraftModuleId(d)}`).join('\n')
+
       const description = [
         seed.why ? `Seed rationale: ${seed.why}` : 'Created from a Brainstorm Companion seed.',
         `When to surface: ${getSeedSurface(seed)}`,
         `Source seed: ${seed.slug || seed.id || seed.title}`,
-      ].join('\n\n')
+        draftRefs.length > 0 ? `Context:\n${draftRefs}` : ''
+      ].filter(Boolean).join('\n\n')
+
       const result = await api.beadsCreate(projectPath, seed.title, description, 2, 'task', 'brainstorm,seed')
       if (result?.success === false) {
         throw new Error(result.error || 'Beads task creation failed.')
@@ -216,6 +226,52 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
       await refresh()
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Failed to promote seed to Beads task.')
+    } finally {
+      setPromotionSeedId(null)
+    }
+  }
+
+  const handleNodeToTask = async () => {
+    if (!selectedCanvasNode) return
+    setPromotionSeedId(selectedCanvasNode.id)
+    setErrorMessage(null)
+    try {
+      const type = getCanvasNodeType(selectedCanvasNode)
+      const sourceId = getCanvasNodeSourceId(selectedCanvasNode)
+      
+      let description = selectedCanvasNode.content
+      
+      if (type === 'seed' || sourceId) {
+        const seedId = type === 'seed' ? selectedCanvasNode.id : sourceId
+        if (seedId) {
+           const seed = seeds.find(s => getSeedId(s) === seedId || s.slug === seedId)
+           if (seed) {
+              const associatedDrafts = drafts.filter(draft => {
+                const draftSourceId = getDraftSourceId(draft)
+                const slugs = draft.slugs || []
+                return draftSourceId === seed.id || draftSourceId === seed.slug || slugs.includes(seed.slug || '') || draft.title === seed.title
+              })
+
+              const draftRefs = associatedDrafts.map(d => `- Draft: ${getDraftModuleId(d)}`).join('\n')
+
+              description = [
+                description,
+                seed.why ? `Seed rationale: ${seed.why}` : '',
+                `When to surface: ${getSeedSurface(seed)}`,
+                `Source: ${seed.slug || seed.id || seed.title}`,
+                draftRefs.length > 0 ? `Context:\n${draftRefs}` : ''
+              ].filter(Boolean).join('\n\n')
+           }
+        }
+      }
+
+      const result = await api.beadsCreate(projectPath, `Implement: ${selectedCanvasNode.title}`, description, 2, 'task', `brainstorm,${type}`)
+      if (result?.success === false) {
+        throw new Error(result.error || 'Beads task creation failed.')
+      }
+      await refresh()
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to promote node to Beads task.')
     } finally {
       setPromotionSeedId(null)
     }
@@ -277,8 +333,8 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
     const preservedEdges = canvas.edges
       .map(edge => ({
         id: edge.id,
-        fromNode: edge.fromNode || edge.from_node || '',
-        toNode: edge.toNode || edge.to_node || '',
+        fromNode: edge.fromNode || '',
+        toNode: edge.toNode || '',
         label: edge.label,
       }))
       .filter(edge =>
@@ -312,60 +368,105 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
   const handleGenerateSketch = async () => {
     if (!selectedCanvasNode) return
     const baseId = selectedCanvasNode.id
-    const sketchNode: BrainstormCanvasNode = {
-      id: `sketch-${baseId}`,
-      nodeType: 'sketch',
-      title: `Sketch: ${selectedCanvasNode.title}`,
-      content: [
-        `Primary surface: ${selectedCanvasNode.title}`,
-        'Layout: compact sidebar workflow with visible state, source artifact, and one primary action.',
-        'Interaction: select a node, inspect rationale, then promote or review without leaving the Brainstorm tab.',
-      ].join('\n'),
-      x: selectedCanvasNode.x,
-      y: selectedCanvasNode.y + 108,
-      width: 178,
-      height: 96,
-      sourceId: baseId,
+    
+    setIsSavingCanvas(true)
+    setErrorMessage(null)
+    
+    try {
+      let sketchNode: BrainstormCanvasNode
+      if (api.brainstormAgenticSketch) {
+        sketchNode = await api.brainstormAgenticSketch(
+          projectPath,
+          baseId,
+          selectedCanvasNode.title,
+          selectedCanvasNode.content
+        )
+      } else {
+        sketchNode = {
+          id: `sketch-${baseId}`,
+          nodeType: 'sketch',
+          title: `Sketch: ${selectedCanvasNode.title}`,
+          content: [
+            `Primary surface: ${selectedCanvasNode.title}`,
+            'Layout: compact sidebar workflow with visible state, source artifact, and one primary action.',
+            'Interaction: select a node, inspect rationale, then promote or review without leaving the Brainstorm tab.',
+          ].join('\n'),
+          x: 0, y: 0, width: 178, height: 96,
+          sourceId: baseId,
+        }
+      }
+      
+      sketchNode.x = selectedCanvasNode.x
+      sketchNode.y = selectedCanvasNode.y + 108
+      
+      const nextCanvas = {
+        nodes: [...canvas.nodes.filter(node => node.id !== sketchNode.id), sketchNode],
+        edges: [
+          ...canvas.edges.filter(edge => edge.toNode !== sketchNode.id),
+          { id: `${baseId}-${sketchNode.id}`, fromNode: baseId, toNode: sketchNode.id, label: 'sketches' },
+        ],
+      }
+      await api.brainstormSaveCanvas?.(projectPath, nextCanvas)
+      setCanvas(nextCanvas)
+      setSelectedCanvasNodeId(sketchNode.id)
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to generate agentic sketch.')
+    } finally {
+      setIsSavingCanvas(false)
     }
-    const nextCanvas = {
-      nodes: [...canvas.nodes.filter(node => node.id !== sketchNode.id), sketchNode],
-      edges: [
-        ...canvas.edges.filter(edge => edge.toNode !== sketchNode.id),
-        { id: `${baseId}-${sketchNode.id}`, fromNode: baseId, toNode: sketchNode.id, label: 'sketches' },
-      ],
-    }
-    await saveCanvas(nextCanvas)
-    setSelectedCanvasNodeId(sketchNode.id)
   }
 
   const handleArchitectReview = async () => {
     if (!selectedCanvasNode) return
     const baseId = selectedCanvasNode.id
     const type = getCanvasNodeType(selectedCanvasNode)
-    const reviewNode: BrainstormCanvasNode = {
-      id: `review-${baseId}`,
-      nodeType: 'review',
-      title: `Review: ${selectedCanvasNode.title}`,
-      content: [
-        `Architect verdict: ${type === 'draft' ? 'ready for KSpec hardening' : 'needs acceptance criteria before implementation'}.`,
-        `Debt check: keep source artifact linked as ${getCanvasNodeSourceId(selectedCanvasNode) || baseId}.`,
-        'Next action: either draft spec details or promote to tracked Beads work with validation evidence.',
-      ].join('\n'),
-      x: selectedCanvasNode.x + 190,
-      y: selectedCanvasNode.y + 108,
-      width: 190,
-      height: 106,
-      sourceId: baseId,
+    
+    setIsSavingCanvas(true)
+    setErrorMessage(null)
+
+    try {
+      let reviewNode: BrainstormCanvasNode
+      if (api.brainstormArchitectReview) {
+        reviewNode = await api.brainstormArchitectReview(
+          projectPath,
+          baseId,
+          type,
+          selectedCanvasNode.title,
+          selectedCanvasNode.content
+        )
+      } else {
+        reviewNode = {
+          id: `review-${baseId}`,
+          nodeType: 'review',
+          title: `Review: ${selectedCanvasNode.title}`,
+          content: [
+            `Architect verdict: ${type === 'draft' ? 'ready for KSpec hardening' : 'needs acceptance criteria before implementation'}.`,
+            `Debt check: keep source artifact linked as ${getCanvasNodeSourceId(selectedCanvasNode) || baseId}.`,
+            'Next action: either draft spec details or promote to tracked Beads work with validation evidence.',
+          ].join('\n'),
+          x: 0, y: 0, width: 190, height: 106,
+          sourceId: baseId,
+        }
+      }
+      
+      reviewNode.x = selectedCanvasNode.x + 190
+      reviewNode.y = selectedCanvasNode.y + 108
+      
+      const nextCanvas = {
+        nodes: [...canvas.nodes.filter(node => node.id !== reviewNode.id), reviewNode],
+        edges: [
+          ...canvas.edges.filter(edge => edge.toNode !== reviewNode.id),
+          { id: `${baseId}-${reviewNode.id}`, fromNode: baseId, toNode: reviewNode.id, label: 'reviews' },
+        ],
+      }
+      await api.brainstormSaveCanvas?.(projectPath, nextCanvas)
+      setCanvas(nextCanvas)
+      setSelectedCanvasNodeId(reviewNode.id)
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to generate architect review.')
+    } finally {
+      setIsSavingCanvas(false)
     }
-    const nextCanvas = {
-      nodes: [...canvas.nodes.filter(node => node.id !== reviewNode.id), reviewNode],
-      edges: [
-        ...canvas.edges.filter(edge => edge.toNode !== reviewNode.id),
-        { id: `${baseId}-${reviewNode.id}`, fromNode: baseId, toNode: reviewNode.id, label: 'reviews' },
-      ],
-    }
-    await saveCanvas(nextCanvas)
-    setSelectedCanvasNodeId(reviewNode.id)
   }
 
   if (selectedDraft) {
@@ -581,11 +682,11 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
                         Draft Spec <FileEdit size={10} />
                       </button>
                       <button
-                        onClick={() => handleSeedToTask(seed)}
+                        className="text-primary hover:text-primary-focus transition-colors flex items-center gap-1"
+                        onClick={(e) => { e.stopPropagation(); handleSeedToTask(seed) }}
                         disabled={promotionSeedId === getSeedId(seed)}
-                        className="text-[9px] text-white/30 hover:text-indigo-300 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
                       >
-                        Promote <ChevronRight size={10} />
+                        {promotionSeedId === getSeedId(seed) ? <Loader2 size={10} className="animate-spin" /> : 'Promote to Beads'} <ChevronRight size={10} />
                       </button>
                     </div>
                   </div>
@@ -724,8 +825,8 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
 
             <div className="brainstorm-canvas">
               {canvas.edges.map(edge => {
-                const from = canvas.nodes.find(node => node.id === edge.fromNode || node.id === edge.from_node)
-                const to = canvas.nodes.find(node => node.id === edge.toNode || node.id === edge.to_node)
+                const from = canvas.nodes.find(node => node.id === edge.fromNode)
+                const to = canvas.nodes.find(node => node.id === edge.toNode)
                 if (!from || !to) return null
                 return (
                   <div
@@ -797,7 +898,17 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
                   <span className="text-[9px] text-white/20">{getCanvasNodeSourceId(selectedCanvasNode) || selectedCanvasNode.id}</span>
                 </div>
                 <div className="text-xs font-bold text-white/90">{selectedCanvasNode.title}</div>
-                <pre className="whitespace-pre-wrap text-[10px] leading-relaxed text-white/50 font-sans">{selectedCanvasNode.content}</pre>
+                <pre className="whitespace-pre-wrap text-[10px] leading-relaxed text-white/50 font-sans max-h-32 overflow-y-auto">{selectedCanvasNode.content}</pre>
+                
+                <div className="pt-2 mt-2 border-t border-white/5 flex justify-end">
+                  <button
+                    onClick={handleNodeToTask}
+                    disabled={promotionSeedId === selectedCanvasNode.id}
+                    className="py-1 px-2 bg-purple-500/10 hover:bg-purple-500/20 disabled:opacity-40 border border-purple-500/20 rounded-md text-[9px] font-bold text-purple-300 flex items-center justify-center gap-1 transition-colors"
+                  >
+                    {promotionSeedId === selectedCanvasNode.id ? <Loader2 size={10} className="animate-spin" /> : 'Promote to Beads'} <ChevronRight size={10} />
+                  </button>
+                </div>
               </div>
             )}
           </div>

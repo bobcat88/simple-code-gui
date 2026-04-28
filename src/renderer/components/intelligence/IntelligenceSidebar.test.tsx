@@ -3,6 +3,14 @@ import { describe, expect, it, vi } from 'vitest'
 import { IntelligenceSidebar } from './IntelligenceSidebar'
 import type { ExtendedApi, ProjectCapabilityScan, ProjectIntelligence } from '../../api/types'
 
+vi.mock('../../hooks/useSwarmMessages', () => ({
+  useSwarmMessages: () => ({
+    messages: [],
+    loading: false,
+    refresh: vi.fn()
+  })
+}))
+
 const baseIntelligence: ProjectIntelligence = {
   git: {
     branch: 'main',

@@ -1042,6 +1042,117 @@ pub async fn brainstorm_save_canvas(cwd: String, mut canvas: BrainstormCanvas) -
 }
 
 #[tauri::command]
+pub async fn brainstorm_agentic_sketch(
+    ai_runtime: tauri::State<'_, std::sync::Arc<crate::ai_runtime::RuntimeManager>>,
+    cwd: String,
+    base_id: String,
+    base_title: String,
+    base_content: String
+) -> Result<BrainstormCanvasNode, String> {
+    let request = crate::ai_runtime::types::CompletionRequest {
+        messages: vec![
+            crate::ai_runtime::types::Message {
+                role: "system".to_string(),
+                content: "You are a software architect and UX designer. The user will provide a feature idea or node content. Output a concise 'sketch' of how this feature should be designed and implemented. Keep it structured and actionable, focusing on UI layout, interaction flow, and basic data structures. Do not use markdown code blocks, just output text.".to_string(),
+                tool_calls: None,
+                tool_call_id: None,
+            },
+            crate::ai_runtime::types::Message {
+                role: "user".to_string(),
+                content: format!("Title: {}\n\nContent:\n{}", base_title, base_content),
+                tool_calls: None,
+                tool_call_id: None,
+            }
+        ],
+        model: None,
+        project_path: Some(cwd),
+        session_id: None,
+        nexus_session_id: None,
+        agent_id: None,
+        policy: Some(crate::ai_runtime::types::RoutingPolicy::Tiered { task: crate::ai_runtime::types::TaskType::Creative, allow_fallback: true }),
+        retry: None,
+        tools: None,
+        tool_choice: None,
+        temperature: Some(0.7),
+        max_tokens: Some(500),
+        stream: None,
+    };
+
+    let response = ai_runtime.dispatch(request).await?;
+
+    let sketch_id = format!("sketch-{}", base_id);
+    let title = format!("Sketch: {}", base_title);
+
+    Ok(BrainstormCanvasNode {
+        id: sketch_id,
+        node_type: "sketch".to_string(),
+        title,
+        content: response.content,
+        x: 0,
+        y: 0,
+        width: 178,
+        height: 96,
+        source_id: Some(base_id),
+    })
+}
+
+#[tauri::command]
+pub async fn brainstorm_architect_review(
+    ai_runtime: tauri::State<'_, std::sync::Arc<crate::ai_runtime::RuntimeManager>>,
+    cwd: String,
+    base_id: String,
+    base_type: String,
+    base_title: String,
+    base_content: String
+) -> Result<BrainstormCanvasNode, String> {
+    let request = crate::ai_runtime::types::CompletionRequest {
+        messages: vec![
+            crate::ai_runtime::types::Message {
+                role: "system".to_string(),
+                content: "You are a software architect reviewing a proposed feature or implementation detail. Analyze the given content for completeness, potential architectural risks, edge cases, and readiness for implementation. Output your verdict as a concise text summary without markdown code blocks. End with a clear recommendation on next steps (e.g., 'Ready to implement', 'Needs more detail', 'Consider edge case X').".to_string(),
+                tool_calls: None,
+                tool_call_id: None,
+            },
+            crate::ai_runtime::types::Message {
+                role: "user".to_string(),
+                content: format!("Node Type: {}\nTitle: {}\n\nContent:\n{}", base_type, base_title, base_content),
+                tool_calls: None,
+                tool_call_id: None,
+            }
+        ],
+        model: None,
+        project_path: Some(cwd),
+        session_id: None,
+        nexus_session_id: None,
+        agent_id: None,
+        policy: Some(crate::ai_runtime::types::RoutingPolicy::Tiered { task: crate::ai_runtime::types::TaskType::Reasoning, allow_fallback: true }),
+        retry: None,
+        tools: None,
+        tool_choice: None,
+        temperature: Some(0.4),
+        max_tokens: Some(500),
+        stream: None,
+    };
+
+    let response = ai_runtime.dispatch(request).await?;
+
+    let review_id = format!("review-{}", base_id);
+    let title = format!("Review: {}", base_title);
+
+    Ok(BrainstormCanvasNode {
+        id: review_id,
+        node_type: "review".to_string(),
+        title,
+        content: response.content,
+        x: 0,
+        y: 0,
+        width: 190,
+        height: 106,
+        source_id: Some(base_id),
+    })
+}
+
+#[tauri::command]
 pub async fn get_agent_messages(
     state: State<'_, OrchestrationState>,
     limit: Option<usize>,

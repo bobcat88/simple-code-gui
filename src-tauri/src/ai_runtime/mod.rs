@@ -8,7 +8,7 @@ use crate::database::{DatabaseManager, insert_token_transaction, TokenTransactio
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use types::{AgentRole, CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse, ModelInfo, ModelTier, ProviderHealth, RoutingPolicy, TaskType};
+use types::{CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse, ModelInfo, ModelTier, ProviderHealth, RoutingPolicy, TaskType};
 
 use async_trait::async_trait;
 

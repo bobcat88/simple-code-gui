@@ -1,6 +1,10 @@
 import '@testing-library/jest-dom/vitest'
 import { vi } from 'vitest'
 
+// Force en-US locale for consistent test results across environments
+process.env.LANG = 'en_US.UTF-8'
+process.env.LC_ALL = 'en_US.UTF-8'
+
 vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn().mockResolvedValue(undefined),
 }))

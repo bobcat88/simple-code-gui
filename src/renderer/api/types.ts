@@ -335,7 +335,6 @@ export interface GsdSeed {
   slug: string
   why: string
   whenToSurface: string
-  when_to_surface?: string
   status: 'planted' | 'sprouted' | 'archived'
   timestamp: number
   createdAt?: string
@@ -346,7 +345,6 @@ export interface KSpecDraft {
   title: string
   content: string
   lastModified: number
-  last_modified?: number
   moduleId?: string
   updatedAt?: number
 }
@@ -355,13 +353,11 @@ export interface BrainstormCanvas {
   nodes: BrainstormCanvasNode[]
   edges: BrainstormCanvasEdge[]
   updatedAt?: number
-  updated_at?: number
 }
 
 export interface BrainstormCanvasNode {
   id: string
   nodeType: 'seed' | 'draft' | 'sketch' | 'review'
-  node_type?: 'seed' | 'draft' | 'sketch' | 'review'
   title: string
   content: string
   x: number
@@ -369,15 +365,12 @@ export interface BrainstormCanvasNode {
   width: number
   height: number
   sourceId?: string
-  source_id?: string
 }
 
 export interface BrainstormCanvasEdge {
   id: string
   fromNode: string
-  from_node?: string
   toNode: string
-  to_node?: string
   label?: string
 }
 
@@ -680,6 +673,8 @@ export interface Api {
   kspecWriteDraft?: (cwd: string, moduleId: string, content: string) => Promise<void>
   brainstormLoadCanvas?: (cwd: string) => Promise<BrainstormCanvas>
   brainstormSaveCanvas?: (cwd: string, canvas: BrainstormCanvas) => Promise<void>
+  brainstormAgenticSketch?: (cwd: string, baseId: string, baseTitle: string, baseContent: string) => Promise<BrainstormCanvasNode>
+  brainstormArchitectReview?: (cwd: string, baseId: string, baseType: string, baseTitle: string, baseContent: string) => Promise<BrainstormCanvasNode>
 }
 
 // ============================================================================

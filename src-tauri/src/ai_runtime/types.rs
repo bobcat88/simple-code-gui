@@ -24,6 +24,7 @@ pub struct ToolCall {
     pub arguments: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ToolResult {
     pub call_id: String,

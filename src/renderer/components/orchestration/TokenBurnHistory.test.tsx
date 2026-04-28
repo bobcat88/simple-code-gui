@@ -60,10 +60,10 @@ describe('TokenBurnHistory', () => {
 
     await waitFor(() => expect(api.getTokenHistory).toHaveBeenCalled())
 
-    expect(screen.getAllByText('1.5K').length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/1[.,]5\s*k/i).length).toBeGreaterThan(0)
     expect(screen.getByText('$0.045')).toBeInTheDocument()
     expect(screen.getAllByText('simple-code-gui').length).toBeGreaterThan(0)
     expect(screen.getAllByText('codex').length).toBeGreaterThan(0)
-    expect(screen.getByTitle('2026-04-21: 1,500 tokens')).toBeInTheDocument()
+    expect(screen.getByTitle(/2026-04-21: 1[.,\s ]*500 tokens/)).toBeInTheDocument()
   })
 })

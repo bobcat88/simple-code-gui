@@ -353,4 +353,8 @@ export const tauriIpc = {
     invoke<any>('brainstorm_load_canvas', { cwd }),
   brainstormSaveCanvas: (cwd: string, canvas: any) =>
     invoke<void>('brainstorm_save_canvas', { cwd, canvas }),
+  brainstormAgenticSketch: (cwd: string, baseId: string, baseTitle: string, baseContent: string) =>
+    invoke<any>('brainstorm_agentic_sketch', { cwd, baseId, baseTitle, baseContent }),
+  brainstormArchitectReview: (cwd: string, baseId: string, baseType: string, baseTitle: string, baseContent: string) =>
+    invoke<any>('brainstorm_architect_review', { cwd, baseId, baseType, baseTitle, baseContent }),
 };
