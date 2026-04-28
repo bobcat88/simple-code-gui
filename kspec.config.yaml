@@ -1,0 +1,6 @@
+project:
+  name: "simple-code-gui"
+  version: "0.1.0"
+
+coverage:
+  scan_paths: []
