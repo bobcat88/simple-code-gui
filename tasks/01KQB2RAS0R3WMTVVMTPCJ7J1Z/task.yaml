@@ -1,0 +1,17 @@
+_ulid: 01KQB2RAS0R3WMTVVMTPCJ7J1Z
+slugs:
+  - task-foundation-connectivity
+title: "Foundation: Connectivity & Sync"
+type: task
+spec_ref: "@01KK67BGNHP8DWNG777BRMSR8A"
+meta_ref: null
+plan_ref: null
+status: pending
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-04-28T22:18:32.096Z
+todos: []
