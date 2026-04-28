@@ -1,3 +1,8 @@
+---
+name: merge
+description: "Merge approved work into an integration branch. Local-first — uses git merge directly, with merge gates based on kspec review disposition."
+---
+
 # Merge
 
 Merge approved work into an integration branch. Local-first — uses git merge directly, with merge gates based on kspec review disposition.

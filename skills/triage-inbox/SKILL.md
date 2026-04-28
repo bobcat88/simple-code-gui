@@ -1,3 +1,8 @@
+---
+name: triage-inbox
+description: "Systematically process inbox items using the **record → act** pattern. Records decisions with audit trail, then executes actions."
+---
+
 # Inbox Triage
 
 Systematically process inbox items using the **record → act** pattern. Records decisions with audit trail, then executes actions.

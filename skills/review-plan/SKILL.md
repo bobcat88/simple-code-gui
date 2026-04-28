@@ -1,3 +1,8 @@
+---
+name: review-plan
+description: "Review a plan document for quality, completeness, and readiness before approval and derivation. Focuses on what a reviewer uniquely checks — alignment with existing specs, task executability, dependency correctness, and coverage completeness."
+---
+
 # Plan Review
 
 Review a plan document for quality, completeness, and readiness before approval and derivation. Focuses on what a reviewer uniquely checks — alignment with existing specs, task executability, dependency correctness, and coverage completeness.

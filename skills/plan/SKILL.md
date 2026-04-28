@@ -1,3 +1,8 @@
+---
+name: plan
+description: "Translate approved plans into specs and tasks. Plans are durable artifacts — they persist in the shadow branch, link to derived work, and provide auditable planning history across sessions."
+---
+
 # Plan to Spec Translation
 
 Translate approved plans into specs and tasks. Plans are durable artifacts — they persist in the shadow branch, link to derived work, and provide auditable planning history across sessions.

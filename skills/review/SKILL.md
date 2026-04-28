@@ -1,3 +1,8 @@
+---
+name: review
+description: "How to review work and use kspec review records. Covers creating reviews, structuring findings, AC coverage verification, and the full review record interface."
+---
+
 # Review
 
 How to review work and use kspec review records. Covers creating reviews, structuring findings, AC coverage verification, and the full review record interface.

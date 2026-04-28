@@ -1,3 +1,8 @@
+---
+name: writing-specs
+description: "Create and maintain specification items — the source of truth for what to build. This skill covers spec structure, writing good acceptance criteria, using traits, and organizing specs in the hierarchy."
+---
+
 # Writing Specs
 
 Create and maintain specification items — the source of truth for what to build. This skill covers spec structure, writing good acceptance criteria, using traits, and organizing specs in the hierarchy.

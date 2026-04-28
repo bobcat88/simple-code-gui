@@ -1,113 +1,112 @@
 _ulid: 01KK67BDK2JJG20G7JD78SPBCA
 slugs:
-- voice
+  - voice
 title: Voice I/O
 type: module
+description: Speech-to-text input (Whisper), text-to-speech output (Piper, XTTS), voice cloning, and
+  per-project voice settings
 status:
   maturity: draft
   implementation: not_started
-description: Speech-to-text input (Whisper), text-to-speech output (Piper, XTTS),
-  voice cloning, and per-project voice settings
-tags:
-- feature
 depends_on: []
 implements: []
 relates_to: []
 tests: []
 traits: []
-notes: []
+tags:
+  - feature
 features:
-- _ulid: 01KK67CPDHGPV96JR19N00FJR2
-  slugs:
-  - stt
-  title: Speech-to-Text Input
-  type: feature
-  tags: []
-  description: WebRTC audio capture with Whisper.js models (tiny to large-v3). Silence
-    detection for auto-submit, live transcription display, configurable microphone
-    and silence threshold.
-  depends_on: []
-  implements: []
-  relates_to: []
-  tests: []
-  traits: []
-  notes: []
-  created: 2026-03-08T08:00:34.225Z
-  acceptance_criteria:
-  - id: ac-1
-    given: whisper model is loaded and microphone is active
-    when: the user speaks and then pauses beyond the silence threshold
-    then: the audio is transcribed and the text is auto-submitted to the active terminal
-  status:
-    maturity: draft
-    implementation: implemented
-- _ulid: 01KK67CQ3Q3D97KVYWK5MW5WKP
-  slugs:
-  - tts
-  title: Text-to-Speech Output
-  type: feature
-  tags: []
-  description: Queue-based audio playback with Piper (lightweight) and XTTS (high
-    quality with voice cloning) engines. Per-project voice override, volume/speed
-    control, skip-on-new option.
-  depends_on: []
-  implements: []
-  relates_to: []
-  tests: []
-  traits: []
-  notes: []
-  created: 2026-03-08T08:00:34.935Z
-  acceptance_criteria:
-  - id: ac-1
-    given: TTS is enabled and a project has a custom voice configured
-    when: the active tab switches to that project
-    then: the TTS engine and voice are switched to the project-specific settings
-  status:
-    implementation: implemented
-    maturity: draft
-- _ulid: 01KK67CS1JS018H9N2C3H7880X
-  slugs:
-  - voice-cloning
-  title: Voice Cloning (XTTS)
-  type: feature
-  tags: []
-  description: Create custom TTS voices from audio samples. Supports sample recording,
-    audio file import, clip extraction, and HuggingFace sample voice downloads.
-  depends_on: []
-  implements: []
-  relates_to: []
-  tests: []
-  traits: []
-  notes: []
-  created: 2026-03-08T08:00:36.914Z
-  status:
-    maturity: draft
-    implementation: implemented
-  acceptance_criteria:
-  - id: ac-cloning-1
-    given: an audio sample
-    when: the voice cloning process is initiated
-    then: a new TTS voice is generated and added to the local catalog
-- _ulid: 01KK67CVN0NHA26Q58GTA308S2
-  slugs:
-  - voice-catalog
-  title: Voice Catalog
-  type: feature
-  tags: []
-  description: Browse, download, and manage TTS voices from HuggingFace catalog. Import
-    custom voices, remove voices, organize voice library.
-  depends_on: []
-  implements: []
-  relates_to: []
-  tests: []
-  traits: []
-  notes: []
-  created: 2026-03-08T08:00:39.585Z
-  status:
-    maturity: draft
-    implementation: implemented
-  acceptance_criteria:
-  - id: ac-catalog-1
-    given: available remote voices
-    when: the user browses the voice catalog
-    then: voices can be selected, downloaded, and managed locally
+  - _ulid: 01KK67CPDHGPV96JR19N00FJR2
+    slugs:
+      - stt
+    title: Speech-to-Text Input
+    type: feature
+    description: WebRTC audio capture with Whisper.js models (tiny to large-v3). Silence detection for
+      auto-submit, live transcription display, configurable microphone and silence threshold.
+    status:
+      maturity: draft
+      implementation: implemented
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    acceptance_criteria:
+      - given: whisper model is loaded and microphone is active
+        id: ac-1
+        then: the audio is transcribed and the text is auto-submitted to the active terminal
+        when: the user speaks and then pauses beyond the silence threshold
+    tags: []
+    created: 2026-03-08T08:00:34.225Z
+    notes: []
+  - _ulid: 01KK67CQ3Q3D97KVYWK5MW5WKP
+    slugs:
+      - tts
+    title: Text-to-Speech Output
+    type: feature
+    description: Queue-based audio playback with Piper (lightweight) and XTTS (high quality with voice
+      cloning) engines. Per-project voice override, volume/speed control, skip-on-new option.
+    status:
+      maturity: draft
+      implementation: implemented
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    acceptance_criteria:
+      - given: TTS is enabled and a project has a custom voice configured
+        id: ac-1
+        then: the TTS engine and voice are switched to the project-specific settings
+        when: the active tab switches to that project
+    tags: []
+    created: 2026-03-08T08:00:34.935Z
+    notes: []
+  - _ulid: 01KK67CS1JS018H9N2C3H7880X
+    slugs:
+      - voice-cloning
+    title: Voice Cloning (XTTS)
+    type: feature
+    description: Create custom TTS voices from audio samples. Supports sample recording, audio file
+      import, clip extraction, and HuggingFace sample voice downloads.
+    status:
+      maturity: draft
+      implementation: implemented
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    acceptance_criteria:
+      - given: an audio sample
+        id: ac-cloning-1
+        then: a new TTS voice is generated and added to the local catalog
+        when: the voice cloning process is initiated
+    tags: []
+    created: 2026-03-08T08:00:36.914Z
+    notes: []
+  - _ulid: 01KK67CVN0NHA26Q58GTA308S2
+    slugs:
+      - voice-catalog
+    title: Voice Catalog
+    type: feature
+    description: Browse, download, and manage TTS voices from HuggingFace catalog. Import custom voices,
+      remove voices, organize voice library.
+    status:
+      maturity: draft
+      implementation: implemented
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    acceptance_criteria:
+      - given: available remote voices
+        id: ac-catalog-1
+        then: voices can be selected, downloaded, and managed locally
+        when: the user browses the voice catalog
+    tags: []
+    created: 2026-03-08T08:00:39.585Z
+    notes: []
+created: 2026-04-28T22:21:13.854Z
+notes: []

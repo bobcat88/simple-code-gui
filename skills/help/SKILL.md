@@ -1,3 +1,8 @@
+---
+name: help
+description: "Get help with kspec commands and workflows."
+---
+
 # kspec Help
 
 Get help with kspec commands and workflows.

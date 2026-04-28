@@ -1,10 +1,9 @@
 _ulid: 01KK67BHT4MRS4W6W1T2Y0GN21
 slugs:
-- extensions
+  - extensions
 title: Extensions & Configuration
 type: module
-description: Extension/MCP registry, installation, per-project configuration, settings
-  management, and theming
+description: Extension/MCP registry, installation, per-project configuration, settings management, and theming
 status:
   maturity: draft
   implementation: not_started
@@ -14,191 +13,192 @@ relates_to: []
 tests: []
 traits: []
 tags:
-- feature
+  - feature
 features:
-- _ulid: 01KK67DNJESNZBF88T9JBHHZ5W
-  slugs:
-  - ext-registry
-  title: Extension Registry
-  type: feature
-  description: Fetch, browse, and install extensions (skills, MCPs, agents) from registry
-    or custom URLs. Global and per-project extension scoping with enable/disable controls.
-  status:
-    maturity: draft
-    implementation: implemented
-  acceptance_criteria:
-  - id: ac-ext-1
-    given: an extension package
-    when: registering it
-    then: it is validated and added to the system registry
-  depends_on: []
-  implements: []
-  relates_to: []
-  tests: []
-  traits: []
-  tags: []
-  created: 2026-03-08T08:01:06.126Z
-  notes: []
-- _ulid: 01KK67DQ85HYPGA16RS2R2WB1K
-  slugs:
-  - settings
-  title: Settings & Theming
-  type: feature
-  description: 'Global and per-project settings: default directory, theme with custom
-    colors, auto-accept tools, permission modes, backend selection. Persisted to JSON
-    with atomic writes and backup.'
-  status:
-    maturity: draft
-    implementation: implemented
-  acceptance_criteria:
-  - id: ac-settings-1
-    given: theme settings
-    when: applied
-    then: the UI updates immediately to reflect the new theme
-  depends_on: []
-  implements: []
-  relates_to: []
-  tests: []
-  traits: []
-  tags: []
-  created: 2026-03-08T08:01:07.846Z
-  notes: []
-- _ulid: 01KK67DSGPZC2E734KX4377R9S
-  slugs:
-  - workspace-persist
-  title: Workspace Persistence
-  type: feature
-  description: Persist projects, open tabs, tile layout, categories, and view mode
-    to workspace.json. Atomic saves with temp file + rename, backup restoration, and
-    data migration from old app names.
-  status:
-    maturity: draft
-    implementation: implemented
-  depends_on: []
-  implements: []
-  relates_to: []
-  tests: []
-  traits: []
-  acceptance_criteria:
-  - given: workspace data has been modified
-    id: ac-1
-    then: data is written atomically via temp file + rename with backup, and validated
-      before finalizing
-    when: saveWorkspace is called
-  tags: []
-  created: 2026-03-08T08:01:10.166Z
-  notes: []
-- _ulid: 01KK67DTW3HCHEA5G8TSNDK5FX
-  slugs:
-  - auto-update
-  title: Auto-Update
-  type: feature
-  description: Check for, download, and install app updates via electron-updater.
-    Status events relayed to renderer for progress UI.
-  status:
-    maturity: draft
-    implementation: implemented
-  acceptance_criteria:
-  - id: ac-update-1
-    given: a new version available
-    when: auto-update is triggered
-    then: the app downloads and prepares the update in the background
-  depends_on: []
-  implements: []
-  relates_to: []
-  tests: []
-  traits: []
-  tags: []
-  created: 2026-03-08T08:01:11.556Z
-  notes: []
-- _ulid: 01KPNWWYCAPS2Z1VZNRXC3QRNQ
-  slugs:
-  - system-ops
-  title: System Operational Telemetry
-  type: feature
-  description: Operational monitoring for app health, crash reporting, and background
-    jobs.
-  status:
-    maturity: draft
-    implementation: implemented
-  acceptance_criteria:
-  - id: ac-ops-1
-    given: a running system
-    when: checking health
-    then: operational telemetry is collected and reported
-  depends_on: []
-  implements: []
-  relates_to: []
-  tests: []
-  traits: []
-  tags: []
-  requirements:
-  - _ulid: 01KPNWYKR6518NMTQF4NBW27DM
-    slugs: []
-    title: App & Plugin Health Dashboard
-    type: requirement
-    description: Status monitoring for core services and installed MCP/Plugins.
+  - _ulid: 01KK67DNJESNZBF88T9JBHHZ5W
+    slugs:
+      - ext-registry
+    title: Extension Registry
+    type: feature
+    description: Fetch, browse, and install extensions (skills, MCPs, agents) from registry or custom
+      URLs. Global and per-project extension scoping with enable/disable controls.
     status:
       maturity: draft
       implementation: implemented
-    acceptance_criteria:
-    - id: ac-gen-1
-      given: the App & Plugin Health Dashboard is implemented
-      when: it is used
-      then: it works as expected
-  - id: ac-health-1
-    given: active plugins
-    when: viewing the health dashboard
-    then: status of all components and plugins is visible
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
+    acceptance_criteria:
+      - given: an extension package
+        id: ac-ext-1
+        then: it is validated and added to the system registry
+        when: registering it
     tags: []
-    created: 2026-04-20T16:53:03.366Z
+    created: 2026-03-08T08:01:06.126Z
     notes: []
+  - _ulid: 01KK67DQ85HYPGA16RS2R2WB1K
+    slugs:
+      - settings
+    title: Settings & Theming
+    type: feature
+    description: "Global and per-project settings: default directory, theme with custom colors,
+      auto-accept tools, permission modes, backend selection. Persisted to JSON with atomic writes
+      and backup."
     status:
       maturity: draft
       implementation: implemented
-    acceptance_criteria:
-    - id: ac-gen-1
-      given: the feature is implemented
-      when: it is used
-      then: it works as expected
-  - _ulid: 01KPNWYNG72RVJCSF9M81S3P4G
-    slugs: []
-    title: Background Jobs Visibility
-    type: requirement
-    description: Panel to monitor running background processes (scans, indices, updates).
-    status:
-      maturity: draft
-      implementation: implemented
-    acceptance_criteria:
-    - id: ac-gen-1
-      given: the Background Jobs Visibility is implemented
-      when: it is used
-      then: it works as expected
-  - id: ac-jobs-1
-    given: background jobs running
-    when: checking visibility
-    then: all active and queued jobs are listed with status
     depends_on: []
     implements: []
     relates_to: []
     tests: []
     traits: []
+    acceptance_criteria:
+      - given: theme settings
+        id: ac-settings-1
+        then: the UI updates immediately to reflect the new theme
+        when: applied
     tags: []
-    created: 2026-04-20T16:53:05.159Z
+    created: 2026-03-08T08:01:07.846Z
     notes: []
+  - _ulid: 01KK67DSGPZC2E734KX4377R9S
+    slugs:
+      - workspace-persist
+    title: Workspace Persistence
+    type: feature
+    description: Persist projects, open tabs, tile layout, categories, and view mode to workspace.json.
+      Atomic saves with temp file + rename, backup restoration, and data migration from old app
+      names.
     status:
       maturity: draft
       implementation: implemented
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
     acceptance_criteria:
-    - id: ac-gen-1
-      given: the feature is implemented
-      when: it is used
-      then: it works as expected
-  created: 2026-04-20T16:52:08.715Z
-  notes: []
+      - given: workspace data has been modified
+        id: ac-1
+        then: data is written atomically via temp file + rename with backup, and validated before finalizing
+        when: saveWorkspace is called
+    tags: []
+    created: 2026-03-08T08:01:10.166Z
+    notes: []
+  - _ulid: 01KK67DTW3HCHEA5G8TSNDK5FX
+    slugs:
+      - auto-update
+    title: Auto-Update
+    type: feature
+    description: Check for, download, and install app updates via electron-updater. Status events
+      relayed to renderer for progress UI.
+    status:
+      maturity: draft
+      implementation: implemented
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    acceptance_criteria:
+      - given: a new version available
+        id: ac-update-1
+        then: the app downloads and prepares the update in the background
+        when: auto-update is triggered
+    tags: []
+    created: 2026-03-08T08:01:11.556Z
+    notes: []
+  - _ulid: 01KPNWWYCAPS2Z1VZNRXC3QRNQ
+    slugs:
+      - system-ops
+    title: System Operational Telemetry
+    type: feature
+    description: Operational monitoring for app health, crash reporting, and background jobs.
+    status:
+      maturity: draft
+      implementation: implemented
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    acceptance_criteria:
+      - given: a running system
+        id: ac-ops-1
+        then: operational telemetry is collected and reported
+        when: checking health
+    tags: []
+    requirements:
+      - _ulid: 01KPNWYKR6518NMTQF4NBW27DM
+        slugs: []
+        title: App & Plugin Health Dashboard
+        type: requirement
+        description: Status monitoring for core services and installed MCP/Plugins.
+        status:
+          maturity: draft
+          implementation: implemented
+        acceptance_criteria:
+          - given: the App & Plugin Health Dashboard is implemented
+            id: ac-gen-1
+            then: it works as expected
+            when: it is used
+        created: 2026-04-28T22:21:13.870Z
+      - status:
+          maturity: draft
+          implementation: implemented
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        acceptance_criteria:
+          - given: the feature is implemented
+            id: ac-gen-1
+            then: it works as expected
+            when: it is used
+        tags: []
+        given: active plugins
+        id: ac-health-1
+        then: status of all components and plugins is visible
+        when: viewing the health dashboard
+        created: 2026-04-20T16:53:03.366Z
+        notes: []
+      - _ulid: 01KPNWYNG72RVJCSF9M81S3P4G
+        slugs: []
+        title: Background Jobs Visibility
+        type: requirement
+        description: Panel to monitor running background processes (scans, indices, updates).
+        status:
+          maturity: draft
+          implementation: implemented
+        acceptance_criteria:
+          - given: the Background Jobs Visibility is implemented
+            id: ac-gen-1
+            then: it works as expected
+            when: it is used
+        created: 2026-04-28T22:21:13.870Z
+      - status:
+          maturity: draft
+          implementation: implemented
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        acceptance_criteria:
+          - given: the feature is implemented
+            id: ac-gen-1
+            then: it works as expected
+            when: it is used
+        tags: []
+        given: background jobs running
+        id: ac-jobs-1
+        then: all active and queued jobs are listed with status
+        when: checking visibility
+        created: 2026-04-20T16:53:05.159Z
+        notes: []
+    created: 2026-04-20T16:52:08.715Z
+    notes: []
+created: 2026-04-28T22:21:13.870Z
 notes: []

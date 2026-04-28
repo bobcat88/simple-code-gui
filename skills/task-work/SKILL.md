@@ -1,3 +1,8 @@
+---
+name: task-work
+description: "Structured workflow for working on tasks. Full lifecycle from start through completion."
+---
+
 # Task Work
 
 Structured workflow for working on tasks. Full lifecycle from start through completion.

@@ -1,3 +1,8 @@
+---
+name: triage-automation
+description: "Assess and prepare tasks for automation eligibility. Goal: make tasks self-contained so they can be worked on by automated agents."
+---
+
 # Automation Triage
 
 Assess and prepare tasks for automation eligibility. Goal: make tasks self-contained so they can be worked on by automated agents.

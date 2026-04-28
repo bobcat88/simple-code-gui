@@ -1,3 +1,8 @@
+---
+name: reflect
+description: "Structured reflection at the end of a work session. Identifies learnings, friction points, and improvements — the raw material for system evolution."
+---
+
 # Session Reflection
 
 Structured reflection at the end of a work session. Identifies learnings, friction points, and improvements — the raw material for system evolution.

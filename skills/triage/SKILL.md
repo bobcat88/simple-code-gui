@@ -1,3 +1,8 @@
+---
+name: triage
+description: "Systematically process items: inbox, observations, or automation eligibility."
+---
+
 # Triage
 
 Systematically process items: inbox, observations, or automation eligibility.
