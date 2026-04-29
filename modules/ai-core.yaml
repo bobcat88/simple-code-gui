@@ -3,7 +3,9 @@ slugs:
   - ai-core
 title: AI Intelligence & Orchestration
 type: module
-description: Everything related to model providers, agent execution, and repository intelligence.
+description: >-
+  Everything related to model providers, agent execution, and repository
+  intelligence.
 status:
   maturity: draft
   implementation: not_started
@@ -19,7 +21,9 @@ features:
       - ai-runtime
     title: Multi-Provider AI Runtime
     type: feature
-    description: Abstraction layer and routing for Claude, OpenAI, Gemini, and Ollama providers.
+    description: >-
+      Abstraction layer and routing for Claude, OpenAI, Gemini, and Ollama
+      providers.
     status:
       maturity: draft
       implementation: implemented
@@ -39,10 +43,12 @@ features:
         slugs: []
         title: Provider Abstraction Interface
         type: requirement
-        description: Unified trait/interface for different LLM providers (Claude, OpenAI, Gemini, Ollama).
+        description: >-
+          Unified trait/interface for different LLM providers (Claude, OpenAI,
+          Gemini, Ollama).
         status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []
@@ -63,7 +69,7 @@ features:
         description: Secure storage and retrieval of provider credentials in SQLite.
         status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []
@@ -81,10 +87,12 @@ features:
         slugs: []
         title: Model Routing Policies
         type: requirement
-        description: System for selecting models based on task type (planning, patching, summarization).
+        description: >-
+          System for selecting models based on task type (planning, patching,
+          summarization).
         status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []
@@ -102,10 +110,12 @@ features:
         slugs: []
         title: Named Model Plans
         type: requirement
-        description: User-definable presets for cost/quality balance (e.g., Budget, High-Quality).
+        description: >-
+          User-definable presets for cost/quality balance (e.g., Budget,
+          High-Quality).
         status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []
@@ -126,7 +136,9 @@ features:
       - gsd-engine
     title: GSD Execution Engine
     type: feature
-    description: Phase-based agent execution engine with verifier loops and wave-based orchestration.
+    description: >-
+      Phase-based agent execution engine with verifier loops and wave-based
+      orchestration.
     status:
       maturity: draft
       implementation: implemented
@@ -138,7 +150,9 @@ features:
     acceptance_criteria:
       - given: a multi-phase plan
         id: ac-gsd-1
-        then: it follows the phase sequence with verification loops and wave orchestration
+        then: >-
+          it follows the phase sequence with verification loops and wave
+          orchestration
         when: the GSD engine executes it
     tags: []
     requirements:
@@ -149,7 +163,7 @@ features:
         description: Logic to break large tasks into sequential, manageable phases.
         status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []
@@ -170,7 +184,7 @@ features:
         description: Orchestrator for executing task waves with dependency awareness.
         status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []
@@ -191,7 +205,7 @@ features:
         description: Automated quality checks and retry logic for failed agent actions.
         status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []
@@ -212,7 +226,7 @@ features:
         description: Tracking and resuming long-running agent sessions across app restarts.
         status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []
@@ -233,10 +247,12 @@ features:
       - token-economics
     title: Token Economics & Telemetry
     type: feature
-    description: Real-time tracking of token consumption and cost savings from RTK/MCP/GitNexus.
+    description: >-
+      Real-time tracking of token consumption and cost savings from
+      RTK/MCP/GitNexus.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -245,11 +261,15 @@ features:
     acceptance_criteria:
       - given: A terminal session is running an AI backend (Claude, Gemini, etc.)
         id: ac-1
-        then: The system parses and stores token counts per session in the telemetry store
+        then: >-
+          The system parses and stores token counts per session in the telemetry
+          store
         when: Token usage data appears in terminal output
       - given: Token data has been collected for one or more sessions
         id: ac-2
-        then: Session token totals, estimated cost, and cumulative totals are displayed
+        then: >-
+          Session token totals, estimated cost, and cumulative totals are
+          displayed
         when: The user views the telemetry panel
       - given: RTK is installed and available
         id: ac-3
@@ -257,7 +277,9 @@ features:
         when: The telemetry panel renders
       - given: Multiple terminal sessions are active
         id: ac-4
-        then: Per-session and aggregate totals update in real-time without page refresh
+        then: >-
+          Per-session and aggregate totals update in real-time without page
+          refresh
         when: Token data updates in any session
     tags: []
     requirements:
@@ -277,7 +299,7 @@ features:
         created: 2026-04-28T22:21:13.876Z
       - status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []
@@ -299,10 +321,12 @@ features:
         slugs: []
         title: Savings Telemetry (RTK/MCP)
         type: requirement
-        description: Calculation and display of tokens saved by using RTK, MCP, and local intelligence.
+        description: >-
+          Calculation and display of tokens saved by using RTK, MCP, and local
+          intelligence.
         status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         acceptance_criteria:
           - given: the Savings Telemetry (RTK/MCP) is implemented
             id: ac-gen-1
@@ -311,7 +335,7 @@ features:
         created: 2026-04-28T22:21:13.876Z
       - status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []
@@ -333,7 +357,9 @@ features:
         slugs: []
         title: Token Burn History
         type: requirement
-        description: SQLite-backed logging of all token transactions for historical analysis.
+        description: >-
+          SQLite-backed logging of all token transactions for historical
+          analysis.
         status:
           maturity: draft
           implementation: implemented
@@ -345,22 +371,28 @@ features:
         acceptance_criteria:
           - given: The application starts
             id: ac-1
-            then: A SQLite database is created/opened at the user data directory with a token_transactions table
+            then: >-
+              A SQLite database is created/opened at the user data directory
+              with a token_transactions table
             when: The token burn history module initializes
           - given: A terminal session produces token usage data (input/output tokens)
             id: ac-2
-            then: A transaction record is inserted into SQLite with session_id, project_path, backend,
-              input_tokens, output_tokens, cost_estimate, and timestamp
+            then: >-
+              A transaction record is inserted into SQLite with session_id,
+              project_path, backend, input_tokens, output_tokens, cost_estimate,
+              and timestamp
             when: The token data is received by the main process
           - given: Token transactions have been logged
             id: ac-3
-            then: Aggregated and per-session token data is returned with filtering by date range, project, and
-              backend
+            then: >-
+              Aggregated and per-session token data is returned with filtering
+              by date range, project, and backend
             when: The renderer requests history via IPC
           - given: The renderer has received token history data
             id: ac-4
-            then: A historical view shows token usage over time with charts, totals, and breakdown by
-              project/backend
+            then: >-
+              A historical view shows token usage over time with charts, totals,
+              and breakdown by project/backend
             when: The Token Burn History UI component renders
         tags: []
         created: 2026-04-20T16:50:59.235Z
@@ -372,7 +404,7 @@ features:
         description: Configurable caps on token usage per task or session.
         status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         acceptance_criteria:
           - given: the Budget & Rate Limits is implemented
             id: ac-gen-1
@@ -381,7 +413,7 @@ features:
         created: 2026-04-28T22:21:13.876Z
       - status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []
@@ -399,7 +431,7 @@ features:
         when: consumption reaches limits
         created: 2026-04-20T16:51:00.931Z
         notes: []
-    created: 2026-04-20T16:49:37Z
+    created: 2026-04-20T16:49:37.000Z
     notes: []
 created: 2026-04-28T22:21:13.876Z
 notes: []

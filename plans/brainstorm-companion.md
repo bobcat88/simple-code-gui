@@ -1,0 +1,143 @@
+# Plan: Brainstorm Companion Implementation
+
+## Specs
+
+```yaml
+- title: Brainstorm Companion
+  slug: brainstorm-companion
+  type: feature
+  parent: "@ai-core"
+  description: |
+    A dedicated ideation and specification workspace integrated into the Project Intelligence Sidebar.
+    Bridges the gap between raw thoughts (seeds) and formal requirements.
+  acceptance_criteria:
+    - id: ac-1
+      given: |
+        The application is running and the Intelligence Sidebar is open
+      when: |
+        The user selects the Brainstorm tab
+      then: |
+        The Brainstorm Companion interface is displayed with Ideas and Drafts sub-tabs
+    - id: ac-2
+      given: |
+        The Brainstorm Companion is open
+      when: |
+        The user switches between Ideas and Drafts tabs
+      then: |
+        The UI state is preserved and the corresponding component is rendered
+
+- title: Idea Inbox (The Foundry)
+  slug: idea-inbox
+  type: feature
+  parent: "@brainstorm-companion"
+  description: |
+    A component for quick-capturing and managing "Seeds" (raw ideas).
+  acceptance_criteria:
+    - id: ac-1
+      given: |
+        The Ideas tab is open
+      when: |
+        The user enters text in the capture field and presses Enter
+      then: |
+        A new Seed is created via GSD and appears in the list
+    - id: ac-2
+      given: |
+        A list of Seeds is displayed
+      when: |
+        The user selects a Seed
+      then: |
+        The Seed details are shown with promotion options
+
+- title: Spec Draft Editor
+  slug: spec-draft-editor
+  type: feature
+  parent: "@brainstorm-companion"
+  description: |
+    A structured, visual editor for drafting KSpec modules and acceptance criteria.
+  acceptance_criteria:
+    - id: ac-1
+      given: |
+        The Drafts tab is open
+      when: |
+        The user enters spec details (Title, Type, ACs)
+      then: |
+        The editor provides real-time validation and a live preview of the spec structure
+    - id: ac-2
+      given: |
+        A draft is in progress
+      when: |
+        The user saves the draft
+      then: |
+        The draft is persisted to the .kspec/ shadow branch via the Rust backend
+
+- title: Promotion Workflow
+  slug: promotion-workflow
+  type: feature
+  parent: "@brainstorm-companion"
+  description: |
+    Workflow for converting Seeds into Spec Drafts or Beads Tasks.
+  acceptance_criteria:
+    - id: ac-1
+      given: |
+        An idea is selected in the Idea Inbox
+      when: |
+        The user clicks "Promote to Spec"
+      then: |
+        The Spec Draft Editor opens pre-populated with the idea's content
+    - id: ac-2
+      given: |
+        An idea is selected
+      when: |
+        The user clicks "Promote to Task"
+      then: |
+        A new Beads issue is created and linked to the corresponding spec if applicable
+```
+
+## Tasks
+
+derive_from_specs: true
+
+```yaml
+- title: "Frontend: BrainstormTab and Layout"
+  slug: task-brainstorm-tab-layout
+  description: |
+    Create the main BrainstormTab container and implement the sub-tab navigation (Ideas/Drafts).
+    Integrate into the IntelligenceSidebar.
+  priority: 2
+  tags: [frontend, layout]
+  spec_ref: "@brainstorm-companion"
+
+- title: "Frontend: IdeaInbox Component"
+  slug: task-idea-inbox-frontend
+  description: |
+    Implement the IdeaInbox component with seed list and capture input.
+    Wire up gsdListSeeds IPC calls.
+  priority: 2
+  tags: [frontend, gsd]
+  spec_ref: "@idea-inbox"
+
+- title: "Frontend: SpecDraftEditor Component"
+  slug: task-spec-draft-editor-frontend
+  description: |
+    Implement the structured YAML editor with live preview and validation.
+    Wire up kspecWriteDraft IPC calls.
+  priority: 2
+  tags: [frontend, kspec]
+  spec_ref: "@spec-draft-editor"
+
+- title: "Backend: KSpec Draft Persistence"
+  slug: task-backend-kspec-draft
+  description: |
+    Implement the Rust side of kspecWriteDraft to persist drafts into the shadow branch.
+  priority: 2
+  tags: [backend, rust, kspec]
+  spec_ref: "@spec-draft-editor"
+
+- title: "Integration: Promotion IPC Bridge"
+  slug: task-promotion-ipc-bridge
+  description: |
+    Implement the IPC bridge for bdCreateTask and handle the conversion logic between seeds, specs, and tasks.
+  priority: 2
+  tags: [integration, beads, kspec, gsd]
+  spec_ref: "@promotion-workflow"
+```

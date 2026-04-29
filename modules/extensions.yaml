@@ -3,7 +3,9 @@ slugs:
   - extensions
 title: Extensions & Configuration
 type: module
-description: Extension/MCP registry, installation, per-project configuration, settings management, and theming
+description: >-
+  Extension/MCP registry, installation, per-project configuration, settings
+  management, and theming
 status:
   maturity: draft
   implementation: not_started
@@ -20,8 +22,10 @@ features:
       - ext-registry
     title: Extension Registry
     type: feature
-    description: Fetch, browse, and install extensions (skills, MCPs, agents) from registry or custom
-      URLs. Global and per-project extension scoping with enable/disable controls.
+    description: >-
+      Fetch, browse, and install extensions (skills, MCPs, agents) from registry
+      or custom URLs. Global and per-project extension scoping with
+      enable/disable controls.
     status:
       maturity: draft
       implementation: implemented
@@ -43,12 +47,13 @@ features:
       - settings
     title: Settings & Theming
     type: feature
-    description: "Global and per-project settings: default directory, theme with custom colors,
-      auto-accept tools, permission modes, backend selection. Persisted to JSON with atomic writes
-      and backup."
+    description: >-
+      Global and per-project settings: default directory, theme with custom
+      colors, auto-accept tools, permission modes, backend selection. Persisted
+      to JSON with atomic writes and backup.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -67,12 +72,13 @@ features:
       - workspace-persist
     title: Workspace Persistence
     type: feature
-    description: Persist projects, open tabs, tile layout, categories, and view mode to workspace.json.
-      Atomic saves with temp file + rename, backup restoration, and data migration from old app
-      names.
+    description: >-
+      Persist projects, open tabs, tile layout, categories, and view mode to
+      workspace.json. Atomic saves with temp file + rename, backup restoration,
+      and data migration from old app names.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -81,7 +87,9 @@ features:
     acceptance_criteria:
       - given: workspace data has been modified
         id: ac-1
-        then: data is written atomically via temp file + rename with backup, and validated before finalizing
+        then: >-
+          data is written atomically via temp file + rename with backup, and
+          validated before finalizing
         when: saveWorkspace is called
     tags: []
     created: 2026-03-08T08:01:10.166Z
@@ -91,11 +99,12 @@ features:
       - auto-update
     title: Auto-Update
     type: feature
-    description: Check for, download, and install app updates via electron-updater. Status events
-      relayed to renderer for progress UI.
+    description: >-
+      Check for, download, and install app updates via electron-updater. Status
+      events relayed to renderer for progress UI.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -114,10 +123,12 @@ features:
       - system-ops
     title: System Operational Telemetry
     type: feature
-    description: Operational monitoring for app health, crash reporting, and background jobs.
+    description: >-
+      Operational monitoring for app health, crash reporting, and background
+      jobs.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -146,7 +157,7 @@ features:
         created: 2026-04-28T22:21:13.870Z
       - status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []
@@ -168,10 +179,12 @@ features:
         slugs: []
         title: Background Jobs Visibility
         type: requirement
-        description: Panel to monitor running background processes (scans, indices, updates).
+        description: >-
+          Panel to monitor running background processes (scans, indices,
+          updates).
         status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         acceptance_criteria:
           - given: the Background Jobs Visibility is implemented
             id: ac-gen-1
@@ -180,7 +193,7 @@ features:
         created: 2026-04-28T22:21:13.870Z
       - status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []

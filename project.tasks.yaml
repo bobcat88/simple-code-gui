@@ -1,15 +1,15 @@
 - _ulid: 01KPNXFSKSCJADKNJGETRD4KG0
   slugs:
     - task-project-quick-switcher
-  title: "Implement: Project Quick-Switcher"
+  title: 'Implement: Project Quick-Switcher'
   type: task
-  spec_ref: "@01KPNWYGEC5WX1JKYWJ2WF0YB0"
+  spec_ref: '@01KPNWYGEC5WX1JKYWJ2WF0YB0'
   status: completed
   blocked_by: []
   depends_on: []
   priority: 3
   tags: []
-  review_ref: "@01KPRRB1Y266W9ARVWMWGQ5AX9"
+  review_ref: '@01KPRRB1Y266W9ARVWMWGQ5AX9'
   notes_count: 5
   todos_count: 0
   created_at: 2026-04-20T17:02:26.425Z
@@ -20,9 +20,9 @@
 - _ulid: 01KPS0GDNN25JVHFVY8JJE5743
   slugs:
     - task-session-discovery
-  title: "Implement: Session Discovery"
+  title: 'Implement: Session Discovery'
   type: task
-  spec_ref: "@session-discovery"
+  spec_ref: '@session-discovery'
   status: completed
   blocked_by: []
   depends_on: []
@@ -38,9 +38,9 @@
 - _ulid: 01KPS0GDQXR8JD6QA2MGT2KD9S
   slugs:
     - task-live-token-cost-hud
-  title: "Implement: Live Token/Cost HUD"
+  title: 'Implement: Live Token/Cost HUD'
   type: task
-  spec_ref: "@01KPNWTQ"
+  spec_ref: '@01KPNWTQ'
   status: completed
   blocked_by: []
   depends_on: []
@@ -56,9 +56,9 @@
 - _ulid: 01KPS0GDT09WMT9BNDYXWZFWP3
   slugs:
     - task-token-burn-history
-  title: "Implement: Token Burn History"
+  title: 'Implement: Token Burn History'
   type: task
-  spec_ref: "@01KPNWTT"
+  spec_ref: '@01KPNWTT'
   status: completed
   blocked_by: []
   depends_on: []
@@ -74,9 +74,9 @@
 - _ulid: 01KPS0GDVZNW3C7K4XM86WS21M
   slugs:
     - task-approval-workflow-ui
-  title: "Implement: Approval Workflow UI"
+  title: 'Implement: Approval Workflow UI'
   type: task
-  spec_ref: "@01KPNWYD"
+  spec_ref: '@01KPNWYD'
   status: completed
   blocked_by: []
   depends_on: []
@@ -92,9 +92,9 @@
 - _ulid: 01KPS0GDXXW4KHZYJHV81QX9R0
   slugs:
     - task-task-assignment-view
-  title: "Implement: Task Assignment View"
+  title: 'Implement: Task Assignment View'
   type: task
-  spec_ref: "@01KPNWYE"
+  spec_ref: '@01KPNWYE'
   status: completed
   blocked_by: []
   depends_on: []
@@ -110,9 +110,9 @@
 - _ulid: 01KPS0GDZYYGBH0AEJ2PDN6YBC
   slugs:
     - task-app-plugin-health-dashboard
-  title: "Implement: App & Plugin Health Dashboard"
+  title: 'Implement: App & Plugin Health Dashboard'
   type: task
-  spec_ref: "@01KPNWYK"
+  spec_ref: '@01KPNWYK'
   status: completed
   blocked_by: []
   depends_on: []
@@ -128,9 +128,9 @@
 - _ulid: 01KPS0GE1Y0DMY1MKT77AASR4Z
   slugs:
     - task-multi-provider-ai-runtime
-  title: "Implement: Multi-Provider AI Runtime"
+  title: 'Implement: Multi-Provider AI Runtime'
   type: task
-  spec_ref: "@ai-runtime"
+  spec_ref: '@ai-runtime'
   status: completed
   blocked_by: []
   depends_on: []
@@ -146,9 +146,9 @@
 - _ulid: 01KPS0GE3XDTDGATRJTWYREYXC
   slugs:
     - task-gsd-execution-engine
-  title: "Implement: GSD Execution Engine"
+  title: 'Implement: GSD Execution Engine'
   type: task
-  spec_ref: "@gsd-engine"
+  spec_ref: '@gsd-engine'
   status: completed
   blocked_by: []
   depends_on: []
@@ -164,9 +164,9 @@
 - _ulid: 01KQB2R958DK4042TQZB0JFJ2P
   slugs:
     - task-foundation-ai-core
-  title: "Foundation: AI Intelligence & Orchestration"
+  title: 'Foundation: AI Intelligence & Orchestration'
   type: task
-  spec_ref: "@01KPNWQND5PA8ZVZEEWXQXK7GH"
+  spec_ref: '@ai-runtime'
   status: completed
   blocked_by: []
   depends_on: []
@@ -179,9 +179,9 @@
 - _ulid: 01KQB2RAS0R3WMTVVMTPCJ7J1Z
   slugs:
     - task-foundation-connectivity
-  title: "Foundation: Connectivity & Sync"
+  title: 'Foundation: Connectivity & Sync'
   type: task
-  spec_ref: "@01KK67BGNHP8DWNG777BRMSR8A"
+  spec_ref: '@prompt-api'
   status: completed
   blocked_by: []
   depends_on: []
@@ -194,9 +194,9 @@
 - _ulid: 01KQB2RCE5SN6NNW7E2JN0604Q
   slugs:
     - task-foundation-extensions
-  title: "Foundation: Extension Registry"
+  title: 'Foundation: Extension Registry'
   type: task
-  spec_ref: "@01KK67BHT4MRS4W6W1T2Y0GN21"
+  spec_ref: '@ext-registry'
   status: completed
   blocked_by: []
   depends_on: []
@@ -209,9 +209,9 @@
 - _ulid: 01KQB2RE0D0ARARAHS5FKTKMAE
   slugs:
     - task-foundation-layout
-  title: "Foundation: Layout & Navigation"
+  title: 'Foundation: Layout & Navigation'
   type: task
-  spec_ref: "@01KK67BC64PX1P0T8AQG7P1Y1A"
+  spec_ref: '@tiled-layout'
   status: completed
   blocked_by: []
   depends_on: []
@@ -224,9 +224,9 @@
 - _ulid: 01KQB2RFS22ZAQ1C4C0RNT48N0
   slugs:
     - task-foundation-tasks
-  title: "Foundation: Task Lifecycle"
+  title: 'Foundation: Task Lifecycle'
   type: task
-  spec_ref: "@01KK67BEXPK9TT6168Q1FM5PYD"
+  spec_ref: '@beads-backend'
   status: completed
   blocked_by: []
   depends_on: []
@@ -239,9 +239,9 @@
 - _ulid: 01KQB2RHE1KHQ3C3H1XYGJK5DZ
   slugs:
     - task-foundation-terminal
-  title: "Foundation: Terminal Management"
+  title: 'Foundation: Terminal Management'
   type: task
-  spec_ref: "@01KK67BAXYFC28NYYSCWDPARHC"
+  spec_ref: '@pty-lifecycle'
   status: completed
   blocked_by: []
   depends_on: []
@@ -254,9 +254,9 @@
 - _ulid: 01KQB2RKCHEYTGPPCE1N60FG3G
   slugs:
     - task-foundation-voice
-  title: "Foundation: Voice I/O"
+  title: 'Foundation: Voice I/O'
   type: task
-  spec_ref: "@01KK67BDK2JJG20G7JD78SPBCA"
+  spec_ref: '@stt'
   status: completed
   blocked_by: []
   depends_on: []

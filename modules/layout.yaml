@@ -20,8 +20,10 @@ features:
       - tiled-layout
     title: Tiled Terminal Layout
     type: feature
-    description: Flexible grid layout where terminals are positioned as tiles using percentage-based
-      coordinates. Supports splitting, swapping, and multi-tab tiles on a pannable canvas.
+    description: >-
+      Flexible grid layout where terminals are positioned as tiles using
+      percentage-based coordinates. Supports splitting, swapping, and multi-tab
+      tiles on a pannable canvas.
     status:
       maturity: draft
       implementation: implemented
@@ -33,13 +35,15 @@ features:
     acceptance_criteria:
       - given: user is in tiled view mode
         id: ac-1
-        then: a new tile is added to the layout with percentage-based coordinates and the terminal renders
-          inside it
+        then: >-
+          a new tile is added to the layout with percentage-based coordinates
+          and the terminal renders inside it
         when: a new session is opened
       - given: multiple tiles exist on the canvas
         id: ac-2
-        then: the tile divides into two tiles in the specified direction (top/bottom/left/right) each
-          getting half the space
+        then: >-
+          the tile divides into two tiles in the specified direction
+          (top/bottom/left/right) each getting half the space
         when: a tile is split
     tags: []
     created: 2026-03-08T08:00:13.357Z
@@ -49,11 +53,12 @@ features:
       - tile-drag-drop
     title: Tile Drag & Drop
     type: feature
-    description: Drag projects from sidebar or tabs between tiles. Drop zones support swap,
+    description: >-
+      Drag projects from sidebar or tabs between tiles. Drop zones support swap,
       split-top/bottom/left/right. Visual preview during drag.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -72,11 +77,12 @@ features:
       - tile-resizing
     title: Tile Resizing
     type: feature
-    description: Resize tiles by dragging edges. Proportional resizing spreads width/height among
-      adjacent tiles. Visual edge highlighting on hover.
+    description: >-
+      Resize tiles by dragging edges. Proportional resizing spreads width/height
+      among adjacent tiles. Visual edge highlighting on hover.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -95,11 +101,13 @@ features:
       - canvas-panning
     title: Canvas Panning
     type: feature
-    description: Middle-mouse-button horizontal panning across a virtual canvas wider than the viewport.
-      3px threshold before drag starts, suppresses paste during panning.
+    description: >-
+      Middle-mouse-button horizontal panning across a virtual canvas wider than
+      the viewport. 3px threshold before drag starts, suppresses paste during
+      panning.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -118,12 +126,13 @@ features:
       - sidebar
     title: Sidebar Navigation
     type: feature
-    description: "Project tree with categories, session lists, inline rename, drag-to-reorder, context
-      menus. Desktop: collapsible left panel with resize handle. Mobile: drawer overlay with
-      hamburger toggle."
+    description: >-
+      Project tree with categories, session lists, inline rename,
+      drag-to-reorder, context menus. Desktop: collapsible left panel with
+      resize handle. Mobile: drawer overlay with hamburger toggle.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -142,11 +151,12 @@ features:
       - tabbed-view
     title: Tabbed View Mode
     type: feature
-    description: Traditional tab-based terminal switching as alternative to tiled layout. Supports undo
-      close tab.
+    description: >-
+      Traditional tab-based terminal switching as alternative to tiled layout.
+      Supports undo close tab.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -168,7 +178,7 @@ features:
     description: Enhanced project switcher and home screen with usage summaries and alerts.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -197,7 +207,7 @@ features:
         created: 2026-04-28T22:21:13.850Z
       - status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []
@@ -222,7 +232,7 @@ features:
         description: Dashboard view of total token usage and activity across all projects.
         status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         acceptance_criteria:
           - given: the Home Usage Summary is implemented
             id: ac-gen-1
@@ -231,7 +241,7 @@ features:
         created: 2026-04-28T22:21:13.850Z
       - status:
           maturity: draft
-          implementation: implemented
+          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []

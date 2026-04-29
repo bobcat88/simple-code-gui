@@ -20,11 +20,12 @@ constraints:
       - context-bridge
     title: Context Bridge Isolation
     type: constraint
-    description: All main process capabilities exposed to renderer through Electron contextBridge. No
-      direct ipcRenderer access in renderer code.
+    description: >-
+      All main process capabilities exposed to renderer through Electron
+      contextBridge. No direct ipcRenderer access in renderer code.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -33,8 +34,9 @@ constraints:
     acceptance_criteria:
       - given: the application is running in Electron
         id: ac-bridge-1
-        then: only functions exposed through contextBridge are available, with no direct access to
-          ipcRenderer or Node.js built-ins
+        then: >-
+          only functions exposed through contextBridge are available, with no
+          direct access to ipcRenderer or Node.js built-ins
         when: the renderer attempts to access main process modules
     tags: []
     created: 2026-03-08T08:01:50.912Z
@@ -44,11 +46,12 @@ constraints:
       - no-shell-injection
     title: Shell Injection Prevention
     type: constraint
-    description: All subprocess spawning uses spawn() with argument arrays, never exec() with string
-      interpolation. Task IDs validated with strict regex.
+    description: >-
+      All subprocess spawning uses spawn() with argument arrays, never exec()
+      with string interpolation. Task IDs validated with strict regex.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -57,7 +60,9 @@ constraints:
     acceptance_criteria:
       - given: a shell command string with untrusted input
         id: ac-injection-1
-        then: arguments are passed as an array to prevent shell interpretation of metacharacters
+        then: >-
+          arguments are passed as an array to prevent shell interpretation of
+          metacharacters
         when: a subprocess is spawned
     tags: []
     created: 2026-03-08T08:01:52.944Z
@@ -68,8 +73,9 @@ features:
       - pty-lifecycle
     title: PTY Session Lifecycle
     type: feature
-    description: Spawn, manage, resize, and terminate PTY processes running AI CLI backends. Ring buffer
-      captures last 200 lines with ANSI stripping.
+    description: >-
+      Spawn, manage, resize, and terminate PTY processes running AI CLI
+      backends. Ring buffer captures last 200 lines with ANSI stripping.
     status:
       maturity: draft
       implementation: implemented
@@ -81,13 +87,15 @@ features:
     acceptance_criteria:
       - given: user opens a project
         id: ac-1
-        then: a PTY process is created with node-pty using the resolved backend executable, correct cwd, and
-          xterm-256color terminal type
+        then: >-
+          a PTY process is created with node-pty using the resolved backend
+          executable, correct cwd, and xterm-256color terminal type
         when: a terminal session is spawned
       - given: a PTY session is running
         id: ac-2
-        then: output is captured in a 200-line ring buffer with ANSI codes stripped and relayed to renderer
-          via IPC
+        then: >-
+          output is captured in a 200-line ring buffer with ANSI codes stripped
+          and relayed to renderer via IPC
         when: terminal output is produced
       - given: a PTY session is running
         id: ac-3
@@ -101,11 +109,13 @@ features:
       - multi-backend
     title: Multi-Backend Support
     type: feature
-    description: Support multiple AI CLI backends (Claude, Gemini, Codex, OpenCode, Aider) with
-      backend-specific argument mapping for permissions, session resumption, and tool acceptance.
+    description: >-
+      Support multiple AI CLI backends (Claude, Gemini, Codex, OpenCode, Aider)
+      with backend-specific argument mapping for permissions, session
+      resumption, and tool acceptance.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -114,13 +124,15 @@ features:
     acceptance_criteria:
       - given: a project has backend set to gemini
         id: ac-1
-        then: the gemini CLI executable is located and launched with Gemini-specific flags for approval mode
-          and allowed tools
+        then: >-
+          the gemini CLI executable is located and launched with Gemini-specific
+          flags for approval mode and allowed tools
         when: a session is spawned
       - given: a backend has permission mode configured
         id: ac-2
-        then: "backend-specific CLI flags are applied: Claude uses --permission-mode, Gemini uses
-          --approval-mode, Codex uses --full-auto, Aider uses --yes"
+        then: >-
+          backend-specific CLI flags are applied: Claude uses --permission-mode,
+          Gemini uses --approval-mode, Codex uses --full-auto, Aider uses --yes
         when: a session is spawned
     tags: []
     created: 2026-03-08T08:00:03.672Z
@@ -130,8 +142,10 @@ features:
       - session-discovery
     title: Session Discovery
     type: feature
-    description: Discover previous sessions from Claude (~/.claude/projects/), OpenCode
-      (.opencode/opencode.db via SQLite), and other backends to enable session resumption.
+    description: >-
+      Discover previous sessions from Claude (~/.claude/projects/), OpenCode
+      (.opencode/opencode.db via SQLite), and other backends to enable session
+      resumption.
     status:
       maturity: draft
       implementation: implemented
@@ -153,11 +167,13 @@ features:
       - backend-switching
     title: Runtime Backend Switching
     type: feature
-    description: Switch the AI backend of a running terminal session without closing the tile. Kills old
-      PTY, spawns new one with same cwd, preserves session ID when backends match.
+    description: >-
+      Switch the AI backend of a running terminal session without closing the
+      tile. Kills old PTY, spawns new one with same cwd, preserves session ID
+      when backends match.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -166,8 +182,9 @@ features:
     acceptance_criteria:
       - given: a running terminal session
         id: ac-switching-1
-        then: the current PTY is terminated and a new PTY for the selected backend is spawned in the same
-          working directory
+        then: >-
+          the current PTY is terminated and a new PTY for the selected backend
+          is spawned in the same working directory
         when: the user selects a different AI backend
     tags: []
     created: 2026-03-08T08:00:07.658Z
@@ -177,11 +194,12 @@ features:
       - cli-install
     title: CLI Tool Installation
     type: feature
-    description: Check, install, and manage AI CLI tools (Claude, Gemini, Codex, OpenCode, Aider) with
-      portable Node.js/Python support for offline-first workflows.
+    description: >-
+      Check, install, and manage AI CLI tools (Claude, Gemini, Codex, OpenCode,
+      Aider) with portable Node.js/Python support for offline-first workflows.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -190,7 +208,9 @@ features:
     acceptance_criteria:
       - given: a missing or outdated AI CLI tool
         id: ac-install-1
-        then: the tool can be installed or updated using the internal package manager logic
+        then: >-
+          the tool can be installed or updated using the internal package
+          manager logic
         when: the application checks for dependencies
     tags: []
     created: 2026-03-08T08:00:09.097Z

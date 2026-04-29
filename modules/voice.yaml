@@ -3,8 +3,9 @@ slugs:
   - voice
 title: Voice I/O
 type: module
-description: Speech-to-text input (Whisper), text-to-speech output (Piper, XTTS), voice cloning, and
-  per-project voice settings
+description: >-
+  Speech-to-text input (Whisper), text-to-speech output (Piper, XTTS), voice
+  cloning, and per-project voice settings
 status:
   maturity: draft
   implementation: not_started
@@ -21,8 +22,10 @@ features:
       - stt
     title: Speech-to-Text Input
     type: feature
-    description: WebRTC audio capture with Whisper.js models (tiny to large-v3). Silence detection for
-      auto-submit, live transcription display, configurable microphone and silence threshold.
+    description: >-
+      WebRTC audio capture with Whisper.js models (tiny to large-v3). Silence
+      detection for auto-submit, live transcription display, configurable
+      microphone and silence threshold.
     status:
       maturity: draft
       implementation: implemented
@@ -34,7 +37,9 @@ features:
     acceptance_criteria:
       - given: whisper model is loaded and microphone is active
         id: ac-1
-        then: the audio is transcribed and the text is auto-submitted to the active terminal
+        then: >-
+          the audio is transcribed and the text is auto-submitted to the active
+          terminal
         when: the user speaks and then pauses beyond the silence threshold
     tags: []
     created: 2026-03-08T08:00:34.225Z
@@ -44,11 +49,13 @@ features:
       - tts
     title: Text-to-Speech Output
     type: feature
-    description: Queue-based audio playback with Piper (lightweight) and XTTS (high quality with voice
-      cloning) engines. Per-project voice override, volume/speed control, skip-on-new option.
+    description: >-
+      Queue-based audio playback with Piper (lightweight) and XTTS (high quality
+      with voice cloning) engines. Per-project voice override, volume/speed
+      control, skip-on-new option.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -67,11 +74,13 @@ features:
       - voice-cloning
     title: Voice Cloning (XTTS)
     type: feature
-    description: Create custom TTS voices from audio samples. Supports sample recording, audio file
-      import, clip extraction, and HuggingFace sample voice downloads.
+    description: >-
+      Create custom TTS voices from audio samples. Supports sample recording,
+      audio file import, clip extraction, and HuggingFace sample voice
+      downloads.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -90,11 +99,12 @@ features:
       - voice-catalog
     title: Voice Catalog
     type: feature
-    description: Browse, download, and manage TTS voices from HuggingFace catalog. Import custom voices,
-      remove voices, organize voice library.
+    description: >-
+      Browse, download, and manage TTS voices from HuggingFace catalog. Import
+      custom voices, remove voices, organize voice library.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []

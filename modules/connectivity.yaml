@@ -3,8 +3,9 @@ slugs:
   - connectivity
 title: Connectivity
 type: module
-description: HTTP API server for prompt injection, mobile WebSocket server, and MCP orchestrator for
-  cross-session control
+description: >-
+  HTTP API server for prompt injection, mobile WebSocket server, and MCP
+  orchestrator for cross-session control
 status:
   maturity: draft
   implementation: not_started
@@ -21,11 +22,12 @@ constraints:
       - orchestrator-localhost
     title: Localhost-Only Orchestrator
     type: constraint
-    description: Orchestrator API only accepts connections from localhost (127.0.0.1, ::1,
+    description: >-
+      Orchestrator API only accepts connections from localhost (127.0.0.1, ::1,
       ::ffff:127.0.0.1). No external network access.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -34,7 +36,9 @@ constraints:
     acceptance_criteria:
       - given: the orchestrator is running
         id: ac-localhost-1
-        then: the connection is rejected at the network layer or by the server middleware
+        then: >-
+          the connection is rejected at the network layer or by the server
+          middleware
         when: a connection attempt is made from a non-localhost IP
     tags: []
     created: 2026-03-08T08:01:54.525Z
@@ -45,9 +49,10 @@ features:
       - prompt-api
     title: HTTP Prompt API
     type: feature
-    description: "Per-project HTTP server for external prompt injection. Session modes: existing (reuse
-      terminal), new-keep (spawn and keep), new-close (spawn and auto-close). Rate limited to 10
-      req/60s per IP."
+    description: >-
+      Per-project HTTP server for external prompt injection. Session modes:
+      existing (reuse terminal), new-keep (spawn and keep), new-close (spawn and
+      auto-close). Rate limited to 10 req/60s per IP.
     status:
       maturity: draft
       implementation: implemented
@@ -59,7 +64,9 @@ features:
     acceptance_criteria:
       - given: the prompt API is active
         id: ac-prompt-1
-        then: the prompt is injected into the target terminal session according to the specified mode
+        then: >-
+          the prompt is injected into the target terminal session according to
+          the specified mode
         when: an external request is made to the project-specific endpoint
     tags: []
     created: 2026-03-08T08:00:55.507Z
@@ -69,12 +76,13 @@ features:
       - orchestrator
     title: MCP Orchestrator
     type: feature
-    description: Localhost HTTP API (port 19836) enabling MCP-based cross-session control. List
-      sessions, read output (last N lines), send input to any PTY. Companion MCP server script for
-      Claude CLI integration.
+    description: >-
+      Localhost HTTP API (port 19836) enabling MCP-based cross-session control.
+      List sessions, read output (last N lines), send input to any PTY.
+      Companion MCP server script for Claude CLI integration.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -83,12 +91,15 @@ features:
     acceptance_criteria:
       - given: multiple PTY sessions are running
         id: ac-1
-        then: a JSON array of all sessions is returned with id, cwd, backend, projectPath, projectName, and
-          spawnedAt
+        then: >-
+          a JSON array of all sessions is returned with id, cwd, backend,
+          projectPath, projectName, and spawnedAt
         when: GET /sessions is called on localhost:19836
       - given: a PTY session exists
         id: ac-2
-        then: the text followed by carriage return is written to the PTY, simulating user keyboard input
+        then: >-
+          the text followed by carriage return is written to the PTY, simulating
+          user keyboard input
         when: POST /sessions/{id}/input is called with text
     tags: []
     created: 2026-03-08T08:00:58.082Z
@@ -98,12 +109,13 @@ features:
       - mobile-server
     title: Mobile Server
     type: feature
-    description: WebSocket + HTTP server for mobile app connectivity. Token-based auth, IP whitelisting,
-      device fingerprinting, rate limiting, nonce-based CSRF protection. Streams terminal data,
-      supports file transfer.
+    description: >-
+      WebSocket + HTTP server for mobile app connectivity. Token-based auth, IP
+      whitelisting, device fingerprinting, rate limiting, nonce-based CSRF
+      protection. Streams terminal data, supports file transfer.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -122,11 +134,13 @@ features:
       - dual-env
     title: Dual Environment Support
     type: feature
-    description: Same UI works in Electron (IPC) and browser/mobile (HTTP+WebSocket). Factory pattern
-      returns ElectronBackend or HttpBackend implementing the same Api interface.
+    description: >-
+      Same UI works in Electron (IPC) and browser/mobile (HTTP+WebSocket).
+      Factory pattern returns ElectronBackend or HttpBackend implementing the
+      same Api interface.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: not_started
     depends_on: []
     implements: []
     relates_to: []
@@ -135,8 +149,9 @@ features:
     acceptance_criteria:
       - given: the app is running in a browser (no window.electronAPI)
         id: ac-1
-        then: HttpBackend is created using WebSocket for PTY data and HTTP for all other operations,
-          providing the same Api interface as ElectronBackend
+        then: >-
+          HttpBackend is created using WebSocket for PTY data and HTTP for all
+          other operations, providing the same Api interface as ElectronBackend
         when: the user connects with host, port, and token
     tags: []
     created: 2026-03-08T08:01:01.869Z
