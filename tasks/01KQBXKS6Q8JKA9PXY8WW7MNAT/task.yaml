@@ -9,7 +9,7 @@ description: |
 spec_ref: "@brainstorm-companion"
 plan_ref: "@plan-plan-brainstorm-companion-implementation"
 origin: derived
-status: pending
+status: in_progress
 blocked_by: []
 depends_on: []
 context: []
@@ -18,5 +18,17 @@ tags:
   - frontend
   - layout
 vcs_refs: []
+history:
+  - author: Johan.P
+    changes:
+      status:
+        new: in_progress
+        previous: pending
+      started_at:
+        new: 2026-04-29T06:08:32.026Z
+        previous: null
+    command: task-start
+    timestamp: 2026-04-29T06:08:32.027Z
 created_at: 2026-04-29T06:07:54.583Z
+started_at: 2026-04-29T06:08:32.026Z
 todos: []
