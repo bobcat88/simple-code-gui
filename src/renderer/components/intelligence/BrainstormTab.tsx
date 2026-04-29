@@ -10,6 +10,7 @@ import { cn } from '../../lib/utils'
 import type { BrainstormCanvas, BrainstormCanvasNode, ExtendedApi, GsdSeed, KSpecDraft } from '../../api/types'
 import { IdeaInbox } from './IdeaInbox'
 import { SpecDraftEditor } from './SpecDraftEditor'
+import { BrainstormCanvas } from './BrainstormCanvas'
 
 interface BrainstormTabProps {
   api: ExtendedApi
@@ -164,16 +165,14 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
         )}
 
         {activeView === 'canvas' && (
-          <div className="flex flex-col items-center justify-center p-12 text-center bg-white/[0.02] rounded-2xl border border-dashed border-white/5">
-            <Network size={32} className="text-white/10 mb-4" />
-            <h3 className="text-xs font-bold text-white/40 mb-2">Canvas Workspace</h3>
-            <p className="text-[10px] text-white/20 leading-relaxed max-w-[200px]">
-              Visual mind-mapping for your ideas and specs is currently being hardened.
-            </p>
-            <div className="mt-6 p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/10 text-[9px] text-emerald-400/60 font-mono">
-              Coming in v1.4
-            </div>
-          </div>
+          <BrainstormCanvas 
+            api={api}
+            projectPath={projectPath}
+            canvas={canvas}
+            seeds={seeds}
+            drafts={drafts}
+            onRefresh={refresh}
+          />
         )}
       </div>
 
