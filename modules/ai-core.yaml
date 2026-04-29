@@ -411,6 +411,9 @@ features:
       Sidebar.
 
       Bridges the gap between raw thoughts (seeds) and formal requirements.
+    status:
+      maturity: draft
+      implementation: in_progress
     depends_on: []
     implements: []
     relates_to: []
