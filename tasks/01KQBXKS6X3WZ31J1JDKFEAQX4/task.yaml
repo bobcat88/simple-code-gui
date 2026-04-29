@@ -1,0 +1,22 @@
+_ulid: 01KQBXKS6X3WZ31J1JDKFEAQX4
+slugs:
+  - task-idea-inbox-frontend
+title: "Frontend: IdeaInbox Component"
+type: task
+description: |
+  Implement the IdeaInbox component with seed list and capture input.
+  Wire up gsdListSeeds IPC calls.
+spec_ref: "@idea-inbox"
+plan_ref: "@plan-plan-brainstorm-companion-implementation"
+origin: derived
+status: pending
+blocked_by: []
+depends_on: []
+context: []
+priority: 2
+tags:
+  - frontend
+  - gsd
+vcs_refs: []
+created_at: 2026-04-29T06:07:54.589Z
+todos: []

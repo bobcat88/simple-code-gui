@@ -3,9 +3,7 @@ slugs:
   - ai-core
 title: AI Intelligence & Orchestration
 type: module
-description: >-
-  Everything related to model providers, agent execution, and repository
-  intelligence.
+description: Everything related to model providers, agent execution, and repository intelligence.
 status:
   maturity: draft
   implementation: not_started
@@ -21,9 +19,7 @@ features:
       - ai-runtime
     title: Multi-Provider AI Runtime
     type: feature
-    description: >-
-      Abstraction layer and routing for Claude, OpenAI, Gemini, and Ollama
-      providers.
+    description: Abstraction layer and routing for Claude, OpenAI, Gemini, and Ollama providers.
     status:
       maturity: draft
       implementation: implemented
@@ -43,9 +39,7 @@ features:
         slugs: []
         title: Provider Abstraction Interface
         type: requirement
-        description: >-
-          Unified trait/interface for different LLM providers (Claude, OpenAI,
-          Gemini, Ollama).
+        description: Unified trait/interface for different LLM providers (Claude, OpenAI, Gemini, Ollama).
         status:
           maturity: draft
           implementation: not_started
@@ -87,9 +81,7 @@ features:
         slugs: []
         title: Model Routing Policies
         type: requirement
-        description: >-
-          System for selecting models based on task type (planning, patching,
-          summarization).
+        description: System for selecting models based on task type (planning, patching, summarization).
         status:
           maturity: draft
           implementation: not_started
@@ -110,9 +102,7 @@ features:
         slugs: []
         title: Named Model Plans
         type: requirement
-        description: >-
-          User-definable presets for cost/quality balance (e.g., Budget,
-          High-Quality).
+        description: User-definable presets for cost/quality balance (e.g., Budget, High-Quality).
         status:
           maturity: draft
           implementation: not_started
@@ -136,9 +126,7 @@ features:
       - gsd-engine
     title: GSD Execution Engine
     type: feature
-    description: >-
-      Phase-based agent execution engine with verifier loops and wave-based
-      orchestration.
+    description: Phase-based agent execution engine with verifier loops and wave-based orchestration.
     status:
       maturity: draft
       implementation: implemented
@@ -150,9 +138,7 @@ features:
     acceptance_criteria:
       - given: a multi-phase plan
         id: ac-gsd-1
-        then: >-
-          it follows the phase sequence with verification loops and wave
-          orchestration
+        then: it follows the phase sequence with verification loops and wave orchestration
         when: the GSD engine executes it
     tags: []
     requirements:
@@ -247,9 +233,7 @@ features:
       - token-economics
     title: Token Economics & Telemetry
     type: feature
-    description: >-
-      Real-time tracking of token consumption and cost savings from
-      RTK/MCP/GitNexus.
+    description: Real-time tracking of token consumption and cost savings from RTK/MCP/GitNexus.
     status:
       maturity: draft
       implementation: not_started
@@ -261,15 +245,11 @@ features:
     acceptance_criteria:
       - given: A terminal session is running an AI backend (Claude, Gemini, etc.)
         id: ac-1
-        then: >-
-          The system parses and stores token counts per session in the telemetry
-          store
+        then: The system parses and stores token counts per session in the telemetry store
         when: Token usage data appears in terminal output
       - given: Token data has been collected for one or more sessions
         id: ac-2
-        then: >-
-          Session token totals, estimated cost, and cumulative totals are
-          displayed
+        then: Session token totals, estimated cost, and cumulative totals are displayed
         when: The user views the telemetry panel
       - given: RTK is installed and available
         id: ac-3
@@ -277,9 +257,7 @@ features:
         when: The telemetry panel renders
       - given: Multiple terminal sessions are active
         id: ac-4
-        then: >-
-          Per-session and aggregate totals update in real-time without page
-          refresh
+        then: Per-session and aggregate totals update in real-time without page refresh
         when: Token data updates in any session
     tags: []
     requirements:
@@ -321,9 +299,7 @@ features:
         slugs: []
         title: Savings Telemetry (RTK/MCP)
         type: requirement
-        description: >-
-          Calculation and display of tokens saved by using RTK, MCP, and local
-          intelligence.
+        description: Calculation and display of tokens saved by using RTK, MCP, and local intelligence.
         status:
           maturity: draft
           implementation: not_started
@@ -357,9 +333,7 @@ features:
         slugs: []
         title: Token Burn History
         type: requirement
-        description: >-
-          SQLite-backed logging of all token transactions for historical
-          analysis.
+        description: SQLite-backed logging of all token transactions for historical analysis.
         status:
           maturity: draft
           implementation: implemented
@@ -371,28 +345,22 @@ features:
         acceptance_criteria:
           - given: The application starts
             id: ac-1
-            then: >-
-              A SQLite database is created/opened at the user data directory
-              with a token_transactions table
+            then: A SQLite database is created/opened at the user data directory with a token_transactions table
             when: The token burn history module initializes
           - given: A terminal session produces token usage data (input/output tokens)
             id: ac-2
-            then: >-
-              A transaction record is inserted into SQLite with session_id,
-              project_path, backend, input_tokens, output_tokens, cost_estimate,
-              and timestamp
+            then: A transaction record is inserted into SQLite with session_id, project_path, backend,
+              input_tokens, output_tokens, cost_estimate, and timestamp
             when: The token data is received by the main process
           - given: Token transactions have been logged
             id: ac-3
-            then: >-
-              Aggregated and per-session token data is returned with filtering
-              by date range, project, and backend
+            then: Aggregated and per-session token data is returned with filtering by date range, project, and
+              backend
             when: The renderer requests history via IPC
           - given: The renderer has received token history data
             id: ac-4
-            then: >-
-              A historical view shows token usage over time with charts, totals,
-              and breakdown by project/backend
+            then: A historical view shows token usage over time with charts, totals, and breakdown by
+              project/backend
             when: The Token Burn History UI component renders
         tags: []
         created: 2026-04-20T16:50:59.235Z
@@ -432,6 +400,130 @@ features:
         created: 2026-04-20T16:51:00.931Z
         notes: []
     created: 2026-04-20T16:49:37.000Z
+    notes: []
+  - _ulid: 01KQBXKS4FC7B5V2K121B9116A
+    slugs:
+      - brainstorm-companion
+    title: Brainstorm Companion
+    type: feature
+    description: >
+      A dedicated ideation and specification workspace integrated into the Project Intelligence
+      Sidebar.
+
+      Bridges the gap between raw thoughts (seeds) and formal requirements.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    acceptance_criteria:
+      - given: |
+          The application is running and the Intelligence Sidebar is open
+        id: ac-1
+        then: |
+          The Brainstorm Companion interface is displayed with Ideas and Drafts sub-tabs
+        when: |
+          The user selects the Brainstorm tab
+      - given: |
+          The Brainstorm Companion is open
+        id: ac-2
+        then: |
+          The UI state is preserved and the corresponding component is rendered
+        when: |
+          The user switches between Ideas and Drafts tabs
+    tags: []
+    features:
+      - _ulid: 01KQBXKS51N5W3GW74747JH14S
+        slugs:
+          - idea-inbox
+        title: Idea Inbox (The Foundry)
+        type: feature
+        description: |
+          A component for quick-capturing and managing "Seeds" (raw ideas).
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        acceptance_criteria:
+          - given: |
+              The Ideas tab is open
+            id: ac-1
+            then: |
+              A new Seed is created via GSD and appears in the list
+            when: |
+              The user enters text in the capture field and presses Enter
+          - given: |
+              A list of Seeds is displayed
+            id: ac-2
+            then: |
+              The Seed details are shown with promotion options
+            when: |
+              The user selects a Seed
+        tags: []
+        created: 2026-04-29T06:07:54.529Z
+        notes: []
+      - _ulid: 01KQBXKS5A9QN2XPZ1DSAWRP52
+        slugs:
+          - spec-draft-editor
+        title: Spec Draft Editor
+        type: feature
+        description: |
+          A structured, visual editor for drafting KSpec modules and acceptance criteria.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        acceptance_criteria:
+          - given: |
+              The Drafts tab is open
+            id: ac-1
+            then: |
+              The editor provides real-time validation and a live preview of the spec structure
+            when: |
+              The user enters spec details (Title, Type, ACs)
+          - given: |
+              A draft is in progress
+            id: ac-2
+            then: |
+              The draft is persisted to the .kspec/ shadow branch via the Rust backend
+            when: |
+              The user saves the draft
+        tags: []
+        created: 2026-04-29T06:07:54.538Z
+        notes: []
+      - _ulid: 01KQBXKS5K9TY0Z36B27MSV8ZE
+        slugs:
+          - promotion-workflow
+        title: Promotion Workflow
+        type: feature
+        description: |
+          Workflow for converting Seeds into Spec Drafts or Beads Tasks.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        acceptance_criteria:
+          - given: |
+              An idea is selected in the Idea Inbox
+            id: ac-1
+            then: |
+              The Spec Draft Editor opens pre-populated with the idea's content
+            when: |
+              The user clicks "Promote to Spec"
+          - given: |
+              An idea is selected
+            id: ac-2
+            then: |
+              A new Beads issue is created and linked to the corresponding spec if applicable
+            when: |
+              The user clicks "Promote to Task"
+        tags: []
+        created: 2026-04-29T06:07:54.547Z
+        notes: []
+    created: 2026-04-29T06:07:54.511Z
     notes: []
 created: 2026-04-28T22:21:13.876Z
 notes: []

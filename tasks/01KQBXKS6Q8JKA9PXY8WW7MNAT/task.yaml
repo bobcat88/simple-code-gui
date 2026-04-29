@@ -1,0 +1,22 @@
+_ulid: 01KQBXKS6Q8JKA9PXY8WW7MNAT
+slugs:
+  - task-brainstorm-tab-layout
+title: "Frontend: BrainstormTab and Layout"
+type: task
+description: |
+  Create the main BrainstormTab container and implement the sub-tab navigation (Ideas/Drafts).
+  Integrate into the IntelligenceSidebar.
+spec_ref: "@brainstorm-companion"
+plan_ref: "@plan-plan-brainstorm-companion-implementation"
+origin: derived
+status: pending
+blocked_by: []
+depends_on: []
+context: []
+priority: 2
+tags:
+  - frontend
+  - layout
+vcs_refs: []
+created_at: 2026-04-29T06:07:54.583Z
+todos: []

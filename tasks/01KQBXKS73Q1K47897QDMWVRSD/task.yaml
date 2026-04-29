@@ -1,0 +1,22 @@
+_ulid: 01KQBXKS73Q1K47897QDMWVRSD
+slugs:
+  - task-spec-draft-editor-frontend
+title: "Frontend: SpecDraftEditor Component"
+type: task
+description: |
+  Implement the structured YAML editor with live preview and validation.
+  Wire up kspecWriteDraft IPC calls.
+spec_ref: "@spec-draft-editor"
+plan_ref: "@plan-plan-brainstorm-companion-implementation"
+origin: derived
+status: pending
+blocked_by: []
+depends_on: []
+context: []
+priority: 2
+tags:
+  - frontend
+  - kspec
+vcs_refs: []
+created_at: 2026-04-29T06:07:54.595Z
+todos: []

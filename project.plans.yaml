@@ -155,11 +155,23 @@ plans:
         tags: [integration, beads, kspec, gsd]
         spec_ref: "@promotion-workflow"
       ```
-    status: approved
+    status: active
     approved_at: null
-    branch: null
-    derived_specs: []
-    derived_tasks: []
+    derived_specs:
+      - "@brainstorm-companion"
+      - "@idea-inbox"
+      - "@spec-draft-editor"
+      - "@promotion-workflow"
+    derived_tasks:
+      - "@implement-brainstorm-companion"
+      - "@implement-idea-inbox-the-foundry"
+      - "@implement-spec-draft-editor"
+      - "@implement-promotion-workflow"
+      - "@task-brainstorm-tab-layout"
+      - "@task-idea-inbox-frontend"
+      - "@task-spec-draft-editor-frontend"
+      - "@task-backend-kspec-draft"
+      - "@task-promotion-ipc-bridge"
     module_ref: "@ai-core"
     source_path: /home/_johan/Documents/Projects/simple-code-gui/.kspec/plans/brainstorm-companion.md
     created_at: 2026-04-29T06:07:48.530Z

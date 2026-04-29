@@ -1,0 +1,22 @@
+_ulid: 01KQBXKS79NMP2KXZYW7DJ189S
+slugs:
+  - task-backend-kspec-draft
+title: "Backend: KSpec Draft Persistence"
+type: task
+description: |
+  Implement the Rust side of kspecWriteDraft to persist drafts into the shadow branch.
+spec_ref: "@spec-draft-editor"
+plan_ref: "@plan-plan-brainstorm-companion-implementation"
+origin: derived
+status: pending
+blocked_by: []
+depends_on: []
+context: []
+priority: 2
+tags:
+  - backend
+  - rust
+  - kspec
+vcs_refs: []
+created_at: 2026-04-29T06:07:54.601Z
+todos: []

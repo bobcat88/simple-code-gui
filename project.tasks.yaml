@@ -1,15 +1,15 @@
 - _ulid: 01KPNXFSKSCJADKNJGETRD4KG0
   slugs:
     - task-project-quick-switcher
-  title: 'Implement: Project Quick-Switcher'
+  title: "Implement: Project Quick-Switcher"
   type: task
-  spec_ref: '@01KPNWYGEC5WX1JKYWJ2WF0YB0'
+  spec_ref: "@01KPNWYGEC5WX1JKYWJ2WF0YB0"
   status: completed
   blocked_by: []
   depends_on: []
   priority: 3
   tags: []
-  review_ref: '@01KPRRB1Y266W9ARVWMWGQ5AX9'
+  review_ref: "@01KPRRB1Y266W9ARVWMWGQ5AX9"
   notes_count: 5
   todos_count: 0
   created_at: 2026-04-20T17:02:26.425Z
@@ -20,9 +20,9 @@
 - _ulid: 01KPS0GDNN25JVHFVY8JJE5743
   slugs:
     - task-session-discovery
-  title: 'Implement: Session Discovery'
+  title: "Implement: Session Discovery"
   type: task
-  spec_ref: '@session-discovery'
+  spec_ref: "@session-discovery"
   status: completed
   blocked_by: []
   depends_on: []
@@ -38,9 +38,9 @@
 - _ulid: 01KPS0GDQXR8JD6QA2MGT2KD9S
   slugs:
     - task-live-token-cost-hud
-  title: 'Implement: Live Token/Cost HUD'
+  title: "Implement: Live Token/Cost HUD"
   type: task
-  spec_ref: '@01KPNWTQ'
+  spec_ref: "@01KPNWTQ"
   status: completed
   blocked_by: []
   depends_on: []
@@ -56,9 +56,9 @@
 - _ulid: 01KPS0GDT09WMT9BNDYXWZFWP3
   slugs:
     - task-token-burn-history
-  title: 'Implement: Token Burn History'
+  title: "Implement: Token Burn History"
   type: task
-  spec_ref: '@01KPNWTT'
+  spec_ref: "@01KPNWTT"
   status: completed
   blocked_by: []
   depends_on: []
@@ -74,9 +74,9 @@
 - _ulid: 01KPS0GDVZNW3C7K4XM86WS21M
   slugs:
     - task-approval-workflow-ui
-  title: 'Implement: Approval Workflow UI'
+  title: "Implement: Approval Workflow UI"
   type: task
-  spec_ref: '@01KPNWYD'
+  spec_ref: "@01KPNWYD"
   status: completed
   blocked_by: []
   depends_on: []
@@ -92,9 +92,9 @@
 - _ulid: 01KPS0GDXXW4KHZYJHV81QX9R0
   slugs:
     - task-task-assignment-view
-  title: 'Implement: Task Assignment View'
+  title: "Implement: Task Assignment View"
   type: task
-  spec_ref: '@01KPNWYE'
+  spec_ref: "@01KPNWYE"
   status: completed
   blocked_by: []
   depends_on: []
@@ -110,9 +110,9 @@
 - _ulid: 01KPS0GDZYYGBH0AEJ2PDN6YBC
   slugs:
     - task-app-plugin-health-dashboard
-  title: 'Implement: App & Plugin Health Dashboard'
+  title: "Implement: App & Plugin Health Dashboard"
   type: task
-  spec_ref: '@01KPNWYK'
+  spec_ref: "@01KPNWYK"
   status: completed
   blocked_by: []
   depends_on: []
@@ -128,9 +128,9 @@
 - _ulid: 01KPS0GE1Y0DMY1MKT77AASR4Z
   slugs:
     - task-multi-provider-ai-runtime
-  title: 'Implement: Multi-Provider AI Runtime'
+  title: "Implement: Multi-Provider AI Runtime"
   type: task
-  spec_ref: '@ai-runtime'
+  spec_ref: "@ai-runtime"
   status: completed
   blocked_by: []
   depends_on: []
@@ -146,9 +146,9 @@
 - _ulid: 01KPS0GE3XDTDGATRJTWYREYXC
   slugs:
     - task-gsd-execution-engine
-  title: 'Implement: GSD Execution Engine'
+  title: "Implement: GSD Execution Engine"
   type: task
-  spec_ref: '@gsd-engine'
+  spec_ref: "@gsd-engine"
   status: completed
   blocked_by: []
   depends_on: []
@@ -164,9 +164,9 @@
 - _ulid: 01KQB2R958DK4042TQZB0JFJ2P
   slugs:
     - task-foundation-ai-core
-  title: 'Foundation: AI Intelligence & Orchestration'
+  title: "Foundation: AI Intelligence & Orchestration"
   type: task
-  spec_ref: '@ai-runtime'
+  spec_ref: "@ai-runtime"
   status: completed
   blocked_by: []
   depends_on: []
@@ -179,9 +179,9 @@
 - _ulid: 01KQB2RAS0R3WMTVVMTPCJ7J1Z
   slugs:
     - task-foundation-connectivity
-  title: 'Foundation: Connectivity & Sync'
+  title: "Foundation: Connectivity & Sync"
   type: task
-  spec_ref: '@prompt-api'
+  spec_ref: "@prompt-api"
   status: completed
   blocked_by: []
   depends_on: []
@@ -194,9 +194,9 @@
 - _ulid: 01KQB2RCE5SN6NNW7E2JN0604Q
   slugs:
     - task-foundation-extensions
-  title: 'Foundation: Extension Registry'
+  title: "Foundation: Extension Registry"
   type: task
-  spec_ref: '@ext-registry'
+  spec_ref: "@ext-registry"
   status: completed
   blocked_by: []
   depends_on: []
@@ -209,9 +209,9 @@
 - _ulid: 01KQB2RE0D0ARARAHS5FKTKMAE
   slugs:
     - task-foundation-layout
-  title: 'Foundation: Layout & Navigation'
+  title: "Foundation: Layout & Navigation"
   type: task
-  spec_ref: '@tiled-layout'
+  spec_ref: "@tiled-layout"
   status: completed
   blocked_by: []
   depends_on: []
@@ -224,9 +224,9 @@
 - _ulid: 01KQB2RFS22ZAQ1C4C0RNT48N0
   slugs:
     - task-foundation-tasks
-  title: 'Foundation: Task Lifecycle'
+  title: "Foundation: Task Lifecycle"
   type: task
-  spec_ref: '@beads-backend'
+  spec_ref: "@beads-backend"
   status: completed
   blocked_by: []
   depends_on: []
@@ -239,9 +239,9 @@
 - _ulid: 01KQB2RHE1KHQ3C3H1XYGJK5DZ
   slugs:
     - task-foundation-terminal
-  title: 'Foundation: Terminal Management'
+  title: "Foundation: Terminal Management"
   type: task
-  spec_ref: '@pty-lifecycle'
+  spec_ref: "@pty-lifecycle"
   status: completed
   blocked_by: []
   depends_on: []
@@ -254,9 +254,9 @@
 - _ulid: 01KQB2RKCHEYTGPPCE1N60FG3G
   slugs:
     - task-foundation-voice
-  title: 'Foundation: Voice I/O'
+  title: "Foundation: Voice I/O"
   type: task
-  spec_ref: '@stt'
+  spec_ref: "@stt"
   status: completed
   blocked_by: []
   depends_on: []
@@ -266,3 +266,151 @@
   todos_count: 0
   created_at: 2026-04-28T22:18:40.913Z
   automation: eligible
+- _ulid: 01KQBXKS5WFCF85ZX3E3YJ95HF
+  slugs:
+    - implement-brainstorm-companion
+  title: Implement Brainstorm Companion
+  type: task
+  spec_ref: "@brainstorm-companion"
+  plan_ref: "@plan-plan-brainstorm-companion-implementation"
+  status: pending
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags: []
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-04-29T06:07:54.556Z
+- _ulid: 01KQBXKS63AJM3DPQKQN6MSAR2
+  slugs:
+    - implement-idea-inbox-the-foundry
+  title: Implement Idea Inbox (The Foundry)
+  type: task
+  spec_ref: "@idea-inbox"
+  plan_ref: "@plan-plan-brainstorm-companion-implementation"
+  status: pending
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags: []
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-04-29T06:07:54.563Z
+- _ulid: 01KQBXKS6BWGNJJT8GMX2Z6T8V
+  slugs:
+    - implement-spec-draft-editor
+  title: Implement Spec Draft Editor
+  type: task
+  spec_ref: "@spec-draft-editor"
+  plan_ref: "@plan-plan-brainstorm-companion-implementation"
+  status: pending
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags: []
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-04-29T06:07:54.571Z
+- _ulid: 01KQBXKS6HR619FWYRZF5JJ2J2
+  slugs:
+    - implement-promotion-workflow
+  title: Implement Promotion Workflow
+  type: task
+  spec_ref: "@promotion-workflow"
+  plan_ref: "@plan-plan-brainstorm-companion-implementation"
+  status: pending
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags: []
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-04-29T06:07:54.577Z
+- _ulid: 01KQBXKS6Q8JKA9PXY8WW7MNAT
+  slugs:
+    - task-brainstorm-tab-layout
+  title: "Frontend: BrainstormTab and Layout"
+  type: task
+  spec_ref: "@brainstorm-companion"
+  plan_ref: "@plan-plan-brainstorm-companion-implementation"
+  status: pending
+  blocked_by: []
+  depends_on: []
+  priority: 2
+  tags:
+    - frontend
+    - layout
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-04-29T06:07:54.583Z
+- _ulid: 01KQBXKS6X3WZ31J1JDKFEAQX4
+  slugs:
+    - task-idea-inbox-frontend
+  title: "Frontend: IdeaInbox Component"
+  type: task
+  spec_ref: "@idea-inbox"
+  plan_ref: "@plan-plan-brainstorm-companion-implementation"
+  status: pending
+  blocked_by: []
+  depends_on: []
+  priority: 2
+  tags:
+    - frontend
+    - gsd
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-04-29T06:07:54.589Z
+- _ulid: 01KQBXKS73Q1K47897QDMWVRSD
+  slugs:
+    - task-spec-draft-editor-frontend
+  title: "Frontend: SpecDraftEditor Component"
+  type: task
+  spec_ref: "@spec-draft-editor"
+  plan_ref: "@plan-plan-brainstorm-companion-implementation"
+  status: pending
+  blocked_by: []
+  depends_on: []
+  priority: 2
+  tags:
+    - frontend
+    - kspec
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-04-29T06:07:54.595Z
+- _ulid: 01KQBXKS79NMP2KXZYW7DJ189S
+  slugs:
+    - task-backend-kspec-draft
+  title: "Backend: KSpec Draft Persistence"
+  type: task
+  spec_ref: "@spec-draft-editor"
+  plan_ref: "@plan-plan-brainstorm-companion-implementation"
+  status: pending
+  blocked_by: []
+  depends_on: []
+  priority: 2
+  tags:
+    - backend
+    - rust
+    - kspec
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-04-29T06:07:54.601Z
+- _ulid: 01KQBXKS7FHBWTFHN6N6CPX88T
+  slugs:
+    - task-promotion-ipc-bridge
+  title: "Integration: Promotion IPC Bridge"
+  type: task
+  spec_ref: "@promotion-workflow"
+  plan_ref: "@plan-plan-brainstorm-companion-implementation"
+  status: pending
+  blocked_by: []
+  depends_on: []
+  priority: 2
+  tags:
+    - integration
+    - beads
+    - kspec
+    - gsd
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-04-29T06:07:54.607Z
