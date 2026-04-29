@@ -14,7 +14,9 @@ import {
   FileEdit,
   PenTool,
   Minus,
-  CheckCircle2
+  CheckCircle2,
+  Share,
+  PlusSquare
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import type { 
@@ -49,6 +51,7 @@ export function BrainstormCanvas({
 }: BrainstormCanvasProps) {
   const [canvas, setCanvas] = useState<CanvasType>(initialCanvas)
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([])
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isProcessing, setIsProcessing] = useState<string | null>(null)
   const canvasRef = useRef<HTMLDivElement>(null)
@@ -60,14 +63,78 @@ export function BrainstormCanvas({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNodeIds.length > 0) {
-        if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return
-        deleteNode(selectedNodeIds[0])
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return
+      
+      if ((e.key === 'Delete' || e.key === 'Backspace')) {
+        if (selectedNodeIds.length > 0) {
+          deleteNode(selectedNodeIds[0])
+        } else if (selectedEdgeId) {
+          deleteEdge(selectedEdgeId)
+        }
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedNodeIds, canvas])
+  }, [selectedNodeIds, selectedEdgeId, canvas])
+
+  const updateNode = (id: string, updates: Partial<BrainstormCanvasNode>) => {
+    const newNodes = canvas.nodes.map(n => n.id === id ? { ...n, ...updates } : n)
+    const newCanvas = { ...canvas, nodes: newNodes }
+    setCanvas(newCanvas)
+    saveCanvas(newCanvas)
+  }
+
+  const addManualNode = () => {
+    const id = `manual-${Date.now()}`
+    const newNode: BrainstormCanvasNode = {
+      id,
+      sourceId: id,
+      nodeType: 'seed',
+      title: 'New Idea',
+      content: 'Double click to edit in inspector...',
+      x: 50 / zoom,
+      y: 50 / zoom,
+      width: 150,
+      height: 100
+    }
+    const newCanvas = { ...canvas, nodes: [...canvas.nodes, newNode] }
+    setCanvas(newCanvas)
+    saveCanvas(newCanvas)
+    setSelectedNodeIds([id])
+  }
+
+  const deleteEdge = (id: string) => {
+    const newEdges = canvas.edges.filter(e => e.id !== id)
+    const newCanvas = { ...canvas, edges: newEdges }
+    setCanvas(newCanvas)
+    saveCanvas(newCanvas)
+    setSelectedEdgeId(null)
+  }
+
+  const updateEdgeLabel = (id: string, label: string) => {
+    const newEdges = canvas.edges.map(e => e.id === id ? { ...e, label } : e)
+    const newCanvas = { ...canvas, edges: newEdges }
+    setCanvas(newCanvas)
+    saveCanvas(newCanvas)
+  }
+
+  const handleExport = () => {
+    let mermaid = 'graph TD\n'
+    canvas.nodes.forEach(node => {
+      const label = node.title.replace(/[()\[\]]/g, '')
+      mermaid += `  ${node.id.substring(0, 8)}["${label} (${node.nodeType})"]\n`
+    })
+    canvas.edges.forEach(edge => {
+      const label = edge.label ? ` -- "${edge.label}" --> ` : ' --> '
+      mermaid += `  ${edge.fromNode.substring(0, 8)}${label}${edge.toNode.substring(0, 8)}\n`
+    })
+
+    const report = `# Brainstorm Topology Export\n\nGenerated on ${new Date().toLocaleString()}\n\n\`\`\`mermaid\n${mermaid}\`\`\`\n\n## Node Details\n\n` + 
+      canvas.nodes.map(n => `### ${n.title} (${n.nodeType})\n${n.content}`).join('\n\n')
+
+    navigator.clipboard.writeText(report)
+    alert('Topology exported as Mermaid Markdown to clipboard!')
+  }
 
   const saveCanvas = async (newCanvas: CanvasType) => {
     setIsSaving(true)
@@ -297,6 +364,20 @@ export function BrainstormCanvas({
             >
               <RefreshCw size={14} />
             </button>
+            <button 
+              onClick={addManualNode}
+              className="p-1.5 hover:bg-white/10 rounded text-white/40 hover:text-white transition-colors"
+              title="Add New Note"
+            >
+              <PlusSquare size={14} />
+            </button>
+            <button 
+              onClick={handleExport}
+              className="p-1.5 hover:bg-white/10 rounded text-white/40 hover:text-white transition-colors"
+              title="Export Topology (Mermaid)"
+            >
+              <Share size={14} />
+            </button>
             <div className="w-px h-4 bg-white/10 mx-1" />
             <div className="flex items-center gap-1 px-1">
               <span className="text-[9px] font-bold text-white/20 uppercase tracking-tighter">Inventory:</span>
@@ -340,7 +421,10 @@ export function BrainstormCanvas({
       <div 
         ref={canvasRef}
         className="flex-1 overflow-hidden relative cursor-grab active:cursor-grabbing"
-        onMouseDown={() => setSelectedNodeIds([])}
+        onMouseDown={() => {
+          setSelectedNodeIds([])
+          setSelectedEdgeId(null)
+        }}
       >
         <div 
           className="absolute inset-0 transition-transform duration-200"
@@ -352,7 +436,7 @@ export function BrainstormCanvas({
           }}
         >
           {/* Edges layer */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible">
+          <svg className="absolute inset-0 w-full h-full overflow-visible">
             <defs>
               <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
                 <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.1)" />
@@ -369,22 +453,59 @@ export function BrainstormCanvas({
               const y2 = toNode.y + toNode.height / 2
 
               return (
-                <g key={edge.id}>
+                <g key={edge.id} className="group/edge cursor-pointer">
+                  {/* Invisible thick hit area */}
                   <line 
                     x1={x1} y1={y1} x2={x2} y2={y2} 
-                    stroke="rgba(255,255,255,0.1)" 
-                    strokeWidth="1.5" 
-                    strokeDasharray="4 4"
-                    markerEnd="url(#arrowhead)"
+                    stroke="transparent" 
+                    strokeWidth="15" 
+                    className="pointer-events-auto"
+                    onMouseDown={(e) => {
+                      e.stopPropagation()
+                      setSelectedEdgeId(edge.id)
+                      setSelectedNodeIds([])
+                    }}
                   />
-                  {edge.label && (
+                  <line 
+                    x1={x1} y1={y1} x2={x2} y2={y2} 
+                    stroke={selectedEdgeId === edge.id ? "rgba(168, 85, 247, 0.6)" : "rgba(255,255,255,0.1)"} 
+                    strokeWidth={selectedEdgeId === edge.id ? "2" : "1.5"} 
+                    strokeDasharray={selectedEdgeId === edge.id ? "none" : "4 4"}
+                    markerEnd="url(#arrowhead)"
+                    className="transition-all duration-200"
+                  />
+                  {edge.label && selectedEdgeId !== edge.id && (
                     <text 
-                      x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 5}
-                      className="text-[8px] fill-white/20 font-bold uppercase"
+                      x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 8}
+                      className="text-[8px] fill-white/40 font-bold uppercase pointer-events-none"
                       textAnchor="middle"
                     >
                       {edge.label}
                     </text>
+                  )}
+                  {selectedEdgeId === edge.id && (
+                    <foreignObject 
+                      x={(x1 + x2) / 2 - 40} y={(y1 + y2) / 2 - 15} 
+                      width="80" height="30"
+                      className="overflow-visible pointer-events-auto"
+                    >
+                      <input
+                        autoFocus
+                        defaultValue={edge.label || ''}
+                        onBlur={(e) => updateEdgeLabel(edge.id, e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            updateEdgeLabel(edge.id, e.currentTarget.value)
+                            setSelectedEdgeId(null)
+                          }
+                          if (e.key === 'Escape') {
+                            setSelectedEdgeId(null)
+                          }
+                        }}
+                        className="w-full bg-purple-900/80 border border-purple-500/50 rounded px-1 py-0.5 text-[9px] text-white font-bold uppercase text-center outline-none shadow-lg backdrop-blur-sm"
+                        placeholder="label..."
+                      />
+                    </foreignObject>
                   )}
                 </g>
               )
@@ -476,10 +597,23 @@ export function BrainstormCanvas({
             <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4">
               {selectedNode ? (
                 <>
-                  <div>
-                    <div className="text-[11px] font-bold text-white mb-1">{selectedNode.title}</div>
-                    <div className="text-[10px] text-white/40 leading-relaxed italic border-l-2 border-white/5 pl-2 mb-4">
-                      {selectedNode.content}
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-[8px] font-bold text-white/20 uppercase tracking-widest mb-1 block">Title</label>
+                      <input 
+                        value={selectedNode.title}
+                        onChange={(e) => updateNode(selectedNode.id, { title: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[11px] text-white focus:outline-none focus:border-indigo-500/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[8px] font-bold text-white/20 uppercase tracking-widest mb-1 block">Content</label>
+                      <textarea 
+                        value={selectedNode.content}
+                        rows={6}
+                        onChange={(e) => updateNode(selectedNode.id, { content: e.target.value })}
+                        className="w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[10px] text-white/70 focus:outline-none focus:border-indigo-500/50 leading-relaxed resize-none custom-scrollbar"
+                      />
                     </div>
                   </div>
 
