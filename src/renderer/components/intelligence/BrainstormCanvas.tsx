@@ -13,6 +13,7 @@ import {
   Lightbulb,
   FileEdit,
   PenTool,
+  Minus,
   CheckCircle2
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
@@ -43,7 +44,7 @@ export function BrainstormCanvas({
   onRefresh 
 }: BrainstormCanvasProps) {
   const [canvas, setCanvas] = useState<CanvasType>(initialCanvas)
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [isProcessing, setIsProcessing] = useState<string | null>(null)
   const canvasRef = useRef<HTMLDivElement>(null)
@@ -52,6 +53,17 @@ export function BrainstormCanvas({
   useEffect(() => {
     setCanvas(initialCanvas)
   }, [initialCanvas])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNodeIds.length > 0) {
+        if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return
+        deleteNode(selectedNodeIds[0])
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedNodeIds, canvas])
 
   const saveCanvas = async (newCanvas: CanvasType) => {
     setIsSaving(true)
@@ -65,12 +77,16 @@ export function BrainstormCanvas({
   }
 
   const handleNodeDrag = (id: string, info: any) => {
+    const deltaX = info.delta.x / zoom
+    const deltaY = info.delta.y / zoom
+    const isPartOfSelection = selectedNodeIds.includes(id)
+
     const newNodes = canvas.nodes.map(node => {
-      if (node.id === id) {
+      if (node.id === id || (isPartOfSelection && selectedNodeIds.includes(node.id))) {
         return {
           ...node,
-          x: node.x + info.delta.x / zoom,
-          y: node.y + info.delta.y / zoom
+          x: node.x + deltaX,
+          y: node.y + deltaY
         }
       }
       return node
@@ -126,12 +142,13 @@ export function BrainstormCanvas({
   }
 
   const deleteNode = (id: string) => {
-    const newNodes = canvas.nodes.filter(n => n.id !== id)
-    const newEdges = canvas.edges.filter(e => e.fromNode !== id && e.toNode !== id)
+    const idsToDelete = selectedNodeIds.includes(id) ? selectedNodeIds : [id]
+    const newNodes = canvas.nodes.filter(n => !idsToDelete.includes(n.id))
+    const newEdges = canvas.edges.filter(e => !idsToDelete.includes(e.fromNode) && !idsToDelete.includes(e.toNode))
     const newCanvas = { nodes: newNodes, edges: newEdges }
     setCanvas(newCanvas)
     saveCanvas(newCanvas)
-    if (selectedNodeId === id) setSelectedNodeId(null)
+    setSelectedNodeIds(prev => prev.filter(selectedId => !idsToDelete.includes(selectedId)))
   }
 
   const handleArchitectReview = async (node: NodeType) => {
@@ -207,10 +224,12 @@ export function BrainstormCanvas({
     }
   }
 
-  const selectedNode = useMemo(() => 
-    canvas.nodes.find(n => n.id === selectedNodeId), 
-    [canvas.nodes, selectedNodeId]
+  const selectedNodes = useMemo(() => 
+    canvas.nodes.filter(n => selectedNodeIds.includes(n.id)), 
+    [canvas.nodes, selectedNodeIds]
   )
+
+  const selectedNode = selectedNodes.length === 1 ? selectedNodes[0] : null
 
   return (
     <div className="flex flex-col h-[500px] bg-black/20 rounded-2xl border border-white/5 overflow-hidden relative">
@@ -233,7 +252,7 @@ export function BrainstormCanvas({
               className="p-1.5 hover:bg-white/10 rounded text-white/40 hover:text-white transition-colors"
               title="Zoom Out"
             >
-              <Trash2 size={14} className="rotate-45" /> {/* Using Trash2 rotated as a minus placeholder since Minus isn't imported */}
+              <Minus size={14} />
             </button>
           </div>
           
@@ -288,7 +307,7 @@ export function BrainstormCanvas({
       <div 
         ref={canvasRef}
         className="flex-1 overflow-hidden relative cursor-grab active:cursor-grabbing"
-        onMouseDown={() => setSelectedNodeId(null)}
+        onMouseDown={() => setSelectedNodeIds([])}
       >
         <div 
           className="absolute inset-0 transition-transform duration-200"
@@ -350,11 +369,17 @@ export function BrainstormCanvas({
                 onDragEnd={handleNodeDragEnd}
                 onClick={(e) => {
                   e.stopPropagation()
-                  setSelectedNodeId(node.id)
+                  if (e.ctrlKey || e.metaKey) {
+                    setSelectedNodeIds(prev => 
+                      prev.includes(node.id) ? prev.filter(id => id !== node.id) : [...prev, node.id]
+                    )
+                  } else {
+                    setSelectedNodeIds([node.id])
+                  }
                 }}
                 className={cn(
                   "brainstorm-node cursor-pointer group",
-                  selectedNodeId === node.id && "brainstorm-node-selected border-white/40 ring-4 ring-white/5",
+                  selectedNodeIds.includes(node.id) && "brainstorm-node-selected border-white/40 ring-4 ring-white/5",
                   node.nodeType === 'draft' && "brainstorm-node-draft",
                   node.nodeType === 'sketch' && "brainstorm-node-sketch",
                   node.nodeType === 'review' && "brainstorm-node-review"
@@ -395,7 +420,7 @@ export function BrainstormCanvas({
 
       {/* Selected Node Sidebar/Panel */}
       <AnimatePresence>
-        {selectedNode && (
+        {selectedNodeIds.length > 0 && (
           <motion.div 
             initial={{ x: 300 }}
             animate={{ x: 0 }}
@@ -405,10 +430,10 @@ export function BrainstormCanvas({
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-2">
                 <Network size={12} className="text-indigo-400" />
-                Node Inspector
+                {selectedNodeIds.length === 1 ? 'Node Inspector' : `Selection (${selectedNodeIds.length})`}
               </h4>
               <button 
-                onClick={() => setSelectedNodeId(null)}
+                onClick={() => setSelectedNodeIds([])}
                 className="p-1 hover:bg-white/5 rounded text-white/20 hover:text-white transition-colors"
               >
                 <Minimize2 size={12} />
@@ -416,46 +441,70 @@ export function BrainstormCanvas({
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4">
-              <div>
-                <div className="text-[11px] font-bold text-white mb-1">{selectedNode.title}</div>
-                <div className="text-[10px] text-white/40 leading-relaxed italic border-l-2 border-white/5 pl-2 mb-4">
-                  {selectedNode.content}
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <div className="text-[9px] font-bold text-white/20 uppercase tracking-widest mb-2">Agentic Actions</div>
-                
-                <button 
-                  onClick={() => handleArchitectReview(selectedNode)}
-                  disabled={!!isProcessing}
-                  className="w-full flex items-center gap-3 p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 hover:bg-amber-500/20 transition-all text-[10px] font-bold disabled:opacity-50"
-                >
-                  <ShieldCheck size={14} className={cn(isProcessing === 'review' && "animate-spin")} />
-                  Architect Review
-                </button>
-
-                <button 
-                  onClick={() => handleAgenticSketch(selectedNode)}
-                  disabled={!!isProcessing}
-                  className="w-full flex items-center gap-3 p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/20 transition-all text-[10px] font-bold disabled:opacity-50"
-                >
-                  <PenTool size={14} className={cn(isProcessing === 'sketch' && "animate-spin")} />
-                  Agentic Sketch
-                </button>
-
-                {selectedNode.nodeType === 'seed' && (
-                  <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-[9px] text-white/30 italic">
-                    This is a raw seed. Run Architect Review to refine the technical approach.
+              {selectedNode ? (
+                <>
+                  <div>
+                    <div className="text-[11px] font-bold text-white mb-1">{selectedNode.title}</div>
+                    <div className="text-[10px] text-white/40 leading-relaxed italic border-l-2 border-white/5 pl-2 mb-4">
+                      {selectedNode.content}
+                    </div>
                   </div>
-                )}
-              </div>
+
+                  <div className="space-y-2 pt-2">
+                    <div className="text-[9px] font-bold text-white/20 uppercase tracking-widest mb-2">Agentic Actions</div>
+                    
+                    <button 
+                      onClick={() => handleArchitectReview(selectedNode)}
+                      disabled={!!isProcessing}
+                      className="w-full flex items-center gap-3 p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 hover:bg-amber-500/20 transition-all text-[10px] font-bold disabled:opacity-50"
+                    >
+                      <ShieldCheck size={14} className={cn(isProcessing === 'review' && "animate-spin")} />
+                      Architect Review
+                    </button>
+
+                    <button 
+                      onClick={() => handleAgenticSketch(selectedNode)}
+                      disabled={!!isProcessing}
+                      className="w-full flex items-center gap-3 p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/20 transition-all text-[10px] font-bold disabled:opacity-50"
+                    >
+                      <PenTool size={14} className={cn(isProcessing === 'sketch' && "animate-spin")} />
+                      Agentic Sketch
+                    </button>
+
+                    {selectedNode.nodeType === 'seed' && (
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-[9px] text-white/30 italic">
+                        This is a raw seed. Run Architect Review to refine the technical approach.
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-[10px] text-white/40 leading-relaxed italic">
+                    {selectedNodeIds.length} nodes selected. You can move them together or perform bulk operations.
+                  </div>
+                  
+                  <button 
+                    onClick={() => deleteNode(selectedNodeIds[0])}
+                    className="w-full flex items-center gap-3 p-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 hover:bg-red-500/20 transition-all text-[10px] font-bold"
+                  >
+                    <Trash2 size={14} />
+                    Delete Selected
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="pt-4 border-t border-white/5 mt-4">
               <div className="flex items-center justify-between text-[9px] text-white/20">
-                <span>POS: {Math.round(selectedNode.x)}, {Math.round(selectedNode.y)}</span>
-                <span>ID: {selectedNode.id.substring(0, 8)}...</span>
+                {selectedNode ? (
+                  <>
+                    <span>POS: {Math.round(selectedNode.x)}, {Math.round(selectedNode.y)}</span>
+                    <span>ID: {selectedNode.id.substring(0, 8)}...</span>
+                  </>
+                ) : (
+                  <span>Bulk Selection Active</span>
+                )}
               </div>
             </div>
           </motion.div>
