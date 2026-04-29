@@ -39,11 +39,100 @@ export function SpecDraftEditor({
   const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [showDraftForm, setShowDraftForm] = useState(false)
   const [newDraftModuleId, setNewDraftModuleId] = useState('')
+  const [viewMode, setViewMode] = useState<'editor' | 'form' | 'preview'>('form')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [previewMode, setPreviewMode] = useState<'editor' | 'preview'>('editor')
 
   const getDraftModuleId = (draft: KSpecDraft) => draft.moduleId || draft.id
   const getDraftUpdatedAt = (draft: KSpecDraft) => draft.updatedAt || draft.lastModified || Date.now()
+
+  // --- YAML Parsing & Serialization ---
+  
+  const parseKSpec = (yaml: string) => {
+    const lines = yaml.split('\n')
+    const getValue = (key: string) => lines.find(l => l.startsWith(`${key}:`))?.split(':')[1]?.trim().replace(/^['"]|['"]$/g, '') || ''
+    
+    // Simple AC parser
+    const acs: any[] = []
+    let currentAc: any = null
+    let currentField: string | null = null
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+      const trimmed = line.trim()
+      
+      if (trimmed.startsWith('- id:')) {
+        if (currentAc) acs.push(currentAc)
+        currentAc = { id: trimmed.split(':')[1]?.trim() || '', given: '', when: '', then: '' }
+        currentField = null
+      } else if (currentAc) {
+        if (trimmed.startsWith('given:')) {
+          currentField = 'given'
+          if (trimmed.includes('|')) currentAc.given = ''
+          else currentAc.given = trimmed.split(':')[1]?.trim() || ''
+        } else if (trimmed.startsWith('when:')) {
+          currentField = 'when'
+          if (trimmed.includes('|')) currentAc.when = ''
+          else currentAc.when = trimmed.split(':')[1]?.trim() || ''
+        } else if (trimmed.startsWith('then:')) {
+          currentField = 'then'
+          if (trimmed.includes('|')) currentAc.then = ''
+          else currentAc.then = trimmed.split(':')[1]?.trim() || ''
+        } else if (line.startsWith('      ') && currentField) {
+          currentAc[currentField] += (currentAc[currentField] ? '\n' : '') + line.substring(6)
+        }
+      }
+    }
+    if (currentAc) acs.push(currentAc)
+
+    return {
+      title: getValue('title'),
+      type: getValue('type'),
+      description: yaml.match(/description: >-\s+([\s\S]*?)(?=\n\S|$)/)?.[1]?.trim() || '',
+      maturity: yaml.match(/maturity:\s+(\S+)/)?.[1] || 'draft',
+      acceptance_criteria: acs
+    }
+  }
+
+  const toYaml = (data: any) => {
+    let yaml = `title: ${data.title}\ntype: ${data.type}\nstatus:\n  maturity: ${data.maturity}\ndescription: >-\n  ${data.description.replace(/\n/g, '\n  ')}\nacceptance_criteria:\n`
+    data.acceptance_criteria.forEach((ac: any) => {
+      yaml += `  - id: ${ac.id}\n`
+      yaml += `    given: |\n      ${ac.given.replace(/\n/g, '\n      ')}\n`
+      yaml += `    when: |\n      ${ac.when.replace(/\n/g, '\n      ')}\n`
+      yaml += `    then: |\n      ${ac.then.replace(/\n/g, '\n      ')}\n`
+    })
+    return yaml
+  }
+
+  const [formData, setFormData] = useState<any>(null)
+
+  useEffect(() => {
+    if (selectedDraft) {
+      setFormData(parseKSpec(draftContent))
+    }
+  }, [selectedDraft, draftContent])
+
+  const updateFormField = (field: string, value: any) => {
+    const newData = { ...formData, [field]: value }
+    setFormData(newData)
+    setDraftContent(toYaml(newData))
+  }
+
+  const updateAcField = (index: number, field: string, value: string) => {
+    const newAcs = [...formData.acceptance_criteria]
+    newAcs[index] = { ...newAcs[index], [field]: value }
+    updateFormField('acceptance_criteria', newAcs)
+  }
+
+  const addAc = () => {
+    const newAcs = [...formData.acceptance_criteria, { id: `ac-${formData.acceptance_criteria.length + 1}`, given: '', when: '', then: '' }]
+    updateFormField('acceptance_criteria', newAcs)
+  }
+
+  const removeAc = (index: number) => {
+    const newAcs = formData.acceptance_criteria.filter((_: any, i: number) => i !== index)
+    updateFormField('acceptance_criteria', newAcs)
+  }
 
   const validateDraftContent = (content: string): string[] => {
     const trimmed = content.trim()
@@ -51,7 +140,7 @@ export function SpecDraftEditor({
     if (!trimmed) errors.push('Draft content is empty.')
     if (!/^title:\s+\S+/m.test(trimmed)) errors.push('Missing top-level title.')
     if (!/^type:\s+\S+/m.test(trimmed)) errors.push('Missing top-level type.')
-    if (!/^status:\s*$/m.test(trimmed) && !/^status:\s+\S+/m.test(trimmed)) errors.push('Missing status block.')
+    if (!/^status:\s*$/m.test(trimmed) && !/^status:\s+\S+/m.test(trimmed) && !/maturity:/m.test(trimmed)) errors.push('Missing status block.')
     if (!/acceptance_criteria:/m.test(trimmed)) errors.push('Missing acceptance_criteria section.')
     return errors
   }
@@ -61,7 +150,7 @@ export function SpecDraftEditor({
   const handleOpenDraft = (draft: KSpecDraft) => {
     setSelectedDraft(draft)
     setDraftContent(draft.content || '')
-    setPreviewMode('editor')
+    setViewMode('form')
   }
 
   const handleSaveDraft = async () => {
@@ -114,26 +203,35 @@ export function SpecDraftEditor({
           <div className="flex items-center gap-2">
             <div className="flex items-center p-0.5 bg-white/5 rounded-md border border-white/10">
               <button
-                onClick={() => setPreviewMode('editor')}
+                onClick={() => setViewMode('form')}
                 className={cn(
                   "px-2 py-1 rounded text-[9px] font-bold transition-all",
-                  previewMode === 'editor' ? "bg-white/10 text-white" : "text-white/30 hover:text-white/60"
+                  viewMode === 'form' ? "bg-white/10 text-white" : "text-white/30 hover:text-white/60"
                 )}
               >
-                Editor
+                Form
               </button>
               <button
-                onClick={() => setPreviewMode('preview')}
+                onClick={() => setViewMode('editor')}
                 className={cn(
                   "px-2 py-1 rounded text-[9px] font-bold transition-all",
-                  previewMode === 'preview' ? "bg-white/10 text-white" : "text-white/30 hover:text-white/60"
+                  viewMode === 'editor' ? "bg-white/10 text-white" : "text-white/30 hover:text-white/60"
+                )}
+              >
+                YAML
+              </button>
+              <button
+                onClick={() => setViewMode('preview')}
+                className={cn(
+                  "px-2 py-1 rounded text-[9px] font-bold transition-all",
+                  viewMode === 'preview' ? "bg-white/10 text-white" : "text-white/30 hover:text-white/60"
                 )}
               >
                 Preview
               </button>
             </div>
             <button 
-              disabled={isSavingDraft || (draftValidation.length > 0 && previewMode === 'editor')}
+              disabled={isSavingDraft || (draftValidation.length > 0 && viewMode === 'editor')}
               onClick={handleSaveDraft}
               className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-lg text-[10px] font-bold flex items-center gap-2 shadow-lg shadow-purple-500/20 transition-all"
             >
@@ -153,8 +251,117 @@ export function SpecDraftEditor({
           </div>
         </div>
         
-        <div className="flex-1 min-h-0 flex flex-col gap-2">
-          {previewMode === 'editor' ? (
+        <div className="flex-1 min-h-0 flex flex-col gap-2 overflow-hidden">
+          {viewMode === 'form' && formData ? (
+            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-6 pr-2">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Title</label>
+                    <input 
+                      value={formData.title}
+                      onChange={e => updateFormField('title', e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white focus:border-purple-500/50 outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Type</label>
+                    <select 
+                      value={formData.type}
+                      onChange={e => updateFormField('type', e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white focus:border-purple-500/50 outline-none appearance-none"
+                    >
+                      <option value="module">Module</option>
+                      <option value="feature">Feature</option>
+                      <option value="requirement">Requirement</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Description</label>
+                  <textarea 
+                    value={formData.description}
+                    onChange={e => updateFormField('description', e.target.value)}
+                    rows={2}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white focus:border-purple-500/50 outline-none resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Acceptance Criteria</label>
+                  <button 
+                    onClick={addAc}
+                    className="p-1 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all"
+                  >
+                    <Plus size={12} />
+                  </button>
+                </div>
+                
+                <div className="space-y-3">
+                  {formData.acceptance_criteria.map((ac: any, idx: number) => (
+                    <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3 relative group">
+                      <button 
+                        onClick={() => removeAc(idx)}
+                        className="absolute top-3 right-3 text-white/10 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                      >
+                        <X size={14} />
+                      </button>
+                      
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="text-[10px] font-bold text-purple-400/80 uppercase">ID:</div>
+                        <input 
+                          value={ac.id}
+                          onChange={e => updateAcField(idx, 'id', e.target.value)}
+                          className="bg-transparent border-none p-0 text-[10px] font-bold text-white/60 focus:outline-none focus:text-white"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2">
+                        <div className="flex flex-col gap-1">
+                          <div className="text-[9px] font-bold text-white/20 uppercase tracking-tighter">Given</div>
+                          <textarea 
+                            value={ac.given}
+                            onChange={e => updateAcField(idx, 'given', e.target.value)}
+                            rows={1}
+                            placeholder="context..."
+                            className="bg-black/20 border border-white/5 rounded p-1.5 text-[10px] text-white/80 focus:border-purple-500/30 outline-none resize-none"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <div className="text-[9px] font-bold text-white/20 uppercase tracking-tighter">When</div>
+                          <textarea 
+                            value={ac.when}
+                            onChange={e => updateAcField(idx, 'when', e.target.value)}
+                            rows={1}
+                            placeholder="action..."
+                            className="bg-black/20 border border-white/5 rounded p-1.5 text-[10px] text-white/80 focus:border-purple-500/30 outline-none resize-none"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <div className="text-[9px] font-bold text-white/20 uppercase tracking-tighter">Then</div>
+                          <textarea 
+                            value={ac.then}
+                            onChange={e => updateAcField(idx, 'then', e.target.value)}
+                            rows={1}
+                            placeholder="result..."
+                            className="bg-black/20 border border-white/5 rounded p-1.5 text-[10px] text-white/80 focus:border-purple-500/30 outline-none resize-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {formData.acceptance_criteria.length === 0 && (
+                    <div className="p-8 text-center border border-dashed border-white/5 rounded-2xl text-[10px] text-white/20">
+                      No ACs added. Click the plus icon to add one.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : viewMode === 'editor' ? (
             <>
               <div className="flex items-center justify-between">
                 <label className="text-[10px] font-bold text-white/20 uppercase tracking-widest">YAML Source</label>

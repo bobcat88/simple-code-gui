@@ -157,6 +157,11 @@ export function BrainstormCanvas({
 
   const handleArchitectReview = async (node: NodeType) => {
     setIsProcessing('review')
+    if (!api.brainstormArchitectReview) {
+      console.warn('Architect Review API not available');
+      setIsProcessing(null);
+      return;
+    }
     try {
       const reviewNode = await api.brainstormArchitectReview(
         projectPath, 
@@ -194,6 +199,11 @@ export function BrainstormCanvas({
 
   const handleAgenticSketch = async (node: NodeType) => {
     setIsProcessing('sketch')
+    if (!api.brainstormAgenticSketch) {
+      console.warn('Agentic Sketch API not available');
+      setIsProcessing(null);
+      return;
+    }
     try {
       const sketchNode = await api.brainstormAgenticSketch(
         projectPath, 

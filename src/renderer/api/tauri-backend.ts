@@ -21,6 +21,7 @@ import {
   GsdSeed,
   KSpecDraft,
   BrainstormCanvas,
+  BrainstormCanvasNode,
   GsdStep,
   UserResponse,
   VectorSearchResult,

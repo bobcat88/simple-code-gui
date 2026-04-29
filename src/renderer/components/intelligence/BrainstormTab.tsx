@@ -7,7 +7,7 @@ import {
   Brain
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
-import type { BrainstormCanvas, BrainstormCanvasNode, ExtendedApi, GsdSeed, KSpecDraft } from '../../api/types'
+import type { BrainstormCanvas as BrainstormCanvasData, BrainstormCanvasNode, ExtendedApi, GsdSeed, KSpecDraft } from '../../api/types'
 import { IdeaInbox } from './IdeaInbox'
 import { SpecDraftEditor } from './SpecDraftEditor'
 import { BrainstormCanvas } from './BrainstormCanvas'
@@ -24,7 +24,7 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
   const [seeds, setSeeds] = useState<GsdSeed[]>([])
   const [drafts, setDrafts] = useState<KSpecDraft[]>([])
   const [loading, setLoading] = useState(false)
-  const [canvas, setCanvas] = useState<BrainstormCanvas>({ nodes: [], edges: [] })
+  const [canvas, setCanvas] = useState<BrainstormCanvasData>({ nodes: [], edges: [] })
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSavingCanvas, setIsSavingCanvas] = useState(false)
   const [selectedCanvasNodeId, setSelectedCanvasNodeId] = useState<string | null>(null)
