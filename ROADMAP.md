@@ -101,6 +101,7 @@ Turning raw ideas into structured specs and visual mockups within the GUI.
 - [x] **Agentic Sketching**: Generate deterministic sketch briefs from selected brainstorm nodes.
 - [x] **Spec-to-Task Bridge**: Promote brainstorm seeds to KSpec draft modules or Beads tasks.
 - [x] **Multi-Agent Design Review**: Generate architect review notes from selected brainstorm nodes.
+- [x] **Topology Export**: Export entire brainstorm structures as Mermaid.js Markdown with automatic persistence to `.kspec/brainstorm/`.
 
 ---
 

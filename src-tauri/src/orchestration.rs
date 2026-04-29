@@ -1220,3 +1220,24 @@ pub async fn kspec_dispatch_stop(
         "job_id": job_id
     }))
 }
+
+#[tauri::command]
+pub async fn brainstorm_save_topology(cwd: String, content: String) -> Result<serde_json::Value, String> {
+    let brainstorm_dir = std::path::Path::new(&cwd).join(".kspec").join("brainstorm");
+    std::fs::create_dir_all(&brainstorm_dir).map_err(|e| e.to_string())?;
+
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+
+    // Save as a versioned file
+    let path = brainstorm_dir.join(format!("topology-{}.md", timestamp));
+    std::fs::write(&path, &content).map_err(|e| e.to_string())?;
+    
+    // Also overwrite the main topology.md for easy access
+    let latest_path = brainstorm_dir.join("topology.md");
+    let _ = std::fs::write(latest_path, content);
+
+    Ok(serde_json::json!({ "success": true, "path": path.to_string_lossy() }))
+}

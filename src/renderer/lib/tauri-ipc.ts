@@ -357,4 +357,6 @@ export const tauriIpc = {
     invoke<any>('brainstorm_agentic_sketch', { cwd, baseId, baseTitle, baseContent }),
   brainstormArchitectReview: (cwd: string, baseId: string, baseType: string, baseTitle: string, baseContent: string) =>
     invoke<any>('brainstorm_architect_review', { cwd, baseId, baseType, baseTitle, baseContent }),
+  brainstormSaveTopology: (cwd: string, content: string) =>
+    invoke<{ success: boolean; error?: string }>('brainstorm_save_topology', { cwd, content }),
 };

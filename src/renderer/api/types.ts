@@ -792,6 +792,7 @@ export interface ExtendedApi extends Api {
   kspecWriteDraft: (cwd: string, moduleId: string, content: string) => Promise<void>
   brainstormLoadCanvas: (cwd: string) => Promise<BrainstormCanvas>
   brainstormSaveCanvas: (cwd: string, canvas: BrainstormCanvas) => Promise<void>
+  brainstormSaveTopology: (cwd: string, content: string) => Promise<{ success: boolean; error?: string }>
 }
 
 // ============================================================================

@@ -118,7 +118,7 @@ export function BrainstormCanvas({
     saveCanvas(newCanvas)
   }
 
-  const handleExport = () => {
+  const handleExport = async () => {
     let mermaid = 'graph TD\n'
     canvas.nodes.forEach(node => {
       const label = node.title.replace(/[()\[\]]/g, '')
@@ -132,8 +132,14 @@ export function BrainstormCanvas({
     const report = `# Brainstorm Topology Export\n\nGenerated on ${new Date().toLocaleString()}\n\n\`\`\`mermaid\n${mermaid}\`\`\`\n\n## Node Details\n\n` + 
       canvas.nodes.map(n => `### ${n.title} (${n.nodeType})\n${n.content}`).join('\n\n')
 
-    navigator.clipboard.writeText(report)
-    alert('Topology exported as Mermaid Markdown to clipboard!')
+    try {
+      await navigator.clipboard.writeText(report)
+      await api.brainstormSaveTopology(projectPath, report)
+      alert('Topology exported to clipboard and saved to .kspec/brainstorm/topology.md')
+    } catch (err) {
+      console.error('Export failed:', err)
+      alert('Export failed, check console for details.')
+    }
   }
 
   const saveCanvas = async (newCanvas: CanvasType) => {
