@@ -172,6 +172,8 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
             seeds={seeds}
             drafts={drafts}
             onRefresh={refresh}
+            onPromoteToDraft={handleSeedToDraft}
+            onPromoteToTask={handleSeedToTask}
           />
         )}
       </div>

@@ -33,6 +33,8 @@ interface BrainstormCanvasProps {
   seeds: GsdSeed[]
   drafts: KSpecDraft[]
   onRefresh: () => Promise<void>
+  onPromoteToDraft?: (seed: GsdSeed) => Promise<void>
+  onPromoteToTask?: (seed: GsdSeed) => Promise<void>
 }
 
 export function BrainstormCanvas({ 
@@ -41,7 +43,9 @@ export function BrainstormCanvas({
   canvas: initialCanvas, 
   seeds, 
   drafts,
-  onRefresh 
+  onRefresh,
+  onPromoteToDraft,
+  onPromoteToTask
 }: BrainstormCanvasProps) {
   const [canvas, setCanvas] = useState<CanvasType>(initialCanvas)
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([])
@@ -219,6 +223,25 @@ export function BrainstormCanvas({
       saveCanvas(newCanvas)
     } catch (err) {
       console.error('Agentic sketch failed:', err)
+    } finally {
+      setIsProcessing(null)
+    }
+  }
+
+  const handlePromote = async (type: 'draft' | 'task') => {
+    if (!selectedNode || selectedNode.nodeType !== 'seed') return
+    const seed = seeds.find(s => s.id === selectedNode.sourceId)
+    if (!seed) return
+
+    setIsProcessing(type)
+    try {
+      if (type === 'draft' && onPromoteToDraft) {
+        await onPromoteToDraft(seed)
+      } else if (type === 'task' && onPromoteToTask) {
+        await onPromoteToTask(seed)
+      }
+    } catch (err) {
+      console.error(`Failed to promote node to ${type}:`, err)
     } finally {
       setIsProcessing(null)
     }
@@ -470,6 +493,30 @@ export function BrainstormCanvas({
                       <PenTool size={14} className={cn(isProcessing === 'sketch' && "animate-spin")} />
                       Agentic Sketch
                     </button>
+
+                    {selectedNode.nodeType === 'seed' && (
+                      <div className="space-y-2 pt-2 border-t border-white/5 mt-2">
+                        <div className="text-[9px] font-bold text-white/20 uppercase tracking-widest mb-2">Promote Idea</div>
+                        
+                        <button 
+                          onClick={() => handlePromote('draft')}
+                          disabled={!!isProcessing}
+                          className="w-full flex items-center gap-3 p-2 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-300 hover:bg-purple-500/20 transition-all text-[10px] font-bold disabled:opacity-50"
+                        >
+                          <FileEdit size={14} className={cn(isProcessing === 'draft' && "animate-spin")} />
+                          Promote to Draft
+                        </button>
+
+                        <button 
+                          onClick={() => handlePromote('task')}
+                          disabled={!!isProcessing}
+                          className="w-full flex items-center gap-3 p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 hover:bg-indigo-500/20 transition-all text-[10px] font-bold disabled:opacity-50"
+                        >
+                          <CheckCircle2 size={14} className={cn(isProcessing === 'task' && "animate-spin")} />
+                          Convert to Task
+                        </button>
+                      </div>
+                    )}
 
                     {selectedNode.nodeType === 'seed' && (
                       <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-[9px] text-white/30 italic">
