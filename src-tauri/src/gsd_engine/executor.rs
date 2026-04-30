@@ -11,6 +11,7 @@ use tokio::task::JoinSet;
 use crate::gsd_engine::tools::{execute_tool, get_gsd_tools};
 use crate::ai_runtime::types::{CompletionRequest, Message};
 use tokio::time::{sleep, Duration};
+use crate::gsd_engine::governance::PermissionType;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ExecutionMode {
@@ -93,6 +94,7 @@ pub struct Executor {
     pub pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<crate::gsd_engine::UserResponse>>>>,
     pub project_path: Option<String>,
     pub knowledge: Arc<Mutex<Option<crate::gsd_engine::knowledge::SwarmMemory>>>,
+    pub governance: Arc<Mutex<crate::gsd_engine::governance::GovernanceEngine>>,
 }
 
 impl Executor {
@@ -103,6 +105,7 @@ impl Executor {
         pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<crate::gsd_engine::UserResponse>>>>,
         project_path: Option<String>,
         knowledge: Arc<Mutex<Option<crate::gsd_engine::knowledge::SwarmMemory>>>,
+        governance: Arc<Mutex<crate::gsd_engine::governance::GovernanceEngine>>,
     ) -> Self {
         Self {
             ai,
@@ -111,6 +114,7 @@ impl Executor {
             pending_responses,
             project_path,
             knowledge,
+            governance,
         }
     }
 
@@ -399,6 +403,94 @@ impl Executor {
                             "tool_call",
                             format!("Agent invoked {}({})", tc.name, tc.arguments),
                         );
+
+                        // GOVERNANCE: Evaluate tool call
+                        let verdict = {
+                            let gov = self.governance.lock().await;
+                            gov.evaluate(&tc.name, &tc.arguments)
+                        };
+
+                        match verdict.permission {
+                            PermissionType::Deny => {
+                                let reason = verdict.message.unwrap_or_else(|| "Blocked by policy".to_string());
+                                let error_msg = format!("Governance Denied: {}", reason);
+                                self.emit_execution_event(
+                                    plan_id,
+                                    Some(phase_id),
+                                    Some(&step.id),
+                                    "governance_denied",
+                                    error_msg.clone(),
+                                );
+                                messages.push(Message {
+                                    role: "tool".to_string(),
+                                    content: format!("Error: Tool execution blocked by policy: {}", reason),
+                                    tool_calls: None,
+                                    tool_call_id: Some(tc.id.clone()),
+                                });
+                                continue;
+                            }
+                            PermissionType::RequireApproval => {
+                                let approval_id = format!("approve-{}", uuid::Uuid::new_v4());
+                                let (tx, rx) = tokio::sync::oneshot::channel();
+                                
+                                {
+                                    let mut pending = self.pending_responses.lock().await;
+                                    pending.insert(approval_id.clone(), tx);
+                                }
+
+                                let reason = verdict.message.unwrap_or_else(|| "This tool call requires manual review.".to_string());
+                                self.emit_execution_event(
+                                    plan_id,
+                                    Some(phase_id),
+                                    Some(&step.id),
+                                    "governance_approval_requested",
+                                    format!("Approval required for {}. Reason: {}", tc.name, reason),
+                                );
+
+                                // Emit a specific event for the Neural HUD to show the approval prompt
+                                let _ = self.app.emit("gsd-approval-requested", serde_json::json!({
+                                    "id": approval_id,
+                                    "tool": tc.name,
+                                    "arguments": tc.arguments,
+                                    "reason": reason,
+                                    "plan_id": plan_id,
+                                    "phase_id": phase_id,
+                                    "step_id": step.id,
+                                }));
+
+                                // Wait for response from user
+                                match rx.await {
+                                    Ok(crate::gsd_engine::UserResponse::Approve) => {
+                                        self.emit_execution_event(
+                                            plan_id,
+                                            Some(phase_id),
+                                            Some(&step.id),
+                                            "governance_approved",
+                                            format!("User approved execution of {}", tc.name),
+                                        );
+                                        // Fall through to execute_tool below
+                                    }
+                                    _ => {
+                                        let error_msg = format!("Governance Denied: User rejected tool execution.");
+                                        self.emit_execution_event(
+                                            plan_id,
+                                            Some(phase_id),
+                                            Some(&step.id),
+                                            "governance_rejected",
+                                            error_msg.clone(),
+                                        );
+                                        messages.push(Message {
+                                            role: "tool".to_string(),
+                                            content: format!("Error: Tool execution rejected by user."),
+                                            tool_calls: None,
+                                            tool_call_id: Some(tc.id.clone()),
+                                        });
+                                        continue;
+                                    }
+                                }
+                            }
+                            PermissionType::Allow => {}
+                        }
 
                         let tool_result = match execute_tool(&tc.name, &tc.arguments, &self.project_path, &self.app).await {
                             Ok(res) => res,

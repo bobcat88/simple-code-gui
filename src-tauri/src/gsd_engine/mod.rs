@@ -256,7 +256,8 @@ pub async fn gsd_execute_plan(
             app_handle.clone(), 
             engine.pending_responses.clone(),
             project_path.clone(),
-            engine.knowledge.clone()
+            engine.knowledge.clone(),
+            engine.governance.clone()
         );
         let max_phase_step_count = plan
             .phases
@@ -358,6 +359,14 @@ pub async fn gsd_list_tools() -> Result<Vec<crate::gsd_engine::types::ToolInfo>,
         }
     }).collect();
     Ok(tool_infos)
+}
+
+#[tauri::command]
+pub async fn gsd_get_governance_status(
+    state: tauri::State<'_, Arc<GsdEngine>>,
+) -> Result<crate::gsd_engine::governance::SwarmPolicy, String> {
+    let gov = state.governance.lock().await;
+    Ok(gov.policy.clone())
 }
 
 #[tauri::command]
