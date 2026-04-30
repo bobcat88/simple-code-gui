@@ -111,6 +111,22 @@ Optimizing the swarm's autonomous execution and manual steering capabilities.
 - [x] **Self-Healing Loop**: Visual "Project Regeneration" feedback during autonomous fix-and-verify cycles.
 - [x] **Forensic Stashing**: Automatic archiving of swarm waves into isolated git branches for audit.
 
+## Phase 28: Swarm Collective Memory & HUD Observability (Complete)
+Optimizing swarm intelligence through historical knowledge and forensic visibility.
+
+- [x] **Swarm Memory Engine**: SQLite FTS5-backed knowledge persistence for success/failure patterns.
+- [x] **Proactive Context Injection**: Dynamic injection of relevant memory patterns into agent prompts.
+- [x] **Forensic Reasoning**: Automated root-cause analysis by specialized sub-agents.
+- [x] **Healing HUD**: Real-time visual feedback (Brain/Sparkles) for collective memory utilization.
+
+## Phase 29: Swarm Governance & Policy Layer
+Establishing safety protocols and permission-based tool execution for the swarm.
+
+- [ ] **Governance Engine**: Policy-based decision layer for managing sensitive tool access.
+- [ ] **Interactive Permission UI**: Granular control over swarm permissions (File Writes, Shell Exec, etc.).
+- [ ] **Swarm Identity (Personas)**: Specialized profiles and expertise-driven routing for sub-agents.
+- [ ] **Global Sync (Borg)**: Bi-directional synchronization of collective memory with the Borg knowledge vault.
+
 ---
 
 *Last Updated: April 30, 2026*
