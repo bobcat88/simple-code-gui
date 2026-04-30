@@ -194,6 +194,12 @@ export const tauriIpc = {
     invoke<{ success: boolean; job_id?: string; error?: string }>('project_scan_async', { path }),
   setCurrentProject: (path: string | null) =>
     invoke<void>('set_current_project', { path }),
+  addActiveProject: (path: string) =>
+    invoke<void>('add_active_project', { path }),
+  removeActiveProject: (path: string) =>
+    invoke<void>('remove_active_project', { path }),
+  getActiveProjects: () =>
+    invoke<string[]>('get_active_projects'),
   kspecDispatchStop: (cwd: string) =>
     invoke<{ success: boolean; error?: string }>('kspec_dispatch_stop', { cwd }),
   beadsList: (cwd: string) =>

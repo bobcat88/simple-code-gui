@@ -93,6 +93,7 @@ pub struct Executor {
     pub app: AppHandle,
     pub pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<crate::gsd_engine::UserResponse>>>>,
     pub project_path: Option<String>,
+    pub active_project_paths: Vec<String>,
     pub knowledge: Arc<Mutex<Option<crate::gsd_engine::knowledge::SwarmMemory>>>,
     pub governance: Arc<Mutex<crate::gsd_engine::governance::GovernanceEngine>>,
 }
@@ -104,6 +105,7 @@ impl Executor {
         app: AppHandle,
         pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<crate::gsd_engine::UserResponse>>>>,
         project_path: Option<String>,
+        active_project_paths: Vec<String>,
         knowledge: Arc<Mutex<Option<crate::gsd_engine::knowledge::SwarmMemory>>>,
         governance: Arc<Mutex<crate::gsd_engine::governance::GovernanceEngine>>,
     ) -> Self {
@@ -113,6 +115,7 @@ impl Executor {
             app,
             pending_responses,
             project_path,
+            active_project_paths,
             knowledge,
             governance,
         }
@@ -390,6 +393,7 @@ impl Executor {
                     tools: Some(tools.clone()),
                     tool_choice: Some("auto".to_string()),
                     project_path: self.project_path.clone(),
+                    active_project_paths: self.active_project_paths.clone(),
                     ..Default::default()
                 };
 
@@ -662,6 +666,7 @@ impl Executor {
                                         tools: Some(crate::gsd_engine::tools::get_gsd_tools()), 
                                         tool_choice: Some("auto".to_string()),
                                         project_path: self.project_path.clone(),
+                                        active_project_paths: self.active_project_paths.clone(),
                                         ..Default::default()
                                     };
 
@@ -899,10 +904,13 @@ impl Executor {
         _phase_id: &str,
         step: &GsdStep,
     ) -> Result<(), String> {
-        let ai = self.ai.clone();
         let step_title = step.title.clone();
         let step_desc = step.description.clone();
         let step_result = step.result.clone().unwrap_or_else(|| "Success".to_string());
+
+        let ai_runtime = self.ai.clone();
+        let project_path = self.project_path.clone();
+        let active_project_paths = self.active_project_paths.clone();
 
         tokio::spawn(async move {
             // 1. AI-Driven Summarization
@@ -918,12 +926,14 @@ impl Executor {
                     tool_calls: None,
                     tool_call_id: None,
                 }],
+                project_path,
+                active_project_paths,
                 temperature: Some(0.3),
                 max_tokens: Some(100),
                 ..Default::default()
             };
 
-            let learning = match ai.dispatch(request).await {
+            let learning = match ai_runtime.dispatch(request).await {
                 Ok(resp) => resp.content,
                 Err(_) => format!("Success: {} - {}", step_title, step_result),
             };
@@ -974,6 +984,8 @@ impl Executor {
                 tool_calls: None,
                 tool_call_id: None,
             }],
+            project_path: self.project_path.clone(),
+            active_project_paths: self.active_project_paths.clone(),
             temperature: Some(0.3),
             max_tokens: Some(150),
             ..Default::default()

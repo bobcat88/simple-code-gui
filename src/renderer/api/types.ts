@@ -738,6 +738,9 @@ export interface ExtendedApi extends Api {
   projectScan: (path: string, options?: ScanOptions) => Promise<ProjectCapabilityScan>
   projectScanAsync: (path: string) => Promise<{ success: boolean; job_id: string }>,
   setCurrentProject: (path: string | null) => Promise<void>,
+  addActiveProject: (path: string) => Promise<void>,
+  removeActiveProject: (path: string) => Promise<void>,
+  getActiveProjects: () => Promise<string[]>,
   projectGenerateProposal: (scan: ProjectCapabilityScan, preset: string, projectName: string, taskBackend: string) => Promise<InitializationProposal>
   projectApplyProposal: (proposal: InitializationProposal) => Promise<string[]>,
   scanProjectIntelligence: (path: string) => Promise<ProjectIntelligence>,

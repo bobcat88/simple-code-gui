@@ -187,6 +187,7 @@ pub struct OrchestrationState {
     pub pending_approvals: PlMutex<Vec<ApprovalRequest>>,
     pub message_bus: PlMutex<Vec<AgentMessage>>,
     pub current_project_path: PlMutex<Option<String>>,
+    pub active_project_paths: PlMutex<Vec<String>>,
     pub last_scan: PlMutex<Option<crate::project_scanner::ProjectCapabilityScan>>,
 }
 
@@ -196,8 +197,47 @@ pub async fn set_current_project(
     path: Option<String>
 ) -> Result<(), String> {
     let mut current = state.current_project_path.lock();
-    *current = path;
+    *current = path.clone();
+    
+    // Also ensure it's in the active_project_paths if provided
+    if let Some(p) = path {
+        let mut active = state.active_project_paths.lock();
+        if !active.contains(&p) {
+            active.push(p);
+        }
+    }
+    
     Ok(())
+}
+
+#[tauri::command]
+pub async fn add_active_project(
+    state: State<'_, OrchestrationState>,
+    path: String
+) -> Result<(), String> {
+    let mut active = state.active_project_paths.lock();
+    if !active.contains(&path) {
+        active.push(path);
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn remove_active_project(
+    state: State<'_, OrchestrationState>,
+    path: String
+) -> Result<(), String> {
+    let mut active = state.active_project_paths.lock();
+    active.retain(|p| p != &path);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_active_projects(
+    state: State<'_, OrchestrationState>
+) -> Result<Vec<String>, String> {
+    let active = state.active_project_paths.lock();
+    Ok(active.clone())
 }
 
 #[tauri::command]
@@ -1044,6 +1084,7 @@ pub async fn brainstorm_save_canvas(cwd: String, mut canvas: BrainstormCanvas) -
 #[tauri::command]
 pub async fn brainstorm_agentic_sketch(
     ai_runtime: tauri::State<'_, std::sync::Arc<crate::ai_runtime::RuntimeManager>>,
+    orchestration: tauri::State<'_, OrchestrationState>,
     cwd: String,
     base_id: String,
     base_title: String,
@@ -1064,18 +1105,12 @@ pub async fn brainstorm_agentic_sketch(
                 tool_call_id: None,
             }
         ],
-        model: None,
         project_path: Some(cwd),
-        session_id: None,
-        nexus_session_id: None,
-        agent_id: None,
         policy: Some(crate::ai_runtime::types::RoutingPolicy::Tiered { task: crate::ai_runtime::types::TaskType::Creative, allow_fallback: true }),
-        retry: None,
-        tools: None,
-        tool_choice: None,
         temperature: Some(0.7),
         max_tokens: Some(500),
-        stream: None,
+        active_project_paths: orchestration.active_project_paths.lock().clone(),
+        ..Default::default()
     };
 
     let response = ai_runtime.dispatch(request).await?;
@@ -1099,6 +1134,7 @@ pub async fn brainstorm_agentic_sketch(
 #[tauri::command]
 pub async fn brainstorm_architect_review(
     ai_runtime: tauri::State<'_, std::sync::Arc<crate::ai_runtime::RuntimeManager>>,
+    orchestration: tauri::State<'_, OrchestrationState>,
     cwd: String,
     base_id: String,
     base_type: String,
@@ -1120,18 +1156,12 @@ pub async fn brainstorm_architect_review(
                 tool_call_id: None,
             }
         ],
-        model: None,
         project_path: Some(cwd),
-        session_id: None,
-        nexus_session_id: None,
-        agent_id: None,
         policy: Some(crate::ai_runtime::types::RoutingPolicy::Tiered { task: crate::ai_runtime::types::TaskType::Reasoning, allow_fallback: true }),
-        retry: None,
-        tools: None,
-        tool_choice: None,
         temperature: Some(0.4),
         max_tokens: Some(500),
-        stream: None,
+        active_project_paths: orchestration.active_project_paths.lock().clone(),
+        ..Default::default()
     };
 
     let response = ai_runtime.dispatch(request).await?;

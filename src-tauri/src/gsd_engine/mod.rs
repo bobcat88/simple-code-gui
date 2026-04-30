@@ -286,6 +286,7 @@ pub async fn gsd_execute_plan(
     let ai = ai_runtime.inner().clone();
     let app_handle = app.clone();
     let project_path = orch.current_project_path.lock().clone();
+    let active_project_paths = orch.active_project_paths.lock().clone();
 
     tauri::async_runtime::spawn(async move {
         if let Some(ref path) = project_path {
@@ -298,6 +299,7 @@ pub async fn gsd_execute_plan(
             app_handle.clone(), 
             engine.pending_responses.clone(),
             project_path.clone(),
+            active_project_paths,
             engine.knowledge.clone(),
             engine.governance.clone()
         );

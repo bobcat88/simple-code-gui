@@ -119,13 +119,22 @@ Optimizing swarm intelligence through historical knowledge and forensic visibili
 - [x] **Forensic Reasoning**: Automated root-cause analysis by specialized sub-agents.
 - [x] **Healing HUD**: Real-time visual feedback (Brain/Sparkles) for collective memory utilization.
 
-## Phase 29: Swarm Governance & Policy Layer
+## Phase 29: Swarm Governance & Policy Layer (Complete)
 Establishing safety protocols and permission-based tool execution for the swarm.
 
-- [ ] **Governance Engine**: Policy-based decision layer for managing sensitive tool access.
-- [ ] **Interactive Permission UI**: Granular control over swarm permissions (File Writes, Shell Exec, etc.).
-- [ ] **Swarm Identity (Personas)**: Specialized profiles and expertise-driven routing for sub-agents.
-- [ ] **Global Sync (Borg)**: Bi-directional synchronization of collective memory with the Borg knowledge vault.
+- [x] **Governance Engine**: Policy-based decision layer for managing sensitive tool access.
+- [x] **Interactive Permission UI**: Granular control over swarm permissions (File Writes, Shell Exec, etc.).
+- [x] **Swarm Identity (Personas)**: Specialized profiles and expertise-driven routing for sub-agents.
+- [x] **Global Sync (Borg)**: Bi-directional synchronization of collective memory with the Borg knowledge vault.
+
+## Phase 30: Swarm Orchestration Mastery (Antigravity Era)
+Scaling the swarm to multi-repo orchestration and autonomous architectural evolution.
+
+- [x] **Multi-Repo Context**: Enable swarms to reason across linked repository groups.
+- [ ] **Autonomous Refactoring**: Proactive identification and execution of architectural improvements.
+- [ ] **Swarm Simulation**: Dry-run execution mode for complex multi-agent waves.
+- [ ] **Cognitive Snapshotting**: Deep persistence of swarm "thought chains" for cross-session resumption.
+- [ ] **Real-time Neural Visualization**: 3D synaptic graph of swarm communication and tool usage.
 
 ---
 

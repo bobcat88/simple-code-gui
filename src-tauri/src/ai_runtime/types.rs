@@ -85,6 +85,7 @@ pub struct CompletionRequest {
     pub messages: Vec<Message>,
     pub model: Option<String>,
     pub project_path: Option<String>,
+    pub active_project_paths: Vec<String>,
     pub session_id: Option<String>,
     pub nexus_session_id: Option<String>,
     pub agent_id: Option<String>,

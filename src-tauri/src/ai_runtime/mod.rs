@@ -705,6 +705,9 @@ pub async fn ai_dispatch(
     if request.project_path.is_none() {
         request.project_path = orchestration.current_project_path.lock().clone();
     }
+    if request.active_project_paths.is_empty() {
+        request.active_project_paths = orchestration.active_project_paths.lock().clone();
+    }
     manager.dispatch(request).await
 }
 
@@ -717,6 +720,9 @@ pub async fn ai_completion(
 ) -> Result<CompletionResponse, String> {
     if request.project_path.is_none() {
         request.project_path = orchestration.current_project_path.lock().clone();
+    }
+    if request.active_project_paths.is_empty() {
+        request.active_project_paths = orchestration.active_project_paths.lock().clone();
     }
     manager.completion(&provider, request).await
 }
