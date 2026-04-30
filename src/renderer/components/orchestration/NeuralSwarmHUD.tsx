@@ -30,10 +30,10 @@ export const NeuralSwarmHUD: React.FC = () => {
 
   const handleStop = async () => {
     if (status.activeWaveId) {
-      const api = getApi();
+      const api = getApi() as ExtendedApi;
       if (api && 'gsdStopPlan' in api) {
         try {
-          await (api as any).gsdStopPlan(status.activeWaveId);
+          await api.gsdStopPlan(status.activeWaveId);
         } catch (err) {
           console.error("Failed to stop swarm:", err);
         }
@@ -42,12 +42,21 @@ export const NeuralSwarmHUD: React.FC = () => {
   };
 
   const handleOverride = async () => {
-    // Override can either skip a checkpoint or force a path.
-    // For now, let's assume it attempts to signal a 'Retry' or 'Approve' to a pending step.
-    const api = getApi();
-    if (api && 'gsdRespondToCheckpoint' in api) {
-      // Find the most recent step that might be waiting
-      // This is a simplification; a real implementation would track pending step IDs.
+    if (status.activeWaveId) {
+      const api = getApi() as ExtendedApi;
+      if (api && 'gsdStopPlan' in api && 'swarmForensicStash' in api) {
+        try {
+          // Stop and get worktree path
+          const worktreePath = await api.gsdStopPlan(status.activeWaveId);
+          if (worktreePath) {
+            // Create forensic stash
+            const branchName = await api.swarmForensicStash(worktreePath, status.activeWaveId);
+            console.log(`[Swarm] Manual override triggered. Forensic stash created in branch: ${branchName}`);
+          }
+        } catch (err) {
+          console.error("Failed to override swarm:", err);
+        }
+      }
     }
   };
 

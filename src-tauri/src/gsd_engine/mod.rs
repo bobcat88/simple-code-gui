@@ -297,12 +297,17 @@ pub async fn gsd_stop_plan(
     state: State<'_, Arc<GsdEngine>>,
     app: AppHandle,
     plan_id: String,
-) -> Result<(), String> {
+) -> Result<Option<String>, String> {
     let mut handles = state.execution_handles.lock().await;
+    let worktree_path = {
+        let active_plans = state.active_plans.lock().await;
+        active_plans.get(&plan_id).and_then(|p| p.metadata.get("worktree_path").cloned())
+    };
+
     if let Some(handle) = handles.remove(&plan_id) {
         handle.abort();
         let _ = app.emit("gsd-execution-stopped", &plan_id);
-        Ok(())
+        Ok(worktree_path)
     } else {
         Err("No active execution for this plan".to_string())
     }

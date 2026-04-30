@@ -40,7 +40,7 @@ use orchestration::{
     brainstorm_load_canvas, brainstorm_save_canvas, broadcast_agent_message, get_agent_messages,
     gsd_list_seeds, gsd_plant_seed, kspec_list_drafts, kspec_write_draft,
     brainstorm_agentic_sketch, brainstorm_architect_review, brainstorm_save_topology,
-    swarm_create_worktree, swarm_cleanup_worktree,
+    swarm_create_worktree, swarm_cleanup_worktree, swarm_execute_wave, swarm_forensic_stash,
 };
 use pty_manager::PtyManager;
 use settings_manager::{AppSettings, SettingsManager};
@@ -714,6 +714,8 @@ pub fn run() {
             gsd_engine::gsd_respond_to_checkpoint,
             gsd_engine::gsd_stop_plan,
             gsd_engine::gsd_list_tools,
+            swarm_execute_wave,
+            swarm_forensic_stash,
             rtk_check,
             rtk_get_stats,
             rtk_get_history,

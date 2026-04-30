@@ -6,7 +6,10 @@ use std::sync::Arc;
 use parking_lot::Mutex as PlMutex;
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
+use chrono::Utc;
+use uuid::Uuid;
 use crate::jobs_manager::JobsManager;
+use crate::gsd_engine::types::{GsdPlan, GsdPhase, GsdStep, StepStatus};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BeadTask {
@@ -1351,4 +1354,131 @@ pub async fn swarm_cleanup_worktree(cwd: String, wave_id: String) -> Result<(), 
         .output();
 
     Ok(())
+}
+
+#[tauri::command]
+pub async fn swarm_forensic_stash(cwd: String, wave_id: String) -> Result<String, String> {
+    let timestamp = Utc::now().format("%Y%m%d-%H%M%S").to_string();
+    let branch_name = format!("forensics/wave-{}-{}", wave_id, timestamp);
+
+    // git checkout -b <branch_name>
+    let output = Command::new("git")
+        .args(["checkout", "-b", &branch_name])
+        .current_dir(&cwd)
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    if !output.status.success() {
+        return Err(String::from_utf8_lossy(&output.stderr).to_string());
+    }
+
+    // git add .
+    let _ = Command::new("git")
+        .args(["add", "."])
+        .current_dir(&cwd)
+        .output();
+
+    // git commit -m "Forensic Stash: Wave {wave_id} failed at {timestamp}"
+    let commit_msg = format!("Forensic Stash: Wave {} failed at {}", wave_id, timestamp);
+    let _ = Command::new("git")
+        .args(["commit", "-m", &commit_msg])
+        .current_dir(&cwd)
+        .output();
+
+    Ok(branch_name)
+}
+
+#[tauri::command]
+pub async fn swarm_execute_wave(
+    app: AppHandle,
+    state: State<'_, OrchestrationState>,
+    gsd_state: State<'_, Arc<crate::gsd_engine::GsdEngine>>,
+    ai_runtime: State<'_, Arc<crate::ai_runtime::RuntimeManager>>,
+    project_path: String,
+    tasks: Vec<crate::orchestration::BeadTask>,
+) -> Result<String, String> {
+    let wave_id = Uuid::new_v4().to_string();
+    
+    // 1. Create worktree FIRST
+    let worktree_path = swarm_create_worktree(project_path.clone(), wave_id.clone()).await?;
+
+    // 2. Create a plan from tasks
+    let mut plan = GsdPlan {
+        id: format!("wave-{}", wave_id),
+        title: format!("Swarm Wave: {}", tasks.first().map(|t| t.title.as_str()).unwrap_or("Untitled")),
+        task_id: "multiple".to_string(),
+        phases: vec![GsdPhase {
+            id: "primary".to_string(),
+            title: "Implementation Wave".to_string(),
+            steps: tasks.into_iter().map(|t| GsdStep {
+                id: t.id,
+                title: t.title,
+                description: "Auto-generated from BeadTask".to_string(),
+                status: StepStatus::Pending,
+                result: None,
+                attempts: 0,
+                max_retries: 3,
+                wave_index: None,
+                started_at: None,
+                completed_at: None,
+            }).collect(),
+            status: StepStatus::Pending,
+            started_at: None,
+            completed_at: None,
+        }],
+        metadata: HashMap::from([
+            ("execution_mode".to_string(), "full".to_string()),
+            ("wave_size".to_string(), "3".to_string()),
+            ("verifier_retries".to_string(), "3".to_string()),
+            ("worktree_path".to_string(), worktree_path.clone()),
+        ]),
+    };
+
+    // 3. Register plan in GSD engine
+    {
+        let mut active_plans = gsd_state.active_plans.lock().await;
+        active_plans.insert(plan.id.clone(), plan.clone());
+    }
+
+    // 4. Start execution in worktree
+    let app_clone = app.clone();
+    let gsd_engine = gsd_state.inner().clone();
+    let ai = ai_runtime.inner().clone();
+    let plan_id = plan.id.clone();
+    let project_path_clone = project_path.clone();
+    let wave_id_clone = wave_id.clone();
+
+    let handle = tauri::async_runtime::spawn(async move {
+        let executor = crate::gsd_engine::executor::Executor::new(
+            ai,
+            gsd_engine.db.clone(),
+            app_clone.clone(),
+            gsd_engine.pending_responses.clone(),
+            Some(worktree_path.clone()),
+        );
+
+        let runtime = crate::gsd_engine::executor::resolve_runtime_config(&plan.metadata, plan.phases[0].steps.len());
+        let _ = app_clone.emit("gsd-execution-started", &plan_id);
+
+        let result = executor.execute_phase(&plan_id, &mut plan.phases[0], runtime).await;
+
+        if let Err(e) = result {
+            // Forensic Stash on failure
+            let _ = swarm_forensic_stash(worktree_path.clone(), wave_id_clone.clone()).await;
+            let _ = app_clone.emit("gsd-execution-failed", &plan_id);
+            eprintln!("[Swarm] Wave {} failed: {}", wave_id_clone, e);
+        } else {
+            let _ = app_clone.emit("gsd-execution-completed", &plan_id);
+            // Cleanup worktree on success
+            let _ = swarm_cleanup_worktree(project_path_clone, wave_id_clone).await;
+        }
+    });
+
+    // 5. Track handle
+    {
+        let mut handles = gsd_state.execution_handles.lock().await;
+        handles.insert(plan.id.clone(), handle);
+    }
+
+    Ok(plan.id)
 }

@@ -549,8 +549,16 @@ export class TauriBackend implements ExtendedApi {
     return await tauriIpc.brainstormLoadCanvas(cwd);
   }
 
-  async gsdStopPlan(planId: string): Promise<void> {
+  async gsdStopPlan(planId: string): Promise<string | null> {
     return invoke('gsd_stop_plan', { planId })
+  }
+
+  async swarmExecuteWave(projectPath: string, tasks: any[]): Promise<string> {
+    return invoke('swarm_execute_wave', { projectPath, tasks })
+  }
+
+  async swarmForensicStash(cwd: string, waveId: string): Promise<string> {
+    return invoke('swarm_forensic_stash', { cwd, waveId })
   }
 
   async brainstormSaveTopology(projectPath: string, report: string): Promise<void> {
