@@ -444,6 +444,14 @@ export class TauriBackend implements ExtendedApi {
     return await tauriIpc.gsdListTools();
   }
 
+  async gsdSwarmQueryMemory(query: string, patternType?: string, limit?: number): Promise<any[]> {
+    return await tauriIpc.gsdSwarmQueryMemory(query, patternType, limit);
+  }
+
+  async gsdSwarmRecordPattern(patternType: string, patternKey: string, content: string, metadata?: string): Promise<void> {
+    await tauriIpc.gsdSwarmRecordPattern(patternType, patternKey, content, metadata);
+  }
+
   // Background Jobs
   async jobsCreate(jobType: string, payload: any): Promise<string> { return await tauriIpc.jobsCreate(jobType, payload); }
   async jobsGet(id: string): Promise<any> { return await tauriIpc.jobsGet(id); }

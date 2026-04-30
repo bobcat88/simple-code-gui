@@ -11,11 +11,14 @@ use tokio::sync::Mutex;
 pub mod executor;
 pub mod types;
 pub mod tools;
+pub mod knowledge;
+pub mod forensics;
 
 pub struct GsdEngine {
     pub active_plans: Arc<Mutex<HashMap<String, GsdPlan>>>,
     pub pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<UserResponse>>>>,
     pub db: Arc<DatabaseManager>,
+    pub knowledge: Arc<Mutex<Option<knowledge::SwarmMemory>>>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -36,6 +39,7 @@ impl GsdEngine {
             active_plans: Arc::new(Mutex::new(HashMap::new())),
             pending_responses: Arc::new(Mutex::new(HashMap::new())),
             db,
+            knowledge: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -63,7 +67,28 @@ impl GsdEngine {
         Ok(())
     }
 
+    pub async fn ensure_knowledge_base(&self, project_path: &str) -> Result<(), String> {
+        let mut knowledge = self.knowledge.lock().await;
+        if knowledge.is_none() {
+            let db_path = std::path::Path::new(project_path)
+                .join(".planning")
+                .join("gsd")
+                .join("knowledge.db");
+            
+            if let Some(parent) = db_path.parent() {
+                if !parent.exists() {
+                    std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+                }
+            }
+
+            let mem = knowledge::SwarmMemory::new(db_path).map_err(|e| e.to_string())?;
+            *knowledge = Some(mem);
+        }
+        Ok(())
+    }
+
     pub async fn load_plans(&self, project_path: &str) -> Result<Vec<GsdPlan>, String> {
+        self.ensure_knowledge_base(project_path).await?;
         let plans_dir = std::path::Path::new(project_path)
             .join(".planning")
             .join("gsd")
@@ -227,7 +252,8 @@ pub async fn gsd_execute_plan(
             engine.db.clone(), 
             app_handle.clone(), 
             engine.pending_responses.clone(),
-            project_path.clone()
+            project_path.clone(),
+            engine.knowledge.clone()
         );
         let max_phase_step_count = plan
             .phases
@@ -329,4 +355,34 @@ pub async fn gsd_list_tools() -> Result<Vec<crate::gsd_engine::types::ToolInfo>,
         }
     }).collect();
     Ok(tool_infos)
+}
+
+#[tauri::command]
+pub async fn gsd_swarm_query_memory(
+    state: State<'_, Arc<GsdEngine>>,
+    term: String,
+) -> Result<Vec<String>, String> {
+    let knowledge = state.knowledge.lock().await;
+    if let Some(mem) = knowledge.as_ref() {
+        mem.query(&term).map_err(|e| e.to_string())
+    } else {
+        Ok(Vec::new())
+    }
+}
+
+#[tauri::command]
+pub async fn gsd_swarm_record_pattern(
+    state: State<'_, Arc<GsdEngine>>,
+    entry_type: String,
+    context: String,
+    content: String,
+    meta: String,
+) -> Result<(), String> {
+    let knowledge = state.knowledge.lock().await;
+    if let Some(mem) = knowledge.as_ref() {
+        mem.record(&entry_type, &context, &content, &meta)
+            .map_err(|e| e.to_string())
+    } else {
+        Err("Swarm memory not initialized for current project".to_string())
+    }
 }

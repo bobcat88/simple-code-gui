@@ -92,6 +92,7 @@ pub struct Executor {
     pub app: AppHandle,
     pub pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<crate::gsd_engine::UserResponse>>>>,
     pub project_path: Option<String>,
+    pub knowledge: Arc<Mutex<Option<crate::gsd_engine::knowledge::SwarmMemory>>>,
 }
 
 impl Executor {
@@ -101,6 +102,7 @@ impl Executor {
         app: AppHandle,
         pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<crate::gsd_engine::UserResponse>>>>,
         project_path: Option<String>,
+        knowledge: Arc<Mutex<Option<crate::gsd_engine::knowledge::SwarmMemory>>>,
     ) -> Self {
         Self {
             ai,
@@ -108,6 +110,7 @@ impl Executor {
             app,
             pending_responses,
             project_path,
+            knowledge,
         }
     }
 
@@ -196,6 +199,22 @@ impl Executor {
                     ));
                     phase.completed_at = Some(Utc::now().timestamp_millis() as u64);
                     let _ = self.app.emit("gsd-phase-updated", phase.clone());
+                    
+                    // FOR-28: Trigger Forensic Reasoning
+                    if let Some(ref path) = self.project_path {
+                        let executor = self.clone();
+                        let phase_title = phase.title.clone();
+                        let step_id = updated_step.id.clone();
+                        let path_clone = path.clone();
+                        
+                        tokio::spawn(async move {
+                            if let Ok(branch) = executor.stash_to_forensic_branch(&path_clone, &phase_title, &step_id).await {
+                                let forensic = crate::gsd_engine::forensics::ForensicAgent::new(executor.knowledge.clone());
+                                let _ = forensic.analyze_branch(&path_clone, &branch).await;
+                            }
+                        });
+                    }
+
                     self.emit_execution_event(
                         plan_id,
                         Some(&phase.id),
@@ -828,6 +847,44 @@ impl Executor {
             Ok(resp) => Ok(resp.content),
             Err(e) => Err(format!("Failed to generate fix: {}", e)),
         }
+    }
+
+    pub async fn stash_to_forensic_branch(&self, project_path: &str, phase_title: &str, step_id: &str) -> Result<String, String> {
+        let timestamp = Utc::now().timestamp();
+        let branch_name = format!("forensic/{}-{}-{}", 
+            phase_title.to_lowercase().replace(" ", "-"),
+            step_id.chars().take(8).collect::<String>(),
+            timestamp
+        );
+
+        // 1. Create forensic branch
+        Command::new("git")
+            .args(["checkout", "-b", &branch_name])
+            .current_dir(project_path)
+            .output()
+            .map_err(|e| e.to_string())?;
+
+        // 2. Commit everything (even if it's messy)
+        Command::new("git")
+            .args(["add", "."])
+            .current_dir(project_path)
+            .output()
+            .map_err(|e| e.to_string())?;
+
+        Command::new("git")
+            .args(["commit", "-m", &format!("Forensic Stash: Phase {} Step {}", phase_title, step_id)])
+            .current_dir(project_path)
+            .output()
+            .map_err(|e| e.to_string())?;
+
+        // 3. Return to main (assuming main is the base)
+        Command::new("git")
+            .args(["checkout", "-"])
+            .current_dir(project_path)
+            .output()
+            .map_err(|e| e.to_string())?;
+
+        Ok(branch_name)
     }
 }
 

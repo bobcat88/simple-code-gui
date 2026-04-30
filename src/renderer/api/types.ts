@@ -656,6 +656,8 @@ export interface Api {
   onGsdPhaseUpdated?: (callback: (phase: GsdPhase) => void) => Unsubscribe
   onGsdStepUpdated?: (callback: (step: GsdStep) => void) => Unsubscribe
   gsdListTools?: () => Promise<ToolInfo[]>
+  gsdSwarmQueryMemory?: (query: string, patternType?: string, limit?: number) => Promise<SwarmKnowledge[]>
+  gsdSwarmRecordPattern?: (patternType: string, patternKey: string, content: string, metadata?: string) => Promise<void>
 
   // ==========================================================================
   // Vector Engine
@@ -793,6 +795,8 @@ export interface ExtendedApi extends Api {
   brainstormLoadCanvas: (cwd: string) => Promise<BrainstormCanvas>
   brainstormSaveCanvas: (cwd: string, canvas: BrainstormCanvas) => Promise<void>
   brainstormSaveTopology: (cwd: string, content: string) => Promise<{ success: boolean; error?: string }>
+  gsdSwarmQueryMemory: (query: string, patternType?: string, limit?: number) => Promise<SwarmKnowledge[]>
+  gsdSwarmRecordPattern: (patternType: string, patternKey: string, content: string, metadata?: string) => Promise<void>
 }
 
 // ============================================================================
@@ -997,6 +1001,15 @@ export interface GsdExecutionEvent {
   eventType: string
   message: string
   timestamp: number
+}
+
+export interface SwarmKnowledge {
+  id: number;
+  pattern_type: string;
+  pattern_key: string;
+  content: string;
+  metadata?: string;
+  rank?: number;
 }
 
 export type InsightSeverity = 'high' | 'medium' | 'low';

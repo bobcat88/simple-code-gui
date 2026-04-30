@@ -317,6 +317,10 @@ export const tauriIpc = {
     listen<any>('gsd-insight', (event) => callback(event.payload)),
   gsdListTools: () =>
     invoke<any[]>('gsd_list_tools'),
+  gsdSwarmQueryMemory: (query: string, patternType?: string, limit?: number) =>
+    invoke<any[]>('gsd_swarm_query_memory', { query, patternType, limit }),
+  gsdSwarmRecordPattern: (patternType: string, patternKey: string, content: string, metadata?: string) =>
+    invoke<void>('gsd_swarm_record_pattern', { patternType, patternKey, content, metadata }),
 
   // Vector Engine
   vectorSearch: (query: string, limit?: number, projectPath?: string) =>
