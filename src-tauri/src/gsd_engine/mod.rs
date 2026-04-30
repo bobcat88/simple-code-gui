@@ -498,6 +498,16 @@ pub async fn gsd_swarm_query_memory(
 }
 
 #[tauri::command]
+pub async fn gsd_identify_refactors(
+    app: AppHandle,
+    state: State<'_, Arc<GsdEngine>>,
+    orch: State<'_, OrchestrationState>,
+) -> Result<String, String> {
+    let project_path = orch.current_project_path.lock().clone();
+    tools::execute_tool("gsd_identify_refactors", "{}", &project_path, &app).await
+}
+
+#[tauri::command]
 pub async fn gsd_swarm_record_pattern(
     state: State<'_, Arc<GsdEngine>>,
     pattern_type: String,

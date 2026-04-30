@@ -80,6 +80,30 @@ export function IntelligenceSidebar({
   const [suggestions, setSuggestions] = useState<any[]>([])
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const healthScore = Math.round(capabilityScan?.projectHealthScore ?? 0)
+  const [refactoringResults, setRefactoringResults] = useState<any[] | null>(null)
+  const [isIdentifyingRefactors, setIsIdentifyingRefactors] = useState(false)
+
+  const handleIdentifyRefactors = async () => {
+    setIsIdentifyingRefactors(true)
+    try {
+      const result = await api.gsdIdentifyRefactors()
+      // Try to parse result as JSON if possible
+      try {
+        const parsed = JSON.parse(result)
+        setRefactoringResults(Array.isArray(parsed) ? parsed : [parsed])
+      } catch {
+        // If not JSON, it might be a text report or raw output
+        // For now, let's treat it as a single finding if it's not empty
+        if (result && result.trim()) {
+          setRefactoringResults([{ title: "Proactive Findings", description: result }])
+        }
+      }
+    } catch (err) {
+      console.error('Failed to identify refactors:', err)
+    } finally {
+      setIsIdentifyingRefactors(false)
+    }
+  }
 
   useEffect(() => {
     if (!activeTab?.projectPath) {
@@ -633,6 +657,84 @@ export function IntelligenceSidebar({
                 <RefreshCw size={12} className={cn(vectorStatus?.isIndexing && "animate-spin")} />
                 Sync Global Knowledge (Borg)
               </button>
+            </div>
+
+            <div className="intelligence-sidebar-section mb-6 mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/40 flex items-center gap-2">
+                  <Sparkles size={12} className="text-indigo-400" />
+                  Refactoring Opportunities
+                </h3>
+                <button 
+                  onClick={handleIdentifyRefactors}
+                  disabled={isIdentifyingRefactors}
+                  className={cn(
+                    "px-2 py-0.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 rounded text-[9px] font-bold transition-all",
+                    isIdentifyingRefactors && "animate-pulse"
+                  )}
+                >
+                  {isIdentifyingRefactors ? 'ANALYZING' : 'SCAN'}
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {!refactoringResults && !isIdentifyingRefactors && (
+                  <div className="p-4 bg-white/5 border border-dashed border-white/10 rounded-xl text-center space-y-2">
+                    <p className="text-[10px] text-white/40 leading-relaxed">
+                      Analyze codebase for structural improvements and architectural debt.
+                    </p>
+                    <button 
+                      onClick={handleIdentifyRefactors}
+                      className="text-[10px] text-indigo-400 font-bold hover:text-indigo-300 transition-colors"
+                    >
+                      Run Proactive Audit
+                    </button>
+                  </div>
+                )}
+
+                {isIdentifyingRefactors && (
+                  <div className="space-y-2">
+                    {[1, 2].map(i => (
+                      <div key={i} className="h-16 bg-white/5 rounded-xl border border-white/5 animate-pulse" />
+                    ))}
+                  </div>
+                )}
+
+                {refactoringResults && refactoringResults.length === 0 && (
+                  <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-center">
+                    <p className="text-[10px] text-emerald-400 font-medium">No major architectural debt detected.</p>
+                  </div>
+                )}
+
+                {refactoringResults && refactoringResults.map((finding, idx) => (
+                  <div key={idx} className="group bg-white/5 border border-white/5 hover:border-indigo-500/30 rounded-xl p-3 space-y-2 transition-all">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="text-[11px] font-bold text-white/90 line-clamp-1">
+                        {finding.title || finding.symbolName || 'Architectural Debt'}
+                      </div>
+                      <div className={cn(
+                        "text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider",
+                        finding.risk === 'HIGH' ? "bg-rose-500/20 text-rose-400" :
+                        finding.risk === 'MEDIUM' ? "bg-amber-500/20 text-amber-400" :
+                        "bg-indigo-500/20 text-indigo-400"
+                      )}>
+                        {finding.risk || 'Normal'}
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-white/50 leading-relaxed line-clamp-2">
+                      {finding.description || finding.reason || (typeof finding === 'string' ? finding : 'Potential refactoring opportunity detected.')}
+                    </p>
+                    <div className="flex items-center gap-2 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button className="flex-1 py-1 bg-white/5 hover:bg-white/10 text-white/60 rounded text-[9px] font-bold transition-all">
+                        DETAILS
+                      </button>
+                      <button className="flex-1 py-1 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 rounded text-[9px] font-bold transition-all">
+                        APPLY
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {activeTab && (

@@ -132,6 +132,14 @@ impl GovernanceEngine {
                         tools: vec!["gitnexus_detect_changes".to_string(), "run_command".to_string()],
                         governance_tier: "restricted".to_string(),
                     },
+                    SwarmPersona {
+                        id: "refactorer".to_string(),
+                        name: "Refactorer".to_string(),
+                        role: "Code Quality & Optimization".to_string(),
+                        expertise: vec!["refactoring-patterns".to_string(), "dry".to_string(), "solid".to_string(), "performance".to_string()],
+                        tools: vec!["gitnexus_context".to_string(), "gitnexus_impact".to_string(), "gitnexus_rename".to_string()],
+                        governance_tier: "elevated".to_string(),
+                    },
                 ],
             },
         }

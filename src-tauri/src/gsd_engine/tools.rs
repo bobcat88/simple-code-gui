@@ -17,6 +17,46 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
     let args: Value = serde_json::from_str(arguments).map_err(|e| e.to_string())?;
 
     match name {
+        "gitnexus_query" => {
+            let query = args["query"].as_str().ok_or("Missing query argument")?;
+            let limit = args["limit"].as_u64().unwrap_or(5).to_string();
+            
+            let mut cmd = Command::new("gitnexus");
+            cmd.arg("query").arg(query).arg("--limit").arg(limit);
+            if let Some(ref path) = project_path {
+                cmd.arg("--repo").arg(path);
+            }
+            run_command(&mut cmd, project_path)
+        }
+        "gitnexus_impact" => {
+            let target = args["target"].as_str().ok_or("Missing target argument")?;
+            let direction = args["direction"].as_str().unwrap_or("upstream");
+            
+            let mut cmd = Command::new("gitnexus");
+            cmd.arg("impact").arg(target).arg("--direction").arg(direction);
+            if let Some(ref path) = project_path {
+                cmd.arg("--repo").arg(path);
+            }
+            run_command(&mut cmd, project_path)
+        }
+        "gsd_identify_refactors" => {
+            // Proactive scan for technical debt
+            let mut cmd = Command::new("gitnexus");
+            cmd.arg("analyze").arg("--mode").arg("proactive");
+            if let Some(ref path) = project_path {
+                cmd.arg("--repo").arg(path);
+            }
+            run_command(&mut cmd, project_path)
+        }
+        "gitnexus_detect_changes" => {
+            let scope = args["scope"].as_str().unwrap_or("unstaged");
+            let mut cmd = Command::new("gitnexus");
+            cmd.arg("detect-changes").arg("--scope").arg(scope);
+            if let Some(ref path) = project_path {
+                cmd.arg("--repo").arg(path);
+            }
+            run_command(&mut cmd, project_path)
+        }
         "read_file" => {
             let path = args["path"].as_str().ok_or("Missing path argument")?;
             let full_path = resolve_path(path, project_path)?;
@@ -473,6 +513,48 @@ pub fn get_gsd_tools() -> Vec<crate::ai_runtime::types::ToolDefinition> {
                     "action_command": { "type": "string", "description": "Command to run if the action is selected" }
                 },
                 "required": ["message"]
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "gitnexus_query".to_string(),
+            description: "Query the code knowledge graph for execution flows related to a concept. Returns processes (call chains) ranked by relevance.".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "query": { "type": "string", "description": "Natural language or keyword search query" },
+                    "limit": { "type": "integer", "description": "Max processes to return (defaults to 5)" }
+                },
+                "required": ["query"]
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "gitnexus_impact".to_string(),
+            description: "Analyze the blast radius of changing a code symbol. Returns affected symbols and risk assessment.".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "target": { "type": "string", "description": "Name of function, class, or file to analyze" },
+                    "direction": { "type": "string", "enum": ["upstream", "downstream"], "description": "Analyze what depends on this (upstream) or what this depends on (downstream)" }
+                },
+                "required": ["target"]
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "gsd_identify_refactors".to_string(),
+            description: "Proactively identify refactoring opportunities and technical debt across the codebase using semantic graph analysis.".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {}
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "gitnexus_detect_changes".to_string(),
+            description: "Analyze uncommitted git changes and find affected execution flows. Use this for safety audits before commit.".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "scope": { "type": "string", "enum": ["unstaged", "staged", "all"], "description": "What to analyze (defaults to unstaged)" }
+                }
             }),
         },
     ]

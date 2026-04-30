@@ -645,6 +645,8 @@ impl Executor {
                                         "frontend_dev" => "You are a Frontend Developer Agent. You specialize in modern web technologies, React, and CSS.",
                                         "qa_specialist" => "You are a QA Specialist Agent. Your goal is to find bugs, verify functionality, and ensure code quality.",
                                         "researcher" => "You are a Research Agent. Your goal is to gather information and provide detailed reports on technical topics.",
+                                        "refactorer" => "You are a Refactoring Agent. Your goal is to proactively identify and execute architectural improvements, simplify code, and remove technical debt.",
+                                        "architect" => "You are an Architectural Agent. Your goal is to design robust, scalable systems and ensure cross-module consistency.",
                                         _ => "You are a specialized GSD Agent. Complete the task as requested.",
                                     };
 
