@@ -13,12 +13,14 @@ pub mod types;
 pub mod tools;
 pub mod knowledge;
 pub mod forensics;
+pub mod governance;
 
 pub struct GsdEngine {
     pub active_plans: Arc<Mutex<HashMap<String, GsdPlan>>>,
     pub pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<UserResponse>>>>,
     pub db: Arc<DatabaseManager>,
     pub knowledge: Arc<Mutex<Option<knowledge::SwarmMemory>>>,
+    pub governance: Arc<Mutex<governance::GovernanceEngine>>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -40,6 +42,7 @@ impl GsdEngine {
             pending_responses: Arc::new(Mutex::new(HashMap::new())),
             db,
             knowledge: Arc::new(Mutex::new(None)),
+            governance: Arc::new(Mutex::new(governance::GovernanceEngine::new_default())),
         }
     }
 
