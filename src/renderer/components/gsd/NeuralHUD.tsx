@@ -9,7 +9,9 @@ import {
   Activity, 
   ChevronRight, 
   X,
-  ExternalLink
+  ExternalLink,
+  Sparkles,
+  Brain
 } from 'lucide-react';
 import { useApi } from '../../contexts/ApiContext';
 import { useWorkspaceStore } from '../../stores/workspace';
@@ -24,6 +26,7 @@ export function NeuralHUD() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [activeInsight, setActiveInsight] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'insights' | 'forensics'>('insights');
+  const [healedSteps, setHealedSteps] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!api?.onGsdInsight) return;
@@ -37,7 +40,30 @@ export function NeuralHUD() {
       }
     });
 
-    return () => unsubscribe();
+    const unsubscribeEvents = api.onGsdExecutionEvent ? api.onGsdExecutionEvent((event) => {
+      if (event.eventType === 'memory_injected' && event.stepId) {
+        setHealedSteps(prev => new Set(prev).add(event.stepId));
+        
+        // Add a "Healing" insight
+        const healingInsight: NeuralInsight = {
+          id: `healing-${event.stepId}-${Date.now()}`,
+          severity: 'low',
+          insightType: 'optimization',
+          message: 'Collective Memory Active',
+          details: event.message,
+          timestamp: Date.now(),
+        };
+        setInsights(prev => [healingInsight, ...prev].slice(0, 10));
+        
+        // Auto-expand if high value
+        setIsMinimized(false);
+      }
+    }) : () => {};
+
+    return () => {
+      unsubscribe();
+      unsubscribeEvents();
+    };
   }, [api]);
 
   const removeInsight = useCallback((id: string) => {
@@ -120,7 +146,8 @@ export function NeuralHUD() {
                         insight.severity === 'medium' ? "bg-amber-500/20 text-amber-400" :
                         "bg-indigo-500/20 text-indigo-400"
                       )}>
-                        {insight.insightType === 'architectural' ? <Layers size={18} /> :
+                        {insight.message.includes('Collective Memory') ? <Brain size={18} /> :
+                         insight.insightType === 'architectural' ? <Layers size={18} /> :
                          insight.insightType === 'optimization' ? <Zap size={18} /> :
                          <Terminal size={18} />}
                       </div>
@@ -187,10 +214,12 @@ export function NeuralHUD() {
         onClick={() => setIsMinimized(!isMinimized)}
         className="pointer-events-auto mt-2 px-4 py-2 rounded-full bg-black/40 border border-white/10 backdrop-blur-md text-[11px] font-bold text-white/80 flex items-center gap-2 shadow-lg ring-1 ring-white/5 hover:bg-black/60 transition-all"
       >
-        <div className="relative">
-          <div className="absolute inset-0 bg-indigo-500 rounded-full blur-[4px] opacity-50 animate-pulse" />
-          <div className="relative w-2 h-2 rounded-full bg-indigo-400" />
-        </div>
+        {healedSteps.size > 0 && (
+          <div className="relative">
+            <div className="absolute inset-0 bg-emerald-500 rounded-full blur-[4px] opacity-50 animate-pulse" />
+            <Sparkles size={14} className="relative text-emerald-400" />
+          </div>
+        )}
         NEURAL HUD: {insights.length} ACTIVE
         {isMinimized ? <ChevronRight size={14} /> : <X size={14} />}
       </motion.button>

@@ -306,12 +306,39 @@ impl Executor {
                 4. VERIFY: Ensure the integrated solution meets all requirements.\n\n\
                 You are the brain of the operation. Coordinate effectively.";
 
+            // FOR-28: Proactive Context Injection
+            let mut memory_context = String::new();
+            if let Some(ref knowledge) = *self.knowledge.lock().await {
+                // Query for patterns related to the step title
+                // We simplify the query to avoid FTS5 syntax errors
+                let search_term = step.title.split_whitespace().collect::<Vec<_>>().join(" OR ");
+                if let Ok(patterns) = knowledge.query(&search_term) {
+                    if !patterns.is_empty() {
+                        memory_context = format!(
+                            "\n\n[COLLECTIVE MEMORY]: The swarm has encountered similar tasks before. \
+                            Consider these previous findings to avoid repeated mistakes:\n- {}",
+                            patterns.join("\n- ")
+                        );
+                    }
+                }
+            }
+
+            if !memory_context.is_empty() {
+                self.emit_execution_event(
+                    plan_id,
+                    Some(phase_id),
+                    Some(&step.id),
+                    "memory_injected",
+                    format!("Collective memory patterns found for: {}", step.title),
+                );
+            }
+
             let system_prompt = if step.description.contains("[forensic]") {
-                forensic_prompt
+                format!("{}{}", forensic_prompt, memory_context)
             } else if step.description.contains("[supervisor]") {
-                supervisor_prompt
+                format!("{}{}", supervisor_prompt, memory_context)
             } else {
-                base_prompt
+                format!("{}{}", base_prompt, memory_context)
             };
             
             let mut messages = vec![
