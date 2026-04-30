@@ -359,4 +359,12 @@ export const tauriIpc = {
     invoke<any>('brainstorm_architect_review', { cwd, baseId, baseType, baseTitle, baseContent }),
   brainstormSaveTopology: (cwd: string, content: string) =>
     invoke<{ success: boolean; error?: string }>('brainstorm_save_topology', { cwd, content }),
+
+  // Swarm Worktree Management
+  swarmCreateWorktree: (cwd: string, waveId: string) =>
+    invoke<{ success: boolean; path?: string; error?: string }>('swarm_create_worktree', { cwd, wave_id: waveId }),
+  swarmCleanupWorktree: (cwd: string, waveId: string) =>
+    invoke<{ success: boolean; error?: string }>('swarm_cleanup_worktree', { cwd, wave_id: waveId }),
+  onSwarmNeuralEvent: (callback: (event: any) => void): Promise<UnlistenFn> =>
+    listen<any>('swarm-neural-event', (event) => callback(event.payload)),
 };

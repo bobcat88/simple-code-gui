@@ -16,7 +16,7 @@ import { useWorkspaceStore } from '../../stores/workspace';
 import { cn } from '../../lib/utils';
 import type { NeuralInsight } from '../../api/types';
 
-export function NeuralHUD() {
+export function GsdInsightHUD() {
   const { api } = useApi();
   const { activeTabId } = useWorkspaceStore();
   const [insights, setInsights] = useState<NeuralInsight[]>([]);

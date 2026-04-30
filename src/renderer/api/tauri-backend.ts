@@ -26,7 +26,8 @@ import {
   UserResponse,
   VectorSearchResult,
   VectorIndexStatus,
-  VectorChunk
+  VectorChunk,
+  SwarmEventCallback
 } from './types'
 import { tauriIpc } from '../lib/tauri-ipc'
 import { check } from '@tauri-apps/plugin-updater'
@@ -548,6 +549,14 @@ export class TauriBackend implements ExtendedApi {
     return await tauriIpc.brainstormLoadCanvas(cwd);
   }
 
+  async gsdStopPlan(planId: string): Promise<void> {
+    return invoke('gsd_stop_plan', { planId })
+  }
+
+  async brainstormSaveTopology(projectPath: string, report: string): Promise<void> {
+    return invoke('brainstorm_save_topology', { projectPath, report })
+  }
+
   async brainstormSaveCanvas(cwd: string, canvas: BrainstormCanvas): Promise<void> {
     await tauriIpc.brainstormSaveCanvas(cwd, canvas);
   }
@@ -558,5 +567,20 @@ export class TauriBackend implements ExtendedApi {
 
   async brainstormArchitectReview(cwd: string, baseId: string, baseType: string, baseTitle: string, baseContent: string): Promise<BrainstormCanvasNode> {
     return await tauriIpc.brainstormArchitectReview(cwd, baseId, baseType, baseTitle, baseContent);
+  }
+
+  // Swarm Worktree Management
+  async swarmCreateWorktree(cwd: string, waveId: string): Promise<{ success: boolean; path?: string; error?: string }> {
+    return await tauriIpc.swarmCreateWorktree(cwd, waveId);
+  }
+
+  async swarmCleanupWorktree(cwd: string, waveId: string): Promise<{ success: boolean; error?: string }> {
+    return await tauriIpc.swarmCleanupWorktree(cwd, waveId);
+  }
+
+  onSwarmNeuralEvent(callback: SwarmEventCallback): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onSwarmNeuralEvent(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
   }
 }

@@ -180,6 +180,27 @@ pub struct AgentMessage {
     pub message_type: String, // "finding", "request", "alert", etc.
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SwarmEvent {
+    #[serde(rename = "type")]
+    pub event_type: String, // "COLLABORATION", "HEALING", "THINKING", "TOOL_USE", "WAVE_STATUS"
+    pub source: String,
+    pub target: Option<String>,
+    pub intensity: f32,
+    pub payload: serde_json::Value,
+    pub timestamp: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct SwarmStatus {
+    pub active_wave_id: Option<String>,
+    pub project_integrity: u32,
+    pub retry_count: u32,
+    pub active_agents: Vec<String>,
+}
+
 #[derive(Default)]
 pub struct OrchestrationState {
     pub watched_projects: PlMutex<HashMap<String, tauri::async_runtime::JoinHandle<()>>>,
@@ -188,6 +209,7 @@ pub struct OrchestrationState {
     pub message_bus: PlMutex<Vec<AgentMessage>>,
     pub current_project_path: PlMutex<Option<String>>,
     pub last_scan: PlMutex<Option<crate::project_scanner::ProjectCapabilityScan>>,
+    pub swarm_statuses: PlMutex<HashMap<String, SwarmStatus>>, // project_path -> status
 }
 
 #[tauri::command]
@@ -1240,4 +1262,93 @@ pub async fn brainstorm_save_topology(cwd: String, content: String) -> Result<se
     let _ = std::fs::write(latest_path, content);
 
     Ok(serde_json::json!({ "success": true, "path": path.to_string_lossy() }))
+}
+
+pub fn emit_swarm_event(app: &AppHandle, event: SwarmEvent) {
+    let _ = app.emit("swarm-neural-event", event);
+}
+
+pub fn update_swarm_status(app: &AppHandle, state: &OrchestrationState, project_path: &str, status: SwarmStatus) {
+    let mut statuses = state.swarm_statuses.lock();
+    statuses.insert(project_path.to_string(), status.clone());
+    let _ = app.emit("swarm-status-updated", status);
+}
+
+#[tauri::command]
+pub async fn swarm_get_status(
+    state: State<'_, OrchestrationState>,
+    project_path: String,
+) -> Result<SwarmStatus, String> {
+    let statuses = state.swarm_statuses.lock();
+    Ok(statuses.get(&project_path).cloned().unwrap_or_default())
+}
+
+#[tauri::command]
+pub async fn swarm_create_worktree(cwd: String, wave_id: String) -> Result<String, String> {
+    let worktree_root = std::path::Path::new(&cwd).join(".worktrees");
+    let worktree_path = worktree_root.join(format!("wave-{}", wave_id));
+    
+    // Ensure .worktrees exists
+    if !worktree_root.exists() {
+        std::fs::create_dir_all(&worktree_root).map_err(|e| e.to_string())?;
+    }
+
+    // git worktree add <path> -b swarm/wave-<id>
+    let branch_name = format!("swarm/wave-{}", wave_id);
+    
+    let output = Command::new("git")
+        .args(["worktree", "add", worktree_path.to_str().unwrap(), "-b", &branch_name])
+        .current_dir(&cwd)
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        // If branch already exists, try adding without -b
+        if stderr.contains("already exists") {
+             let output_retry = Command::new("git")
+                .args(["worktree", "add", worktree_path.to_str().unwrap(), &branch_name])
+                .current_dir(&cwd)
+                .output()
+                .map_err(|e| e.to_string())?;
+             
+             if !output_retry.status.success() {
+                 return Err(String::from_utf8_lossy(&output_retry.stderr).to_string());
+             }
+        } else {
+            return Err(stderr);
+        }
+    }
+
+    Ok(worktree_path.to_str().unwrap().to_string())
+}
+
+#[tauri::command]
+pub async fn swarm_cleanup_worktree(cwd: String, wave_id: String) -> Result<(), String> {
+    let worktree_path = std::path::Path::new(&cwd)
+        .join(".worktrees")
+        .join(format!("wave-{}", wave_id));
+
+    if !worktree_path.exists() {
+        return Ok(());
+    }
+
+    let output = Command::new("git")
+        .args(["worktree", "remove", "--force", worktree_path.to_str().unwrap()])
+        .current_dir(&cwd)
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    if !output.status.success() {
+        return Err(String::from_utf8_lossy(&output.stderr).to_string());
+    }
+    
+    // Also delete the branch
+    let branch_name = format!("swarm/wave-{}", wave_id);
+    let _ = Command::new("git")
+        .args(["branch", "-D", &branch_name])
+        .current_dir(&cwd)
+        .output();
+
+    Ok(())
 }

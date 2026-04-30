@@ -1,6 +1,9 @@
 use crate::ai_runtime::RuntimeManager;
 use crate::database::DatabaseManager;
+use crate::ai_runtime::types::{CompletionRequest, Message};
+use crate::gsd_engine::tools::{execute_tool, get_gsd_tools};
 use crate::gsd_engine::types::{ExecutionEvent, GsdPhase, GsdStep, StepStatus};
+use crate::orchestration::SwarmEvent;
 use chrono::Utc;
 use std::collections::HashMap;
 use std::process::Command;
@@ -8,8 +11,6 @@ use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::Mutex;
 use tokio::task::JoinSet;
-use crate::gsd_engine::tools::{execute_tool, get_gsd_tools};
-use crate::ai_runtime::types::{CompletionRequest, Message};
 use tokio::time::{sleep, Duration};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -131,6 +132,34 @@ impl Executor {
         let _ = self.app.emit("gsd-execution-event", payload);
     }
 
+    fn emit_swarm_neural_event(
+        &self,
+        event_type: &str,
+        source: &str,
+        target: Option<&str>,
+        message: impl Into<String>,
+        payload: Option<serde_json::Value>,
+    ) {
+        let mut final_payload = serde_json::json!({ "message": message.into() });
+        if let Some(p) = payload {
+            if let Some(obj) = p.as_object() {
+                for (k, v) in obj {
+                    final_payload[k] = v.clone();
+                }
+            }
+        }
+
+        let event = SwarmEvent {
+            event_type: event_type.to_string(),
+            source: source.to_string(),
+            target: target.map(|s| s.to_string()),
+            intensity: 1.0,
+            payload: final_payload,
+            timestamp: Utc::now().timestamp_millis() as u64,
+        };
+        let _ = self.app.emit("swarm-neural-event", event);
+    }
+
     pub async fn execute_phase(
         &self,
         plan_id: &str,
@@ -161,6 +190,18 @@ impl Executor {
                     wave_index + 1,
                     batch.len()
                 ),
+            );
+
+            self.emit_swarm_neural_event(
+                "WAVE_STATUS",
+                "Orchestrator",
+                None,
+                format!("Wave {}/{} started", wave_index + 1, wave_batches.len()),
+                Some(serde_json::json!({
+                    "activeWaveId": format!("WAVE-{}", wave_index + 1),
+                    "retryCount": 0,
+                    "projectIntegrity": 100
+                }))
             );
 
             let mut join_set = JoinSet::new();
@@ -265,6 +306,24 @@ impl Executor {
             );
             let _ = self.app.emit("gsd-step-updated", step.clone());
 
+            if step.attempts > 1 {
+                self.emit_swarm_neural_event(
+                    "HEALING",
+                    &step.id,
+                    None,
+                    format!("Retrying step {} (attempt {})", step.title, step.attempts),
+                    Some(serde_json::json!({ "retryCount": step.attempts - 1 }))
+                );
+            } else {
+                self.emit_swarm_neural_event(
+                    "THINKING",
+                    "Orchestrator",
+                    Some(&step.id),
+                    format!("Starting task: {}", step.title),
+                    None
+                );
+            }
+
             // Select System Prompt based on task type
             let base_prompt = "You are a Transwarp Nexus GSD (Get Stuff Done) Agent. \
                 Your goal is to complete the technical task described. \
@@ -353,6 +412,29 @@ impl Executor {
                             "tool_call",
                             format!("Agent invoked {}({})", tc.name, tc.arguments),
                         );
+
+                        // Neural Swarm Feedback
+                        self.emit_swarm_neural_event(
+                            "TOOL_USE",
+                            &step.id,
+                            None,
+                            format!("Using tool: {}", tc.name),
+                            Some(serde_json::json!({ "tool": tc.name }))
+                        );
+
+                        if tc.name == "delegate_task" {
+                             let target = serde_json::from_str::<serde_json::Value>(&tc.arguments)
+                                .ok()
+                                .and_then(|v| v.get("role").and_then(|v| v.as_str()).map(|s| s.to_string()));
+                             
+                             self.emit_swarm_neural_event(
+                                "COLLABORATION",
+                                &step.id,
+                                target.as_deref(),
+                                format!("Delegating task to {}", target.as_deref().unwrap_or("agent")),
+                                None
+                            );
+                        }
 
                         let tool_result = match execute_tool(&tc.name, &tc.arguments, &self.project_path, &self.app).await {
                             Ok(res) => res,

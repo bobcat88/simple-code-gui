@@ -14,6 +14,7 @@ pub mod tools;
 
 pub struct GsdEngine {
     pub active_plans: Arc<Mutex<HashMap<String, GsdPlan>>>,
+    pub execution_handles: Arc<Mutex<HashMap<String, tauri::async_runtime::JoinHandle<()>>>>,
     pub pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<UserResponse>>>>,
     pub db: Arc<DatabaseManager>,
 }
@@ -34,6 +35,7 @@ impl GsdEngine {
     pub fn new(db: Arc<DatabaseManager>) -> Self {
         Self {
             active_plans: Arc::new(Mutex::new(HashMap::new())),
+            execution_handles: Arc::new(Mutex::new(HashMap::new())),
             pending_responses: Arc::new(Mutex::new(HashMap::new())),
             db,
         }
@@ -220,8 +222,9 @@ pub async fn gsd_execute_plan(
     let ai = ai_runtime.inner().clone();
     let app_handle = app.clone();
     let project_path = orch.current_project_path.lock().clone();
+    let plan_id_inner = plan_id.clone();
 
-    tauri::async_runtime::spawn(async move {
+    let handle = tauri::async_runtime::spawn(async move {
         let executor = executor::Executor::new(
             ai, 
             engine.db.clone(), 
@@ -236,7 +239,7 @@ pub async fn gsd_execute_plan(
             .max()
             .unwrap_or(0);
         let runtime = executor::resolve_runtime_config(&plan.metadata, max_phase_step_count);
-        let _ = app_handle.emit("gsd-execution-started", &plan_id);
+        let _ = app_handle.emit("gsd-execution-started", &plan_id_inner);
 
         // Initial save for execution status
         if let Some(ref path) = project_path {
@@ -246,7 +249,7 @@ pub async fn gsd_execute_plan(
         for phase_index in 0..plan.phases.len() {
             let phase_result = {
                 let phase = &mut plan.phases[phase_index];
-                executor.execute_phase(&plan_id, phase, runtime).await
+                executor.execute_phase(&plan_id_inner, phase, runtime).await
             };
 
             if let Err(e) = phase_result {
@@ -255,35 +258,54 @@ pub async fn gsd_execute_plan(
                 let _ = app_handle.emit("gsd-phase-updated", phase.clone());
 
                 let mut plans = engine.active_plans.lock().await;
-                plans.insert(plan_id.clone(), plan.clone());
+                plans.insert(plan_id_inner.clone(), plan.clone());
                 
                 if let Some(ref path) = project_path {
                     let _ = engine.save_plan(path, &plan).await;
                 }
                 
-                let _ = app_handle.emit("gsd-execution-failed", &plan_id);
+                let _ = app_handle.emit("gsd-execution-failed", &plan_id_inner);
                 return;
             }
 
             let mut plans = engine.active_plans.lock().await;
-            plans.insert(plan_id.clone(), plan.clone());
+            plans.insert(plan_id_inner.clone(), plan.clone());
 
             if let Some(ref path) = project_path {
                 let _ = engine.save_plan(path, &plan).await;
             }
         }
 
-        let _ = app_handle.emit("gsd-execution-completed", &plan_id);
+        let _ = app_handle.emit("gsd-execution-completed", &plan_id_inner);
 
         // Final save
         let mut plans = engine.active_plans.lock().await;
-        plans.insert(plan_id, plan.clone());
+        plans.insert(plan_id_inner, plan.clone());
         if let Some(ref path) = project_path {
             let _ = engine.save_plan(path, &plan).await;
         }
     });
 
+    let mut handles = state.execution_handles.lock().await;
+    handles.insert(plan_id, handle);
+
     Ok(())
+}
+
+#[tauri::command]
+pub async fn gsd_stop_plan(
+    state: State<'_, Arc<GsdEngine>>,
+    app: AppHandle,
+    plan_id: String,
+) -> Result<(), String> {
+    let mut handles = state.execution_handles.lock().await;
+    if let Some(handle) = handles.remove(&plan_id) {
+        handle.abort();
+        let _ = app.emit("gsd-execution-stopped", &plan_id);
+        Ok(())
+    } else {
+        Err("No active execution for this plan".to_string())
+    }
 }
 
 #[tauri::command]

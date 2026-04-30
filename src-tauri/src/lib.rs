@@ -40,6 +40,7 @@ use orchestration::{
     brainstorm_load_canvas, brainstorm_save_canvas, broadcast_agent_message, get_agent_messages,
     gsd_list_seeds, gsd_plant_seed, kspec_list_drafts, kspec_write_draft,
     brainstorm_agentic_sketch, brainstorm_architect_review, brainstorm_save_topology,
+    swarm_create_worktree, swarm_cleanup_worktree,
 };
 use pty_manager::PtyManager;
 use settings_manager::{AppSettings, SettingsManager};
@@ -711,6 +712,7 @@ pub fn run() {
             gsd_engine::gsd_list_plans,
             gsd_engine::gsd_execute_plan,
             gsd_engine::gsd_respond_to_checkpoint,
+            gsd_engine::gsd_stop_plan,
             gsd_engine::gsd_list_tools,
             rtk_check,
             rtk_get_stats,
@@ -753,7 +755,9 @@ pub fn run() {
             brainstorm_save_canvas,
             brainstorm_agentic_sketch,
             brainstorm_architect_review,
-            brainstorm_save_topology
+            brainstorm_save_topology,
+            swarm_create_worktree,
+            swarm_cleanup_worktree
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

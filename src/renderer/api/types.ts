@@ -245,6 +245,7 @@ export interface ApiOpenSessionEvent {
 }
 
 export type ApiOpenSessionCallback = (event: ApiOpenSessionEvent) => void
+export type SwarmEventCallback = (event: SwarmEvent) => void
 
 export interface UpdateNotice {
   id: string
@@ -379,6 +380,21 @@ export interface VectorIndexStatus {
   indexedChunks: number
   isIndexing: boolean
   lastUpdated: number
+}
+
+export interface SwarmEvent {
+  type: 'COLLABORATION' | 'HEALING' | 'THINKING' | 'TOOL_USE' | 'WAVE_STATUS'
+  source: string
+  target?: string
+  intensity?: number // 0.0 to 1.0 for pulsation/speed
+  payload?: any
+  timestamp: number
+}
+
+export interface SwarmStatus {
+  activeWaveId: string | null
+  projectIntegrity: number // 0-100 (HP bar)
+  retryCount: number
 }
 
 export interface VectorSearchResult {
@@ -737,6 +753,7 @@ export interface ExtendedApi extends Api {
   kspecDispatchStatus: (cwd: string) => Promise<any>,
   kspecDispatchStart: (cwd: string) => Promise<{ success: boolean; error?: string }>,
   kspecDispatchStop: (cwd: string) => Promise<{ success: boolean; error?: string }>,
+  gsdStopPlan: (planId: string) => Promise<void>,
   apiStatus?: (projectPath: string) => Promise<{ running: boolean; port?: number }>,
   beadsCheck?: (cwd: string) => Promise<{ installed: boolean; initialized: boolean }>,
   beadsList: (cwd: string) => Promise<any>,
@@ -793,6 +810,11 @@ export interface ExtendedApi extends Api {
   brainstormLoadCanvas: (cwd: string) => Promise<BrainstormCanvas>
   brainstormSaveCanvas: (cwd: string, canvas: BrainstormCanvas) => Promise<void>
   brainstormSaveTopology: (cwd: string, content: string) => Promise<{ success: boolean; error?: string }>
+
+  // Swarm Worktree Management
+  swarmCreateWorktree: (cwd: string, waveId: string) => Promise<{ success: boolean; path?: string; error?: string }>
+  swarmCleanupWorktree: (cwd: string, waveId: string) => Promise<{ success: boolean; error?: string }>
+  onSwarmNeuralEvent: (callback: SwarmEventCallback) => Unsubscribe
 }
 
 // ============================================================================
