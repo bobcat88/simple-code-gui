@@ -92,8 +92,43 @@ impl GsdEngine {
         Ok(())
     }
 
+    pub async fn ensure_governance(&self, project_path: &str) -> Result<(), String> {
+        let policy_path = std::path::Path::new(project_path)
+            .join(".planning")
+            .join("gsd")
+            .join("governance.yaml");
+        
+        if policy_path.exists() {
+            let mut gov = self.governance.lock().await;
+            match governance::GovernanceEngine::load_from_file(&policy_path) {
+                Ok(engine) => *gov = engine,
+                Err(e) => {
+                    eprintln!("Failed to load governance policy from {}: {}", policy_path.display(), e);
+                }
+            }
+        } else {
+            // Create default policy file if it doesn't exist (Decisions in Git)
+            if let Some(parent) = policy_path.parent() {
+                if !parent.exists() {
+                    std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+                }
+            }
+            let gov = self.governance.lock().await;
+            let _ = gov.save_to_file(&policy_path);
+            
+            // Automatic git add
+            let _ = std::process::Command::new("git")
+                .arg("add")
+                .arg(&policy_path)
+                .current_dir(project_path)
+                .output();
+        }
+        Ok(())
+    }
+
     pub async fn load_plans(&self, project_path: &str) -> Result<Vec<GsdPlan>, String> {
         self.ensure_knowledge_base(project_path).await?;
+        self.ensure_governance(project_path).await?;
         let plans_dir = std::path::Path::new(project_path)
             .join(".planning")
             .join("gsd")
@@ -252,6 +287,10 @@ pub async fn gsd_execute_plan(
     let project_path = orch.current_project_path.lock().clone();
 
     tauri::async_runtime::spawn(async move {
+        if let Some(ref path) = project_path {
+            let _ = engine.ensure_governance(path).await;
+        }
+        
         let executor = executor::Executor::new(
             ai, 
             engine.db.clone(), 
@@ -366,6 +405,14 @@ pub async fn gsd_respond_to_approval(
     } else {
         Err("No pending approval for this ID".to_string())
     }
+}
+
+#[tauri::command]
+pub async fn gsd_get_personas(
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<Vec<governance::SwarmPersona>, String> {
+    let gov = state.governance.lock().await;
+    Ok(gov.policy.personas.clone())
 }
 
 #[tauri::command]

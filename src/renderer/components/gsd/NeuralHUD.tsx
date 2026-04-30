@@ -26,9 +26,10 @@ export function NeuralHUD() {
   const [insights, setInsights] = useState<NeuralInsight[]>([]);
   const [isMinimized, setIsMinimized] = useState(false);
   const [activeInsight, setActiveInsight] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'insights' | 'forensics'>('insights');
+  const [viewMode, setViewMode] = useState<'insights' | 'forensics' | 'swarm'>('insights');
   const [healedSteps, setHealedSteps] = useState<Set<string>>(new Set());
   const [pendingApprovals, setPendingApprovals] = useState<GsdApprovalRequest[]>([]);
+  const [personas, setPersonas] = useState<SwarmPersona[]>([]);
 
   useEffect(() => {
     if (!api?.onGsdInsight) return;
@@ -74,6 +75,12 @@ export function NeuralHUD() {
       unsubscribeApprovals();
     };
   }, [api]);
+
+  useEffect(() => {
+    if (viewMode === 'swarm' && api?.gsdGetPersonas) {
+      api.gsdGetPersonas().then(setPersonas);
+    }
+  }, [viewMode, api]);
 
   const removeInsight = useCallback((id: string) => {
     setInsights(prev => prev.filter(i => i.id !== id));
@@ -125,30 +132,44 @@ export function NeuralHUD() {
           >
             {/* View Switcher */}
             <div className="flex bg-black/40 backdrop-blur-md rounded-lg border border-white/10 p-1 pointer-events-auto">
-              <button 
-                onClick={() => setViewMode('insights')}
-                className={cn(
-                  "px-3 py-1 text-[9px] font-bold uppercase tracking-wider rounded transition-all",
-                  viewMode === 'insights' ? "bg-indigo-500/20 text-indigo-400" : "text-white/40 hover:text-white/60"
-                )}
-              >
-                Insights
-              </button>
-              <button 
-                onClick={() => setViewMode('forensics')}
-                className={cn(
-                  "px-3 py-1 text-[9px] font-bold uppercase tracking-wider rounded transition-all",
-                  viewMode === 'forensics' ? "bg-red-500/20 text-red-400" : "text-white/40 hover:text-white/60"
-                )}
-              >
-                Forensics
-              </button>
+              <div className="flex items-center gap-2 px-1">
+                <button 
+                  onClick={() => setViewMode('insights')}
+                  className={cn(
+                    "p-2 rounded-lg transition-colors",
+                    viewMode === 'insights' ? "bg-white/10 text-white" : "text-white/40 hover:text-white/60"
+                  )}
+                  title="Intelligence Feed"
+                >
+                  <Activity className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => setViewMode('swarm')}
+                  className={cn(
+                    "p-2 rounded-lg transition-colors relative",
+                    viewMode === 'swarm' ? "bg-white/10 text-white" : "text-white/40 hover:text-white/60"
+                  )}
+                  title="Swarm Personas"
+                >
+                  <Brain className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => setViewMode('forensics')}
+                  className={cn(
+                    "p-2 rounded-lg transition-colors",
+                    viewMode === 'forensics' ? "bg-white/10 text-white" : "text-white/40 hover:text-white/60"
+                  )}
+                  title="Forensic Audit"
+                >
+                  <Layers className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {viewMode === 'insights' ? (
               <div className="flex flex-col items-end gap-3">
                 {/* Governance Approvals - Priority 1 */}
-                <AnimatePresence>
+                <AnimatePresence mode="popLayout">
                   {pendingApprovals.map((approval) => (
                     <PermissionGuard 
                       key={approval.approvalId}
@@ -234,6 +255,60 @@ export function NeuralHUD() {
                     </div>
                   </motion.div>
                 ))}
+              </div>
+            ) : viewMode === 'swarm' ? (
+              <div className="flex flex-col items-end gap-3 max-h-[60vh] overflow-y-auto no-scrollbar pr-2 pointer-events-auto">
+                <AnimatePresence mode="popLayout">
+                  {personas.map((persona) => (
+                    <motion.div
+                      key={persona.id}
+                      initial={{ opacity: 0, x: 50, scale: 0.9 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: 20, scale: 0.95 }}
+                      className="w-80 rounded-xl border border-white/10 bg-black/40 backdrop-blur-xl p-4 shadow-2xl"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-lg bg-indigo-500/20 text-indigo-400">
+                          <Brain size={18} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-0.5">
+                            <h4 className="text-sm font-semibold text-white/90 truncate">{persona.name}</h4>
+                            <span className={cn(
+                              "text-[8px] px-1.5 py-0.5 rounded-full border uppercase tracking-widest font-bold",
+                              persona.governanceTier === 'elevated' ? "bg-amber-500/10 border-amber-500/30 text-amber-400" : 
+                              persona.governanceTier === 'restricted' ? "bg-red-500/10 border-red-500/30 text-red-400" : 
+                              "bg-indigo-500/10 border-indigo-500/30 text-indigo-400"
+                            )}>
+                              {persona.governanceTier}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-white/40 mb-3 uppercase tracking-wider font-medium">{persona.role}</p>
+                          
+                          <div className="flex flex-wrap gap-1.5 mb-3">
+                            {persona.expertise.map(skill => (
+                              <span key={skill} className="px-2 py-0.5 rounded-md bg-white/5 text-[9px] text-white/60 border border-white/5">
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+
+                          <div className="pt-2 border-t border-white/5">
+                            <div className="flex items-center justify-between text-[10px]">
+                              <span className="text-white/40">Tool Access</span>
+                              <span className="text-white/80 font-mono">{persona.tools.length} Tools</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                {personas.length === 0 && (
+                  <div className="w-80 text-center py-8 text-white/40 text-xs italic">
+                    Initializing Swarm Collective...
+                  </div>
+                )}
               </div>
             ) : (
               <ForensicReport />

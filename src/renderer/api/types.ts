@@ -651,7 +651,9 @@ export interface Api {
   gsdAddStep?: (planId: string, phaseId: string, title: string, description: string) => Promise<GsdStep>
   gsdExecutePlan?: (planId: string) => Promise<void>
   gsdRespondToCheckpoint?: (stepId: string, response: UserResponse) => Promise<void>
-  gsdRespondToApproval?: (approvalId: string, response: 'approve' | 'reject') => Promise<void>
+  gsdRespondToApproval: (approvalId: string, response: string) => Promise<void>;
+  gsdGetPersonas: () => Promise<SwarmPersona[]>;
+  gsdListTools: () => Promise<ToolInfo[]>;
   onGsdExecutionEvent?: (callback: (event: GsdExecutionEvent) => void) => Unsubscribe
   onGsdInsight?: (callback: (insight: NeuralInsight) => void) => Unsubscribe
   onGsdApprovalRequested?: (callback: (approval: GsdApprovalRequest) => void) => Unsubscribe
@@ -1035,6 +1037,15 @@ export interface GsdApprovalRequest {
   arguments: any;
   reason: string;
   risk: 'low' | 'medium' | 'high' | 'critical';
+}
+
+export interface SwarmPersona {
+  id: string;
+  name: string;
+  role: string;
+  expertise: string[];
+  tools: string[];
+  governanceTier: string;
 }
 
 export interface ToolInfo {
