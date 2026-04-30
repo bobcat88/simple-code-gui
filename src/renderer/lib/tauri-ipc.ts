@@ -315,6 +315,10 @@ export const tauriIpc = {
     listen<any>('gsd-step-updated', (event) => callback(event.payload)),
   onGsdInsight: (callback: (insight: any) => void): Promise<UnlistenFn> =>
     listen<any>('gsd-insight', (event) => callback(event.payload)),
+  onGsdApprovalRequested: (callback: (approval: any) => void): Promise<UnlistenFn> =>
+    listen<any>('gsd-approval-requested', (event) => callback(event.payload)),
+  gsdRespondToApproval: (approvalId: string, response: string) =>
+    invoke<void>('gsd_respond_to_approval', { approvalId, response }),
   gsdListTools: () =>
     invoke<any[]>('gsd_list_tools'),
   gsdSwarmQueryMemory: (query: string, patternType?: string, limit?: number) =>

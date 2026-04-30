@@ -711,6 +711,7 @@ pub fn run() {
             gsd_engine::gsd_list_plans,
             gsd_engine::gsd_execute_plan,
             gsd_engine::gsd_respond_to_checkpoint,
+            gsd_engine::gsd_respond_to_approval,
             gsd_engine::gsd_list_tools,
             gsd_engine::gsd_get_governance_status,
             gsd_engine::gsd_swarm_query_memory,

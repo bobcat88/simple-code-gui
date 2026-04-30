@@ -16,8 +16,9 @@ import {
 import { useApi } from '../../contexts/ApiContext';
 import { useWorkspaceStore } from '../../stores/workspace';
 import { cn } from '../../lib/utils';
-import type { NeuralInsight } from '../../api/types';
+import type { NeuralInsight, GsdApprovalRequest } from '../../api/types';
 import { ForensicReport } from './ForensicReport';
+import { PermissionGuard } from './PermissionGuard';
 
 export function NeuralHUD() {
   const { api } = useApi();
@@ -27,6 +28,7 @@ export function NeuralHUD() {
   const [activeInsight, setActiveInsight] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'insights' | 'forensics'>('insights');
   const [healedSteps, setHealedSteps] = useState<Set<string>>(new Set());
+  const [pendingApprovals, setPendingApprovals] = useState<GsdApprovalRequest[]>([]);
 
   useEffect(() => {
     if (!api?.onGsdInsight) return;
@@ -60,9 +62,16 @@ export function NeuralHUD() {
       }
     }) : () => {};
 
+    const unsubscribeApprovals = api.onGsdApprovalRequested ? api.onGsdApprovalRequested((approval) => {
+      setPendingApprovals(prev => [...prev, approval]);
+      setIsMinimized(false);
+      setViewMode('insights');
+    }) : () => {};
+
     return () => {
       unsubscribe();
       unsubscribeEvents();
+      unsubscribeApprovals();
     };
   }, [api]);
 
@@ -85,6 +94,20 @@ export function NeuralHUD() {
       console.warn('No active terminal to execute insight action');
     }
   }, [activeTabId, api, removeInsight]);
+
+  const handleApprovalResolve = useCallback(async (approvalId: string, decision: 'approve' | 'reject') => {
+    if (!api.gsdRespondToApproval) return;
+    
+    try {
+      await api.gsdRespondToApproval(approvalId, decision);
+      setPendingApprovals(prev => prev.filter(a => a.approvalId !== approvalId));
+      if (api.activityLogInfo) {
+        api.activityLogInfo('NeuralHUD', `Resolved approval ${approvalId}: ${decision}`, '');
+      }
+    } catch (err) {
+      console.error('Failed to resolve approval:', err);
+    }
+  }, [api]);
 
   const showHud = insights.length > 0 || viewMode === 'forensics';
 
@@ -124,6 +147,18 @@ export function NeuralHUD() {
 
             {viewMode === 'insights' ? (
               <div className="flex flex-col items-end gap-3">
+                {/* Governance Approvals - Priority 1 */}
+                <AnimatePresence>
+                  {pendingApprovals.map((approval) => (
+                    <PermissionGuard 
+                      key={approval.approvalId}
+                      approval={approval}
+                      onResolve={(decision) => handleApprovalResolve(approval.approvalId, decision)}
+                    />
+                  ))}
+                </AnimatePresence>
+
+                {/* Insights - Priority 2 */}
                 {insights.slice(0, 3).map((insight, idx) => (
                   <motion.div
                     key={insight.id || idx}
@@ -220,7 +255,7 @@ export function NeuralHUD() {
             <Sparkles size={14} className="relative text-emerald-400" />
           </div>
         )}
-        NEURAL HUD: {insights.length} ACTIVE
+        NEURAL HUD: {insights.length + pendingApprovals.length} ACTIVE
         {isMinimized ? <ChevronRight size={14} /> : <X size={14} />}
       </motion.button>
     </div>

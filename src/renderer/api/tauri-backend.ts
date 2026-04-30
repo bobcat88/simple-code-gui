@@ -440,6 +440,16 @@ export class TauriBackend implements ExtendedApi {
     return () => unlisten?.();
   }
 
+  onGsdApprovalRequested(callback: (approval: any) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onGsdApprovalRequested(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  async gsdRespondToApproval(approvalId: string, response: string): Promise<void> {
+    await tauriIpc.gsdRespondToApproval(approvalId, response);
+  }
+
   async gsdListTools(): Promise<any[]> {
     return await tauriIpc.gsdListTools();
   }

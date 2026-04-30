@@ -18,6 +18,7 @@ pub mod governance;
 pub struct GsdEngine {
     pub active_plans: Arc<Mutex<HashMap<String, GsdPlan>>>,
     pub pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<UserResponse>>>>,
+    pub pending_approvals: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<bool>>>>,
     pub db: Arc<DatabaseManager>,
     pub knowledge: Arc<Mutex<Option<knowledge::SwarmMemory>>>,
     pub governance: Arc<Mutex<governance::GovernanceEngine>>,
@@ -40,6 +41,7 @@ impl GsdEngine {
         Self {
             active_plans: Arc::new(Mutex::new(HashMap::new())),
             pending_responses: Arc::new(Mutex::new(HashMap::new())),
+            pending_approvals: Arc::new(Mutex::new(HashMap::new())),
             db,
             knowledge: Arc::new(Mutex::new(None)),
             governance: Arc::new(Mutex::new(governance::GovernanceEngine::new_default())),
@@ -342,6 +344,27 @@ pub async fn gsd_respond_to_checkpoint(
         Ok(())
     } else {
         Err("No pending checkpoint for this step".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn gsd_respond_to_approval(
+    state: State<'_, Arc<GsdEngine>>,
+    approval_id: String,
+    response: String,
+) -> Result<(), String> {
+    let user_res = match response.to_lowercase().as_str() {
+        "approve" => UserResponse::Approve,
+        "reject" => UserResponse::Abort,
+        _ => return Err(format!("Invalid response: {}", response)),
+    };
+
+    let mut pending = state.pending_responses.lock().await;
+    if let Some(sender) = pending.remove(&approval_id) {
+        let _ = sender.send(user_res);
+        Ok(())
+    } else {
+        Err("No pending approval for this ID".to_string())
     }
 }
 
