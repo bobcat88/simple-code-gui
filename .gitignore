@@ -14,3 +14,4 @@ dist-build/
 .beads-credential-key
 .gitnexus
 .kspec-worktrees/
+.worktrees/
