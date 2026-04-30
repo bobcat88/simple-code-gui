@@ -652,7 +652,10 @@ export interface Api {
   gsdExecutePlan?: (planId: string) => Promise<void>
   gsdRespondToCheckpoint?: (stepId: string, response: UserResponse) => Promise<void>
   gsdRespondToApproval: (approvalId: string, response: string) => Promise<void>;
+  gsdGetGovernanceStatus: () => Promise<SwarmPolicy>;
   gsdGetPersonas: () => Promise<SwarmPersona[]>;
+  gsdSyncMemory: () => Promise<number>;
+  gsdUpdatePolicy: (policy: SwarmPolicy) => Promise<void>;
   gsdListTools: () => Promise<ToolInfo[]>;
   onGsdExecutionEvent?: (callback: (event: GsdExecutionEvent) => void) => Unsubscribe
   onGsdInsight?: (callback: (insight: NeuralInsight) => void) => Unsubscribe
@@ -1046,6 +1049,24 @@ export interface SwarmPersona {
   expertise: string[];
   tools: string[];
   governanceTier: string;
+}
+
+export interface SwarmPolicy {
+  version: string;
+  metadata: {
+    name: string;
+    id: string;
+  };
+  defaultMode: 'permissive' | 'watchful' | 'strict' | 'locked';
+  rules: {
+    selector: { tool: string };
+    permissions: {
+      permissionType: 'allow' | 'require_approval' | 'deny';
+      patterns: string[];
+      message?: string;
+    }[];
+  }[];
+  personas: SwarmPersona[];
 }
 
 export interface ToolInfo {

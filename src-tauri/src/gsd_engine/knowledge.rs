@@ -25,10 +25,18 @@ impl SwarmMemory {
 
     /// Record a new learning entry
     pub fn record(&self, entry_type: &str, context: &str, content: &str, meta: &str) -> Result<()> {
-        self.conn.execute(
-            "INSERT INTO swarm_knowledge (type, context, content, meta) VALUES (?1, ?2, ?3, ?4)",
-            params![entry_type, context, content, meta],
+        // Simple duplicate check to keep collective memory clean
+        let mut stmt = self.conn.prepare(
+            "SELECT 1 FROM swarm_knowledge WHERE context = ?1 AND content = ?2 LIMIT 1"
         )?;
+        let exists = stmt.exists(params![context, content])?;
+        
+        if !exists {
+            self.conn.execute(
+                "INSERT INTO swarm_knowledge (type, context, content, meta) VALUES (?1, ?2, ?3, ?4)",
+                params![entry_type, context, content, meta],
+            )?;
+        }
         Ok(())
     }
 
@@ -43,5 +51,26 @@ impl SwarmMemory {
             results.push(row?);
         }
         Ok(results)
+    }
+
+    /// Get all entries for sync
+    pub fn get_all_entries(&self) -> Result<Vec<crate::gsd_engine::sync::MemoryEntry>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT type, context, content, meta FROM swarm_knowledge"
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(crate::gsd_engine::sync::MemoryEntry {
+                entry_type: row.get(0)?,
+                context: row.get(1)?,
+                content: row.get(2)?,
+                meta: row.get(3)?,
+            })
+        })?;
+
+        let mut entries = Vec::new();
+        for row in rows {
+            entries.push(row?);
+        }
+        Ok(entries)
     }
 }

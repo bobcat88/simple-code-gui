@@ -204,3 +204,9 @@ impl GovernanceEngine {
         }
     }
 }
+
+impl GovernanceEngine {
+    pub fn get_personas(&self) -> Vec<SwarmPersona> {
+        self.policy.personas.clone()
+    }
+}

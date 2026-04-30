@@ -14,6 +14,7 @@ pub mod tools;
 pub mod knowledge;
 pub mod forensics;
 pub mod governance;
+pub mod sync;
 
 pub struct GsdEngine {
     pub active_plans: Arc<Mutex<HashMap<String, GsdPlan>>>,
@@ -467,4 +468,42 @@ pub async fn gsd_swarm_record_pattern(
     } else {
         Err("Swarm memory not initialized for current project".to_string())
     }
+}
+
+#[tauri::command]
+pub async fn gsd_sync_memory(
+    state: State<'_, Arc<Mutex<GsdEngine>>>,
+) -> Result<usize, String> {
+    let engine = state.lock().await;
+    let knowledge_lock = engine.knowledge.lock().await;
+    
+    if let Some(ref knowledge) = *knowledge_lock {
+        // First import from global
+        let imported = sync::GlobalSync::import(knowledge)?;
+        // Then export local to global
+        sync::GlobalSync::export(knowledge)?;
+        Ok(imported)
+    } else {
+        Err("Swarm memory not initialized".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn gsd_update_policy(
+    state: State<'_, Arc<Mutex<GsdEngine>>>,
+    orch_state: State<'_, crate::orchestration::OrchestrationState>,
+    policy: governance::SwarmPolicy,
+) -> Result<(), String> {
+    let engine = state.lock().await;
+    let mut gov = engine.governance.lock().await;
+    gov.policy = policy;
+    
+    // Save to file if project path exists
+    let project_path = orch_state.current_project_path.lock().clone();
+    if let Some(path) = project_path {
+        let policy_path = std::path::Path::new(&path).join(".planning/gsd/governance.yaml");
+        gov.save_to_file(policy_path)?;
+    }
+    
+    Ok(())
 }

@@ -11,12 +11,18 @@ import {
   X,
   ExternalLink,
   Sparkles,
-  Brain
+  Brain,
+  RefreshCw,
+  Settings,
+  Shield,
+  User,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { useApi } from '../../contexts/ApiContext';
 import { useWorkspaceStore } from '../../stores/workspace';
 import { cn } from '../../lib/utils';
-import type { NeuralInsight, GsdApprovalRequest } from '../../api/types';
+import type { NeuralInsight, GsdApprovalRequest, SwarmPolicy, SwarmPersona } from '../../api/types';
 import { ForensicReport } from './ForensicReport';
 import { PermissionGuard } from './PermissionGuard';
 
@@ -26,10 +32,12 @@ export function NeuralHUD() {
   const [insights, setInsights] = useState<NeuralInsight[]>([]);
   const [isMinimized, setIsMinimized] = useState(false);
   const [activeInsight, setActiveInsight] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'insights' | 'forensics' | 'swarm'>('insights');
+  const [viewMode, setViewMode] = useState<'insights' | 'forensics' | 'swarm' | 'governance'>('insights');
   const [healedSteps, setHealedSteps] = useState<Set<string>>(new Set());
   const [pendingApprovals, setPendingApprovals] = useState<GsdApprovalRequest[]>([]);
   const [personas, setPersonas] = useState<SwarmPersona[]>([]);
+  const [policy, setPolicy] = useState<SwarmPolicy | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     if (!api?.onGsdInsight) return;
@@ -80,7 +88,27 @@ export function NeuralHUD() {
     if (viewMode === 'swarm' && api?.gsdGetPersonas) {
       api.gsdGetPersonas().then(setPersonas);
     }
+    if (viewMode === 'governance' && api?.gsdGetGovernanceStatus) {
+      api.gsdGetGovernanceStatus().then(setPolicy);
+    }
   }, [viewMode, api]);
+
+  const handleSyncMemory = async () => {
+    if (!api?.gsdSyncMemory) return;
+    setIsSyncing(true);
+    try {
+      const imported = await api.gsdSyncMemory();
+      console.log(`Synced memory. Imported ${imported} new patterns.`);
+      if (api.gsdGetPersonas) {
+        const p = await api.gsdGetPersonas();
+        setPersonas(p);
+      }
+    } catch (err) {
+      console.error('Sync failed:', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const removeInsight = useCallback((id: string) => {
     setInsights(prev => prev.filter(i => i.id !== id));
@@ -256,8 +284,113 @@ export function NeuralHUD() {
                   </motion.div>
                 ))}
               </div>
+            ) : viewMode === 'governance' ? (
+              <div className="flex flex-col items-end gap-3 max-h-[70vh] overflow-y-auto no-scrollbar pr-2 pointer-events-auto">
+                <div className="w-96 bg-black/60 backdrop-blur-2xl border border-white/10 rounded-xl p-6 shadow-2xl">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/50 flex items-center gap-2">
+                      <Shield size={16} className="text-amber-400" />
+                      Governance Policy
+                    </h3>
+                    <button 
+                      onClick={() => setViewMode('swarm')}
+                      className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      <X size={16} className="text-white/40" />
+                    </button>
+                  </div>
+
+                  {policy && (
+                    <div className="space-y-6">
+                      <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                        <label className="text-[10px] uppercase font-bold text-white/30 block mb-2">Operational Mode</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {['permissive', 'watchful', 'strict', 'locked'].map(mode => (
+                            <button
+                              key={mode}
+                              onClick={() => {
+                                const newPolicy = { ...policy, defaultMode: mode as any };
+                                setPolicy(newPolicy);
+                                api.gsdUpdatePolicy(newPolicy);
+                              }}
+                              className={cn(
+                                "py-1.5 px-2 rounded-md text-[10px] font-bold uppercase transition-all border",
+                                policy.defaultMode === mode 
+                                  ? "bg-amber-500/20 border-amber-500/50 text-amber-400" 
+                                  : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10"
+                              )}
+                            >
+                              {mode}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-[10px] uppercase font-bold text-white/30">Active Personas</h4>
+                          <button className="p-1 hover:bg-white/10 rounded text-indigo-400 transition-colors">
+                            <Plus size={14} />
+                          </button>
+                        </div>
+                        <div className="space-y-2 max-h-60 overflow-y-auto no-scrollbar">
+                          {policy.personas.map((p) => (
+                            <div key={p.id} className="p-3 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between group">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                  <User size={14} />
+                                </div>
+                                <div>
+                                  <div className="text-xs font-semibold text-white/90">{p.name}</div>
+                                  <div className="text-[9px] text-white/40">{p.role}</div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button className="p-1.5 hover:bg-white/10 rounded text-white/40 hover:text-white transition-colors">
+                                  <Settings size={12} />
+                                </button>
+                                <button className="p-1.5 hover:bg-red-500/20 rounded text-white/40 hover:text-red-400 transition-colors">
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             ) : viewMode === 'swarm' ? (
               <div className="flex flex-col items-end gap-3 max-h-[60vh] overflow-y-auto no-scrollbar pr-2 pointer-events-auto">
+                <div className="w-80 bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-4 shadow-2xl mb-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/50 flex items-center gap-2">
+                      <Layers size={14} className="text-indigo-400" />
+                      Active Swarm
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={handleSyncMemory}
+                        disabled={isSyncing}
+                        className={cn(
+                          "p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all active:scale-95 group",
+                          isSyncing && "opacity-50 pointer-events-none"
+                        )}
+                        title="Sync with Borg Knowledge Vault"
+                      >
+                        <RefreshCw size={14} className={cn("text-white/60 group-hover:text-white", isSyncing && "animate-spin")} />
+                      </button>
+                      <button 
+                        onClick={() => setViewMode('governance')}
+                        className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all active:scale-95 group"
+                        title="Governance Policy"
+                      >
+                        <Shield size={14} className="text-white/60 group-hover:text-white" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 <AnimatePresence mode="popLayout">
                   {personas.map((persona) => (
                     <motion.div

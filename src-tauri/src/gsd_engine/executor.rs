@@ -303,12 +303,29 @@ impl Executor {
                 5. RESOLUTION: Once the root cause is verified, implement the fix and verify it with tests.\n\n\
                 Use `git_diff` and `git_log` to identify regressions if applicable.";
 
-            let supervisor_prompt = "You are the Supervisor Nexus Agent. Your goal is to orchestrate a swarm of specialized agents to complete complex tasks.\n\
+            let personas_context = {
+                let gov = self.governance.lock().await;
+                let personas = gov.get_personas();
+                if personas.is_empty() {
+                    "No specialized agents available. You must handle all sub-tasks yourself.".to_string()
+                } else {
+                    format!(
+                        "You have access to the following specialized agents via `delegate_task`:\n{}",
+                        personas.iter().map(|p| format!("- {} ({}): Expertise in {}", p.name, p.role, p.expertise.join(", "))).collect::<Vec<_>>().join("\n")
+                    )
+                }
+            };
+
+            let supervisor_prompt = format!(
+                "You are the Supervisor Nexus Agent. Your goal is to orchestrate a swarm of specialized agents to complete complex tasks.\n\
                 1. ANALYZE: Break down the main goal into smaller, manageable sub-tasks.\n\
-                2. DELEGATE: Use the `delegate_task` tool to assign sub-tasks to specialized agents (Rust Expert, Frontend Dev, etc.).\n\
+                2. DELEGATE: Use the `delegate_task` tool to assign sub-tasks to specialized agents.\n\
                 3. INTEGRATE: Combine the results from sub-agents to form the final solution.\n\
                 4. VERIFY: Ensure the integrated solution meets all requirements.\n\n\
-                You are the brain of the operation. Coordinate effectively.";
+                {}\n\n\
+                You are the brain of the operation. Coordinate effectively.",
+                personas_context
+            );
 
             // FOR-28: Proactive Context Injection
             let mut memory_context = String::new();

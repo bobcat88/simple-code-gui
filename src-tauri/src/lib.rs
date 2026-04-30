@@ -717,6 +717,8 @@ pub fn run() {
             gsd_engine::gsd_get_governance_status,
             gsd_engine::gsd_swarm_query_memory,
             gsd_engine::gsd_swarm_record_pattern,
+            gsd_engine::gsd_sync_memory,
+            gsd_engine::gsd_update_policy,
             rtk_check,
             rtk_get_stats,
             rtk_get_history,

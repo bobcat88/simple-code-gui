@@ -450,8 +450,20 @@ export class TauriBackend implements ExtendedApi {
     await tauriIpc.gsdRespondToApproval(approvalId, response);
   }
 
+  async gsdGetGovernanceStatus(): Promise<any> {
+    return await tauriIpc.gsdGetGovernanceStatus();
+  }
+
   async gsdGetPersonas(): Promise<any[]> {
     return await tauriIpc.gsdGetPersonas();
+  }
+
+  async gsdSyncMemory(): Promise<number> {
+    return await tauriIpc.gsdSyncMemory();
+  }
+
+  async gsdUpdatePolicy(policy: any): Promise<void> {
+    await tauriIpc.gsdUpdatePolicy(policy);
   }
 
   async gsdListTools(): Promise<any[]> {

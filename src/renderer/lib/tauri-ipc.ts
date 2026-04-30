@@ -319,8 +319,14 @@ export const tauriIpc = {
     listen<any>('gsd-approval-requested', (event) => callback(event.payload)),
   gsdRespondToApproval: (approvalId: string, response: string) =>
     invoke<void>('gsd_respond_to_approval', { approvalId, response }),
+  gsdGetGovernanceStatus: () =>
+    invoke<any>('gsd_get_governance_status'),
   gsdGetPersonas: () =>
     invoke<any[]>('gsd_get_personas'),
+  gsdSyncMemory: () =>
+    invoke<number>('gsd_sync_memory'),
+  gsdUpdatePolicy: (policy: any) =>
+    invoke<void>('gsd_update_policy', { policy }),
   gsdListTools: () =>
     invoke<any[]>('gsd_list_tools'),
   gsdSwarmQueryMemory: (query: string, patternType?: string, limit?: number) =>
