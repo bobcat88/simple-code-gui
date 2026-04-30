@@ -138,4 +138,13 @@ Scaling the swarm to multi-repo orchestration and autonomous architectural evolu
 
 ---
 
+## Phase 32: Swarm Cross-Repo Memory Integration (Complete)
+Enabling federated knowledge retrieval across multiple repository contexts.
+
+- [x] **Federated Query Engine**: Iterate through `active_project_paths` for memory retrieval.
+- [x] **Cross-Repo Deduplication**: Content-based merging of findings from multiple knowledge databases.
+- [x] **Parameter Alignment**: Synchronized IPC arguments between frontend and backend.
+
+---
+
 *Last Updated: April 30, 2026*

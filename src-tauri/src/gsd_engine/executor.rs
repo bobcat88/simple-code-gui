@@ -336,7 +336,7 @@ impl Executor {
                 // Query for patterns related to the step title
                 // We simplify the query to avoid FTS5 syntax errors
                 let search_term = step.title.split_whitespace().collect::<Vec<_>>().join(" OR ");
-                if let Ok(patterns) = knowledge.query(&search_term) {
+                if let Ok(patterns) = knowledge.query(&search_term, None, None) {
                     if !patterns.is_empty() {
                         memory_context = format!(
                             "\n\n[COLLECTIVE MEMORY]: The swarm has encountered similar tasks before. \

@@ -445,27 +445,69 @@ pub async fn gsd_get_governance_status(
 #[tauri::command]
 pub async fn gsd_swarm_query_memory(
     state: State<'_, Arc<GsdEngine>>,
-    term: String,
+    orch: State<'_, OrchestrationState>,
+    query: String,
+    pattern_type: Option<String>,
+    limit: Option<usize>,
 ) -> Result<Vec<String>, String> {
+    let active_paths = orch.active_project_paths.lock().clone();
+    let mut all_results = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+
+    let pattern_type_ref = pattern_type.as_deref();
+
+    for path in active_paths {
+        let db_path = std::path::Path::new(&path)
+            .join(".planning")
+            .join("gsd")
+            .join("knowledge.db");
+
+        if db_path.exists() {
+            if let Ok(mem) = knowledge::SwarmMemory::new(db_path) {
+                if let Ok(results) = mem.query(&query, pattern_type_ref, limit) {
+                    for res in results {
+                        if seen.insert(res.clone()) {
+                            all_results.push(res);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Also include the current locked knowledge if not already covered
     let knowledge = state.knowledge.lock().await;
     if let Some(mem) = knowledge.as_ref() {
-        mem.query(&term).map_err(|e| e.to_string())
-    } else {
-        Ok(Vec::new())
+        if let Ok(results) = mem.query(&query, pattern_type_ref, limit) {
+            for res in results {
+                if seen.insert(res.clone()) {
+                    all_results.push(res);
+                }
+            }
+        }
     }
+
+    // Final limit check on aggregated results
+    if let Some(l) = limit {
+        if all_results.len() > l {
+            all_results.truncate(l);
+        }
+    }
+
+    Ok(all_results)
 }
 
 #[tauri::command]
 pub async fn gsd_swarm_record_pattern(
     state: State<'_, Arc<GsdEngine>>,
-    entry_type: String,
-    context: String,
+    pattern_type: String,
+    pattern_key: String,
     content: String,
-    meta: String,
+    metadata: String,
 ) -> Result<(), String> {
     let knowledge = state.knowledge.lock().await;
     if let Some(mem) = knowledge.as_ref() {
-        mem.record(&entry_type, &context, &content, &meta)
+        mem.record(&pattern_type, &pattern_key, &content, &metadata)
             .map_err(|e| e.to_string())
     } else {
         Err("Swarm memory not initialized for current project".to_string())
