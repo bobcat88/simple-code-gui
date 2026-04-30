@@ -32,12 +32,25 @@ export function NeuralHUD() {
   const [insights, setInsights] = useState<NeuralInsight[]>([]);
   const [isMinimized, setIsMinimized] = useState(false);
   const [activeInsight, setActiveInsight] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'insights' | 'forensics' | 'swarm' | 'governance'>('insights');
+  const [viewMode, setViewMode] = useState<'insights' | 'forensics' | 'swarm' | 'governance' | 'workspace'>('insights');
   const [healedSteps, setHealedSteps] = useState<Set<string>>(new Set());
   const [pendingApprovals, setPendingApprovals] = useState<GsdApprovalRequest[]>([]);
   const [personas, setPersonas] = useState<SwarmPersona[]>([]);
   const [policy, setPolicy] = useState<SwarmPolicy | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [activeProjects, setActiveProjects] = useState<string[]>([]);
+  const { projects } = useWorkspaceStore();
+
+  const fetchActiveProjects = useCallback(async () => {
+    if (api?.getActiveProjects) {
+      const paths = await api.getActiveProjects();
+      setActiveProjects(paths);
+    }
+  }, [api]);
+
+  useEffect(() => {
+    fetchActiveProjects();
+  }, [fetchActiveProjects]);
 
   useEffect(() => {
     if (!api?.onGsdInsight) return;
@@ -107,6 +120,20 @@ export function NeuralHUD() {
       console.error('Sync failed:', err);
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const handleAddActiveProject = async (path: string) => {
+    if (api?.addActiveProject) {
+      await api.addActiveProject(path);
+      fetchActiveProjects();
+    }
+  };
+
+  const handleRemoveActiveProject = async (path: string) => {
+    if (api?.removeActiveProject) {
+      await api.removeActiveProject(path);
+      fetchActiveProjects();
     }
   };
 
@@ -190,6 +217,16 @@ export function NeuralHUD() {
                   title="Forensic Audit"
                 >
                   <Layers className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => setViewMode('workspace')}
+                  className={cn(
+                    "p-2 rounded-lg transition-colors",
+                    viewMode === 'workspace' ? "bg-white/10 text-white" : "text-white/40 hover:text-white/60"
+                  )}
+                  title="Multi-Repo Workspace"
+                >
+                  <Settings className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -442,6 +479,89 @@ export function NeuralHUD() {
                     Initializing Swarm Collective...
                   </div>
                 )}
+              </div>
+            ) : viewMode === 'workspace' ? (
+              <div className="flex flex-col items-end gap-3 max-h-[70vh] overflow-y-auto no-scrollbar pr-2 pointer-events-auto">
+                <div className="w-96 bg-black/60 backdrop-blur-2xl border border-white/10 rounded-xl p-6 shadow-2xl">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-white/50 flex items-center gap-2">
+                      <Settings size={16} className="text-indigo-400" />
+                      Swarm Workspace
+                    </h3>
+                    <button 
+                      onClick={() => setViewMode('insights')}
+                      className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      <X size={16} className="text-white/40" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <h4 className="text-[10px] uppercase font-bold text-white/30">Active Project Contexts</h4>
+                      <div className="space-y-2">
+                        {activeProjects.map((path) => {
+                          const project = projects.find(p => p.path === path);
+                          return (
+                            <div key={path} className="p-3 rounded-lg bg-white/5 border border-white/5 flex items-center justify-between group">
+                              <div className="flex items-center gap-3 overflow-hidden">
+                                <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                                  <Layers size={14} />
+                                </div>
+                                <div className="overflow-hidden">
+                                  <div className="text-xs font-semibold text-white/90 truncate">{project?.name || path.split('/').pop()}</div>
+                                  <div className="text-[9px] text-white/40 truncate font-mono">{path}</div>
+                                </div>
+                              </div>
+                              <button 
+                                onClick={() => handleRemoveActiveProject(path)}
+                                className="p-1.5 hover:bg-red-500/20 rounded text-white/40 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          );
+                        })}
+                        {activeProjects.length === 0 && (
+                          <div className="text-center py-4 text-white/20 text-[10px] italic">No active external contexts</div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-white/5">
+                      <h4 className="text-[10px] uppercase font-bold text-white/30 mb-3">Available Projects</h4>
+                      <div className="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-1">
+                        {projects
+                          .filter(p => !activeProjects.includes(p.path))
+                          .map((p) => (
+                            <button
+                              key={p.path}
+                              onClick={() => handleAddActiveProject(p.path)}
+                              className="w-full p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-between group transition-all"
+                            >
+                              <div className="flex items-center gap-2 overflow-hidden text-left">
+                                <div className="w-6 h-6 rounded bg-white/5 flex items-center justify-center text-white/40">
+                                  <Plus size={12} />
+                                </div>
+                                <div className="overflow-hidden">
+                                  <div className="text-[11px] font-medium text-white/70 truncate">{p.name}</div>
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
+                      <div className="flex gap-2">
+                        <Info size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                        <p className="text-[10px] text-amber-500/80 leading-relaxed">
+                          Active projects define the search boundaries for the Swarm. Cross-repo reasoning allows agents to understand dependencies and patterns across all linked repositories.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <ForensicReport />
