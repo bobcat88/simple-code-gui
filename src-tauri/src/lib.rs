@@ -726,6 +726,8 @@ pub fn run() {
             gsd_engine::gsd_sync_memory,
             gsd_engine::gsd_update_policy,
             gsd_engine::gsd_identify_refactors,
+            gsd_engine::gsd_apply_refactor,
+            gsd_engine::gsd_get_refactor_details,
             rtk_check,
             rtk_get_stats,
             rtk_get_history,

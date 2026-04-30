@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use serde_json::{json, Value};
 
 use crate::ai_runtime::RuntimeManager;
 use crate::database::DatabaseManager;
 use crate::gsd_engine::types::{GsdPhase, GsdPlan, GsdStep, StepStatus};
 use crate::orchestration::OrchestrationState;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::sync::Mutex;
 
 pub mod executor;
@@ -264,6 +265,104 @@ pub async fn gsd_add_step(
     }
 
     Ok(step)
+}
+
+#[tauri::command]
+pub async fn gsd_apply_refactor(
+    app: AppHandle,
+    state: State<'_, Arc<GsdEngine>>,
+    orch: State<'_, OrchestrationState>,
+    ai_runtime: State<'_, Arc<RuntimeManager>>,
+    finding: Value,
+) -> Result<String, String> {
+    let project_path = orch.current_project_path.lock().clone();
+    let title = finding["title"].as_str().or(finding["symbolName"].as_str()).unwrap_or("Proactive Refactor");
+    let finding_json = finding.to_string();
+    let description = format!("{}\n\nFinding Context:\n{}", 
+        finding["description"].as_str().or(finding["reason"].as_str()).unwrap_or("Refactoring recommended by Swarm Architect."),
+        finding_json
+    );
+    
+    // 1. Create a unique plan ID
+    let plan_id = format!("refactor-{}", uuid::Uuid::new_v4());
+    
+    // 2. Build the plan structure
+    let mut metadata = HashMap::new();
+    metadata.insert("goal".to_string(), "Execute proactive refactoring".to_string());
+    metadata.insert("finding".to_string(), finding.to_string());
+    metadata.insert("author".to_string(), "Swarm Architect".to_string());
+    metadata.insert("complexity".to_string(), finding["risk"].as_str().unwrap_or("MEDIUM").to_string());
+
+    let mut plan = GsdPlan {
+        id: plan_id.clone(),
+        title: title.to_string(),
+        task_id: format!("refactor-{}", uuid::Uuid::new_v4()),
+        phases: vec![GsdPhase {
+            id: "refactor-phase-1".to_string(),
+            title: "Implementation".to_string(),
+            steps: vec![GsdStep {
+                id: "refactor-step-1".to_string(),
+                title: format!("Apply refactor: {}", title),
+                description: description.to_string(),
+                status: StepStatus::Pending,
+                result: None,
+                attempts: 0,
+                max_retries: 3,
+                wave_index: Some(0),
+                started_at: None,
+                completed_at: None,
+            }],
+            status: StepStatus::Pending,
+            started_at: None,
+            completed_at: None,
+        }],
+        metadata,
+    };
+
+    // 3. Register and save the plan
+    {
+        let mut plans = state.active_plans.lock().await;
+        plans.insert(plan_id.clone(), plan.clone());
+        if let Some(ref path) = project_path {
+            state.save_plan(path, &plan).await?;
+        }
+    }
+
+    // 4. Trigger execution
+    let plan_id_clone = plan_id.clone();
+    let app_clone = app.clone();
+
+    tauri::async_runtime::spawn(async move {
+        let state = app_clone.state::<Arc<GsdEngine>>();
+        let orch = app_clone.state::<OrchestrationState>();
+        let ai = app_clone.state::<Arc<RuntimeManager>>();
+        let _ = gsd_execute_plan(app_clone.clone(), state, orch, ai, plan_id_clone).await;
+    });
+
+    Ok(plan_id)
+}
+
+#[tauri::command]
+pub async fn gsd_get_refactor_details(
+    _state: State<'_, Arc<GsdEngine>>,
+    orch: State<'_, OrchestrationState>,
+    symbol_name: String,
+) -> Result<String, String> {
+    let project_path = orch.current_project_path.lock().clone();
+    
+    // Use gitnexus_context tool logic
+    let mut cmd = std::process::Command::new("gitnexus");
+    cmd.arg("context").arg("--name").arg(&symbol_name);
+    if let Some(ref path) = project_path {
+        cmd.arg("--repo").arg(path);
+    }
+    
+    let output = cmd.output().map_err(|e| e.to_string())?;
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    } else {
+        Err(String::from_utf8_lossy(&output.stderr).to_string())
+    }
 }
 
 #[tauri::command]

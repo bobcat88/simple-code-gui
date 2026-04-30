@@ -665,6 +665,9 @@ export interface Api {
   gsdListTools?: () => Promise<ToolInfo[]>
   gsdSwarmQueryMemory?: (query: string, patternType?: string, limit?: number) => Promise<SwarmKnowledge[]>
   gsdSwarmRecordPattern?: (patternType: string, patternKey: string, content: string, metadata?: string) => Promise<void>
+  gsdIdentifyRefactors?: () => Promise<string>
+  gsdApplyRefactor?: (finding: any) => Promise<string>
+  gsdGetRefactorDetails?: (symbolName: string) => Promise<string>
 
   // ==========================================================================
   // Vector Engine

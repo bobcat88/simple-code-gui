@@ -565,6 +565,14 @@ export class TauriBackend implements ExtendedApi {
     return await tauriIpc.gsdIdentifyRefactors();
   }
 
+  async gsdApplyRefactor(finding: any): Promise<string> {
+    return await tauriIpc.gsdApplyRefactor(finding);
+  }
+
+  async gsdGetRefactorDetails(symbolName: string): Promise<string> {
+    return await tauriIpc.gsdGetRefactorDetails(symbolName);
+  }
+
   // Brainstorm Companion
   async gsdListSeeds(cwd: string): Promise<GsdSeed[]> {
     return await tauriIpc.gsdListSeeds(cwd);

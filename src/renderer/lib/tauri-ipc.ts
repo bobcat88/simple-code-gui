@@ -337,6 +337,10 @@ export const tauriIpc = {
     invoke<any[]>('gsd_list_tools'),
   gsdIdentifyRefactors: () =>
     invoke<string>('gsd_identify_refactors'),
+  gsdApplyRefactor: (finding: any) =>
+    invoke<string>('gsd_apply_refactor', { finding }),
+  gsdGetRefactorDetails: (symbolName: string) =>
+    invoke<string>('gsd_get_refactor_details', { symbolName }),
   gsdSwarmQueryMemory: (query: string, patternType?: string, limit?: number) =>
     invoke<any[]>('gsd_swarm_query_memory', { query, patternType, limit }),
   gsdSwarmRecordPattern: (patternType: string, patternKey: string, content: string, metadata?: string) =>
