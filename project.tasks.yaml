@@ -354,7 +354,7 @@
   type: task
   spec_ref: "@idea-inbox"
   plan_ref: "@plan-plan-brainstorm-companion-implementation"
-  status: in_progress
+  status: pending_review
   blocked_by: []
   depends_on: []
   priority: 2
@@ -365,6 +365,7 @@
   todos_count: 0
   created_at: 2026-04-29T06:07:54.589Z
   started_at: 2026-05-01T13:25:55.888Z
+  submitted_at: 2026-05-01T13:25:58.683Z
 - _ulid: 01KQBXKS73Q1K47897QDMWVRSD
   slugs:
     - task-spec-draft-editor-frontend
