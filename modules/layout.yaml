@@ -76,7 +76,7 @@ features:
       adjacent tiles. Visual edge highlighting on hover.
     status:
       maturity: draft
-      implementation: not_started
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
