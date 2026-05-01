@@ -1076,3 +1076,17 @@
   notes_count: 1
   todos_count: 0
   created_at: 2026-05-01T17:27:41.078Z
+- _ulid: 01KQJ99ZJBED7WG7VTVCRP5MN2
+  slugs:
+    - task-speech-to-text-input
+  title: "Implement: Speech-to-Text Input"
+  type: task
+  spec_ref: "@stt"
+  status: pending
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags: []
+  notes_count: 1
+  todos_count: 0
+  created_at: 2026-05-01T17:27:42.923Z
