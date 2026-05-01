@@ -5,8 +5,9 @@ title: "Implement: HTTP Prompt API"
 type: task
 spec_ref: "@prompt-api"
 derivation: auto
-status: pending_review
+status: completed
 blocked_by: []
+closed_reason: "Audit: synchronization with existing implementation"
 depends_on: []
 context: []
 priority: 3
@@ -51,7 +52,21 @@ history:
         previous: null
     command: task-submit
     timestamp: 2026-05-01T17:28:34.028Z
+  - author: Johan.P
+    changes:
+      status:
+        new: completed
+        previous: pending_review
+      closed_reason:
+        new: "Audit: synchronization with existing implementation"
+        previous: null
+      completed_at:
+        new: 2026-05-01T17:28:35.932Z
+        previous: null
+    command: task-complete
+    timestamp: 2026-05-01T17:28:35.939Z
 created_at: 2026-05-01T17:27:46.781Z
 started_at: 2026-05-01T17:28:31.266Z
 submitted_at: 2026-05-01T17:28:34.028Z
+completed_at: 2026-05-01T17:28:35.932Z
 todos: []
