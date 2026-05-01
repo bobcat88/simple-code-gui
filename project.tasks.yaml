@@ -1088,7 +1088,7 @@
   title: "Implement: Speech-to-Text Input"
   type: task
   spec_ref: "@stt"
-  status: pending_review
+  status: completed
   blocked_by: []
   depends_on: []
   priority: 3
@@ -1098,6 +1098,7 @@
   created_at: 2026-05-01T17:27:42.923Z
   started_at: 2026-05-01T17:28:16.158Z
   submitted_at: 2026-05-01T17:28:18.983Z
+  completed_at: 2026-05-01T17:28:20.997Z
 - _ulid: 01KQJ9A1H3RARBFC66E1SJFSSE
   slugs:
     - task-beads-task-backend
