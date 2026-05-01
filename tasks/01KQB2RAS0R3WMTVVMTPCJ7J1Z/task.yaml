@@ -6,13 +6,21 @@ type: task
 spec_ref: "@01KK67BGNHP8DWNG777BRMSR8A"
 meta_ref: null
 plan_ref: null
-status: in_progress
+status: pending_review
 blocked_by: []
 depends_on: []
 context: []
 priority: 3
 tags: []
 vcs_refs: []
+submission_linkage:
+  review_url: null
+  branch: feature/phase-29-swarm-governance
+  captured_at: 2026-05-01T17:18:50.511Z
+  commit: 14df5b59369422b64317f4d97faef91d2cf4d848
+  remote: origin
+  remote_url: https://github.com/bobcat88/simple-code-gui
+  upstream_ref: refs/heads/feature/phase-29-swarm-governance
 history:
   - author: Johan.P
     changes:
@@ -24,6 +32,27 @@ history:
         previous: null
     command: task-start
     timestamp: 2026-05-01T17:18:36.112Z
+  - author: Johan.P
+    changes:
+      status:
+        new: pending_review
+        previous: in_progress
+      submission_linkage:
+        new:
+          review_url: null
+          branch: feature/phase-29-swarm-governance
+          captured_at: 2026-05-01T17:18:50.511Z
+          commit: 14df5b59369422b64317f4d97faef91d2cf4d848
+          remote: origin
+          remote_url: https://github.com/bobcat88/simple-code-gui
+          upstream_ref: refs/heads/feature/phase-29-swarm-governance
+        previous: null
+      submitted_at:
+        new: 2026-05-01T17:18:50.516Z
+        previous: null
+    command: task-submit
+    timestamp: 2026-05-01T17:18:50.516Z
 created_at: 2026-04-28T22:18:32.096Z
 started_at: 2026-05-01T17:18:36.111Z
+submitted_at: 2026-05-01T17:18:50.516Z
 todos: []
