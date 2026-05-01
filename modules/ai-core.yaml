@@ -302,7 +302,7 @@ features:
         description: Calculation and display of tokens saved by using RTK, MCP, and local intelligence.
         status:
           maturity: draft
-          implementation: not_started
+          implementation: implemented
         acceptance_criteria:
           - given: the Savings Telemetry (RTK/MCP) is implemented
             id: ac-gen-1
