@@ -379,6 +379,8 @@ export const tauriIpc = {
     invoke<any[]>('gsd_list_seeds', { cwd }),
   gsdPlantSeed: (cwd: string, seed: any) =>
     invoke<void>('gsd_plant_seed', { cwd, seed }),
+  gsdUpdateSeedStatus: (cwd: string, seedId: string, status: string) =>
+    invoke<void>('gsd_update_seed_status', { cwd, seed_id: seedId, status }),
   kspecListDrafts: (cwd: string) =>
     invoke<any[]>('kspec_list_drafts', { cwd }),
   kspecWriteDraft: (cwd: string, moduleId: string, content: string) =>

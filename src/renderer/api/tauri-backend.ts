@@ -584,6 +584,10 @@ export class TauriBackend implements ExtendedApi {
     await tauriIpc.gsdPlantSeed(cwd, seed);
   }
 
+  async gsdUpdateSeedStatus(cwd: string, seedId: string, status: string): Promise<void> {
+    await tauriIpc.gsdUpdateSeedStatus(cwd, seedId, status);
+  }
+
   async kspecListDrafts(cwd: string): Promise<KSpecDraft[]> {
     return await tauriIpc.kspecListDrafts(cwd);
   }

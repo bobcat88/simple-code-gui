@@ -65,6 +65,12 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
       const moduleId = (seed.slug || seed.title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'brainstorm-seed'
       const content = `title: ${seed.title}\ntype: module\nstatus:\n  maturity: draft\ndescription: ${seed.why || 'Draft created from a brainstorm seed.'}\nacceptance_criteria:\n  - id: ac-1\n    given: ${seed.title}\n    when: this seed is promoted into implementation work\n    then: the desired outcome is specified and testable\n`
       await api.kspecWriteDraft(projectPath, moduleId, content)
+      
+      // Update seed status to reflected it's been promoted
+      if (seed.slug) {
+        await api.gsdUpdateSeedStatus?.(projectPath, seed.slug, 'promoted_to_draft')
+      }
+
       setActiveView('drafts')
       await refresh()
     } catch (err) {
@@ -85,6 +91,12 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
       ].filter(Boolean).join('\n\n')
 
       await api.beadsCreate(projectPath, seed.title, description, 2, 'task', 'brainstorm,seed')
+      
+      // Update seed status to reflected it's been promoted
+      if (seed.slug) {
+        await api.gsdUpdateSeedStatus?.(projectPath, seed.slug, 'promoted_to_task')
+      }
+
       await refresh()
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Failed to promote seed to Beads task.')

@@ -335,7 +335,7 @@ export interface GsdSeed {
   slug: string
   why: string
   whenToSurface: string
-  status: 'planted' | 'sprouted' | 'archived'
+  status: 'planted' | 'sprouted' | 'archived' | 'promoted_to_draft' | 'promoted_to_task'
   timestamp: number
   createdAt?: string
 }
@@ -680,6 +680,7 @@ export interface Api {
   // Brainstorm Companion
   gsdListSeeds?: (cwd: string) => Promise<GsdSeed[]>
   gsdPlantSeed?: (cwd: string, seed: GsdSeed) => Promise<void>
+  gsdUpdateSeedStatus?: (cwd: string, seedId: string, status: string) => Promise<void>
   kspecListDrafts?: (cwd: string) => Promise<KSpecDraft[]>
   kspecWriteDraft?: (cwd: string, moduleId: string, content: string) => Promise<void>
   brainstormLoadCanvas?: (cwd: string) => Promise<BrainstormCanvas>

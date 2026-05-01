@@ -957,7 +957,7 @@ pub async fn broadcast_agent_message(
 
 #[tauri::command]
 pub async fn gsd_list_seeds(cwd: String) -> Result<Vec<GsdSeed>, String> {
-    let seeds_dir = std::path::Path::new(&cwd).join(".planning").join("seeds");
+    let seeds_dir = std::path::Path::new(&cwd).join(".kspec").join("seeds");
     if !seeds_dir.exists() {
         return Ok(Vec::new());
     }
@@ -1012,7 +1012,7 @@ pub async fn gsd_list_seeds(cwd: String) -> Result<Vec<GsdSeed>, String> {
 
 #[tauri::command]
 pub async fn gsd_plant_seed(cwd: String, seed: GsdSeed) -> Result<(), String> {
-    let seeds_dir = std::path::Path::new(&cwd).join(".planning").join("seeds");
+    let seeds_dir = std::path::Path::new(&cwd).join(".kspec").join("seeds");
     std::fs::create_dir_all(&seeds_dir).map_err(|e| e.to_string())?;
 
     let filename = if seed.slug.trim().is_empty() {
@@ -1035,6 +1035,36 @@ pub async fn gsd_plant_seed(cwd: String, seed: GsdSeed) -> Result<(), String> {
     std::fs::write(path, content).map_err(|e| e.to_string())?;
     Ok(())
 }
+
+#[tauri::command]
+pub async fn gsd_update_seed_status(cwd: String, seed_id: String, status: String) -> Result<(), String> {
+    let seeds_dir = std::path::Path::new(&cwd).join(".kspec").join("seeds");
+    let path = seeds_dir.join(format!("{}.md", seed_id));
+    
+    if !path.exists() {
+        return Err(format!("Seed not found: {}", seed_id));
+    }
+
+    let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    let mut lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
+    let mut updated = false;
+
+    for line in lines.iter_mut() {
+        if line.starts_with("status: ") {
+            *line = format!("status: {}", status);
+            updated = true;
+            break;
+        }
+    }
+
+    if !updated {
+        lines.push(format!("status: {}", status));
+    }
+
+    std::fs::write(path, lines.join("\n")).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 
 #[tauri::command]
 pub async fn kspec_list_drafts(cwd: String) -> Result<Vec<KSpecDraft>, String> {

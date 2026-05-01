@@ -9,7 +9,8 @@ import {
   Lightbulb,
   FileEdit,
   ChevronRight,
-  Loader2
+  Loader2,
+  Check
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import type { GsdSeed, ExtendedApi } from '../../api/types'
@@ -138,46 +139,88 @@ export function IdeaInbox({
             <div className="h-12 bg-white/5 rounded-xl animate-pulse" />
           </div>
         ) : seeds.length > 0 ? (
-          seeds.map((seed, i) => (
-            <div 
-              key={i} 
-              className="p-3 brainstorm-card group cursor-default"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-white/90 truncate group-hover:text-indigo-300 transition-colors">
-                    {seed.title}
-                  </div>
-                  {seed.why && (
-                    <div className="text-[10px] text-white/40 line-clamp-2 mt-1 italic">
-                      "{seed.why}"
+          seeds.map((seed, i) => {
+            const isPromoted = seed.status === 'promoted_to_draft' || seed.status === 'promoted_to_task'
+            const seedId = getSeedId(seed)
+            
+            return (
+              <div 
+                key={i} 
+                className={cn(
+                  "p-3 brainstorm-card group cursor-default transition-all duration-300",
+                  isPromoted && "opacity-70 grayscale-[0.2] border-emerald-500/10 bg-emerald-500/[0.02]"
+                )}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    {isPromoted && (
+                      <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 text-[8px] font-bold uppercase tracking-tight border border-emerald-500/20 mb-2 w-fit animate-in fade-in zoom-in-95 duration-500">
+                        <Check size={8} /> Promoted
+                      </div>
+                    )}
+                    <div className={cn(
+                      "text-xs font-semibold truncate transition-colors",
+                      isPromoted ? "text-emerald-400/80" : "text-white/90 group-hover:text-indigo-300"
+                    )}>
+                      {seed.title}
                     </div>
-                  )}
+                    {seed.why && (
+                      <div className="text-[10px] text-white/40 line-clamp-2 mt-1 italic">
+                        "{seed.why}"
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-[9px] font-mono text-white/20 shrink-0">
+                    {new Date(getSeedCreatedAt(seed)).toLocaleDateString()}
+                  </div>
                 </div>
-                <div className="text-[9px] font-mono text-white/20 shrink-0">
-                  {new Date(getSeedCreatedAt(seed)).toLocaleDateString()}
+                <div className="flex items-center gap-2 mt-3">
+                  <span className={cn(
+                    "px-1.5 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-tight border transition-colors",
+                    isPromoted 
+                      ? "bg-emerald-500/5 text-emerald-500/40 border-emerald-500/10" 
+                      : "bg-indigo-500/10 text-indigo-400 border-indigo-500/10"
+                  )}>
+                    {getSeedSurface(seed)}
+                  </span>
+                  
+                  <button
+                    onClick={() => onSeedToDraft(seed)}
+                    disabled={isPromoted}
+                    className={cn(
+                      "ml-auto text-[9px] flex items-center gap-1 transition-all",
+                      isPromoted 
+                        ? "text-emerald-400/40 cursor-default" 
+                        : "text-white/30 hover:text-purple-300 opacity-0 group-hover:opacity-100"
+                    )}
+                  >
+                    {seed.status === 'promoted_to_draft' ? 'Converted to Spec' : 'Draft Spec'} 
+                    {seed.status === 'promoted_to_draft' ? <Check size={10} /> : <FileEdit size={10} />}
+                  </button>
+                  
+                  <button
+                    onClick={() => handlePromoteToTask(seed)}
+                    disabled={isPromoted || promotionSeedId === seedId}
+                    className={cn(
+                      "text-[9px] flex items-center gap-1 transition-all disabled:opacity-50",
+                      isPromoted 
+                        ? "text-emerald-400/40 cursor-default" 
+                        : "text-indigo-400/80 hover:text-indigo-300 opacity-0 group-hover:opacity-100"
+                    )}
+                  >
+                    {promotionSeedId === seedId ? (
+                      <Loader2 size={10} className="animate-spin" />
+                    ) : seed.status === 'promoted_to_task' ? (
+                      'Converted to Task'
+                    ) : (
+                      'Promote to Beads'
+                    )}
+                    {isPromoted ? <Check size={10} /> : <ChevronRight size={10} />}
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center gap-2 mt-3">
-                <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 text-[8px] font-bold uppercase tracking-tight border border-indigo-500/10">
-                  {getSeedSurface(seed)}
-                </span>
-                <button
-                  onClick={() => onSeedToDraft(seed)}
-                  className="ml-auto text-[9px] text-white/30 hover:text-purple-300 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all"
-                >
-                  Draft Spec <FileEdit size={10} />
-                </button>
-                <button
-                  onClick={() => handlePromoteToTask(seed)}
-                  disabled={promotionSeedId === getSeedId(seed)}
-                  className="text-[9px] text-indigo-400/80 hover:text-indigo-300 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
-                >
-                  {promotionSeedId === getSeedId(seed) ? <Loader2 size={10} className="animate-spin" /> : 'Promote to Beads'} <ChevronRight size={10} />
-                </button>
-              </div>
-            </div>
-          ))
+            )
+          })
         ) : (
           <div className="flex flex-col items-center justify-center p-8 text-center bg-white/[0.02] rounded-2xl border border-dashed border-white/5">
             <Sparkles size={24} className="text-white/10 mb-2" />

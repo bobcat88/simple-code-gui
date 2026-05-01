@@ -41,7 +41,7 @@ use orchestration::{
     set_current_project,
     brainstorm_load_canvas, brainstorm_save_canvas, broadcast_agent_message, get_agent_messages,
     create_swarm_snapshot_file, hydrate_swarm_from_snapshots,
-    gsd_list_seeds, gsd_plant_seed, kspec_list_drafts, kspec_write_draft,
+    gsd_list_seeds, gsd_plant_seed, gsd_update_seed_status, kspec_list_drafts, kspec_write_draft,
     brainstorm_agentic_sketch, brainstorm_architect_review, brainstorm_save_topology,
 };
 use pty_manager::PtyManager;
@@ -771,7 +771,8 @@ pub fn run() {
             brainstorm_save_canvas,
             brainstorm_agentic_sketch,
             brainstorm_architect_review,
-            brainstorm_save_topology
+            brainstorm_save_topology,
+            gsd_update_seed_status
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
