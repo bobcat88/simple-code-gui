@@ -6,7 +6,7 @@ type: module
 description: HTTP API server for prompt injection and external control.
 status:
   maturity: draft
-  implementation: in_progress
+  implementation: implemented
 depends_on: []
 implements: []
 relates_to: []
