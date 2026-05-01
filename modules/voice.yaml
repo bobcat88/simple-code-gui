@@ -6,7 +6,7 @@ type: module
 description: Speech-to-text input (Whisper) for hands-free terminal interaction.
 status:
   maturity: draft
-  implementation: in_progress
+  implementation: implemented
 depends_on: []
 implements: []
 relates_to: []
