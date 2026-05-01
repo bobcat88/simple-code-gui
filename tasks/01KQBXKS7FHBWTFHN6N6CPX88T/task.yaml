@@ -9,7 +9,7 @@ description: >
 spec_ref: "@promotion-workflow"
 plan_ref: "@plan-plan-brainstorm-companion-implementation"
 origin: derived
-status: in_progress
+status: pending_review
 blocked_by: []
 depends_on: []
 context: []
@@ -20,6 +20,14 @@ tags:
   - kspec
   - gsd
 vcs_refs: []
+submission_linkage:
+  review_url: null
+  branch: feature/phase-29-swarm-governance
+  captured_at: 2026-05-01T13:26:10.697Z
+  commit: 2bb78c0248464977702a786fe539b28adc7430a2
+  remote: origin
+  remote_url: https://github.com/bobcat88/simple-code-gui
+  upstream_ref: refs/heads/feature/phase-29-swarm-governance
 history:
   - author: Johan.P
     changes:
@@ -31,6 +39,27 @@ history:
         previous: null
     command: task-start
     timestamp: 2026-05-01T13:26:08.870Z
+  - author: Johan.P
+    changes:
+      status:
+        new: pending_review
+        previous: in_progress
+      submission_linkage:
+        new:
+          review_url: null
+          branch: feature/phase-29-swarm-governance
+          captured_at: 2026-05-01T13:26:10.697Z
+          commit: 2bb78c0248464977702a786fe539b28adc7430a2
+          remote: origin
+          remote_url: https://github.com/bobcat88/simple-code-gui
+          upstream_ref: refs/heads/feature/phase-29-swarm-governance
+        previous: null
+      submitted_at:
+        new: 2026-05-01T13:26:10.701Z
+        previous: null
+    command: task-submit
+    timestamp: 2026-05-01T13:26:10.702Z
 created_at: 2026-04-29T06:07:54.607Z
 started_at: 2026-05-01T13:26:08.869Z
+submitted_at: 2026-05-01T13:26:10.701Z
 todos: []
