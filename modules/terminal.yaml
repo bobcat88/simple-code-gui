@@ -48,7 +48,7 @@ constraints:
       interpolation. Task IDs validated with strict regex.
     status:
       maturity: draft
-      implementation: not_started
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
