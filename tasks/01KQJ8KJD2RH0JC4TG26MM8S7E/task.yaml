@@ -1,0 +1,19 @@
+_ulid: 01KQJ8KJD2RH0JC4TG26MM8S7E
+slugs:
+  - task-task-panel-ui
+title: "Foundation: Task Panel UI"
+type: task
+spec_ref: "@01KK67D5YWCHVC8RJGVH5MGVKD"
+status: completed
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags:
+  - foundation
+vcs_refs: []
+created_at: 2026-05-01T17:15:09.373Z
+started_at: 2026-05-01T17:15:09.373Z
+completed_at: 2026-05-01T17:15:09.373Z
+todos: []
+automation: eligible

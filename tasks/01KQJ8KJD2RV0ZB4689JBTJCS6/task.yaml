@@ -1,0 +1,19 @@
+_ulid: 01KQJ8KJD2RV0ZB4689JBTJCS6
+slugs:
+  - task-tile-resizing
+title: "Foundation: Tile Resizing"
+type: task
+spec_ref: "@01KK67C5G8P9DBB3ZC020NS5MQ"
+status: completed
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags:
+  - foundation
+vcs_refs: []
+created_at: 2026-05-01T17:15:09.373Z
+started_at: 2026-05-01T17:15:09.373Z
+completed_at: 2026-05-01T17:15:09.373Z
+todos: []
+automation: eligible

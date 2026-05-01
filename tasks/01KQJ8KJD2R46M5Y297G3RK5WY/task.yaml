@@ -1,0 +1,19 @@
+_ulid: 01KQJ8KJD2R46M5Y297G3RK5WY
+slugs:
+  - task-cli-tool-installation
+title: "Foundation: CLI Tool Installation"
+type: task
+spec_ref: "@01KK67BXW9RQP8D62KHVSF3CW9"
+status: completed
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags:
+  - foundation
+vcs_refs: []
+created_at: 2026-05-01T17:15:09.373Z
+started_at: 2026-05-01T17:15:09.373Z
+completed_at: 2026-05-01T17:15:09.373Z
+todos: []
+automation: eligible

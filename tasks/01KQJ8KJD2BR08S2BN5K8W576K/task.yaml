@@ -1,0 +1,19 @@
+_ulid: 01KQJ8KJD2BR08S2BN5K8W576K
+slugs:
+  - task-kspec-task-backend
+title: "Foundation: Kspec Task Backend"
+type: task
+spec_ref: "@01KK67D2TP6ANDE0XJR4WWXKAF"
+status: completed
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags:
+  - foundation
+vcs_refs: []
+created_at: 2026-05-01T17:15:09.373Z
+started_at: 2026-05-01T17:15:09.373Z
+completed_at: 2026-05-01T17:15:09.373Z
+todos: []
+automation: eligible

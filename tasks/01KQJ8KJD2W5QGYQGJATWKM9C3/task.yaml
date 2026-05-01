@@ -1,0 +1,19 @@
+_ulid: 01KQJ8KJD2W5QGYQGJATWKM9C3
+slugs:
+  - task-real-time-activity-feed
+title: "Foundation: Real-time Activity Feed"
+type: task
+spec_ref: "@01KPNWY9P99S2EB736NTXXJM4V"
+status: completed
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags:
+  - foundation
+vcs_refs: []
+created_at: 2026-05-01T17:15:09.373Z
+started_at: 2026-05-01T17:15:09.373Z
+completed_at: 2026-05-01T17:15:09.373Z
+todos: []
+automation: eligible

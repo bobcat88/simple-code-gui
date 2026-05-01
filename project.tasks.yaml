@@ -432,3 +432,615 @@
   started_at: 2026-05-01T13:26:08.869Z
   submitted_at: 2026-05-01T13:26:10.701Z
   completed_at: 2026-05-01T13:26:26.713Z
+- _ulid: 01KQJ8KJD1GWR7B38KFVQYPB6K
+  slugs:
+    - task-multi-backend-support
+  title: "Foundation: Multi-Backend Support"
+  type: task
+  spec_ref: "@01KK67BRJR4864JXD28BE8HNK2"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2VAAACBY3MFK02S0T
+  slugs:
+    - task-runtime-backend-switching
+  title: "Foundation: Runtime Backend Switching"
+  type: task
+  spec_ref: "@01KK67BWF9SHA4CYVW2K38CWKK"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2R46M5Y297G3RK5WY
+  slugs:
+    - task-cli-tool-installation
+  title: "Foundation: CLI Tool Installation"
+  type: task
+  spec_ref: "@01KK67BXW9RQP8D62KHVSF3CW9"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD25KR5051XGZH76TRM
+  slugs:
+    - task-context-bridge-isolation
+  title: "Foundation: Context Bridge Isolation"
+  type: task
+  spec_ref: "@01KK67F1A0FJC86K6NECKWHRA3"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2BD9WTD66V3ZP4PT5
+  slugs:
+    - task-shell-injection-prevention
+  title: "Foundation: Shell Injection Prevention"
+  type: task
+  spec_ref: "@01KK67F39FMSKW6S55K009Q60A"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2SS5H0Q4E78Z7E2NR
+  slugs:
+    - task-tile-drag---drop
+  title: "Foundation: Tile Drag & Drop"
+  type: task
+  spec_ref: "@01KK67C43QN01EYHYHABV8BBVE"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2RV0ZB4689JBTJCS6
+  slugs:
+    - task-tile-resizing
+  title: "Foundation: Tile Resizing"
+  type: task
+  spec_ref: "@01KK67C5G8P9DBB3ZC020NS5MQ"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2996DEBTE44N30DP3
+  slugs:
+    - task-canvas-panning
+  title: "Foundation: Canvas Panning"
+  type: task
+  spec_ref: "@01KK67C74KF39CXGH08EAA3089"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2NKX9Z66TG76P1JNV
+  slugs:
+    - task-sidebar-navigation
+  title: "Foundation: Sidebar Navigation"
+  type: task
+  spec_ref: "@01KK67C9AQPXS2BZXTN88KXCNT"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2KKD658WBAW1TS5MV
+  slugs:
+    - task-tabbed-view-mode
+  title: "Foundation: Tabbed View Mode"
+  type: task
+  spec_ref: "@01KK67CAKFEEA1S2W21BYEESQA"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2B2E7WRQ07J2HKB4M
+  slugs:
+    - task-advanced-workspace-control
+  title: "Foundation: Advanced Workspace Control"
+  type: task
+  spec_ref: "@01KPNWWWEZYCZCYNWMBNYWJWWN"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2V8S7G45JPH2ZX8MR
+  slugs:
+    - task-home-usage-summary
+  title: "Foundation: Home Usage Summary"
+  type: task
+  spec_ref: "@01KPNWYJ0X2PM2NVYDP2C4VQBJ"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2BR08S2BN5K8W576K
+  slugs:
+    - task-kspec-task-backend
+  title: "Foundation: Kspec Task Backend"
+  type: task
+  spec_ref: "@01KK67D2TP6ANDE0XJR4WWXKAF"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2ADCCAQBJ03ERRA8M
+  slugs:
+    - task-unified-task-adapter
+  title: "Foundation: Unified Task Adapter"
+  type: task
+  spec_ref: "@01KK67D43YDQQSPB0N6QEN22Q4"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2RH0JC4TG26MM8S7E
+  slugs:
+    - task-task-panel-ui
+  title: "Foundation: Task Panel UI"
+  type: task
+  spec_ref: "@01KK67D5YWCHVC8RJGVH5MGVKD"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD20ME9CQPKCVF6ST37
+  slugs:
+    - task-advanced-orchestration-ui
+  title: "Foundation: Advanced Orchestration UI"
+  type: task
+  spec_ref: "@01KPNWWTJ4QM238RFJP3APGK9P"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2W5QGYQGJATWKM9C3
+  slugs:
+    - task-real-time-activity-feed
+  title: "Foundation: Real-time Activity Feed"
+  type: task
+  spec_ref: "@01KPNWY9P99S2EB736NTXXJM4V"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2N9NK2FD3F0Z3VFP0
+  slugs:
+    - task-agent-status-cards
+  title: "Foundation: Agent Status Cards"
+  type: task
+  spec_ref: "@01KPNWYBDWVTS6N37AHF3MWPW6"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD285Y3W95TTEAFPH2T
+  slugs:
+    - task-settings---theming
+  title: "Foundation: Settings & Theming"
+  type: task
+  spec_ref: "@01KK67DQ85HYPGA16RS2R2WB1K"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2FP6X09M6EFHJ6E28
+  slugs:
+    - task-workspace-persistence
+  title: "Foundation: Workspace Persistence"
+  type: task
+  spec_ref: "@01KK67DSGPZC2E734KX4377R9S"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2P761VKZJDJ0RQZ3V
+  slugs:
+    - task-auto-update
+  title: "Foundation: Auto-Update"
+  type: task
+  spec_ref: "@01KK67DTW3HCHEA5G8TSNDK5FX"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD21TD37M2WFBN1W9V6
+  slugs:
+    - task-system-operational-telemetry
+  title: "Foundation: System Operational Telemetry"
+  type: task
+  spec_ref: "@01KPNWWYCAPS2Z1VZNRXC3QRNQ"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2PW2BTSFJRXWHZJ9A
+  slugs:
+    - task-background-jobs-visibility
+  title: "Foundation: Background Jobs Visibility"
+  type: task
+  spec_ref: "@01KPNWYNG72RVJCSF9M81S3P4G"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2D6D45CQJ2K5C93RE
+  slugs:
+    - task-provider-abstraction-interface
+  title: "Foundation: Provider Abstraction Interface"
+  type: task
+  spec_ref: "@01KPNWT9DJJYXS5J0HCP3WJ0R6"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD2BS34ZNJN3K1TJBPW
+  slugs:
+    - task-auth---api-key-management
+  title: "Foundation: Auth & API Key Management"
+  type: task
+  spec_ref: "@01KPNWTB6935QVDS6ANRD4PQ9M"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD3CG0YHGSGP8F89T6G
+  slugs:
+    - task-model-routing-policies
+  title: "Foundation: Model Routing Policies"
+  type: task
+  spec_ref: "@01KPNWTCV0CY2KPET8VX2X699P"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD3NWBWKC6AV01SRG6V
+  slugs:
+    - task-named-model-plans
+  title: "Foundation: Named Model Plans"
+  type: task
+  spec_ref: "@01KPNWTEKMYMVHRE4AB0AE6EF5"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD3GRQAMWKZMTFEQ0HT
+  slugs:
+    - task-phase-based-decomposition
+  title: "Foundation: Phase-based Decomposition"
+  type: task
+  spec_ref: "@01KPNWTGE0H4SR3YYF0YNTHT2D"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD3R76V6GF0QH64BQ9V
+  slugs:
+    - task-wave-based-execution
+  title: "Foundation: Wave-based Execution"
+  type: task
+  spec_ref: "@01KPNWTJ4624RN9A805Q6P3GDN"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD3SPFM6PY4P32SKE9Q
+  slugs:
+    - task-verification---retry-loop
+  title: "Foundation: Verification & Retry Loop"
+  type: task
+  spec_ref: "@01KPNWTKQVEQPD9KC2V24BVMS7"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD35PY7CPMF2P2WSN4F
+  slugs:
+    - task-execution-state-persistence
+  title: "Foundation: Execution State Persistence"
+  type: task
+  spec_ref: "@01KPNWTNCEYS2WKY5VPT18MZTH"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD3FNSYGJ6CBTHRNTJE
+  slugs:
+    - task-token-economics---telemetry
+  title: "Foundation: Token Economics & Telemetry"
+  type: task
+  spec_ref: "@01KPNWRA78HGZ4D06Q26CY9FKY"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD3K3DHBMSY4HPBQF07
+  slugs:
+    - task-savings-telemetry--rtk-mcp-
+  title: "Foundation: Savings Telemetry (RTK/MCP)"
+  type: task
+  spec_ref: "@01KPNWTRXKAQ76CQYFP8CA18X9"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible
+- _ulid: 01KQJ8KJD3QRNDBSYWPPW0E6R1
+  slugs:
+    - task-budget---rate-limits
+  title: "Foundation: Budget & Rate Limits"
+  type: task
+  spec_ref: "@01KPNWTW6207547YKZBEXCN1R1"
+  status: completed
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags:
+    - foundation
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-01T17:15:09.373Z
+  started_at: 2026-05-01T17:15:09.373Z
+  completed_at: 2026-05-01T17:15:09.373Z
+  automation: eligible

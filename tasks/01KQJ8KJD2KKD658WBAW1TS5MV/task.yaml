@@ -1,0 +1,19 @@
+_ulid: 01KQJ8KJD2KKD658WBAW1TS5MV
+slugs:
+  - task-tabbed-view-mode
+title: "Foundation: Tabbed View Mode"
+type: task
+spec_ref: "@01KK67CAKFEEA1S2W21BYEESQA"
+status: completed
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags:
+  - foundation
+vcs_refs: []
+created_at: 2026-05-01T17:15:09.373Z
+started_at: 2026-05-01T17:15:09.373Z
+completed_at: 2026-05-01T17:15:09.373Z
+todos: []
+automation: eligible

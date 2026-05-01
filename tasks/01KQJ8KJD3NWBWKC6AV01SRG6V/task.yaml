@@ -1,0 +1,19 @@
+_ulid: 01KQJ8KJD3NWBWKC6AV01SRG6V
+slugs:
+  - task-named-model-plans
+title: "Foundation: Named Model Plans"
+type: task
+spec_ref: "@01KPNWTEKMYMVHRE4AB0AE6EF5"
+status: completed
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags:
+  - foundation
+vcs_refs: []
+created_at: 2026-05-01T17:15:09.373Z
+started_at: 2026-05-01T17:15:09.373Z
+completed_at: 2026-05-01T17:15:09.373Z
+todos: []
+automation: eligible

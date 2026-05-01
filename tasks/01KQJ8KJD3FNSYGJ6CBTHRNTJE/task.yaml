@@ -1,0 +1,19 @@
+_ulid: 01KQJ8KJD3FNSYGJ6CBTHRNTJE
+slugs:
+  - task-token-economics---telemetry
+title: "Foundation: Token Economics & Telemetry"
+type: task
+spec_ref: "@01KPNWRA78HGZ4D06Q26CY9FKY"
+status: completed
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags:
+  - foundation
+vcs_refs: []
+created_at: 2026-05-01T17:15:09.373Z
+started_at: 2026-05-01T17:15:09.373Z
+completed_at: 2026-05-01T17:15:09.373Z
+todos: []
+automation: eligible

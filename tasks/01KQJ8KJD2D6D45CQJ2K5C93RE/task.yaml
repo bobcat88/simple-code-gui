@@ -1,0 +1,19 @@
+_ulid: 01KQJ8KJD2D6D45CQJ2K5C93RE
+slugs:
+  - task-provider-abstraction-interface
+title: "Foundation: Provider Abstraction Interface"
+type: task
+spec_ref: "@01KPNWT9DJJYXS5J0HCP3WJ0R6"
+status: completed
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags:
+  - foundation
+vcs_refs: []
+created_at: 2026-05-01T17:15:09.373Z
+started_at: 2026-05-01T17:15:09.373Z
+completed_at: 2026-05-01T17:15:09.373Z
+todos: []
+automation: eligible

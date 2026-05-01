@@ -1,0 +1,19 @@
+_ulid: 01KQJ8KJD3R76V6GF0QH64BQ9V
+slugs:
+  - task-wave-based-execution
+title: "Foundation: Wave-based Execution"
+type: task
+spec_ref: "@01KPNWTJ4624RN9A805Q6P3GDN"
+status: completed
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags:
+  - foundation
+vcs_refs: []
+created_at: 2026-05-01T17:15:09.373Z
+started_at: 2026-05-01T17:15:09.373Z
+completed_at: 2026-05-01T17:15:09.373Z
+todos: []
+automation: eligible

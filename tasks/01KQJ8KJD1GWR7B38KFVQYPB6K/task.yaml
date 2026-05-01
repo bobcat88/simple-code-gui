@@ -1,0 +1,19 @@
+_ulid: 01KQJ8KJD1GWR7B38KFVQYPB6K
+slugs:
+  - task-multi-backend-support
+title: "Foundation: Multi-Backend Support"
+type: task
+spec_ref: "@01KK67BRJR4864JXD28BE8HNK2"
+status: completed
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags:
+  - foundation
+vcs_refs: []
+created_at: 2026-05-01T17:15:09.373Z
+started_at: 2026-05-01T17:15:09.373Z
+completed_at: 2026-05-01T17:15:09.373Z
+todos: []
+automation: eligible

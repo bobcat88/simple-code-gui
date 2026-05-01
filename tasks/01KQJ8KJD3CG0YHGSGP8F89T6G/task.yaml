@@ -1,0 +1,19 @@
+_ulid: 01KQJ8KJD3CG0YHGSGP8F89T6G
+slugs:
+  - task-model-routing-policies
+title: "Foundation: Model Routing Policies"
+type: task
+spec_ref: "@01KPNWTCV0CY2KPET8VX2X699P"
+status: completed
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags:
+  - foundation
+vcs_refs: []
+created_at: 2026-05-01T17:15:09.373Z
+started_at: 2026-05-01T17:15:09.373Z
+completed_at: 2026-05-01T17:15:09.373Z
+todos: []
+automation: eligible

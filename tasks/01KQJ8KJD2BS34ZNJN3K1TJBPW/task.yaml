@@ -1,0 +1,19 @@
+_ulid: 01KQJ8KJD2BS34ZNJN3K1TJBPW
+slugs:
+  - task-auth---api-key-management
+title: "Foundation: Auth & API Key Management"
+type: task
+spec_ref: "@01KPNWTB6935QVDS6ANRD4PQ9M"
+status: completed
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags:
+  - foundation
+vcs_refs: []
+created_at: 2026-05-01T17:15:09.373Z
+started_at: 2026-05-01T17:15:09.373Z
+completed_at: 2026-05-01T17:15:09.373Z
+todos: []
+automation: eligible
