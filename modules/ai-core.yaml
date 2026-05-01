@@ -476,6 +476,9 @@ features:
         type: feature
         description: |
           A structured, visual editor for drafting KSpec modules and acceptance criteria.
+        status:
+          maturity: draft
+          implementation: in_progress
         depends_on: []
         implements: []
         relates_to: []
