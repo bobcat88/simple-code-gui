@@ -181,7 +181,7 @@ features:
       portable Node.js/Python support for offline-first workflows.
     status:
       maturity: draft
-      implementation: not_started
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
