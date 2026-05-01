@@ -171,7 +171,7 @@ features:
         description: Panel to monitor running background processes (scans, indices, updates).
         status:
           maturity: draft
-          implementation: not_started
+          implementation: implemented
         acceptance_criteria:
           - given: the Background Jobs Visibility is implemented
             id: ac-gen-1
