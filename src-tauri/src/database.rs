@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{sqlite::SqliteConnectOptions, SqlitePool};
 use tauri::AppHandle;
 use tauri::Manager;
+use crate::orchestration::AgentMessage;
 
 pub struct DatabaseManager {
     pub pool: SqlitePool,
@@ -649,6 +650,54 @@ impl DatabaseManager {
         .await
         .map_err(|e| e.to_string())?;
 
+        // Swarm Snapshots Table
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS swarm_snapshots (
+                id TEXT PRIMARY KEY,
+                project_path TEXT NOT NULL,
+                commit_sha TEXT,
+                timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        // Swarm Messages Table (Cognitive Log)
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS swarm_messages (
+                id TEXT PRIMARY KEY,
+                snapshot_id TEXT,
+                project_path TEXT,
+                timestamp INTEGER NOT NULL,
+                from_agent TEXT NOT NULL,
+                to_agent TEXT,
+                message_type TEXT NOT NULL,
+                content TEXT NOT NULL,
+                metadata TEXT,
+                FOREIGN KEY(snapshot_id) REFERENCES swarm_snapshots(id)
+            )",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_swarm_messages_snapshot
+             ON swarm_messages (snapshot_id)",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_swarm_messages_project
+             ON swarm_messages (project_path)",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
         Ok(())
     }
 }
@@ -721,6 +770,145 @@ pub async fn get_vector_chunks(
     }).collect();
 
     Ok(chunks)
+}
+
+pub async fn insert_swarm_message(
+    pool: &SqlitePool,
+    message: &AgentMessage,
+    project_path: Option<&str>,
+    snapshot_id: Option<&str>,
+) -> Result<(), String> {
+    let metadata_json = message.metadata.as_ref().map(|m| serde_json::to_string(m).unwrap());
+
+    sqlx::query(
+        "INSERT INTO swarm_messages 
+            (id, snapshot_id, project_path, timestamp, from_agent, to_agent, message_type, content, metadata)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    )
+    .bind(&message.id)
+    .bind(snapshot_id)
+    .bind(project_path)
+    .bind(message.timestamp as i64)
+    .bind(&message.from_agent)
+    .bind(&message.to_agent)
+    .bind(&message.message_type)
+    .bind(&message.content)
+    .bind(metadata_json)
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+pub async fn get_swarm_messages(
+    pool: &SqlitePool,
+    project_path: Option<&str>,
+    snapshot_id: Option<&str>,
+    limit: Option<usize>,
+) -> Result<Vec<AgentMessage>, String> {
+    let l = limit.map(|n| n as i64).unwrap_or(-1);
+
+    let rows = sqlx::query_as::<_, (String, i64, String, Option<String>, String, String, Option<String>)>(
+        "SELECT id, timestamp, from_agent, to_agent, message_type, content, metadata 
+         FROM swarm_messages 
+         WHERE (? IS NULL OR project_path = ?)
+           AND (? IS NULL OR snapshot_id = ?)
+         ORDER BY timestamp DESC
+         LIMIT ?",
+    )
+    .bind(project_path)
+    .bind(project_path)
+    .bind(snapshot_id)
+    .bind(snapshot_id)
+    .bind(l)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let messages = rows.into_iter().map(|(id, timestamp, from_agent, to_agent, message_type, content, metadata_json)| {
+        let metadata = metadata_json.and_then(|s| serde_json::from_str(&s).ok());
+
+        AgentMessage {
+            id,
+            timestamp: timestamp as u64,
+            from_agent,
+            to_agent,
+            message_type,
+            content,
+            metadata,
+        }
+    }).collect();
+
+    Ok(messages)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SwarmSnapshot {
+    pub id: String,
+    pub project_path: String,
+    pub commit_sha: Option<String>,
+    pub timestamp: String,
+}
+
+pub async fn create_swarm_snapshot(
+    pool: &SqlitePool,
+    id: &str,
+    project_path: &str,
+    commit_sha: Option<&str>,
+) -> Result<(), String> {
+    sqlx::query(
+        "INSERT INTO swarm_snapshots (id, project_path, commit_sha) VALUES (?, ?, ?)",
+    )
+    .bind(id)
+    .bind(project_path)
+    .bind(commit_sha)
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+pub async fn link_messages_to_snapshot(
+    pool: &SqlitePool,
+    snapshot_id: &str,
+    project_path: &str,
+) -> Result<(), String> {
+    sqlx::query(
+        "UPDATE swarm_messages SET snapshot_id = ? WHERE project_path = ? AND snapshot_id IS NULL"
+    )
+    .bind(snapshot_id)
+    .bind(project_path)
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+pub async fn get_swarm_snapshots(
+    pool: &SqlitePool,
+    project_path: &str,
+) -> Result<Vec<SwarmSnapshot>, String> {
+    let rows = sqlx::query_as::<_, (String, String, Option<String>, String)>(
+        "SELECT id, project_path, commit_sha, timestamp FROM swarm_snapshots WHERE project_path = ? ORDER BY timestamp DESC",
+    )
+    .bind(project_path)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let snapshots = rows.into_iter().map(|(id, project_path, commit_sha, timestamp)| {
+        SwarmSnapshot {
+            id,
+            project_path,
+            commit_sha,
+            timestamp,
+        }
+    }).collect();
+
+    Ok(snapshots)
 }
 
 #[cfg(test)]

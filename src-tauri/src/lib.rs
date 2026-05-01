@@ -40,6 +40,7 @@ use orchestration::{
     add_active_project, remove_active_project, get_active_projects,
     set_current_project,
     brainstorm_load_canvas, brainstorm_save_canvas, broadcast_agent_message, get_agent_messages,
+    create_swarm_snapshot_file, hydrate_swarm_from_snapshots,
     gsd_list_seeds, gsd_plant_seed, kspec_list_drafts, kspec_write_draft,
     brainstorm_agentic_sketch, brainstorm_architect_review, brainstorm_save_topology,
 };
@@ -762,6 +763,8 @@ pub fn run() {
             get_agent_messages,
             gsd_list_seeds,
             gsd_plant_seed,
+            create_swarm_snapshot_file,
+            hydrate_swarm_from_snapshots,
             kspec_list_drafts,
             kspec_write_draft,
             brainstorm_load_canvas,

@@ -4,6 +4,9 @@ use tauri::{AppHandle, Emitter, State};
 use std::collections::HashMap;
 use std::sync::Arc;
 use parking_lot::Mutex as PlMutex;
+use crate::database::DatabaseManager;
+use uuid::Uuid;
+use chrono::Utc;
 use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 use crate::jobs_manager::JobsManager;
@@ -195,17 +198,25 @@ pub struct OrchestrationState {
 #[tauri::command]
 pub async fn set_current_project(
     state: State<'_, OrchestrationState>,
+    db: State<'_, Arc<DatabaseManager>>,
     path: Option<String>
 ) -> Result<(), String> {
-    let mut current = state.current_project_path.lock();
-    *current = path.clone();
+    {
+        let mut current = state.current_project_path.lock();
+        *current = path.clone();
+    }
     
     // Also ensure it's in the active_project_paths if provided
     if let Some(p) = path {
-        let mut active = state.active_project_paths.lock();
-        if !active.contains(&p) {
-            active.push(p);
+        {
+            let mut active = state.active_project_paths.lock();
+            if !active.contains(&p) {
+                active.push(p.clone());
+            }
         }
+        
+        // Auto-hydrate from JSON snapshots (durable logs)
+        let _ = internal_hydrate_swarm(&db, &p).await;
     }
     
     Ok(())
@@ -909,17 +920,31 @@ pub async fn submit_approval_request(
 pub async fn broadcast_agent_message(
     app: AppHandle,
     state: State<'_, OrchestrationState>,
+    db: State<'_, Arc<DatabaseManager>>,
     message: AgentMessage,
 ) -> Result<serde_json::Value, String> {
+    let current_path = {
+        let path = state.current_project_path.lock();
+        path.clone()
+    };
+
     {
         let mut bus = state.message_bus.lock();
         bus.push(message.clone());
         
-        // Keep only the last 100 messages to avoid unbounded growth
+        // Keep only the last 100 messages to avoid unbounded growth in-memory
         if bus.len() > 100 {
             bus.remove(0);
         }
     }
+
+    // Persist to SQLite for long-term history
+    let _ = crate::database::insert_swarm_message(
+        &db.pool,
+        &message,
+        current_path.as_deref(),
+        None
+    ).await;
 
     let _ = app.emit("agent-message", &message);
 
@@ -1186,12 +1211,135 @@ pub async fn brainstorm_architect_review(
 #[tauri::command]
 pub async fn get_agent_messages(
     state: State<'_, OrchestrationState>,
+    db: State<'_, Arc<DatabaseManager>>,
     limit: Option<usize>,
 ) -> Result<Vec<AgentMessage>, String> {
-    let bus = state.message_bus.lock();
-    let n = limit.unwrap_or(bus.len());
-    let start = if bus.len() > n { bus.len() - n } else { 0 };
-    Ok(bus[start..].to_vec())
+    let limit = limit.unwrap_or(50);
+    
+    // First, try the in-memory bus
+    {
+        let bus = state.message_bus.lock();
+        if bus.len() >= limit {
+            let start = bus.len() - limit;
+            let mut msgs = bus[start..].to_vec();
+            // Return most recent first to match UI expectation
+            msgs.reverse();
+            return Ok(msgs);
+        }
+    }
+    
+    // If we need more, fetch from DB
+    let current_path = {
+        let path = state.current_project_path.lock();
+        path.clone()
+    };
+    
+    crate::database::get_swarm_messages(&db.pool, current_path.as_deref(), None, Some(limit)).await
+}
+
+#[tauri::command]
+pub async fn create_swarm_snapshot_file(
+    state: State<'_, OrchestrationState>,
+    db: State<'_, Arc<DatabaseManager>>,
+    name: String,
+) -> Result<String, String> {
+    let current_path = {
+        let path = state.current_project_path.lock();
+        path.clone()
+    }.ok_or("No active project to snapshot")?;
+
+    let snapshot_id = Uuid::new_v4().to_string();
+    
+    // 1. Create entry in SQLite
+    crate::database::create_swarm_snapshot(
+        &db.pool,
+        &snapshot_id,
+        &current_path,
+        None
+    ).await?;
+
+    // 2. Fetch all messages for this project that aren't snapshotted yet
+    let messages = crate::database::get_swarm_messages(&db.pool, Some(&current_path), None, None).await?;
+    
+    // 3. Link them in SQLite
+    crate::database::link_messages_to_snapshot(&db.pool, &snapshot_id, &current_path).await?;
+    
+    // 4. Save to JSON
+    let snapshots_dir = std::path::Path::new(&current_path).join(".kspec").join("snapshots");
+    if !snapshots_dir.exists() {
+        std::fs::create_dir_all(&snapshots_dir).map_err(|e| e.to_string())?;
+    }
+    
+    let file_path = snapshots_dir.join(format!("{}.json", snapshot_id));
+    let snapshot_data = serde_json::json!({
+        "id": snapshot_id,
+        "name": name,
+        "project_path": current_path,
+        "timestamp": Utc::now().to_rfc3339(),
+        "messages": messages
+    });
+    
+    std::fs::write(&file_path, serde_json::to_string_pretty(&snapshot_data).map_err(|e| e.to_string())?)
+        .map_err(|e| e.to_string())?;
+
+    Ok(snapshot_id)
+}
+
+pub async fn internal_hydrate_swarm(
+    db: &DatabaseManager,
+    project_path: &str,
+) -> Result<usize, String> {
+    let snapshots_dir = std::path::Path::new(project_path).join(".kspec").join("snapshots");
+    if !snapshots_dir.exists() {
+        return Ok(0);
+    }
+
+    let mut count = 0;
+    let entries = std::fs::read_dir(snapshots_dir).map_err(|e| e.to_string())?;
+    
+    for entry in entries {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) == Some("json") {
+            let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+            let snapshot: serde_json::Value = serde_json::from_str(&content).map_err(|e| e.to_string())?;
+            
+            let id = snapshot["id"].as_str().ok_or("Missing snapshot ID")?;
+            
+            // Insert snapshot metadata (ignore error if exists)
+            let _ = crate::database::create_swarm_snapshot(
+                &db.pool,
+                id,
+                project_path,
+                snapshot["commit_sha"].as_str()
+            ).await;
+            
+            // Insert messages
+            if let Some(messages) = snapshot["messages"].as_array() {
+                for msg_val in messages {
+                    if let Ok(msg) = serde_json::from_value::<AgentMessage>(msg_val.clone()) {
+                        let _ = crate::database::insert_swarm_message(
+                            &db.pool,
+                            &msg,
+                            Some(project_path),
+                            Some(id)
+                        ).await;
+                        count += 1;
+                    }
+                }
+            }
+        }
+    }
+    
+    Ok(count)
+}
+
+#[tauri::command]
+pub async fn hydrate_swarm_from_snapshots(
+    db: State<'_, Arc<DatabaseManager>>,
+    project_path: String,
+) -> Result<usize, String> {
+    internal_hydrate_swarm(&db, &project_path).await
 }
 
 #[tauri::command]
