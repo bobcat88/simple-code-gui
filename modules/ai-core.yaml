@@ -511,7 +511,7 @@ features:
           Workflow for converting Seeds into Spec Drafts or Beads Tasks.
         status:
           maturity: draft
-          implementation: in_progress
+          implementation: implemented
         depends_on: []
         implements: []
         relates_to: []
