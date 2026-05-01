@@ -35,6 +35,8 @@ export const SwarmActivityStream: React.FC<SwarmActivityStreamProps> = ({ api, p
   const [isRestoring, setIsRestoring] = React.useState<string | null>(null);
   const [lastAction, setLastAction] = React.useState<string | null>(null);
   const [view, setView] = React.useState<'activity' | 'snapshots'>('activity');
+  const [showSnapshotDialog, setShowSnapshotDialog] = React.useState(false);
+  const [handoffNotes, setHandoffNotes] = React.useState('');
 
   const handleSnapshot = async () => {
     if (!projectPath) return;
@@ -42,9 +44,12 @@ export const SwarmActivityStream: React.FC<SwarmActivityStreamProps> = ({ api, p
     setLastAction(null);
     try {
       const name = `snapshot-${new Date().toISOString().replace(/[:.]/g, '-')}`;
-      const result = await api.gsdCreateSwarmSnapshot(projectPath, name);
+      const result = await api.gsdCreateSwarmSnapshot(projectPath, name, handoffNotes);
       if (result.success) {
         setLastAction('Snapshot captured successfully');
+        setHandoffNotes('');
+        setShowSnapshotDialog(false);
+        refreshSnapshots();
         setTimeout(() => setLastAction(null), 3000);
       }
     } catch (err) {
@@ -153,7 +158,7 @@ export const SwarmActivityStream: React.FC<SwarmActivityStreamProps> = ({ api, p
         <NeuralSwarmGraph messages={messages} />
         <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button 
-            onClick={handleSnapshot}
+            onClick={() => setShowSnapshotDialog(true)}
             disabled={isSnapshotting}
             className="p-1.5 bg-zinc-900/80 border border-white/10 rounded-lg text-white/40 hover:text-white hover:border-indigo-500/50 transition-all shadow-xl"
             title="Create Cognitive Snapshot"
@@ -319,6 +324,13 @@ export const SwarmActivityStream: React.FC<SwarmActivityStreamProps> = ({ api, p
                       </button>
                     </div>
                   </div>
+                  {snapshot.handoff_notes && (
+                    <div className="mt-2 px-2 py-1.5 rounded bg-white/5 border border-white/5">
+                      <p className="text-[10px] text-zinc-400 italic line-clamp-3">
+                        "{snapshot.handoff_notes}"
+                      </p>
+                    </div>
+                  )}
                   {snapshot.worktree_path && (
                     <div className="mt-2 flex items-center gap-2 p-1.5 rounded bg-black/40 border border-emerald-500/10 font-mono text-[8px] text-emerald-400/60 overflow-hidden">
                       <ExternalLink size={8} />
@@ -331,6 +343,62 @@ export const SwarmActivityStream: React.FC<SwarmActivityStreamProps> = ({ api, p
           )}
         </div>
       </div>
+
+      {/* Snapshot Creation Dialog */}
+      {showSnapshotDialog && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-zinc-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+            <div className="p-3 border-b border-white/5 flex items-center justify-between bg-zinc-800/50">
+              <div className="flex items-center gap-2">
+                <Camera size={14} className="text-indigo-400" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-white">Capture Swarm State</span>
+              </div>
+              <button 
+                onClick={() => setShowSnapshotDialog(false)}
+                className="text-zinc-500 hover:text-white"
+              >
+                <ChevronRight size={14} className="rotate-90" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="space-y-2">
+                <label className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Handoff Notes</label>
+                <textarea 
+                  value={handoffNotes}
+                  onChange={(e) => setHandoffNotes(e.target.value)}
+                  placeholder="Describe the current context, goals, and any specific blockers for the next agent..."
+                  className="w-full h-32 bg-black/40 border border-white/10 rounded-lg p-2.5 text-[11px] text-zinc-300 placeholder:text-zinc-700 focus:outline-none focus:border-indigo-500/50 resize-none custom-scrollbar font-medium"
+                  autoFocus
+                />
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setShowSnapshotDialog(false)}
+                  className="flex-1 py-2 rounded-lg bg-zinc-800 border border-white/5 text-zinc-400 text-[10px] font-bold uppercase hover:bg-zinc-700 transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSnapshot}
+                  disabled={isSnapshotting}
+                  className="flex-[2] py-2 rounded-lg bg-indigo-600 text-white text-[10px] font-bold uppercase hover:bg-indigo-500 transition-all flex items-center justify-center gap-2"
+                >
+                  {isSnapshotting ? <Activity size={12} className="animate-spin" /> : <Zap size={12} />}
+                  {isSnapshotting ? 'Capturing...' : 'Capture Snapshot'}
+                </button>
+              </div>
+            </div>
+            <div className="p-2.5 bg-black/40 border-t border-white/5 flex items-center gap-2">
+              <div className="p-1 rounded bg-amber-500/10 border border-amber-500/20">
+                <AlertTriangle size={10} className="text-amber-500" />
+              </div>
+              <p className="text-[9px] text-zinc-500 italic">
+                Capturing will freeze current neural state and generate a collaborative handoff artifact.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

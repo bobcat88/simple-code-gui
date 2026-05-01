@@ -812,9 +812,8 @@ export interface ExtendedApi extends Api {
   gsdSwarmRecordPattern: (patternType: string, patternKey: string, content: string, metadata?: string) => Promise<void>
 
   // Swarm Snapshotting
-  gsdCreateSwarmSnapshot: (cwd: string, name: string) => Promise<{ success: boolean; path?: string; error?: string }>
-  gsdGetSwarmMessages: (cwd: string, limit?: number) => Promise<any[]>
-  gsdHydrateSwarm: (cwd: string) => Promise<{ success: boolean; count: number; error?: string }>
+  gsdCreateSwarmSnapshot(cwd: string, name: string, handoffNotes?: string): Promise<{ success: boolean; snapshotId?: string; error?: string }>;
+  gsdHydrateSwarm(cwd: string): Promise<{ success: boolean; count: number; error?: string }>;
   gsdGetSwarmSnapshots: (projectPath: string) => Promise<SwarmSnapshot[]>
   gsdCreateSnapshotWorkspace: (snapshotId: string) => Promise<{ success: boolean; path?: string; error?: string }>
 }

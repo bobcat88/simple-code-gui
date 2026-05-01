@@ -1282,6 +1282,7 @@ pub async fn create_swarm_snapshot_file(
     state: State<'_, OrchestrationState>,
     db: State<'_, Arc<DatabaseManager>>,
     name: String,
+    handoff_notes: Option<String>,
 ) -> Result<String, String> {
     let current_path = {
         let path = state.current_project_path.lock();
@@ -1291,7 +1292,7 @@ pub async fn create_swarm_snapshot_file(
     let snapshot_id = Uuid::new_v4().to_string();
     
     // 1. Create Snapshot record in SQLite
-    crate::database::create_swarm_snapshot(&db.pool, &snapshot_id, &current_path, Some(&name), None, None).await?;
+    crate::database::create_swarm_snapshot(&db.pool, &snapshot_id, &current_path, Some(&name), None, None, handoff_notes.as_deref()).await?;
     
     // 2. Fetch all messages for this project that aren't snapshotted yet
     let messages = crate::database::get_swarm_messages(&db.pool, Some(&current_path), None, None).await?;
@@ -1311,11 +1312,24 @@ pub async fn create_swarm_snapshot_file(
         "name": name,
         "project_path": current_path,
         "timestamp": Utc::now().to_rfc3339(),
+        "handoff_notes": handoff_notes,
         "messages": messages
     });
     
     std::fs::write(&file_path, serde_json::to_string_pretty(&snapshot_data).map_err(|e| e.to_string())?)
         .map_err(|e| e.to_string())?;
+
+    // 4b. Save to Markdown (Collaborative Handoff Artifact)
+    let md_path = snapshots_dir.join(format!("{}.md", snapshot_id));
+    let timestamp = Utc::now().to_rfc3339();
+    let md_content = generate_snapshot_markdown(
+        &snapshot_id,
+        &snapshot_data["name"].as_str().unwrap_or("Unnamed Snapshot"),
+        &timestamp,
+        handoff_notes.as_deref(),
+        &messages,
+    );
+    std::fs::write(&md_path, md_content).map_err(|e| e.to_string())?;
 
     // 5. Ensure Git tracks it immediately if we're in a git repo
     let _ = std::process::Command::new("python3")
@@ -1324,6 +1338,49 @@ pub async fn create_swarm_snapshot_file(
         .output();
 
     Ok(snapshot_id)
+}
+
+fn generate_snapshot_markdown(
+    snapshot_id: &str,
+    name: &str,
+    timestamp: &str,
+    handoff_notes: Option<&str>,
+    messages: &[AgentMessage],
+) -> String {
+    let mut md = format!("# Swarm Handoff: {}\n\n", name);
+    md.push_str(&format!("- **Snapshot ID**: `{}`\n", snapshot_id));
+    md.push_str(&format!("- **Generated At**: {}\n", timestamp));
+    
+    if let Some(notes) = handoff_notes {
+        md.push_str("\n## Handoff Notes\n\n");
+        md.push_str(notes);
+        md.push_str("\n");
+    }
+
+    md.push_str("\n## Thought Chain (Recent activity)\n\n");
+    if messages.is_empty() {
+        md.push_str("_No messages recorded in this snapshot._\n");
+    } else {
+        // Show last 20 messages to keep it readable
+        for msg in messages.iter().rev().take(20).rev() {
+            let from = &msg.from_agent;
+            let m_type = &msg.message_type;
+            let content = &msg.content;
+            
+            md.push_str(&format!("### {} [{}]\n", from, m_type));
+            md.push_str(&format!("{}\n\n", content));
+            
+            if let Some(meta) = &msg.metadata {
+                md.push_str("<details>\n<summary>Technical Context</summary>\n\n");
+                md.push_str("```json\n");
+                md.push_str(&serde_json::to_string_pretty(meta).unwrap_or_default());
+                md.push_str("\n```\n</details>\n\n");
+            }
+        }
+    }
+    
+    md.push_str("\n---\n*This artifact was automatically generated to facilitate swarm session resumption.*\n");
+    md
 }
 
 pub async fn internal_hydrate_swarm(
@@ -1355,7 +1412,8 @@ pub async fn internal_hydrate_swarm(
                 project_path, 
                 name,
                 snapshot["commit_sha"].as_str(),
-                None
+                None,
+                snapshot["handoff_notes"].as_str(),
             ).await;
             
             // Insert messages

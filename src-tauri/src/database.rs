@@ -658,6 +658,7 @@ impl DatabaseManager {
                 name TEXT,
                 commit_sha TEXT,
                 worktree_path TEXT,
+                handoff_notes TEXT,
                 timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
             )",
         )
@@ -667,6 +668,10 @@ impl DatabaseManager {
 
         // Ensure name column exists (for migrations)
         let _ = sqlx::query("ALTER TABLE swarm_snapshots ADD COLUMN name TEXT")
+            .execute(&self.pool)
+            .await;
+        
+        let _ = sqlx::query("ALTER TABLE swarm_snapshots ADD COLUMN handoff_notes TEXT")
             .execute(&self.pool)
             .await;
         let _ = sqlx::query("ALTER TABLE swarm_snapshots ADD COLUMN worktree_path TEXT")
@@ -860,6 +865,7 @@ pub struct SwarmSnapshot {
     pub name: Option<String>,
     pub commit_sha: Option<String>,
     pub worktree_path: Option<String>,
+    pub handoff_notes: Option<String>,
     pub timestamp: String,
 }
 
@@ -870,15 +876,17 @@ pub async fn create_swarm_snapshot(
     name: Option<&str>,
     commit_sha: Option<&str>,
     worktree_path: Option<&str>,
+    handoff_notes: Option<&str>,
 ) -> Result<(), String> {
     sqlx::query(
-        "INSERT OR IGNORE INTO swarm_snapshots (id, project_path, name, commit_sha, worktree_path) VALUES (?, ?, ?, ?, ?)",
+        "INSERT OR IGNORE INTO swarm_snapshots (id, project_path, name, commit_sha, worktree_path, handoff_notes) VALUES (?, ?, ?, ?, ?, ?)",
     )
     .bind(id)
     .bind(project_path)
     .bind(name)
     .bind(commit_sha)
     .bind(worktree_path)
+    .bind(handoff_notes)
     .execute(pool)
     .await
     .map_err(|e| e.to_string())?;
@@ -921,12 +929,12 @@ pub async fn get_swarm_snapshots(
 ) -> Result<Vec<SwarmSnapshot>, String> {
     let query = if let Some(path) = project_path {
         sqlx::query_as::<_, SwarmSnapshot>(
-            "SELECT id, project_path, name, commit_sha, worktree_path, timestamp FROM swarm_snapshots WHERE project_path = ? ORDER BY timestamp DESC"
+            "SELECT id, project_path, name, commit_sha, worktree_path, handoff_notes, timestamp FROM swarm_snapshots WHERE project_path = ? ORDER BY timestamp DESC"
         )
         .bind(path)
     } else {
         sqlx::query_as::<_, SwarmSnapshot>(
-            "SELECT id, project_path, name, commit_sha, worktree_path, timestamp FROM swarm_snapshots ORDER BY timestamp DESC"
+            "SELECT id, project_path, name, commit_sha, worktree_path, handoff_notes, timestamp FROM swarm_snapshots ORDER BY timestamp DESC"
         )
     };
 

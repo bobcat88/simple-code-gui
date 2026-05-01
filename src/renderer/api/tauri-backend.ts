@@ -630,10 +630,10 @@ export class TauriBackend implements ExtendedApi {
   }
 
   // Swarm Snapshotting
-  async gsdCreateSwarmSnapshot(cwd: string, name: string): Promise<{ success: boolean; path?: string; error?: string }> {
+  async gsdCreateSwarmSnapshot(cwd: string, name: string, handoffNotes?: string): Promise<{ success: boolean; snapshotId?: string; error?: string }> {
     try {
-      const id = await tauriIpc.createSwarmSnapshotFile(name);
-      return { success: true, path: id };
+      const snapshotId = await tauriIpc.createSwarmSnapshot(cwd, name, handoffNotes);
+      return { success: true, snapshotId };
     } catch (e) {
       return { success: false, error: String(e) };
     }
