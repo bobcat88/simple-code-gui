@@ -105,7 +105,7 @@ features:
         description: User-definable presets for cost/quality balance (e.g., Budget, High-Quality).
         status:
           maturity: draft
-          implementation: not_started
+          implementation: implemented
         depends_on: []
         implements: []
         relates_to: []
