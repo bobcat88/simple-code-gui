@@ -42,7 +42,7 @@ features:
         description: Unified trait/interface for different LLM providers (Claude, OpenAI, Gemini, Ollama).
         status:
           maturity: draft
-          implementation: not_started
+          implementation: implemented
         depends_on: []
         implements: []
         relates_to: []
