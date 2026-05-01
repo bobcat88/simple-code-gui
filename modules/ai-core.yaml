@@ -170,7 +170,7 @@ features:
         description: Orchestrator for executing task waves with dependency awareness.
         status:
           maturity: draft
-          implementation: not_started
+          implementation: implemented
         depends_on: []
         implements: []
         relates_to: []
