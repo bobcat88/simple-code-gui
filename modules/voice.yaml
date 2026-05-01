@@ -3,11 +3,10 @@ slugs:
   - voice
 title: Voice I/O
 type: module
-description: >-
-  Speech-to-text input (Whisper) for hands-free terminal interaction.
+description: Speech-to-text input (Whisper) for hands-free terminal interaction.
 status:
   maturity: draft
-  implementation: implemented
+  implementation: in_progress
 depends_on: []
 implements: []
 relates_to: []
@@ -21,10 +20,8 @@ features:
       - stt
     title: Speech-to-Text Input
     type: feature
-    description: >-
-      WebRTC audio capture with Whisper.js models (tiny to large-v3). Silence
-      detection for auto-submit, live transcription display, configurable
-      microphone and silence threshold.
+    description: WebRTC audio capture with Whisper.js models (tiny to large-v3). Silence detection for
+      auto-submit, live transcription display, configurable microphone and silence threshold.
     status:
       maturity: draft
       implementation: implemented
@@ -36,13 +33,10 @@ features:
     acceptance_criteria:
       - given: whisper model is loaded and microphone is active
         id: ac-1
-        then: >-
-          the audio is transcribed and the text is auto-submitted to the active
-          terminal
+        then: the audio is transcribed and the text is auto-submitted to the active terminal
         when: the user speaks and then pauses beyond the silence threshold
     tags: []
     created: 2026-03-08T08:00:34.225Z
     notes: []
 created: 2026-04-28T22:21:13.854Z
 notes: []
-
