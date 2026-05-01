@@ -1090,3 +1090,17 @@
   notes_count: 1
   todos_count: 0
   created_at: 2026-05-01T17:27:42.923Z
+- _ulid: 01KQJ9A1H3RARBFC66E1SJFSSE
+  slugs:
+    - task-beads-task-backend
+  title: "Implement: Beads Task Backend"
+  type: task
+  spec_ref: "@beads-backend"
+  status: pending
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags: []
+  notes_count: 1
+  todos_count: 0
+  created_at: 2026-05-01T17:27:44.931Z

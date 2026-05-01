@@ -1,0 +1,16 @@
+_ulid: 01KQJ9A1H3RARBFC66E1SJFSSE
+slugs:
+  - task-beads-task-backend
+title: "Implement: Beads Task Backend"
+type: task
+spec_ref: "@beads-backend"
+derivation: auto
+status: pending
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-05-01T17:27:44.931Z
+todos: []
