@@ -443,6 +443,9 @@ features:
         type: feature
         description: |
           A component for quick-capturing and managing "Seeds" (raw ideas).
+        status:
+          maturity: draft
+          implementation: in_progress
         depends_on: []
         implements: []
         relates_to: []
