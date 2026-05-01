@@ -392,7 +392,7 @@
   type: task
   spec_ref: "@spec-draft-editor"
   plan_ref: "@plan-plan-brainstorm-companion-implementation"
-  status: pending
+  status: in_progress
   blocked_by: []
   depends_on: []
   priority: 2
@@ -403,6 +403,7 @@
   notes_count: 0
   todos_count: 0
   created_at: 2026-04-29T06:07:54.601Z
+  started_at: 2026-05-01T13:26:05.179Z
 - _ulid: 01KQBXKS7FHBWTFHN6N6CPX88T
   slugs:
     - task-promotion-ipc-bridge
