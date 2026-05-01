@@ -212,7 +212,7 @@ features:
         description: Tracking and resuming long-running agent sessions across app restarts.
         status:
           maturity: draft
-          implementation: not_started
+          implementation: implemented
         depends_on: []
         implements: []
         relates_to: []
