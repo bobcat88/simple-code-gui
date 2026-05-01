@@ -182,7 +182,7 @@
   title: "Foundation: Connectivity & Sync"
   type: task
   spec_ref: "@01KK67BGNHP8DWNG777BRMSR8A"
-  status: pending_review
+  status: completed
   blocked_by: []
   depends_on: []
   priority: 3
@@ -192,6 +192,7 @@
   created_at: 2026-04-28T22:18:32.096Z
   started_at: 2026-05-01T17:18:36.111Z
   submitted_at: 2026-05-01T17:18:50.516Z
+  completed_at: 2026-05-01T17:18:52.236Z
 - _ulid: 01KQB2RCE5SN6NNW7E2JN0604Q
   slugs:
     - task-foundation-extensions
