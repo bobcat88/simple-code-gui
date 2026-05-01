@@ -24,7 +24,7 @@ features:
       auto-submit, live transcription display, configurable microphone and silence threshold.
     status:
       maturity: draft
-      implementation: in_progress
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
