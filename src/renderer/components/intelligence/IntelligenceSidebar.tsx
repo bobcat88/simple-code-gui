@@ -859,7 +859,10 @@ export function IntelligenceSidebar({
               <span className="text-[10px] text-blue-400/80 font-medium">Live Stream</span>
             </div>
           </div>
-          <SwarmActivityStream />
+          <SwarmActivityStream 
+            api={api}
+            projectPath={activeTab?.projectPath || ''}
+          />
         </section>
         </>
         )}

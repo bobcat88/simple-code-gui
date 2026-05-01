@@ -368,6 +368,12 @@ export const tauriIpc = {
   onAgentMessage: (callback: (message: any) => void): Promise<UnlistenFn> =>
     listen<any>('agent-message', (event) => callback(event.payload)),
 
+  createSwarmSnapshotFile: (name: string) =>
+    invoke<string>('create_swarm_snapshot_file', { name }),
+    
+  hydrateSwarmFromSnapshots: (projectPath: string) =>
+    invoke<number>('hydrate_swarm_from_snapshots', { projectPath }),
+
   // Brainstorm Companion
   gsdListSeeds: (cwd: string) =>
     invoke<any[]>('gsd_list_seeds', { cwd }),

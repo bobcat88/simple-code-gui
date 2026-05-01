@@ -809,6 +809,11 @@ export interface ExtendedApi extends Api {
   brainstormSaveTopology: (cwd: string, content: string) => Promise<{ success: boolean; error?: string }>
   gsdSwarmQueryMemory: (query: string, patternType?: string, limit?: number) => Promise<SwarmKnowledge[]>
   gsdSwarmRecordPattern: (patternType: string, patternKey: string, content: string, metadata?: string) => Promise<void>
+
+  // Swarm Snapshotting
+  gsdCreateSwarmSnapshot: (cwd: string, name: string) => Promise<{ success: boolean; path?: string; error?: string }>
+  gsdGetSwarmMessages: (cwd: string, limit?: number) => Promise<any[]>
+  gsdHydrateSwarm: (cwd: string) => Promise<{ success: boolean; count: number; error?: string }>
 }
 
 // ============================================================================

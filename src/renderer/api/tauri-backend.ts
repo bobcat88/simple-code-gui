@@ -623,4 +623,27 @@ export class TauriBackend implements ExtendedApi {
   async brainstormSaveTopology(cwd: string, content: string): Promise<{ success: boolean; error?: string }> {
     return await tauriIpc.brainstormSaveTopology(cwd, content);
   }
+
+  // Swarm Snapshotting
+  async gsdCreateSwarmSnapshot(cwd: string, name: string): Promise<{ success: boolean; path?: string; error?: string }> {
+    try {
+      const id = await tauriIpc.createSwarmSnapshotFile(name);
+      return { success: true, path: id };
+    } catch (e) {
+      return { success: false, error: String(e) };
+    }
+  }
+
+  async gsdGetSwarmMessages(cwd: string, limit?: number): Promise<any[]> {
+    return await tauriIpc.getAgentMessages(limit);
+  }
+
+  async gsdHydrateSwarm(cwd: string): Promise<{ success: boolean; count: number; error?: string }> {
+    try {
+      const count = await tauriIpc.hydrateSwarmFromSnapshots(cwd);
+      return { success: true, count };
+    } catch (e) {
+      return { success: false, count: 0, error: String(e) };
+    }
+  }
 }
