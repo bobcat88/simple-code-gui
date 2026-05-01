@@ -157,7 +157,7 @@ features:
       PTY, spawns new one with same cwd, preserves session ID when backends match.
     status:
       maturity: draft
-      implementation: not_started
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
