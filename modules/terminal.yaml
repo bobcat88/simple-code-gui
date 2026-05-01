@@ -72,7 +72,7 @@ features:
       captures last 200 lines with ANSI stripping.
     status:
       maturity: draft
-      implementation: implemented
+      implementation: in_progress
     depends_on: []
     implements: []
     relates_to: []
