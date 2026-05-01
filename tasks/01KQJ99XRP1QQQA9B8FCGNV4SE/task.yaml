@@ -1,0 +1,16 @@
+_ulid: 01KQJ99XRP1QQQA9B8FCGNV4SE
+slugs:
+  - task-tiled-terminal-layout
+title: "Implement: Tiled Terminal Layout"
+type: task
+spec_ref: "@tiled-layout"
+derivation: auto
+status: pending
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-05-01T17:27:41.078Z
+todos: []
