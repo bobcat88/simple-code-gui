@@ -95,7 +95,7 @@ features:
       relayed to renderer for progress UI.
     status:
       maturity: draft
-      implementation: not_started
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
