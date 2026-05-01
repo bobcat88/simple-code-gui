@@ -84,7 +84,7 @@ features:
         description: System for selecting models based on task type (planning, patching, summarization).
         status:
           maturity: draft
-          implementation: not_started
+          implementation: implemented
         depends_on: []
         implements: []
         relates_to: []
