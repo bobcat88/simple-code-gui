@@ -99,7 +99,7 @@ features:
       3px threshold before drag starts, suppresses paste during panning.
     status:
       maturity: draft
-      implementation: not_started
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
