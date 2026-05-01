@@ -3,11 +3,10 @@ slugs:
   - connectivity
 title: Connectivity
 type: module
-description: >-
-  HTTP API server for prompt injection and external control.
+description: HTTP API server for prompt injection and external control.
 status:
   maturity: draft
-  implementation: implemented
+  implementation: in_progress
 depends_on: []
 implements: []
 relates_to: []
@@ -21,10 +20,9 @@ features:
       - prompt-api
     title: HTTP Prompt API
     type: feature
-    description: >-
-      Per-project HTTP server for external prompt injection. Session modes:
-      existing (reuse terminal), new-keep (spawn and keep), new-close (spawn and
-      auto-close). Rate limited to 10 req/60s per IP.
+    description: "Per-project HTTP server for external prompt injection. Session modes: existing (reuse
+      terminal), new-keep (spawn and keep), new-close (spawn and auto-close). Rate limited to 10
+      req/60s per IP."
     status:
       maturity: draft
       implementation: implemented
@@ -36,13 +34,10 @@ features:
     acceptance_criteria:
       - given: the prompt API is active
         id: ac-prompt-1
-        then: >-
-          the prompt is injected into the target terminal session according to
-          the specified mode
+        then: the prompt is injected into the target terminal session according to the specified mode
         when: an external request is made to the project-specific endpoint
     tags: []
     created: 2026-03-08T08:00:55.507Z
     notes: []
 created: 2026-04-28T22:21:13.865Z
 notes: []
-
