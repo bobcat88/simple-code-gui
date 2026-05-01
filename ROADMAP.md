@@ -136,7 +136,12 @@ Scaling the swarm to multi-repo orchestration and autonomous architectural evolu
 - [x] **Cognitive Snapshotting**: Deep persistence of swarm "thought chains" for cross-session resumption.
 - [x] **Real-time Neural Visualization**: 3D synaptic graph of swarm communication and tool usage.
 
----
+## Phase 31: NeuralHUD Multi-Repo Management (Complete)
+Finalizing the visual interface for steering multi-repository swarm activity.
+
+- [x] **Multi-Repo HUD**: Visual indicators for active repository contexts within the NeuralHUD.
+- [x] **Repo Quick-Switcher**: Low-latency switching between federated memory stores.
+- [x] **Global Activity Feed**: Unified stream of swarm messages across all active projects.
 
 ## Phase 32: Swarm Cross-Repo Memory Integration (Complete)
 Enabling federated knowledge retrieval across multiple repository contexts.
@@ -144,6 +149,13 @@ Enabling federated knowledge retrieval across multiple repository contexts.
 - [x] **Federated Query Engine**: Iterate through `active_project_paths` for memory retrieval.
 - [x] **Cross-Repo Deduplication**: Content-based merging of findings from multiple knowledge databases.
 - [x] **Parameter Alignment**: Synchronized IPC arguments between frontend and backend.
+
+## Phase 33: Swarm Refactoring Execution (In Progress)
+Autonomous execution of large-scale architectural refactors across the swarm.
+
+- [/] **Impact-Aware Patching**: Integrate GitNexus impact analysis into the automated refactoring loop.
+- [ ] **Multi-File Wave Execution**: Execute coordinated edits across multiple files in parallel waves.
+- [ ] **Post-Refactor Validation**: Autonomous verification of refactored code via Kspec and unit tests.
 
 ---
 
