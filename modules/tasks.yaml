@@ -120,7 +120,7 @@ features:
     description: High-fidelity dashboard for agent status, activity feeds, and approval workflows.
     status:
       maturity: draft
-      implementation: not_started
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
