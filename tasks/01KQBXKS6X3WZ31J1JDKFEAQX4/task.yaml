@@ -9,7 +9,7 @@ description: |
 spec_ref: "@idea-inbox"
 plan_ref: "@plan-plan-brainstorm-companion-implementation"
 origin: derived
-status: pending
+status: in_progress
 blocked_by: []
 depends_on: []
 context: []
@@ -18,5 +18,17 @@ tags:
   - frontend
   - gsd
 vcs_refs: []
+history:
+  - author: Johan.P
+    changes:
+      status:
+        new: in_progress
+        previous: pending
+      started_at:
+        new: 2026-05-01T13:25:55.888Z
+        previous: null
+    command: task-start
+    timestamp: 2026-05-01T13:25:55.888Z
 created_at: 2026-04-29T06:07:54.589Z
+started_at: 2026-05-01T13:25:55.888Z
 todos: []
