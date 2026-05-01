@@ -1,0 +1,18 @@
+notes:
+  - _ulid: 01KQJ9A55DWQBQFTM83P12V24Y
+    content: >-
+      Implementation notes (auto-generated from spec):
+
+
+      Fetch, browse, and install extensions (skills, MCPs, agents) from registry or custom URLs.
+      Global and per-project extension scoping with enable/disable controls.
+
+
+
+      Acceptance Criteria:
+
+      - ac-ext-1: Given an extension package, when registering it, then it is validated and added to
+      the system registry
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-05-01T17:27:48.654Z
