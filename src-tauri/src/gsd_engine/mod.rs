@@ -288,36 +288,86 @@ pub async fn gsd_apply_refactor(
     // 1. Create a unique plan ID
     let plan_id = format!("refactor-{}", uuid::Uuid::new_v4());
     
-    // 2. Build the plan structure
+    // 2. Build the plan structure with Impact-Aware Patching
     let mut metadata = HashMap::new();
     metadata.insert("goal".to_string(), "Execute proactive refactoring".to_string());
     metadata.insert("finding".to_string(), finding.to_string());
     metadata.insert("author".to_string(), "Swarm Architect".to_string());
     metadata.insert("complexity".to_string(), finding["risk"].as_str().unwrap_or("MEDIUM").to_string());
 
-    let mut plan = GsdPlan {
-        id: plan_id.clone(),
-        title: title.to_string(),
-        task_id: format!("refactor-{}", uuid::Uuid::new_v4()),
-        phases: vec![GsdPhase {
-            id: "refactor-phase-1".to_string(),
-            title: "Implementation".to_string(),
+    let symbol_name = finding["symbolName"].as_str();
+    let mut phases = Vec::new();
+
+    // PHASE 1: Impact Analysis (Conditional)
+    if let Some(symbol) = symbol_name {
+        phases.push(GsdPhase {
+            id: "refactor-impact-analysis".to_string(),
+            title: "Impact Analysis".to_string(),
             steps: vec![GsdStep {
-                id: "refactor-step-1".to_string(),
-                title: format!("Apply refactor: {}", title),
-                description: description.to_string(),
+                id: "refactor-impact-step-1".to_string(),
+                title: format!("Blast Radius Analysis: {}", symbol),
+                description: format!("Use the `gitnexus_impact` tool to analyze the blast radius of changing `{}`. Report any HIGH or CRITICAL risks found. If the risk is unacceptable, abort the refactoring.", symbol),
                 status: StepStatus::Pending,
                 result: None,
                 attempts: 0,
-                max_retries: 3,
-                wave_index: Some(0),
+                max_retries: 2,
+                wave_index: Some(1),
                 started_at: None,
                 completed_at: None,
             }],
             status: StepStatus::Pending,
             started_at: None,
             completed_at: None,
+        });
+    }
+
+    // PHASE 2: Implementation
+    phases.push(GsdPhase {
+        id: "refactor-implementation".to_string(),
+        title: "Implementation".to_string(),
+        steps: vec![GsdStep {
+            id: "refactor-step-1".to_string(),
+            title: format!("Apply refactor: {}", title),
+            description: description.to_string(),
+            status: StepStatus::Pending,
+            result: None,
+            attempts: 0,
+            max_retries: 3,
+            wave_index: Some(1),
+            started_at: None,
+            completed_at: None,
         }],
+        status: StepStatus::Pending,
+        started_at: None,
+        completed_at: None,
+    });
+
+    // PHASE 3: Verification
+    phases.push(GsdPhase {
+        id: "refactor-verification".to_string(),
+        title: "Verification".to_string(),
+        steps: vec![GsdStep {
+            id: "refactor-verify-step-1".to_string(),
+            title: "Post-Refactor Verification".to_string(),
+            description: "Run the project's build and test suite to ensure the refactoring didn't introduce regressions. Use `gitnexus_detect_changes` to verify the scope of changes matches expectations.".to_string(),
+            status: StepStatus::Pending,
+            result: None,
+            attempts: 0,
+            max_retries: 2,
+            wave_index: Some(1),
+            started_at: None,
+            completed_at: None,
+        }],
+        status: StepStatus::Pending,
+        started_at: None,
+        completed_at: None,
+    });
+
+    let mut plan = GsdPlan {
+        id: plan_id.clone(),
+        title: title.to_string(),
+        task_id: format!("refactor-{}", uuid::Uuid::new_v4()),
+        phases,
         metadata,
         dry_run: dry_run.unwrap_or(false),
     };
@@ -326,6 +376,7 @@ pub async fn gsd_apply_refactor(
     {
         let mut plans = state.active_plans.lock().await;
         plans.insert(plan_id.clone(), plan.clone());
+        // AC: @01KPNWTN ac-gen-1
         if let Some(ref path) = project_path {
             state.save_plan(path, &plan).await?;
         }
@@ -370,6 +421,7 @@ pub async fn gsd_get_refactor_details(
 }
 
 #[tauri::command]
+// AC: @gsd-engine ac-gsd-1
 pub async fn gsd_execute_plan(
     app: AppHandle,
     state: State<'_, Arc<GsdEngine>>,
@@ -429,6 +481,7 @@ pub async fn gsd_execute_plan(
         for phase_index in 0..plan.phases.len() {
             let phase_result = {
                 let phase = &mut plan.phases[phase_index];
+                // AC: @01KPNWTG ac-gen-1
                 executor.execute_phase(&plan_id, phase, runtime).await
             };
 

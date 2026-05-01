@@ -74,6 +74,7 @@ pub(crate) fn build_wave_batches(step_count: usize, wave_size: usize) -> Vec<Vec
         .collect()
 }
 
+// AC: @01KPNWTK ac-gen-1
 pub(crate) fn verification_outcome(description: &str, attempts: u32) -> bool {
     if description.contains("[verify:fail]") {
         return false;
@@ -197,6 +198,7 @@ impl Executor {
             format!("Phase {} started", phase.title),
         ).await;
 
+        // AC: @01KPNWTJ ac-gen-1
         let wave_batches = build_wave_batches(phase.steps.len(), runtime.wave_size);
 
         for (wave_index, batch) in wave_batches.iter().enumerate() {

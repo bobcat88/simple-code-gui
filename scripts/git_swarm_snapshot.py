@@ -2,7 +2,7 @@ import sqlite3
 import json
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 def main():
     project_path = os.getcwd()
@@ -16,7 +16,7 @@ def main():
     
     # 1. Generate Snapshot ID
     snapshot_id = str(uuid.uuid4())
-    timestamp = datetime.utcnow().isoformat() + "Z"
+    timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     
     # Try to get last commit message as name
     try:
