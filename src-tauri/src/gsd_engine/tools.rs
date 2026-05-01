@@ -221,15 +221,14 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
             };
             
             let state = app.state::<Arc<crate::orchestration::OrchestrationState>>();
-            {
-                let mut bus = state.message_bus.lock();
-                bus.push(message.clone());
-                if bus.len() > 100 {
-                    bus.remove(0);
-                }
-            }
+            let db = app.state::<Arc<crate::database::DatabaseManager>>();
             
-            let _ = app.emit("agent-message", &message);
+            crate::orchestration::internal_broadcast_agent_message(
+                app, 
+                &*state, 
+                &*db, 
+                message
+            ).await?;
             
             Ok(format!("Message broadcast successfully with ID: {}", id))
         }

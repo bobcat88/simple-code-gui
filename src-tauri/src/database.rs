@@ -655,6 +655,7 @@ impl DatabaseManager {
             "CREATE TABLE IF NOT EXISTS swarm_snapshots (
                 id TEXT PRIMARY KEY,
                 project_path TEXT NOT NULL,
+                name TEXT,
                 commit_sha TEXT,
                 timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
             )",
@@ -662,6 +663,11 @@ impl DatabaseManager {
         .execute(&self.pool)
         .await
         .map_err(|e| e.to_string())?;
+
+        // Ensure name column exists (for migrations)
+        let _ = sqlx::query("ALTER TABLE swarm_snapshots ADD COLUMN name TEXT")
+            .execute(&self.pool)
+            .await;
 
         // Swarm Messages Table (Cognitive Log)
         sqlx::query(
@@ -781,7 +787,7 @@ pub async fn insert_swarm_message(
     let metadata_json = message.metadata.as_ref().map(|m| serde_json::to_string(m).unwrap());
 
     sqlx::query(
-        "INSERT INTO swarm_messages 
+        "INSERT OR IGNORE INTO swarm_messages 
             (id, snapshot_id, project_path, timestamp, from_agent, to_agent, message_type, content, metadata)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
@@ -855,13 +861,15 @@ pub async fn create_swarm_snapshot(
     pool: &SqlitePool,
     id: &str,
     project_path: &str,
+    name: Option<&str>,
     commit_sha: Option<&str>,
 ) -> Result<(), String> {
     sqlx::query(
-        "INSERT INTO swarm_snapshots (id, project_path, commit_sha) VALUES (?, ?, ?)",
+        "INSERT OR IGNORE INTO swarm_snapshots (id, project_path, name, commit_sha) VALUES (?, ?, ?, ?)",
     )
     .bind(id)
     .bind(project_path)
+    .bind(name)
     .bind(commit_sha)
     .execute(pool)
     .await

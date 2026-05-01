@@ -916,13 +916,12 @@ pub async fn submit_approval_request(
 // Agent Messaging Commands
 // ============================================================================
 
-#[tauri::command]
-pub async fn broadcast_agent_message(
-    app: AppHandle,
-    state: State<'_, OrchestrationState>,
-    db: State<'_, Arc<DatabaseManager>>,
+pub async fn internal_broadcast_agent_message(
+    app: &AppHandle,
+    state: &OrchestrationState,
+    db: &DatabaseManager,
     message: AgentMessage,
-) -> Result<serde_json::Value, String> {
+) -> Result<(), String> {
     let current_path = {
         let path = state.current_project_path.lock();
         path.clone()
@@ -947,8 +946,19 @@ pub async fn broadcast_agent_message(
     ).await;
 
     let _ = app.emit("agent-message", &message);
+    Ok(())
+}
 
-    Ok(serde_json::json!({ "success": true, "id": message.id }))
+#[tauri::command]
+pub async fn broadcast_agent_message(
+    app: AppHandle,
+    state: State<'_, Arc<OrchestrationState>>,
+    db: State<'_, Arc<DatabaseManager>>,
+    message: AgentMessage,
+) -> Result<serde_json::Value, String> {
+    let id = message.id.clone();
+    internal_broadcast_agent_message(&app, &*state, &*db, message).await?;
+    Ok(serde_json::json!({ "success": true, "id": id }))
 }
 
 // ============================================================================
@@ -1280,14 +1290,9 @@ pub async fn create_swarm_snapshot_file(
 
     let snapshot_id = Uuid::new_v4().to_string();
     
-    // 1. Create entry in SQLite
-    crate::database::create_swarm_snapshot(
-        &db.pool,
-        &snapshot_id,
-        &current_path,
-        None
-    ).await?;
-
+    // 1. Create Snapshot record in SQLite
+    crate::database::create_swarm_snapshot(&db.pool, &snapshot_id, &current_path, Some(&name), None).await?;
+    
     // 2. Fetch all messages for this project that aren't snapshotted yet
     let messages = crate::database::get_swarm_messages(&db.pool, Some(&current_path), None, None).await?;
     
@@ -1311,6 +1316,12 @@ pub async fn create_swarm_snapshot_file(
     
     std::fs::write(&file_path, serde_json::to_string_pretty(&snapshot_data).map_err(|e| e.to_string())?)
         .map_err(|e| e.to_string())?;
+
+    // 5. Ensure Git tracks it immediately if we're in a git repo
+    let _ = std::process::Command::new("python3")
+        .arg("scripts/git_swarm_snapshot.py")
+        .current_dir(&current_path)
+        .output();
 
     Ok(snapshot_id)
 }
@@ -1337,10 +1348,12 @@ pub async fn internal_hydrate_swarm(
             let id = snapshot["id"].as_str().ok_or("Missing snapshot ID")?;
             
             // Insert snapshot metadata (ignore error if exists)
+            let name = snapshot["name"].as_str();
             let _ = crate::database::create_swarm_snapshot(
-                &db.pool,
-                id,
-                project_path,
+                &db.pool, 
+                id, 
+                project_path, 
+                name,
                 snapshot["commit_sha"].as_str()
             ).await;
             
