@@ -256,8 +256,8 @@
     - task-foundation-voice
   title: "Foundation: Voice I/O"
   type: task
-  spec_ref: "@stt"
-  status: completed
+  spec_ref: "@01KK67BDK2JJG20G7JD78SPBCA"
+  status: in_progress
   blocked_by: []
   depends_on: []
   priority: 3
@@ -265,7 +265,7 @@
   notes_count: 0
   todos_count: 0
   created_at: 2026-04-28T22:18:40.913Z
-  automation: eligible
+  started_at: 2026-05-01T17:18:33.125Z
 - _ulid: 01KQBXKS5WFCF85ZX3E3YJ95HF
   slugs:
     - implement-brainstorm-companion
