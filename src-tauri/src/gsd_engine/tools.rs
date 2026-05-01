@@ -208,15 +208,16 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
             let timestamp = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()
-                .as_secs();
+                .as_millis() as u64;
                 
             let message = crate::orchestration::AgentMessage {
                 id: id.clone(),
-                agent_id: "gsd_agent".to_string(), // In a real swarm, this would be dynamic
-                agent_name: "GSD Agent".to_string(),
-                content: content.to_string(),
                 timestamp,
+                from_agent: "GSD Agent".to_string(),
+                to_agent: None,
+                content: content.to_string(),
                 message_type: message_type.to_string(),
+                metadata: None,
             };
             
             let state = app.state::<Arc<crate::orchestration::OrchestrationState>>();

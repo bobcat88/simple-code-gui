@@ -3,10 +3,10 @@ import { tauriIpc } from '../lib/tauri-ipc';
 
 export interface AgentMessage {
   id: string;
-  timestamp: string;
+  timestamp: number;
   from_agent: string;
   to_agent?: string;
-  message_type: 'finding' | 'request' | 'warning' | 'alert';
+  message_type: 'finding' | 'request' | 'warning' | 'alert' | 'simulation';
   content: string;
   metadata?: any;
 }

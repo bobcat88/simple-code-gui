@@ -18,7 +18,9 @@ import {
   Users,
   Lightbulb, 
   Sparkles, 
-  Wand2
+  Wand2,
+  FlaskConical,
+  Play
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { SwarmActivityStream } from '../orchestration/SwarmActivityStream'
@@ -86,6 +88,7 @@ export function IntelligenceSidebar({
 
   const handleIdentifyRefactors = async () => {
     setIsIdentifyingRefactors(true)
+    if (!api.gsdIdentifyRefactors) return;
     try {
       const result = await api.gsdIdentifyRefactors()
       // Try to parse result as JSON if possible
@@ -106,11 +109,12 @@ export function IntelligenceSidebar({
     }
   }
 
-  const handleApplyRefactor = async (finding: any) => {
+  const handleApplyRefactor = async (finding: any, dryRun: boolean = false) => {
+    if (!api.gsdApplyRefactor) return;
     try {
-      await api.gsdApplyRefactor(finding)
+      await api.gsdApplyRefactor(finding, dryRun)
     } catch (err) {
-      console.error('Failed to apply refactor:', err)
+      console.error(`Failed to ${dryRun ? 'simulate' : 'apply'} refactor:`, err)
     }
   }
 
@@ -118,6 +122,7 @@ export function IntelligenceSidebar({
     const symbolName = finding.symbolName || finding.title || ""
     if (!symbolName) return
 
+    if (!api.gsdGetRefactorDetails) return;
     try {
       const details = await api.gsdGetRefactorDetails(symbolName)
       setRefactorDetail({ finding, details })
@@ -753,6 +758,14 @@ export function IntelligenceSidebar({
                         DETAILS
                       </button>
                       <button 
+                        onClick={() => handleApplyRefactor(finding, true)}
+                        className="flex-1 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400/80 rounded text-[9px] font-bold transition-all flex items-center justify-center gap-1"
+                        title="Simulate in dry-run mode"
+                      >
+                        <FlaskConical size={10} />
+                        SIMULATE
+                      </button>
+                      <button 
                         onClick={() => handleApplyRefactor(finding)}
                         className="flex-1 py-1 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 rounded text-[9px] font-bold transition-all"
                       >
@@ -904,6 +917,16 @@ export function IntelligenceSidebar({
                 className="px-4 py-2 text-xs font-bold text-white/40 hover:text-white transition-colors"
               >
                 CANCEL
+              </button>
+              <button 
+                onClick={() => {
+                  handleApplyRefactor(refactorDetail.finding, true);
+                  setRefactorDetail(null);
+                }}
+                className="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-600/20 transition-all flex items-center gap-2"
+              >
+                <FlaskConical size={14} />
+                SIMULATE
               </button>
               <button 
                 onClick={() => {

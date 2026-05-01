@@ -49,6 +49,7 @@ pub struct GsdPlan {
     pub task_id: String,
     pub phases: Vec<GsdPhase>,
     pub metadata: HashMap<String, String>,
+    pub dry_run: bool,
 }
 
 #[allow(dead_code)]

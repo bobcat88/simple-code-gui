@@ -131,8 +131,8 @@ Establishing safety protocols and permission-based tool execution for the swarm.
 Scaling the swarm to multi-repo orchestration and autonomous architectural evolution.
 
 - [x] **Multi-Repo Context**: Enable swarms to reason across linked repository groups.
-- [ ] **Autonomous Refactoring**: Proactive identification and execution of architectural improvements.
-- [ ] **Swarm Simulation**: Dry-run execution mode for complex multi-agent waves.
+- [x] **Autonomous Refactoring**: Proactive identification and execution of architectural improvements.
+- [x] **Swarm Simulation**: Dry-run execution mode for complex multi-agent waves.
 - [ ] **Cognitive Snapshotting**: Deep persistence of swarm "thought chains" for cross-session resumption.
 - [ ] **Real-time Neural Visualization**: 3D synaptic graph of swarm communication and tool usage.
 

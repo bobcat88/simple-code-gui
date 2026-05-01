@@ -22,7 +22,7 @@ import {
 import { useApi } from '../../contexts/ApiContext';
 import { useWorkspaceStore } from '../../stores/workspace';
 import { cn } from '../../lib/utils';
-import type { NeuralInsight, GsdApprovalRequest, SwarmPolicy, SwarmPersona } from '../../api/types';
+import type { NeuralInsight, GsdApprovalRequest, SwarmPolicy, SwarmPersona, GsdExecutionEvent } from '../../api/types';
 import { ForensicReport } from './ForensicReport';
 import { PermissionGuard } from './PermissionGuard';
 
@@ -64,9 +64,14 @@ export function NeuralHUD() {
       }
     });
 
-    const unsubscribeEvents = api.onGsdExecutionEvent ? api.onGsdExecutionEvent((event) => {
+    const unsubscribeEvents = api.onGsdExecutionEvent?.((event: GsdExecutionEvent) => {
       if (event.eventType === 'memory_injected' && event.stepId) {
-        setHealedSteps(prev => new Set(prev).add(event.stepId));
+        const stepId = event.stepId;
+        setHealedSteps(prev => {
+          const next = new Set(prev);
+          next.add(stepId);
+          return next;
+        });
         
         // Add a "Healing" insight
         const healingInsight: NeuralInsight = {
@@ -82,13 +87,13 @@ export function NeuralHUD() {
         // Auto-expand if high value
         setIsMinimized(false);
       }
-    }) : () => {};
+    }) ?? (() => {});
 
-    const unsubscribeApprovals = api.onGsdApprovalRequested ? api.onGsdApprovalRequested((approval) => {
+    const unsubscribeApprovals = api.onGsdApprovalRequested?.((approval: GsdApprovalRequest) => {
       setPendingApprovals(prev => [...prev, approval]);
       setIsMinimized(false);
       setViewMode('insights');
-    }) : () => {};
+    }) ?? (() => {});
 
     return () => {
       unsubscribe();

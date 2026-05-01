@@ -309,8 +309,8 @@ export const tauriIpc = {
     invoke<any>('gsd_add_phase', { planId, title }),
   gsdAddStep: (planId: string, phaseId: string, title: string, description: string) =>
     invoke<any>('gsd_add_step', { planId, phaseId, title, description }),
-  gsdExecutePlan: (planId: string) =>
-    invoke<void>('gsd_execute_plan', { planId }),
+  gsdExecutePlan: (planId: string, dryRun?: boolean) =>
+    invoke<void>('gsd_execute_plan', { planId, dryRun }),
   gsdRespondToCheckpoint: (stepId: string, response: string) =>
     invoke<void>('gsd_respond_to_checkpoint', { stepId, response }),
   onGsdExecutionEvent: (callback: (event: any) => void): Promise<UnlistenFn> =>
@@ -337,8 +337,8 @@ export const tauriIpc = {
     invoke<any[]>('gsd_list_tools'),
   gsdIdentifyRefactors: () =>
     invoke<string>('gsd_identify_refactors'),
-  gsdApplyRefactor: (finding: any) =>
-    invoke<string>('gsd_apply_refactor', { finding }),
+  gsdApplyRefactor: (finding: any, dryRun?: boolean) =>
+    invoke<string>('gsd_apply_refactor', { finding, dryRun }),
   gsdGetRefactorDetails: (symbolName: string) =>
     invoke<string>('gsd_get_refactor_details', { symbolName }),
   gsdSwarmQueryMemory: (query: string, patternType?: string, limit?: number) =>

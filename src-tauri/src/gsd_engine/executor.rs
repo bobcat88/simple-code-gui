@@ -96,6 +96,7 @@ pub struct Executor {
     pub active_project_paths: Vec<String>,
     pub knowledge: Arc<Mutex<Option<crate::gsd_engine::knowledge::SwarmMemory>>>,
     pub governance: Arc<Mutex<crate::gsd_engine::governance::GovernanceEngine>>,
+    pub dry_run: bool,
 }
 
 impl Executor {
@@ -108,6 +109,7 @@ impl Executor {
         active_project_paths: Vec<String>,
         knowledge: Arc<Mutex<Option<crate::gsd_engine::knowledge::SwarmMemory>>>,
         governance: Arc<Mutex<crate::gsd_engine::governance::GovernanceEngine>>,
+        dry_run: bool,
     ) -> Self {
         Self {
             ai,
@@ -118,10 +120,11 @@ impl Executor {
             active_project_paths,
             knowledge,
             governance,
+            dry_run,
         }
     }
 
-    fn emit_execution_event(
+    async fn emit_execution_event(
         &self,
         plan_id: &str,
         phase_id: Option<&str>,
@@ -129,16 +132,52 @@ impl Executor {
         event_type: &str,
         message: impl Into<String>,
     ) {
+        let msg_str = message.into();
         let payload = ExecutionEvent {
             plan_id: plan_id.to_string(),
             phase_id: phase_id.map(|value| value.to_string()),
             step_id: step_id.map(|value| value.to_string()),
             event_type: event_type.to_string(),
-            message: message.into(),
+            message: msg_str.clone(),
             timestamp: Utc::now().timestamp_millis() as u64,
         };
 
         let _ = self.app.emit("gsd-execution-event", payload);
+
+        // If it's a simulation intercept, also broadcast as a swarm agent message
+        if event_type == "simulation_intercept" {
+            self.broadcast_simulation_message(plan_id, phase_id, step_id, msg_str).await;
+        }
+    }
+
+    async fn broadcast_simulation_message(
+        &self,
+        plan_id: &str,
+        phase_id: Option<&str>,
+        step_id: Option<&str>,
+        message: String,
+    ) {
+        if let Some(state) = self.app.try_state::<Arc<crate::orchestration::OrchestrationState>>() {
+            let mut messages = state.message_bus.lock();
+            let msg = crate::orchestration::AgentMessage {
+                id: format!("sim-{}", Utc::now().timestamp_nanos_opt().unwrap_or(0)),
+                timestamp: Utc::now().timestamp_millis() as u64,
+                from_agent: "Executor".to_string(),
+                to_agent: None,
+                message_type: "simulation".to_string(),
+                content: message,
+                metadata: Some(serde_json::json!({
+                    "plan_id": plan_id,
+                    "phase_id": phase_id,
+                    "step_id": step_id,
+                })),
+            };
+            messages.push(msg.clone());
+            if messages.len() > 100 {
+                messages.remove(0);
+            }
+            let _ = self.app.emit("agent-message", msg);
+        }
     }
 
     pub async fn execute_phase(
@@ -156,7 +195,7 @@ impl Executor {
             None,
             "phase_started",
             format!("Phase {} started", phase.title),
-        );
+        ).await;
 
         let wave_batches = build_wave_batches(phase.steps.len(), runtime.wave_size);
 
@@ -171,7 +210,7 @@ impl Executor {
                     wave_index + 1,
                     batch.len()
                 ),
-            );
+            ).await;
 
             let mut join_set = JoinSet::new();
 
@@ -233,7 +272,7 @@ impl Executor {
                             updated_step.title,
                             wave_index + 1
                         ),
-                    );
+                    ).await;
                     return Err(format!(
                         "Step {} failed during wave {}",
                         updated_step.id,
@@ -250,7 +289,7 @@ impl Executor {
                 None,
                 "wave_completed",
                 format!("Wave {} completed", wave_index + 1),
-            );
+            ).await;
         }
 
         phase.status = StepStatus::Completed;
@@ -262,7 +301,7 @@ impl Executor {
             None,
             "phase_completed",
             format!("Phase {} completed", phase.title),
-        );
+        ).await;
 
         Ok(())
     }
@@ -288,7 +327,7 @@ impl Executor {
                 Some(&step.id),
                 "step_started",
                 format!("Step {} attempt {}", step.title, step.attempts),
-            );
+            ).await;
             let _ = self.app.emit("gsd-step-updated", step.clone());
 
             // Select System Prompt based on task type
@@ -354,7 +393,7 @@ impl Executor {
                     Some(&step.id),
                     "memory_injected",
                     format!("Collective memory patterns found for: {}", step.title),
-                );
+                ).await;
             }
 
             let system_prompt = if step.description.contains("[forensic]") {
@@ -423,7 +462,7 @@ impl Executor {
                             Some(&step.id),
                             "tool_call",
                             format!("Agent invoked {}({})", tc.name, tc.arguments),
-                        );
+                        ).await;
 
                         // GOVERNANCE: Evaluate tool call
                         let verdict = {
@@ -441,7 +480,7 @@ impl Executor {
                                     Some(&step.id),
                                     "governance_denied",
                                     error_msg.clone(),
-                                );
+                                ).await;
                                 messages.push(Message {
                                     role: "tool".to_string(),
                                     content: format!("Error: Tool execution blocked by policy: {}", reason),
@@ -466,7 +505,7 @@ impl Executor {
                                     Some(&step.id),
                                     "governance_approval_requested",
                                     format!("Approval required for {}. Reason: {}", tc.name, reason),
-                                );
+                                ).await;
 
                                 // Emit a specific event for the Neural HUD to show the approval prompt
                                 let _ = self.app.emit("gsd-approval-requested", serde_json::json!({
@@ -488,7 +527,7 @@ impl Executor {
                                             Some(&step.id),
                                             "governance_approved",
                                             format!("User approved execution of {}", tc.name),
-                                        );
+                                        ).await;
                                         // Fall through to execute_tool below
                                     }
                                     _ => {
@@ -499,7 +538,7 @@ impl Executor {
                                             Some(&step.id),
                                             "governance_rejected",
                                             error_msg.clone(),
-                                        );
+                                        ).await;
                                         messages.push(Message {
                                             role: "tool".to_string(),
                                             content: format!("Error: Tool execution rejected by user."),
@@ -513,7 +552,22 @@ impl Executor {
                             PermissionType::Allow => {}
                         }
 
-                        let tool_result = match execute_tool(&tc.name, &tc.arguments, &self.project_path, &self.app).await {
+                        // Simulation Interception (Dry-Run Mode)
+            let tool_result = if self.dry_run && is_destructive_tool(&tc.name) {
+                self.emit_execution_event(
+                    plan_id,
+                    Some(phase_id),
+                    Some(&step.id),
+                    "simulation_intercept",
+                    format!("[Simulation] Intercepted destructive tool: {}", tc.name),
+                ).await;
+                
+                Ok(format!("[Simulation] Successfully simulated {} with arguments: {}", tc.name, tc.arguments))
+            } else {
+                execute_tool(&tc.name, &tc.arguments, &self.project_path, &self.app).await
+            };
+
+                        let tool_result = match tool_result {
                             Ok(res) => res,
                             Err(e) => {
                                 // Error IPC Bridge: Automatically check logs on tool failure
@@ -633,7 +687,7 @@ impl Executor {
                                         Some(&step.id),
                                         "delegation_approved",
                                         format!("User approved delegation to {} for task: {}", role, task),
-                                    );
+                                    ).await;
                                     
                                     step.status = StepStatus::InProgress;
                                     let _ = self.app.emit("gsd-step-updated", step.clone());
@@ -736,7 +790,7 @@ impl Executor {
                 Some(&step.id),
                 "step_verified",
                 format!("Step {} verification result: {}", step.title, verified),
-            );
+            ).await;
 
             if verified {
                 self.atomic_commit(&step).await?;
@@ -778,7 +832,7 @@ impl Executor {
                     Some(&step.id),
                     "step_committed",
                     format!("Step {} committed after verification", step.title),
-                );
+                ).await;
                 return Ok(step);
             }
 
@@ -793,7 +847,7 @@ impl Executor {
                     Some(&step.id),
                     "step_retrying",
                     format!("Retrying step {} automatically (attempt {}/{})", step.title, step.attempts, retry_budget),
-                );
+                ).await;
                 continue;
             }
 
@@ -818,7 +872,7 @@ impl Executor {
                 Some(&step.id),
                 "auto_fix_proposed",
                 format!("Step {} proposed fix: {}", step.title, fix_proposal),
-            );
+            ).await;
 
             // Create oneshot channel and register it
             let (tx, rx) = tokio::sync::oneshot::channel();
@@ -836,7 +890,7 @@ impl Executor {
                         Some(&step.id),
                         "user_approved",
                         format!("User manually approved step {}", step.title),
-                    );
+                    ).await;
                     step.status = StepStatus::Completed;
                     return Ok(step);
                 }
@@ -847,7 +901,7 @@ impl Executor {
                         Some(&step.id),
                         "auto_fix_applied",
                         format!("User approved auto-fix for step {}", step.title),
-                    );
+                    ).await;
                     
                     step.status = StepStatus::AutoFixing("Applying fix...".to_string());
                     let _ = self.app.emit("gsd-step-updated", step.clone());
@@ -869,7 +923,7 @@ impl Executor {
                         Some(&step.id),
                         "user_requested_retry",
                         format!("User requested retry for step {}", step.title),
-                    );
+                    ).await;
                     // Reset attempts if user wants to retry manually? 
                     // Let's keep it as is for now.
                     continue;
@@ -890,6 +944,11 @@ impl Executor {
     }
 
     async fn atomic_commit(&self, step: &GsdStep) -> Result<(), String> {
+        if self.dry_run {
+            println!("[GSD] [Simulation] Skipping atomic commit for step: {}", step.title);
+            return Ok(());
+        }
+        
         // Logic to commit changes to git
         // For now just log it
         println!("[GSD] Atomic commit for step: {}", step.title);
@@ -967,7 +1026,7 @@ impl Executor {
             Some(&step.id),
             "learning_triggered",
             format!("Automated learning captured for step: {}", step.title),
-        );
+        ).await;
 
         Ok(())
     }
@@ -1000,6 +1059,10 @@ impl Executor {
     }
 
     pub async fn stash_to_forensic_branch(&self, project_path: &str, phase_title: &str, step_id: &str) -> Result<String, String> {
+        if self.dry_run {
+            return Ok(format!("simulation-forensic-{}", step_id));
+        }
+
         let timestamp = Utc::now().timestamp();
         let branch_name = format!("forensic/{}-{}-{}", 
             phase_title.to_lowercase().replace(" ", "-"),
@@ -1035,6 +1098,13 @@ impl Executor {
             .map_err(|e| e.to_string())?;
 
         Ok(branch_name)
+    }
+}
+
+fn is_destructive_tool(name: &str) -> bool {
+    match name {
+        "write_file" | "replace_file_content" | "multi_replace_file_content" | "run_bash" | "inject_trace" | "gsd_apply_refactor" => true,
+        _ => false,
     }
 }
 

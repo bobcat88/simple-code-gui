@@ -40,6 +40,13 @@ export const SwarmActivityStream: React.FC = () => {
         text: 'text-red-400',
         label: 'Alert'
       };
+      case 'simulation': return {
+        icon: <Zap size={12} className="text-purple-400" />,
+        bg: 'bg-purple-500/5',
+        border: 'border-purple-500/20',
+        text: 'text-purple-400',
+        label: 'Simulation'
+      };
       default: return {
         icon: <Activity size={12} className="text-zinc-400" />,
         bg: 'bg-zinc-500/5',

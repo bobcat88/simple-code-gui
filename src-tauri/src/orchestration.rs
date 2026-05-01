@@ -173,11 +173,12 @@ pub struct ApprovalResponse {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AgentMessage {
     pub id: String,
-    pub agent_id: String,
-    pub agent_name: String,
-    pub content: String,
     pub timestamp: u64,
-    pub message_type: String, // "finding", "request", "alert", etc.
+    pub from_agent: String,
+    pub to_agent: Option<String>,
+    pub message_type: String,
+    pub content: String,
+    pub metadata: Option<serde_json::Value>,
 }
 
 #[derive(Default)]

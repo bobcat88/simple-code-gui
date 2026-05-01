@@ -180,6 +180,7 @@ pub async fn gsd_create_plan(
             ("wave_size".to_string(), "2".to_string()),
             ("verifier_retries".to_string(), "3".to_string()),
         ]),
+        dry_run: false,
     };
 
     plans.insert(plan_id.clone(), plan.clone());
@@ -274,6 +275,7 @@ pub async fn gsd_apply_refactor(
     orch: State<'_, OrchestrationState>,
     ai_runtime: State<'_, Arc<RuntimeManager>>,
     finding: Value,
+    dry_run: Option<bool>,
 ) -> Result<String, String> {
     let project_path = orch.current_project_path.lock().clone();
     let title = finding["title"].as_str().or(finding["symbolName"].as_str()).unwrap_or("Proactive Refactor");
@@ -317,6 +319,7 @@ pub async fn gsd_apply_refactor(
             completed_at: None,
         }],
         metadata,
+        dry_run: dry_run.unwrap_or(false),
     };
 
     // 3. Register and save the plan
@@ -331,12 +334,13 @@ pub async fn gsd_apply_refactor(
     // 4. Trigger execution
     let plan_id_clone = plan_id.clone();
     let app_clone = app.clone();
+    let dry_run_clone = plan.dry_run;
 
     tauri::async_runtime::spawn(async move {
         let state = app_clone.state::<Arc<GsdEngine>>();
         let orch = app_clone.state::<OrchestrationState>();
         let ai = app_clone.state::<Arc<RuntimeManager>>();
-        let _ = gsd_execute_plan(app_clone.clone(), state, orch, ai, plan_id_clone).await;
+        let _ = gsd_execute_plan(app_clone.clone(), state, orch, ai, plan_id_clone, Some(dry_run_clone)).await;
     });
 
     Ok(plan_id)
@@ -372,13 +376,18 @@ pub async fn gsd_execute_plan(
     orch: State<'_, OrchestrationState>,
     ai_runtime: State<'_, Arc<RuntimeManager>>,
     plan_id: String,
+    dry_run: Option<bool>,
 ) -> Result<(), String> {
     let mut plan = {
-        let plans = state.active_plans.lock().await;
-        plans
-            .get(&plan_id)
-            .cloned()
-            .ok_or_else(|| "Plan not found".to_string())?
+        let mut plans = state.active_plans.lock().await;
+        let p = plans
+            .get_mut(&plan_id)
+            .ok_or_else(|| "Plan not found".to_string())?;
+        
+        if let Some(dr) = dry_run {
+            p.dry_run = dr;
+        }
+        p.clone()
     };
 
     let engine = state.inner().clone();
@@ -400,7 +409,8 @@ pub async fn gsd_execute_plan(
             project_path.clone(),
             active_project_paths,
             engine.knowledge.clone(),
-            engine.governance.clone()
+            engine.governance.clone(),
+            plan.dry_run
         );
         let max_phase_step_count = plan
             .phases

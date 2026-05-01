@@ -651,22 +651,21 @@ export interface Api {
   gsdAddStep?: (planId: string, phaseId: string, title: string, description: string) => Promise<GsdStep>
   gsdExecutePlan?: (planId: string) => Promise<void>
   gsdRespondToCheckpoint?: (stepId: string, response: UserResponse) => Promise<void>
-  gsdRespondToApproval: (approvalId: string, response: string) => Promise<void>;
-  gsdGetGovernanceStatus: () => Promise<SwarmPolicy>;
-  gsdGetPersonas: () => Promise<SwarmPersona[]>;
-  gsdSyncMemory: () => Promise<number>;
-  gsdUpdatePolicy: (policy: SwarmPolicy) => Promise<void>;
-  gsdListTools: () => Promise<ToolInfo[]>;
+  gsdRespondToApproval?: (approvalId: string, response: string) => Promise<void>
+  gsdGetGovernanceStatus?: () => Promise<SwarmPolicy>
+  gsdGetPersonas?: () => Promise<SwarmPersona[]>
+  gsdSyncMemory?: () => Promise<number>
+  gsdUpdatePolicy?: (policy: SwarmPolicy) => Promise<void>
+  gsdListTools?: () => Promise<ToolInfo[]>
   onGsdExecutionEvent?: (callback: (event: GsdExecutionEvent) => void) => Unsubscribe
   onGsdInsight?: (callback: (insight: NeuralInsight) => void) => Unsubscribe
   onGsdApprovalRequested?: (callback: (approval: GsdApprovalRequest) => void) => Unsubscribe
   onGsdPhaseUpdated?: (callback: (phase: GsdPhase) => void) => Unsubscribe
   onGsdStepUpdated?: (callback: (step: GsdStep) => void) => Unsubscribe
-  gsdListTools?: () => Promise<ToolInfo[]>
   gsdSwarmQueryMemory?: (query: string, patternType?: string, limit?: number) => Promise<SwarmKnowledge[]>
   gsdSwarmRecordPattern?: (patternType: string, patternKey: string, content: string, metadata?: string) => Promise<void>
   gsdIdentifyRefactors?: () => Promise<string>
-  gsdApplyRefactor?: (finding: any) => Promise<string>
+  gsdApplyRefactor?: (finding: any, dryRun?: boolean) => Promise<string>
   gsdGetRefactorDetails?: (symbolName: string) => Promise<string>
 
   // ==========================================================================

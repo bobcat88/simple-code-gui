@@ -77,7 +77,7 @@ export function BrainstormCanvas({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedNodeIds, selectedEdgeId, canvas])
 
-  const updateNode = (id: string, updates: Partial<BrainstormCanvasNode>) => {
+  const updateNode = (id: string, updates: Partial<NodeType>) => {
     const newNodes = canvas.nodes.map(n => n.id === id ? { ...n, ...updates } : n)
     const newCanvas = { ...canvas, nodes: newNodes }
     setCanvas(newCanvas)
@@ -86,7 +86,7 @@ export function BrainstormCanvas({
 
   const addManualNode = () => {
     const id = `manual-${Date.now()}`
-    const newNode: BrainstormCanvasNode = {
+    const newNode: NodeType = {
       id,
       sourceId: id,
       nodeType: 'seed',

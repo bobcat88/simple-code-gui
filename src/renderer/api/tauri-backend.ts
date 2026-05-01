@@ -26,7 +26,9 @@ import {
   UserResponse,
   VectorSearchResult,
   VectorIndexStatus,
-  VectorChunk
+  VectorChunk,
+  GsdExecutionEvent,
+  GsdApprovalRequest
 } from './types'
 import { tauriIpc } from '../lib/tauri-ipc'
 import { check } from '@tauri-apps/plugin-updater'
@@ -416,7 +418,7 @@ export class TauriBackend implements ExtendedApi {
     await tauriIpc.gsdRespondToCheckpoint(stepId, response);
   }
 
-  onGsdExecutionEvent(callback: (event: any) => void): Unsubscribe {
+  onGsdExecutionEvent(callback: (event: GsdExecutionEvent) => void): Unsubscribe {
     let unlisten: (() => void) | undefined;
     tauriIpc.onGsdExecutionEvent(callback).then(fn => unlisten = fn);
     return () => unlisten?.();
@@ -440,7 +442,7 @@ export class TauriBackend implements ExtendedApi {
     return () => unlisten?.();
   }
 
-  onGsdApprovalRequested(callback: (approval: any) => void): Unsubscribe {
+  onGsdApprovalRequested(callback: (approval: GsdApprovalRequest) => void): Unsubscribe {
     let unlisten: (() => void) | undefined;
     tauriIpc.onGsdApprovalRequested(callback).then(fn => unlisten = fn);
     return () => unlisten?.();
@@ -565,8 +567,8 @@ export class TauriBackend implements ExtendedApi {
     return await tauriIpc.gsdIdentifyRefactors();
   }
 
-  async gsdApplyRefactor(finding: any): Promise<string> {
-    return await tauriIpc.gsdApplyRefactor(finding);
+  async gsdApplyRefactor(finding: any, dryRun?: boolean): Promise<string> {
+    return await tauriIpc.gsdApplyRefactor(finding, dryRun);
   }
 
   async gsdGetRefactorDetails(symbolName: string): Promise<string> {
@@ -604,5 +606,21 @@ export class TauriBackend implements ExtendedApi {
 
   async brainstormArchitectReview(cwd: string, baseId: string, baseType: string, baseTitle: string, baseContent: string): Promise<BrainstormCanvasNode> {
     return await tauriIpc.brainstormArchitectReview(cwd, baseId, baseType, baseTitle, baseContent);
+  }
+
+  async addActiveProject(path: string): Promise<void> {
+    await tauriIpc.addActiveProject(path);
+  }
+
+  async removeActiveProject(path: string): Promise<void> {
+    await tauriIpc.removeActiveProject(path);
+  }
+
+  async getActiveProjects(): Promise<string[]> {
+    return await tauriIpc.getActiveProjects();
+  }
+
+  async brainstormSaveTopology(cwd: string, content: string): Promise<{ success: boolean; error?: string }> {
+    return await tauriIpc.brainstormSaveTopology(cwd, content);
   }
 }
