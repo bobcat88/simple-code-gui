@@ -12,10 +12,15 @@ import {
   Camera,
   Download,
   CheckCircle2,
-  Share2
+  Share2,
+  History,
+  Layers,
+  ExternalLink,
+  ChevronRight
 } from 'lucide-react';
-import type { ExtendedApi } from '../../api/types';
+import type { ExtendedApi, SwarmSnapshot } from '../../api/types';
 import { NeuralSwarmGraph } from './NeuralSwarmGraph';
+import { useSwarmSnapshots } from '../../hooks/useSwarmSnapshots';
 
 interface SwarmActivityStreamProps {
   api: ExtendedApi;
@@ -24,9 +29,12 @@ interface SwarmActivityStreamProps {
 
 export const SwarmActivityStream: React.FC<SwarmActivityStreamProps> = ({ api, projectPath }) => {
   const { messages, loading, refresh } = useSwarmMessages(30);
+  const { snapshots, refresh: refreshSnapshots } = useSwarmSnapshots(projectPath);
   const [isSnapshotting, setIsSnapshotting] = React.useState(false);
   const [isHydrating, setIsHydrating] = React.useState(false);
+  const [isRestoring, setIsRestoring] = React.useState<string | null>(null);
   const [lastAction, setLastAction] = React.useState<string | null>(null);
+  const [view, setView] = React.useState<'activity' | 'snapshots'>('activity');
 
   const handleSnapshot = async () => {
     if (!projectPath) return;
@@ -61,6 +69,24 @@ export const SwarmActivityStream: React.FC<SwarmActivityStreamProps> = ({ api, p
       console.error('Failed to hydrate swarm:', err);
     } finally {
       setIsHydrating(false);
+    }
+  };
+
+  const handleRestoreWorkspace = async (snapshot: SwarmSnapshot) => {
+    if (!projectPath) return;
+    setIsRestoring(snapshot.id);
+    setLastAction(null);
+    try {
+      const result = await api.gsdCreateSnapshotWorkspace(snapshot.id);
+      if (result.success) {
+        setLastAction(`Workspace isolated at: ${result.path}`);
+        refreshSnapshots();
+        setTimeout(() => setLastAction(null), 5000);
+      }
+    } catch (err) {
+      console.error('Failed to restore workspace:', err);
+    } finally {
+      setIsRestoring(null);
     }
   };
 
@@ -157,9 +183,21 @@ export const SwarmActivityStream: React.FC<SwarmActivityStreamProps> = ({ api, p
 
       <div className="flex-1 flex flex-col bg-zinc-950/20 backdrop-blur-md border border-white/5 rounded-xl overflow-hidden shadow-2xl min-h-[300px]">
         <div className="p-3 border-b border-white/5 flex items-center justify-between bg-zinc-900/40">
-          <div className="flex items-center gap-2">
-            <Users size={14} className="text-blue-400" />
-            <h3 className="text-xs font-bold text-zinc-100 uppercase tracking-wider">Thought Chain</h3>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setView('activity')}
+              className={`flex items-center gap-2 px-1 py-1 transition-all border-b-2 ${view === 'activity' ? 'border-blue-500 text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+            >
+              <Users size={14} />
+              <span className="text-xs font-bold uppercase tracking-wider text-inherit">Thought Chain</span>
+            </button>
+            <button 
+              onClick={() => setView('snapshots')}
+              className={`flex items-center gap-2 px-1 py-1 transition-all border-b-2 ${view === 'snapshots' ? 'border-indigo-500 text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+            >
+              <History size={14} />
+              <span className="text-xs font-bold uppercase tracking-wider text-inherit">Snapshots</span>
+            </button>
           </div>
           <div className="flex items-center gap-2">
             <button className="p-1 text-zinc-500 hover:text-zinc-300 transition-colors">
@@ -169,59 +207,127 @@ export const SwarmActivityStream: React.FC<SwarmActivityStreamProps> = ({ api, p
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 space-y-3 opacity-20">
-              <Users size={32} />
-              <div className="text-[10px] uppercase tracking-[0.2em] font-bold">Waiting for swarm sync</div>
-            </div>
-          ) : (
-            messages.map((msg) => {
-              const styles = getTypeStyles(msg.message_type);
-              return (
-                <div 
-                  key={msg.id}
-                  className={`p-2.5 rounded-lg border ${styles.border} ${styles.bg} transition-all hover:bg-white/5 group relative overflow-hidden`}
-                >
-                  <div className="flex items-start gap-3 relative z-10">
-                    <div className="shrink-0 mt-0.5">
-                      <div className="p-1.5 rounded bg-zinc-900/80 border border-white/5 shadow-inner">
-                        {styles.icon}
+          {view === 'activity' ? (
+            messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 space-y-3 opacity-20">
+                <Users size={32} />
+                <div className="text-[10px] uppercase tracking-[0.2em] font-bold">Waiting for swarm sync</div>
+              </div>
+            ) : (
+              messages.map((msg) => {
+                const styles = getTypeStyles(msg.message_type);
+                return (
+                  <div 
+                    key={msg.id}
+                    className={`p-2.5 rounded-lg border ${styles.border} ${styles.bg} transition-all hover:bg-white/5 group relative overflow-hidden`}
+                  >
+                    <div className="flex items-start gap-3 relative z-10">
+                      <div className="shrink-0 mt-0.5">
+                        <div className="p-1.5 rounded bg-zinc-900/80 border border-white/5 shadow-inner">
+                          {styles.icon}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <span className={`text-[9px] font-black uppercase tracking-tighter px-1 rounded bg-zinc-900 ${styles.text}`}>
-                            {styles.label}
-                          </span>
-                          <div className="flex items-center gap-1 text-zinc-400">
-                            <User size={10} />
-                            <span className="text-[10px] font-bold truncate max-w-[80px]">{msg.from_agent}</span>
-                          </div>
-                          {msg.to_agent && (
-                            <div className="flex items-center gap-1 text-zinc-500">
-                              <span className="text-[10px]">→</span>
-                              <span className="text-[10px] italic">{msg.to_agent}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[9px] font-black uppercase tracking-tighter px-1 rounded bg-zinc-900 ${styles.text}`}>
+                              {styles.label}
+                            </span>
+                            <div className="flex items-center gap-1 text-zinc-400">
+                              <User size={10} />
+                              <span className="text-[10px] font-bold truncate max-w-[80px]">{msg.from_agent}</span>
                             </div>
-                          )}
+                            {msg.to_agent && (
+                              <div className="flex items-center gap-1 text-zinc-500">
+                                <span className="text-[10px]">→</span>
+                                <span className="text-[10px] italic">{msg.to_agent}</span>
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-[9px] text-zinc-500 font-medium font-mono">
+                            {formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true })}
+                          </span>
                         </div>
-                        <span className="text-[9px] text-zinc-500 font-medium font-mono">
-                          {formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true })}
-                        </span>
+                        <p className="text-[11px] text-zinc-300 leading-relaxed font-medium">
+                          {msg.content}
+                        </p>
+                        {msg.metadata && Object.keys(msg.metadata).length > 0 && (
+                          <div className="mt-2 p-1.5 rounded bg-black/60 border border-white/5 text-[9px] text-zinc-500 font-mono overflow-x-auto whitespace-pre custom-scrollbar max-h-32">
+                            {JSON.stringify(msg.metadata, null, 2)}
+                          </div>
+                        )}
                       </div>
-                      <p className="text-[11px] text-zinc-300 leading-relaxed font-medium">
-                        {msg.content}
-                      </p>
-                      {msg.metadata && Object.keys(msg.metadata).length > 0 && (
-                        <div className="mt-2 p-1.5 rounded bg-black/60 border border-white/5 text-[9px] text-zinc-500 font-mono overflow-x-auto whitespace-pre custom-scrollbar max-h-32">
-                          {JSON.stringify(msg.metadata, null, 2)}
-                        </div>
-                      )}
                     </div>
                   </div>
+                );
+              })
+            )
+          ) : (
+            // Snapshots View
+            snapshots.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 space-y-3 opacity-20">
+                <History size={32} />
+                <div className="text-[10px] uppercase tracking-[0.2em] font-bold">No Neural Snapshots Found</div>
+              </div>
+            ) : (
+              snapshots.map((snapshot) => (
+                <div 
+                  key={snapshot.id}
+                  className="p-3 rounded-lg border border-white/5 bg-zinc-900/40 hover:bg-zinc-800/40 transition-all group relative overflow-hidden"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded bg-indigo-500/10 border border-indigo-500/20">
+                        <Layers size={14} className="text-indigo-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-[11px] font-bold text-white leading-tight">{snapshot.name}</h4>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[9px] text-zinc-500 font-mono">{snapshot.commit_sha?.substring(0, 7) || 'NO_COMMIT'}</span>
+                          <span className="text-zinc-700">•</span>
+                          <span className="text-[9px] text-zinc-500 italic">
+                            {formatDistanceToNow(new Date(snapshot.timestamp), { addSuffix: true })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {snapshot.worktree_path ? (
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold uppercase tracking-tighter">
+                          <CheckCircle2 size={10} />
+                          Active Workspace
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => handleRestoreWorkspace(snapshot)}
+                          disabled={isRestoring !== null}
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 text-indigo-400 text-[9px] font-bold uppercase tracking-tighter transition-all"
+                        >
+                          {isRestoring === snapshot.id ? (
+                            <Activity size={10} className="animate-spin" />
+                          ) : (
+                            <Zap size={10} />
+                          )}
+                          Restore Workspace
+                        </button>
+                      )}
+                      <button 
+                        className="p-1.5 rounded bg-zinc-800 border border-white/5 text-zinc-500 hover:text-white transition-all"
+                        title="View Snapshot Data"
+                      >
+                        <ChevronRight size={12} />
+                      </button>
+                    </div>
+                  </div>
+                  {snapshot.worktree_path && (
+                    <div className="mt-2 flex items-center gap-2 p-1.5 rounded bg-black/40 border border-emerald-500/10 font-mono text-[8px] text-emerald-400/60 overflow-hidden">
+                      <ExternalLink size={8} />
+                      <span className="truncate">{snapshot.worktree_path}</span>
+                    </div>
+                  )}
                 </div>
-              );
-            })
+              ))
+            )
           )}
         </div>
       </div>

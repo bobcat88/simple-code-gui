@@ -28,7 +28,8 @@ import {
   VectorIndexStatus,
   VectorChunk,
   GsdExecutionEvent,
-  GsdApprovalRequest
+  GsdApprovalRequest,
+  SwarmSnapshot
 } from './types'
 import { tauriIpc } from '../lib/tauri-ipc'
 import { check } from '@tauri-apps/plugin-updater'
@@ -648,6 +649,19 @@ export class TauriBackend implements ExtendedApi {
       return { success: true, count };
     } catch (e) {
       return { success: false, count: 0, error: String(e) };
+    }
+  }
+
+  async gsdGetSwarmSnapshots(projectPath: string): Promise<SwarmSnapshot[]> {
+    return await tauriIpc.getSwarmSnapshots(projectPath);
+  }
+
+  async gsdCreateSnapshotWorkspace(snapshotId: string): Promise<{ success: boolean; path?: string; error?: string }> {
+    try {
+      const path = await tauriIpc.createSnapshotWorkspace(snapshotId);
+      return { success: true, path };
+    } catch (e) {
+      return { success: false, error: String(e) };
     }
   }
 }

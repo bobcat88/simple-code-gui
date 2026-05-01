@@ -374,6 +374,12 @@ export const tauriIpc = {
   hydrateSwarmFromSnapshots: (projectPath: string) =>
     invoke<number>('hydrate_swarm_from_snapshots', { projectPath }),
 
+  getSwarmSnapshots: (projectPath?: string) =>
+    invoke<any[]>('get_swarm_snapshots', { project_path: projectPath }),
+
+  createSnapshotWorkspace: (snapshotId: string) =>
+    invoke<string>('create_snapshot_workspace', { snapshot_id: snapshotId }),
+
   // Brainstorm Companion
   gsdListSeeds: (cwd: string) =>
     invoke<any[]>('gsd_list_seeds', { cwd }),
