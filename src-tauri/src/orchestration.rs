@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::process::Command;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use std::collections::HashMap;
 use std::sync::Arc;
 use parking_lot::Mutex as PlMutex;
@@ -1291,7 +1291,7 @@ pub async fn create_swarm_snapshot_file(
     let snapshot_id = Uuid::new_v4().to_string();
     
     // 1. Create Snapshot record in SQLite
-    crate::database::create_swarm_snapshot(&db.pool, &snapshot_id, &current_path, Some(&name), None).await?;
+    crate::database::create_swarm_snapshot(&db.pool, &snapshot_id, &current_path, Some(&name), None, None).await?;
     
     // 2. Fetch all messages for this project that aren't snapshotted yet
     let messages = crate::database::get_swarm_messages(&db.pool, Some(&current_path), None, None).await?;
@@ -1354,7 +1354,8 @@ pub async fn internal_hydrate_swarm(
                 id, 
                 project_path, 
                 name,
-                snapshot["commit_sha"].as_str()
+                snapshot["commit_sha"].as_str(),
+                None
             ).await;
             
             // Insert messages
@@ -1462,4 +1463,52 @@ pub async fn brainstorm_save_topology(cwd: String, content: String) -> Result<se
     let _ = std::fs::write(latest_path, content);
 
     Ok(serde_json::json!({ "success": true, "path": path.to_string_lossy() }))
+}
+
+#[tauri::command]
+pub async fn create_snapshot_workspace(
+    app: AppHandle,
+    db: State<'_, Arc<DatabaseManager>>,
+    snapshot_id: String,
+) -> Result<String, String> {
+    // 1. Fetch snapshot details
+    let snapshot = crate::database::get_swarm_snapshot(&db.pool, &snapshot_id).await?;
+
+    let project_path = snapshot.project_path;
+    let commit_sha = snapshot.commit_sha.ok_or("Snapshot has no commit SHA")?;
+
+    // 2. Determine worktree path in cache
+    let cache_dir = app.path().app_cache_dir().unwrap().join("snapshots").join(&snapshot_id);
+    
+    // 3. Create git worktree
+    let output = Command::new("git")
+        .current_dir(&project_path)
+        .arg("worktree")
+        .arg("add")
+        .arg("--detach")
+        .arg(&cache_dir)
+        .arg(&commit_sha)
+        .output()
+        .map_err(|e| format!("Failed to run git worktree: {}", e))?;
+
+    if !output.status.success() {
+        let err = String::from_utf8_lossy(&output.stderr);
+        if !err.contains("already exists") {
+            return Err(format!("Git worktree error: {}", err));
+        }
+    }
+
+    // 4. Update snapshot record with worktree path
+    let worktree_path = cache_dir.to_string_lossy().to_string();
+    crate::database::update_swarm_snapshot_worktree(&db.pool, &snapshot_id, &worktree_path).await?;
+
+    Ok(worktree_path)
+}
+
+#[tauri::command]
+pub async fn get_swarm_snapshots(
+    db: State<'_, Arc<DatabaseManager>>,
+    project_path: Option<String>,
+) -> Result<Vec<crate::database::SwarmSnapshot>, String> {
+    crate::database::get_swarm_snapshots(&db.pool, project_path.as_deref()).await
 }

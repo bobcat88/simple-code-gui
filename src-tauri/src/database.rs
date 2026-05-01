@@ -657,6 +657,7 @@ impl DatabaseManager {
                 project_path TEXT NOT NULL,
                 name TEXT,
                 commit_sha TEXT,
+                worktree_path TEXT,
                 timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
             )",
         )
@@ -666,6 +667,9 @@ impl DatabaseManager {
 
         // Ensure name column exists (for migrations)
         let _ = sqlx::query("ALTER TABLE swarm_snapshots ADD COLUMN name TEXT")
+            .execute(&self.pool)
+            .await;
+        let _ = sqlx::query("ALTER TABLE swarm_snapshots ADD COLUMN worktree_path TEXT")
             .execute(&self.pool)
             .await;
 
@@ -849,11 +853,13 @@ pub async fn get_swarm_messages(
     Ok(messages)
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct SwarmSnapshot {
     pub id: String,
     pub project_path: String,
+    pub name: Option<String>,
     pub commit_sha: Option<String>,
+    pub worktree_path: Option<String>,
     pub timestamp: String,
 }
 
@@ -863,19 +869,68 @@ pub async fn create_swarm_snapshot(
     project_path: &str,
     name: Option<&str>,
     commit_sha: Option<&str>,
+    worktree_path: Option<&str>,
 ) -> Result<(), String> {
     sqlx::query(
-        "INSERT OR IGNORE INTO swarm_snapshots (id, project_path, name, commit_sha) VALUES (?, ?, ?, ?)",
+        "INSERT OR IGNORE INTO swarm_snapshots (id, project_path, name, commit_sha, worktree_path) VALUES (?, ?, ?, ?, ?)",
     )
     .bind(id)
     .bind(project_path)
     .bind(name)
     .bind(commit_sha)
+    .bind(worktree_path)
     .execute(pool)
     .await
     .map_err(|e| e.to_string())?;
 
     Ok(())
+}
+
+pub async fn get_swarm_snapshot(
+    pool: &SqlitePool,
+    id: &str,
+) -> Result<SwarmSnapshot, String> {
+    sqlx::query_as::<_, SwarmSnapshot>(
+        "SELECT id, project_path, name, commit_sha, worktree_path, timestamp FROM swarm_snapshots WHERE id = ?"
+    )
+    .bind(id)
+    .fetch_one(pool)
+    .await
+    .map_err(|e| e.to_string())
+}
+
+pub async fn update_swarm_snapshot_worktree(
+    pool: &SqlitePool,
+    id: &str,
+    worktree_path: &str,
+) -> Result<(), String> {
+    sqlx::query(
+        "UPDATE swarm_snapshots SET worktree_path = ? WHERE id = ?"
+    )
+    .bind(worktree_path)
+    .bind(id)
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+pub async fn get_swarm_snapshots(
+    pool: &SqlitePool,
+    project_path: Option<&str>,
+) -> Result<Vec<SwarmSnapshot>, String> {
+    let query = if let Some(path) = project_path {
+        sqlx::query_as::<_, SwarmSnapshot>(
+            "SELECT id, project_path, name, commit_sha, worktree_path, timestamp FROM swarm_snapshots WHERE project_path = ? ORDER BY timestamp DESC"
+        )
+        .bind(path)
+    } else {
+        sqlx::query_as::<_, SwarmSnapshot>(
+            "SELECT id, project_path, name, commit_sha, worktree_path, timestamp FROM swarm_snapshots ORDER BY timestamp DESC"
+        )
+    };
+
+    query.fetch_all(pool).await.map_err(|e| e.to_string())
 }
 
 pub async fn link_messages_to_snapshot(
@@ -895,29 +950,6 @@ pub async fn link_messages_to_snapshot(
     Ok(())
 }
 
-pub async fn get_swarm_snapshots(
-    pool: &SqlitePool,
-    project_path: &str,
-) -> Result<Vec<SwarmSnapshot>, String> {
-    let rows = sqlx::query_as::<_, (String, String, Option<String>, String)>(
-        "SELECT id, project_path, commit_sha, timestamp FROM swarm_snapshots WHERE project_path = ? ORDER BY timestamp DESC",
-    )
-    .bind(project_path)
-    .fetch_all(pool)
-    .await
-    .map_err(|e| e.to_string())?;
-
-    let snapshots = rows.into_iter().map(|(id, project_path, commit_sha, timestamp)| {
-        SwarmSnapshot {
-            id,
-            project_path,
-            commit_sha,
-            timestamp,
-        }
-    }).collect();
-
-    Ok(snapshots)
-}
 
 #[cfg(test)]
 mod tests {

@@ -43,6 +43,7 @@ use orchestration::{
     create_swarm_snapshot_file, hydrate_swarm_from_snapshots,
     gsd_list_seeds, gsd_plant_seed, gsd_update_seed_status, kspec_list_drafts, kspec_write_draft,
     brainstorm_agentic_sketch, brainstorm_architect_review, brainstorm_save_topology,
+    create_snapshot_workspace, get_swarm_snapshots,
 };
 use pty_manager::PtyManager;
 use settings_manager::{AppSettings, SettingsManager};
@@ -779,7 +780,9 @@ pub fn run() {
             brainstorm_agentic_sketch,
             brainstorm_architect_review,
             brainstorm_save_topology,
-            gsd_update_seed_status
+            gsd_update_seed_status,
+            create_snapshot_workspace,
+            get_swarm_snapshots,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

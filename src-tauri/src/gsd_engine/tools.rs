@@ -57,6 +57,11 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
             }
             run_command(&mut cmd, project_path)
         }
+        "kspec_validate" => {
+            let mut cmd = Command::new("bun");
+            cmd.arg("x").arg("kspec").arg("validate");
+            run_command(&mut cmd, project_path)
+        }
         "read_file" => {
             let path = args["path"].as_str().ok_or("Missing path argument")?;
             let full_path = resolve_path(path, project_path)?;
@@ -555,6 +560,14 @@ pub fn get_gsd_tools() -> Vec<crate::ai_runtime::types::ToolDefinition> {
                 "properties": {
                     "scope": { "type": "string", "enum": ["unstaged", "staged", "all"], "description": "What to analyze (defaults to unstaged)" }
                 }
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "kspec_validate".to_string(),
+            description: "Run Kspec validation on the codebase to ensure requirement alignment and AC coverage.".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {}
             }),
         },
     ]
