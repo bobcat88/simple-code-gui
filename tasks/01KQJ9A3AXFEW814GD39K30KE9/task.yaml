@@ -5,13 +5,21 @@ title: "Implement: HTTP Prompt API"
 type: task
 spec_ref: "@prompt-api"
 derivation: auto
-status: in_progress
+status: pending_review
 blocked_by: []
 depends_on: []
 context: []
 priority: 3
 tags: []
 vcs_refs: []
+submission_linkage:
+  review_url: null
+  branch: feature/phase-29-swarm-governance
+  captured_at: 2026-05-01T17:28:34.022Z
+  commit: d8ded809f05180be8594146eed97e185796880f9
+  remote: origin
+  remote_url: https://github.com/bobcat88/simple-code-gui
+  upstream_ref: refs/heads/feature/phase-29-swarm-governance
 history:
   - author: Johan.P
     changes:
@@ -23,6 +31,27 @@ history:
         previous: null
     command: task-start
     timestamp: 2026-05-01T17:28:31.266Z
+  - author: Johan.P
+    changes:
+      status:
+        new: pending_review
+        previous: in_progress
+      submission_linkage:
+        new:
+          review_url: null
+          branch: feature/phase-29-swarm-governance
+          captured_at: 2026-05-01T17:28:34.022Z
+          commit: d8ded809f05180be8594146eed97e185796880f9
+          remote: origin
+          remote_url: https://github.com/bobcat88/simple-code-gui
+          upstream_ref: refs/heads/feature/phase-29-swarm-governance
+        previous: null
+      submitted_at:
+        new: 2026-05-01T17:28:34.028Z
+        previous: null
+    command: task-submit
+    timestamp: 2026-05-01T17:28:34.028Z
 created_at: 2026-05-01T17:27:46.781Z
 started_at: 2026-05-01T17:28:31.266Z
+submitted_at: 2026-05-01T17:28:34.028Z
 todos: []
