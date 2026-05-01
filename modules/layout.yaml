@@ -24,7 +24,7 @@ features:
       coordinates. Supports splitting, swapping, and multi-tab tiles on a pannable canvas.
     status:
       maturity: draft
-      implementation: in_progress
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
