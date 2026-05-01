@@ -322,10 +322,26 @@ pub async fn gsd_apply_refactor(
     }
 
     // PHASE 2: Implementation
-    phases.push(GsdPhase {
-        id: "refactor-implementation".to_string(),
-        title: "Implementation".to_string(),
-        steps: vec![GsdStep {
+    let mut impl_steps = Vec::new();
+    if let Some(files) = finding["affectedFiles"].as_array() {
+        for (i, file) in files.iter().enumerate() {
+            let file_path = file.as_str().unwrap_or("unknown_file");
+            impl_steps.push(GsdStep {
+                id: format!("refactor-step-{}", i + 1),
+                title: format!("Apply refactor to: {}", file_path),
+                description: format!("Apply the refactoring logic to `{}`. {}", file_path, description),
+                status: StepStatus::Pending,
+                result: None,
+                attempts: 0,
+                max_retries: 3,
+                wave_index: Some(1), // Execute all in parallel
+                started_at: None,
+                completed_at: None,
+            });
+        }
+    } else {
+        // Fallback to single step
+        impl_steps.push(GsdStep {
             id: "refactor-step-1".to_string(),
             title: format!("Apply refactor: {}", title),
             description: description.to_string(),
@@ -336,7 +352,13 @@ pub async fn gsd_apply_refactor(
             wave_index: Some(1),
             started_at: None,
             completed_at: None,
-        }],
+        });
+    }
+
+    phases.push(GsdPhase {
+        id: "refactor-implementation".to_string(),
+        title: "Implementation".to_string(),
+        steps: impl_steps,
         status: StepStatus::Pending,
         started_at: None,
         completed_at: None,

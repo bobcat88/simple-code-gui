@@ -50,6 +50,7 @@ impl OutputBuffer {
     }
 
     fn append(&mut self, data: &str) {
+        // AC: @pty-lifecycle ac-2
         let text = format!("{}{}", self.partial, data);
         let mut parts: Vec<&str> = text.split('\n').collect();
         
@@ -155,6 +156,7 @@ impl PtyManager {
         cols: u16,
         nexus_session_id: Option<String>,
     ) -> Result<String, String> {
+        // AC: @pty-lifecycle ac-1
         let id = Uuid::new_v4().to_string();
         let pty_system = native_pty_system();
         
@@ -170,6 +172,7 @@ impl PtyManager {
         println!("[PTY] Found executable: {}", exe);
         
         let mut cmd = CommandBuilder::new(exe);
+        // AC: @no-shell-injection ac-injection-1
         cmd.cwd(cwd.clone());
         cmd.args(args.clone());
         

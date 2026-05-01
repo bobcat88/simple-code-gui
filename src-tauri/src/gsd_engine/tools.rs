@@ -40,9 +40,9 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
             run_command(&mut cmd, project_path)
         }
         "gsd_identify_refactors" => {
-            // Proactive scan for technical debt
+            // Proactive scan for technical debt (long functions)
             let mut cmd = Command::new("gitnexus");
-            cmd.arg("analyze").arg("--mode").arg("proactive");
+            cmd.arg("cypher").arg("MATCH (f:Function) WHERE f.endLine - f.startLine > 200 RETURN f.name, f.filePath, (f.endLine - f.startLine) as lines ORDER BY lines DESC");
             if let Some(ref path) = project_path {
                 cmd.arg("--repo").arg(path);
             }

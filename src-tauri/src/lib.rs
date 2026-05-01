@@ -80,6 +80,8 @@ async fn spawn_session(
     cols: u16,
     nexus_session_id: Option<String>,
 ) -> Result<String, String> {
+    // AC: @pty-lifecycle ac-1
+    // AC: @multi-backend ac-1, ac-2
     println!("[spawn_session] project: {}, backend: {}, nexus_session_id: {:?}", cwd, backend, nexus_session_id);
 
     // Validate CWD
@@ -122,6 +124,7 @@ async fn write_to_pty(
     id: String,
     data: String,
 ) -> Result<(), String> {
+    // AC: @pty-lifecycle ac-2
     state.write(&id, &data)
 }
 
@@ -137,6 +140,7 @@ async fn resize_pty(
 
 #[tauri::command]
 async fn kill_session(state: State<'_, Arc<PtyManager>>, id: String) -> Result<(), String> {
+    // AC: @pty-lifecycle ac-3
     state.kill(&id);
     Ok(())
 }
@@ -148,6 +152,7 @@ async fn set_pty_backend(
     id: String,
     backend: String,
 ) -> Result<(), String> {
+    // AC: @backend-switching ac-switching-1
     state.set_backend(app, &id, backend)
 }
 
@@ -183,6 +188,8 @@ async fn log_token_event(
     transaction: TokenTransactionInput,
     saved_tokens: Option<i64>,
 ) -> Result<(), String> {
+    // AC: @token-history ac-2
+    // AC: @rtk-telemetry ac-savings-1
     insert_token_transaction(&db.pool, &transaction).await?;
 
     sqlx::query(

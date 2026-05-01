@@ -2,7 +2,7 @@ use crate::ai_runtime::RuntimeManager;
 use crate::database::DatabaseManager;
 use crate::gsd_engine::types::{ExecutionEvent, GsdPhase, GsdStep, StepStatus};
 use chrono::Utc;
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 use std::process::Command;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager};
@@ -59,19 +59,6 @@ pub(crate) fn resolve_runtime_config(
         wave_size,
         verifier_retries,
     }
-}
-
-pub(crate) fn build_wave_batches(step_count: usize, wave_size: usize) -> Vec<Vec<usize>> {
-    if step_count == 0 {
-        return Vec::new();
-    }
-
-    let wave_size = wave_size.max(1);
-    (0..step_count)
-        .collect::<Vec<_>>()
-        .chunks(wave_size)
-        .map(|chunk| chunk.to_vec())
-        .collect()
 }
 
 // AC: @01KPNWTK ac-gen-1
@@ -199,7 +186,33 @@ impl Executor {
         ).await;
 
         // AC: @01KPNWTJ ac-gen-1
-        let wave_batches = build_wave_batches(phase.steps.len(), runtime.wave_size);
+        // Group steps by wave_index, or use sequential chunks if wave_index is missing
+        let mut wave_groups: BTreeMap<u32, Vec<usize>> = BTreeMap::new();
+        let mut unassigned_steps = Vec::new();
+        
+        for (i, step) in phase.steps.iter().enumerate() {
+            if let Some(w) = step.wave_index {
+                wave_groups.entry(w).or_default().push(i);
+            } else {
+                unassigned_steps.push(i);
+            }
+        }
+        
+        // Final sequence of batches to execute
+        let mut wave_batches = Vec::new();
+        
+        // Add assigned waves in order
+        for (_w, step_indices) in wave_groups {
+            // Further split each wave if it exceeds wave_size
+            for chunk in step_indices.chunks(runtime.wave_size) {
+                wave_batches.push(chunk.to_vec());
+            }
+        }
+        
+        // Add unassigned steps at the end
+        for chunk in unassigned_steps.chunks(runtime.wave_size) {
+            wave_batches.push(chunk.to_vec());
+        }
 
         for (wave_index, batch) in wave_batches.iter().enumerate() {
             self.emit_execution_event(
@@ -218,7 +231,9 @@ impl Executor {
 
             for step_index in batch.iter().copied() {
                 let mut step = phase.steps[step_index].clone();
-                step.wave_index = Some(wave_index as u32 + 1);
+                if step.wave_index.is_none() {
+                    step.wave_index = Some(wave_index as u32 + 1);
+                }
                 phase.steps[step_index] = step.clone();
                 
                 let executor = self.clone();

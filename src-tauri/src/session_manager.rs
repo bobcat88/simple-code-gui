@@ -15,6 +15,7 @@ pub fn discover_sessions(
     project_path: &str,
     backend: Option<&str>,
 ) -> Result<Vec<Session>, String> {
+    // AC: @session-discovery ac-discovery-1
     let backend = backend.unwrap_or("claude");
 
     match backend {

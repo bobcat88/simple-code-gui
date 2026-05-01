@@ -20,11 +20,13 @@ pub struct RtkStats {
 
 #[command]
 pub async fn rtk_check() -> Result<bool, String> {
+    // AC: @cli-install ac-install-1
     Ok(Command::new("rtk").arg("--version").output().is_ok())
 }
 
 #[command]
 pub async fn rtk_get_stats() -> Result<RtkStats, String> {
+    // AC: @rtk-telemetry ac-savings-1
     let output = Command::new("rtk")
         .arg("gain")
         .arg("--format")
