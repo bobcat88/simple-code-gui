@@ -1139,7 +1139,7 @@
   title: "Implement: Extension Registry"
   type: task
   spec_ref: "@ext-registry"
-  status: pending
+  status: in_progress
   blocked_by: []
   depends_on: []
   priority: 3
@@ -1147,3 +1147,4 @@
   notes_count: 1
   todos_count: 0
   created_at: 2026-05-01T17:27:48.654Z
+  started_at: 2026-05-01T17:28:38.588Z
