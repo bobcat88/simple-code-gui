@@ -372,7 +372,7 @@ features:
         description: Configurable caps on token usage per task or session.
         status:
           maturity: draft
-          implementation: not_started
+          implementation: implemented
         acceptance_criteria:
           - given: the Budget & Rate Limits is implemented
             id: ac-gen-1
