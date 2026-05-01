@@ -181,8 +181,8 @@
     - task-foundation-connectivity
   title: "Foundation: Connectivity & Sync"
   type: task
-  spec_ref: "@prompt-api"
-  status: completed
+  spec_ref: "@01KK67BGNHP8DWNG777BRMSR8A"
+  status: in_progress
   blocked_by: []
   depends_on: []
   priority: 3
@@ -190,7 +190,7 @@
   notes_count: 0
   todos_count: 0
   created_at: 2026-04-28T22:18:32.096Z
-  automation: eligible
+  started_at: 2026-05-01T17:18:36.111Z
 - _ulid: 01KQB2RCE5SN6NNW7E2JN0604Q
   slugs:
     - task-foundation-extensions

@@ -6,12 +6,24 @@ type: task
 spec_ref: "@01KK67BGNHP8DWNG777BRMSR8A"
 meta_ref: null
 plan_ref: null
-status: pending
+status: in_progress
 blocked_by: []
 depends_on: []
 context: []
 priority: 3
 tags: []
 vcs_refs: []
+history:
+  - author: Johan.P
+    changes:
+      status:
+        new: in_progress
+        previous: pending
+      started_at:
+        new: 2026-05-01T17:18:36.111Z
+        previous: null
+    command: task-start
+    timestamp: 2026-05-01T17:18:36.112Z
 created_at: 2026-04-28T22:18:32.096Z
+started_at: 2026-05-01T17:18:36.111Z
 todos: []
