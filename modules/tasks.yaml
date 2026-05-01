@@ -140,7 +140,7 @@ features:
         description: Visual log of all system and agent activities across the current session.
         status:
           maturity: draft
-          implementation: not_started
+          implementation: implemented
         acceptance_criteria:
           - given: the Real-time Activity Feed is implemented
             id: ac-gen-1
