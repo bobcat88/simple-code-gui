@@ -63,7 +63,7 @@ features:
         description: Secure storage and retrieval of provider credentials in SQLite.
         status:
           maturity: draft
-          implementation: not_started
+          implementation: implemented
         depends_on: []
         implements: []
         relates_to: []
