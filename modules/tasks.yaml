@@ -3,9 +3,7 @@ slugs:
   - tasks
 title: Task Management
 type: module
-description: >-
-  Integrated task tracking via Beads and Kspec backends with unified adapter
-  pattern
+description: Integrated task tracking via Beads and Kspec backends with unified adapter pattern
 status:
   maturity: draft
   implementation: not_started
@@ -22,10 +20,8 @@ features:
       - beads-backend
     title: Beads Task Backend
     type: feature
-    description: >-
-      Task CRUD via Beads CLI (bd command). File watchers on .beads/ directory
-      with 500ms debounce. Task ID validation, shell injection prevention via
-      spawn().
+    description: Task CRUD via Beads CLI (bd command). File watchers on .beads/ directory with 500ms
+      debounce. Task ID validation, shell injection prevention via spawn().
     status:
       maturity: draft
       implementation: implemented
@@ -47,13 +43,11 @@ features:
       - kspec-backend
     title: Kspec Task Backend
     type: feature
-    description: >-
-      Spec-driven task management via kspec CLI. Daemon lifecycle management,
-      auto-injection of task instructions into CLAUDE.md, dispatch for
-      autonomous agents.
+    description: Spec-driven task management via kspec CLI. Daemon lifecycle management, auto-injection
+      of task instructions into CLAUDE.md, dispatch for autonomous agents.
     status:
       maturity: draft
-      implementation: not_started
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
@@ -72,10 +66,8 @@ features:
       - task-adapter
     title: Unified Task Adapter
     type: feature
-    description: >-
-      Adapter pattern abstracting Beads and Kspec backends behind a unified
-      TaskAdapter interface. Auto-detection of initialized backend, transparent
-      routing, migration support.
+    description: Adapter pattern abstracting Beads and Kspec backends behind a unified TaskAdapter
+      interface. Auto-detection of initialized backend, transparent routing, migration support.
     status:
       maturity: draft
       implementation: not_started
@@ -87,15 +79,11 @@ features:
     acceptance_criteria:
       - given: a project has kspec initialized
         id: ac-1
-        then: >-
-          the kspec adapter is auto-detected and used for all task operations
-          transparently
+        then: the kspec adapter is auto-detected and used for all task operations transparently
         when: the task panel loads
       - given: a project has beads initialized
         id: ac-2
-        then: >-
-          tasks are migrated from beads to kspec format and the adapter switches
-          to kspec backend
+        then: tasks are migrated from beads to kspec format and the adapter switches to kspec backend
         when: user clicks upgrade to kspec
     tags: []
     created: 2026-03-08T08:00:48.254Z
@@ -105,10 +93,9 @@ features:
       - task-panel
     title: Task Panel UI
     type: feature
-    description: >-
-      Collapsible bottom panel showing task list with filtering, sorting, inline
-      editing, status cycling, create/detail modals, and resizable height. State
-      machine: loading → not_installed → not_initialized → ready.
+    description: "Collapsible bottom panel showing task list with filtering, sorting, inline editing,
+      status cycling, create/detail modals, and resizable height. State machine: loading →
+      not_installed → not_initialized → ready."
     status:
       maturity: draft
       implementation: not_started
@@ -130,9 +117,7 @@ features:
       - orchestration-ui
     title: Advanced Orchestration UI
     type: feature
-    description: >-
-      High-fidelity dashboard for agent status, activity feeds, and approval
-      workflows.
+    description: High-fidelity dashboard for agent status, activity feeds, and approval workflows.
     status:
       maturity: draft
       implementation: not_started
@@ -152,9 +137,7 @@ features:
         slugs: []
         title: Real-time Activity Feed
         type: requirement
-        description: >-
-          Visual log of all system and agent activities across the current
-          session.
+        description: Visual log of all system and agent activities across the current session.
         status:
           maturity: draft
           implementation: not_started
@@ -188,9 +171,7 @@ features:
         slugs: []
         title: Agent Status Cards
         type: requirement
-        description: >-
-          Detailed status display for individual agents (Planner, Builder,
-          Reviewer).
+        description: Detailed status display for individual agents (Planner, Builder, Reviewer).
         status:
           maturity: draft
           implementation: not_started
@@ -258,9 +239,7 @@ features:
         slugs: []
         title: Task Assignment View
         type: requirement
-        description: >-
-          Management view for assigning agents to specific repositories or
-          tasks.
+        description: Management view for assigning agents to specific repositories or tasks.
         status:
           maturity: draft
           implementation: implemented
