@@ -149,7 +149,7 @@ features:
         description: Logic to break large tasks into sequential, manageable phases.
         status:
           maturity: draft
-          implementation: not_started
+          implementation: implemented
         depends_on: []
         implements: []
         relates_to: []
