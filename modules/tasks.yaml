@@ -70,7 +70,7 @@ features:
       interface. Auto-detection of initialized backend, transparent routing, migration support.
     status:
       maturity: draft
-      implementation: not_started
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
