@@ -1,0 +1,16 @@
+_ulid: 01KQJ99QZFENPBSAX63W5TYCZZ
+slugs:
+  - task-pty-session-lifecycle
+title: "Implement: PTY Session Lifecycle"
+type: task
+spec_ref: "@pty-lifecycle"
+derivation: auto
+status: pending
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-05-01T17:27:35.151Z
+todos: []

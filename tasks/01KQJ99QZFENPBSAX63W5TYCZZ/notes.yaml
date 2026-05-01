@@ -1,0 +1,25 @@
+notes:
+  - _ulid: 01KQJ99QZBCZ1GG392FXVJ40JV
+    content: >-
+      Implementation notes (auto-generated from spec):
+
+
+      Spawn, manage, resize, and terminate PTY processes running AI CLI backends. Ring buffer
+      captures last 200 lines with ANSI stripping.
+
+
+
+      Acceptance Criteria:
+
+      - ac-1: Given user opens a project, when a terminal session is spawned, then a PTY process is
+      created with node-pty using the resolved backend executable, correct cwd, and xterm-256color
+      terminal type
+
+      - ac-2: Given a PTY session is running, when terminal output is produced, then output is
+      captured in a 200-line ring buffer with ANSI codes stripped and relayed to renderer via IPC
+
+      - ac-3: Given a PTY session is running, when the user closes the tab or app exits, then the
+      PTY process is terminated and all listeners are cleaned up
+    supersedes: null
+    author: Johan.P
+    created_at: 2026-05-01T17:27:35.147Z
