@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use crate::gsd_engine::knowledge::SwarmMemory;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, Hash, PartialEq, Eq)]
 pub struct MemoryEntry {
     #[serde(rename = "type")]
     pub entry_type: String,

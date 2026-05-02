@@ -397,7 +397,7 @@ impl Executor {
                         memory_context = format!(
                             "\n\n[COLLECTIVE MEMORY]: The swarm has encountered similar tasks before. \
                             Consider these previous findings to avoid repeated mistakes:\n- {}",
-                            patterns.join("\n- ")
+                            patterns.iter().map(|p| p.content.as_str()).collect::<Vec<_>>().join("\n- ")
                         );
                     }
                 }

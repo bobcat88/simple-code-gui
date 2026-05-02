@@ -41,24 +41,38 @@ impl SwarmMemory {
     }
 
     /// Query the collective memory
-    pub fn query(&self, term: &str, entry_type: Option<&str>, limit: Option<usize>) -> Result<Vec<String>> {
+    pub fn query(&self, term: &str, entry_type: Option<&str>, limit: Option<usize>) -> Result<Vec<crate::gsd_engine::sync::MemoryEntry>> {
         let limit = limit.unwrap_or(5);
         let sql = if let Some(_t) = entry_type {
-            format!("SELECT content FROM swarm_knowledge WHERE type = ?1 AND swarm_knowledge MATCH ?2 ORDER BY rank LIMIT {}", limit)
+            format!("SELECT type, context, content, meta FROM swarm_knowledge WHERE type = ?1 AND swarm_knowledge MATCH ?2 ORDER BY rank LIMIT {}", limit)
         } else {
-            format!("SELECT content FROM swarm_knowledge WHERE swarm_knowledge MATCH ?1 ORDER BY rank LIMIT {}", limit)
+            format!("SELECT type, context, content, meta FROM swarm_knowledge WHERE swarm_knowledge MATCH ?1 ORDER BY rank LIMIT {}", limit)
         };
 
         let mut stmt = self.conn.prepare(&sql)?;
         let mut results = Vec::new();
 
         if let Some(t) = entry_type {
-            let rows = stmt.query_map(params![t, term], |row| row.get(0))?;
+            let rows = stmt.query_map(params![t, term], |row| {
+                Ok(crate::gsd_engine::sync::MemoryEntry {
+                    entry_type: row.get(0)?,
+                    context: row.get(1)?,
+                    content: row.get(2)?,
+                    meta: row.get(3)?,
+                })
+            })?;
             for row in rows {
                 results.push(row?);
             }
         } else {
-            let rows = stmt.query_map([term], |row| row.get(0))?;
+            let rows = stmt.query_map([term], |row| {
+                Ok(crate::gsd_engine::sync::MemoryEntry {
+                    entry_type: row.get(0)?,
+                    context: row.get(1)?,
+                    content: row.get(2)?,
+                    meta: row.get(3)?,
+                })
+            })?;
             for row in rows {
                 results.push(row?);
             }

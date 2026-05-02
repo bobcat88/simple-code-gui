@@ -35,7 +35,10 @@
     "gitnexus": "^1.6.2",
     "lucide-react": "^1.8.0",
     "qrcode.react": "^4.2.0",
+    "react-force-graph-3d": "^1.29.1",
     "tailwind-merge": "^3.5.0",
+    "three": "^0.184.0",
+    "three-spritetext": "^1.10.0",
     "whisper-web-transcriber": "^0.2.5",
     "ws": "^8.19.0",
     "zustand": "^5.0.0"
@@ -51,6 +54,7 @@
     "@types/react": "^18.3.17",
     "@types/react-dom": "^18.3.5",
     "@types/react-window": "^1.8.8",
+    "@types/three": "^0.184.0",
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^4.0.17",

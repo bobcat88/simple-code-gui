@@ -641,7 +641,7 @@ pub async fn gsd_swarm_query_memory(
     query: String,
     pattern_type: Option<String>,
     limit: Option<usize>,
-) -> Result<Vec<String>, String> {
+) -> Result<Vec<crate::gsd_engine::sync::MemoryEntry>, String> {
     let active_paths = orch.active_project_paths.lock().clone();
     let mut all_results = Vec::new();
     let mut seen = std::collections::HashSet::new();

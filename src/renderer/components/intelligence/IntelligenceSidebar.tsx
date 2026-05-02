@@ -36,6 +36,7 @@ import type {
 } from '../../api/types'
 import { BrainstormTab } from './BrainstormTab'
 import { GovernanceTab } from './GovernanceTab'
+import { NeuralHUDTab } from './NeuralHUDTab'
 
 interface IntelligenceSidebarProps {
   intelligence: ProjectIntelligence | null
@@ -79,7 +80,7 @@ export function IntelligenceSidebar({
   const [applying, setApplying] = useState(false)
   const [applyResult, setApplyResult] = useState<string[] | null>(null)
   const [progress, setProgress] = useState<ProposalProgress | null>(null)
-  const [activeSection, setActiveSection] = useState<'intelligence' | 'brainstorm' | 'governance'>('intelligence')
+  const [activeSection, setActiveSection] = useState<'intelligence' | 'brainstorm' | 'governance' | 'neuralhud'>('intelligence')
   const [suggestions, setSuggestions] = useState<any[]>([])
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const healthScore = Math.round(capabilityScan?.projectHealthScore ?? 0)
@@ -283,6 +284,18 @@ export function IntelligenceSidebar({
           Governance
           <ShieldCheck size={12} className={cn(activeSection === 'governance' ? "text-emerald-400" : "text-white/20")} />
         </button>
+        <button
+          onClick={() => setActiveSection('neuralhud')}
+          className={cn(
+            "pb-2 text-[11px] font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
+            activeSection === 'neuralhud' 
+              ? "text-white border-indigo-400" 
+              : "text-white/30 border-transparent hover:text-white/60"
+          )}
+        >
+          NeuralHUD
+          <Brain size={12} className={cn(activeSection === 'neuralhud' ? "text-indigo-400" : "text-white/20")} />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
@@ -293,6 +306,11 @@ export function IntelligenceSidebar({
           />
         ) : activeSection === 'governance' ? (
           <GovernanceTab 
+            api={api}
+            projectPath={activeTab?.projectPath || ''}
+          />
+        ) : activeSection === 'neuralhud' ? (
+          <NeuralHUDTab 
             api={api}
             projectPath={activeTab?.projectPath || ''}
           />
