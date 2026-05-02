@@ -141,6 +141,9 @@ export const tauriIpc = {
   getTokenHistory: (filters?: any) =>
     invoke<any>('get_token_history', { filters }),
 
+  aiGetOptimizationStats: (sessionId?: string) =>
+    invoke<any>('ai_get_optimization_stats', { session_id: sessionId }),
+
   // Voice & XTTS
   voiceCheckTTS: () => invoke<any>('voice_check_tts'),
   voiceFetchCatalog: (forceRefresh?: boolean) => invoke<any[]>('voice_fetch_catalog', { forceRefresh }),

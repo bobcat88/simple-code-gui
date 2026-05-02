@@ -4,15 +4,22 @@ import {
   Cpu, 
   Zap, 
   ShieldCheck, 
-  ChevronRight, 
   Key, 
   Globe, 
   Plus,
   Settings2,
-  Table,
-  Layout
+  Layout,
+  BarChart3
 } from 'lucide-react'
-import type { AiRuntimeSettings as AiRuntimeSettingsType, ProviderConfig, ModelPlan, AgentRoutingPolicy, ProviderHealth } from './settingsTypes'
+import type {
+  AiRuntimeSettings as AiRuntimeSettingsType,
+  ProviderConfig,
+  ModelPlan,
+  AgentRoutingPolicy,
+  ProviderHealth,
+  OptimizationStats,
+  OptimizationStatsResponse,
+} from './settingsTypes'
 import { cn } from '../../lib/utils'
 import { tauriIpc } from '../../lib/tauri-ipc'
 import { useEffect } from 'react'
@@ -22,11 +29,49 @@ interface AiRuntimeSettingsProps {
   onChange: (settings: AiRuntimeSettingsType) => void
 }
 
+const EMPTY_OPTIMIZATION_STATS: OptimizationStats = {
+  provider: null,
+  rawTokens: 0,
+  optimizedTokens: 0,
+  savedTokens: 0,
+  cacheHits: 0,
+  cacheMisses: 0,
+  compressions: 0,
+  reasoningRequests: 0,
+  fimRequests: 0,
+  transactionCount: 0,
+}
+
+function formatMetricNumber(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}m`
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}k`
+  return String(value)
+}
+
+function OptimizationMetric({
+  label,
+  value,
+  detail,
+}: {
+  label: string
+  value: string
+  detail: string
+}): React.ReactElement {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+      <div className="text-[10px] font-bold uppercase tracking-widest text-white/35">{label}</div>
+      <div className="mt-1 text-sm font-semibold text-white/90">{value}</div>
+      <div className="mt-0.5 text-[10px] text-white/40">{detail}</div>
+    </div>
+  )
+}
+
 export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps): React.ReactElement {
   const [activeSubTab, setActiveSubTab] = useState<'plans' | 'providers' | 'routing'>('plans')
   const [editingPlan, setEditingPlan] = useState<ModelPlan | null>(null)
   const [isNewPlan, setIsNewPlan] = useState(false)
   const [healthStatus, setHealthStatus] = useState<Record<string, ProviderHealth>>({})
+  const [optimizationStats, setOptimizationStats] = useState<OptimizationStatsResponse | null>(null)
 
   // Poll for provider health when on the providers tab
   useEffect(() => {
@@ -45,6 +90,21 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
     const interval = setInterval(fetchHealth, 30000)
     return () => clearInterval(interval)
   }, [activeSubTab])
+
+  useEffect(() => {
+    const fetchOptimizationStats = async () => {
+      try {
+        const stats = await tauriIpc.aiGetOptimizationStats()
+        setOptimizationStats(stats)
+      } catch (err) {
+        console.error('Failed to fetch optimization stats:', err)
+      }
+    }
+
+    fetchOptimizationStats()
+    const interval = setInterval(fetchOptimizationStats, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   const updateProvider = (id: string, updates: Partial<ProviderConfig>) => {
     const nextProviders = settings.providers.map(p => 
@@ -105,6 +165,11 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
     setEditingPlan(null)
   }
 
+  const aggregateStats = optimizationStats?.aggregate ?? EMPTY_OPTIMIZATION_STATS
+  const savedPercent = aggregateStats.rawTokens > 0
+    ? Math.round((aggregateStats.savedTokens / aggregateStats.rawTokens) * 100)
+    : 0
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -159,6 +224,51 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
           </div>
         </div>
       </div>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <OptimizationMetric
+          label="Tokens"
+          value={`${formatMetricNumber(aggregateStats.optimizedTokens)} / ${formatMetricNumber(aggregateStats.rawTokens)}`}
+          detail="optimized / raw"
+        />
+        <OptimizationMetric
+          label="Saved"
+          value={formatMetricNumber(aggregateStats.savedTokens)}
+          detail={`${savedPercent}% measured`}
+        />
+        <OptimizationMetric
+          label="Cache"
+          value={`${formatMetricNumber(aggregateStats.cacheHits)} / ${formatMetricNumber(aggregateStats.cacheMisses)}`}
+          detail="hits / misses"
+        />
+        <OptimizationMetric
+          label="Adapters"
+          value={`${formatMetricNumber(aggregateStats.reasoningRequests)} / ${formatMetricNumber(aggregateStats.fimRequests)}`}
+          detail="reasoning / FIM"
+        />
+      </div>
+
+      {optimizationStats && optimizationStats.providerBreakdown.length > 0 && (
+        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+          <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/40">
+            <BarChart3 size={14} />
+            Optimization By Provider
+          </div>
+          <div className="grid gap-2 md:grid-cols-2">
+            {optimizationStats.providerBreakdown.map(providerStats => (
+              <div
+                key={providerStats.provider || 'unknown'}
+                className="flex items-center justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-2"
+              >
+                <span className="text-xs font-semibold text-white/80">{providerStats.provider || 'unknown'}</span>
+                <span className="text-[11px] text-white/50">
+                  {formatMetricNumber(providerStats.optimizedTokens)} tokens, {formatMetricNumber(providerStats.savedTokens)} saved
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
         {activeSubTab === 'plans' && (

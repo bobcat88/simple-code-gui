@@ -9,6 +9,7 @@ pub mod providers;
 use tauri::Emitter;
 
 use crate::database::{DatabaseManager, insert_token_transaction, TokenTransactionInput};
+use opt_metrics::{OptimizationMetricEvent, OptimizationMetrics, OptimizationStatsResponse};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -43,6 +44,7 @@ pub struct RuntimeManager {
     rtk_context: Arc<Mutex<Option<Arc<crate::rtk_context::RtkContextManager>>>>,
     learning: Arc<Mutex<Option<Arc<learning::LearningManager>>>>,
     app_handle: Arc<Mutex<Option<tauri::AppHandle>>>,
+    optimization_metrics: Arc<OptimizationMetrics>,
 }
 
 impl RuntimeManager {
@@ -58,6 +60,7 @@ impl RuntimeManager {
             rtk_context: Arc::new(Mutex::new(None)),
             learning: Arc::new(Mutex::new(None)),
             app_handle: Arc::new(Mutex::new(None)),
+            optimization_metrics: Arc::new(OptimizationMetrics::default()),
         }
     }
 
@@ -617,26 +620,46 @@ impl RuntimeManager {
             let output_cost = (usage.output_tokens as f64 / 1_000_000.0) * pricing.1;
             let total_cost = input_cost + output_cost;
             usage.cost_estimate = Some(total_cost);
+            let saved_tokens = rtk_result.as_ref().map(|r| r.saved_tokens as i64).unwrap_or(usage.saved_tokens as i64);
+            let session_id = request.session_id.clone().unwrap_or_else(|| "default".to_string());
 
             // 3. Record transaction to database
             let db_lock = self.db.lock().await;
             if let Some(db) = &*db_lock {
                 let transaction = TokenTransactionInput {
-                    session_id: request.session_id.clone().unwrap_or_else(|| "default".to_string()),
+                    session_id: session_id.clone(),
                     nexus_session_id: request.nexus_session_id.clone(),
                     agent_id: request.agent_id.clone(),
                     project_path: request.project_path.clone().unwrap_or_else(|| "none".to_string()),
                     backend: provider_name.to_string(),
                     input_tokens: usage.input_tokens as i64,
                     output_tokens: usage.output_tokens as i64,
-                    saved_tokens: rtk_result.as_ref().map(|r| r.saved_tokens as i64),
+                    saved_tokens: Some(saved_tokens),
                     cost_estimate: total_cost,
                     context_reuse_id: rtk_result.map(|r| r.reuse_id).flatten(),
                     timestamp: None,
                 };
                 let _ = insert_token_transaction(&db.pool, &transaction).await;
             }
+
+            let optimization = request.optimization.as_ref();
+            self.optimization_metrics.record_event(OptimizationMetricEvent {
+                session_id: Some(session_id),
+                provider: provider_name.to_string(),
+                raw_tokens: usage.input_tokens as u64 + usage.output_tokens as u64 + saved_tokens.max(0) as u64,
+                optimized_tokens: usage.input_tokens as u64 + usage.output_tokens as u64,
+                saved_tokens: saved_tokens.max(0) as u64,
+                cache_hits: 0,
+                cache_misses: 0,
+                compressions: u64::from(saved_tokens > 0),
+                reasoning_requests: u64::from(optimization.and_then(|opt| opt.reasoning.as_ref()).is_some()),
+                fim_requests: u64::from(optimization.and_then(|opt| opt.fim.as_ref()).is_some()),
+            });
         }
+    }
+
+    pub fn get_optimization_stats(&self, session_id: Option<&str>) -> OptimizationStatsResponse {
+        self.optimization_metrics.stats(session_id)
     }
 
     pub async fn get_health(&self) -> HashMap<String, ProviderHealth> {
@@ -766,6 +789,14 @@ pub async fn ai_get_health_status(
     manager: tauri::State<'_, Arc<RuntimeManager>>,
 ) -> Result<HashMap<String, ProviderHealth>, String> {
     Ok(manager.get_health().await)
+}
+
+#[tauri::command]
+pub async fn ai_get_optimization_stats(
+    manager: tauri::State<'_, Arc<RuntimeManager>>,
+    session_id: Option<String>,
+) -> Result<OptimizationStatsResponse, String> {
+    Ok(manager.get_optimization_stats(session_id.as_deref()))
 }
 
 #[tauri::command]

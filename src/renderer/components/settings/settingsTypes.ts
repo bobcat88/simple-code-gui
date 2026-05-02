@@ -63,6 +63,25 @@ export interface ProviderHealth {
   lastFailureAt?: number
 }
 
+export interface OptimizationStats {
+  provider?: string | null
+  rawTokens: number
+  optimizedTokens: number
+  savedTokens: number
+  cacheHits: number
+  cacheMisses: number
+  compressions: number
+  reasoningRequests: number
+  fimRequests: number
+  transactionCount: number
+}
+
+export interface OptimizationStatsResponse {
+  aggregate: OptimizationStats
+  session: OptimizationStats
+  providerBreakdown: OptimizationStats[]
+}
+
 export interface ProviderConfig {
   id: string
   name: string
