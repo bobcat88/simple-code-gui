@@ -1,7 +1,10 @@
-use crate::ai_runtime::types::{CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse, ModelInfo, Usage};
+use crate::ai_runtime::types::{
+    CacheStrategy, CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse,
+    ModelInfo, Usage,
+};
 use crate::ai_runtime::AIProvider;
-use serde_json::{json, Value};
 use reqwest::Client;
+use serde_json::{json, Value};
 
 use async_trait::async_trait;
 
@@ -19,6 +22,56 @@ impl ClaudeProvider {
     }
 }
 
+fn should_cache_claude_system(request: &CompletionRequest) -> bool {
+    request
+        .optimization
+        .as_ref()
+        .and_then(|optimization| optimization.cache.as_ref())
+        .is_some_and(|cache| matches!(cache.strategy, CacheStrategy::ProviderNative))
+}
+
+fn claude_text_block(text: String, cacheable: bool) -> Value {
+    let mut block = json!({
+        "type": "text",
+        "text": text,
+    });
+    if cacheable {
+        block["cache_control"] = json!({ "type": "ephemeral" });
+    }
+    block
+}
+
+fn apply_claude_optimization_fields(
+    body: &mut Value,
+    request: &CompletionRequest,
+    system_parts: Vec<Value>,
+) {
+    if !system_parts.is_empty() {
+        body["system"] = json!(system_parts);
+    }
+
+    let Some(reasoning) = request
+        .optimization
+        .as_ref()
+        .and_then(|optimization| optimization.reasoning.as_ref())
+    else {
+        return;
+    };
+    let Some(budget_tokens) = reasoning.budget_tokens else {
+        return;
+    };
+    if budget_tokens < 1024 {
+        return;
+    }
+
+    body["thinking"] = json!({
+        "type": "enabled",
+        "budget_tokens": budget_tokens,
+    });
+    body.as_object_mut()
+        .map(|object| object.remove("temperature"));
+}
+
 #[async_trait]
 impl AIProvider for ClaudeProvider {
     fn name(&self) -> &str {
@@ -27,10 +80,16 @@ impl AIProvider for ClaudeProvider {
 
     async fn completion(&self, request: CompletionRequest) -> Result<CompletionResponse, String> {
         let model = request.model.clone().expect("Model must be specified");
-        
+
         let mut messages = Vec::new();
+        let mut system_parts = Vec::new();
         for msg in &request.messages {
-            if msg.role == "tool" {
+            if msg.role == "system" {
+                system_parts.push(claude_text_block(
+                    msg.content.clone(),
+                    should_cache_claude_system(&request),
+                ));
+            } else if msg.role == "tool" {
                 messages.push(json!({
                     "role": "user",
                     "content": [
@@ -70,22 +129,29 @@ impl AIProvider for ClaudeProvider {
             "temperature": request.temperature.unwrap_or(0.7),
         });
 
+        apply_claude_optimization_fields(&mut body, &request, system_parts);
+
         if let Some(tools) = &request.tools {
-            let anthropic_tools: Vec<Value> = tools.iter().map(|t| {
-                json!({
-                    "name": t.name,
-                    "description": t.description,
-                    "input_schema": t.parameters
+            let anthropic_tools: Vec<Value> = tools
+                .iter()
+                .map(|t| {
+                    json!({
+                        "name": t.name,
+                        "description": t.description,
+                        "input_schema": t.parameters
+                    })
                 })
-            }).collect();
+                .collect();
             body["tools"] = json!(anthropic_tools);
-            
+
             if let Some(choice) = &request.tool_choice {
                 body["tool_choice"] = json!({ "type": choice });
             }
         }
 
-        let response = self.client.post("https://api.anthropic.com/v1/messages")
+        let response = self
+            .client
+            .post("https://api.anthropic.com/v1/messages")
             .header("x-api-key", &self.api_key)
             .header("anthropic-version", "2023-06-01")
             .header("content-type", "application/json")
@@ -102,7 +168,7 @@ impl AIProvider for ClaudeProvider {
         }
 
         let json: Value = serde_json::from_str(&body_text).map_err(|e| e.to_string())?;
-        
+
         let mut content = String::new();
         let mut tool_calls = Vec::new();
 
@@ -136,7 +202,11 @@ impl AIProvider for ClaudeProvider {
             id: json["id"].as_str().unwrap_or("unknown").to_string(),
             model,
             content,
-            tool_calls: if tool_calls.is_empty() { None } else { Some(tool_calls) },
+            tool_calls: if tool_calls.is_empty() {
+                None
+            } else {
+                Some(tool_calls)
+            },
             usage: Some(usage),
         })
     }
@@ -171,7 +241,64 @@ impl AIProvider for ClaudeProvider {
                 context_window: 200000,
                 pricing_input_1m: 15.0,
                 pricing_output_1m: 75.0,
-            }
+            },
         ])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ai_runtime::types::{
+        CacheOptimization, CacheTtl, OptimizationRequest, PromptCacheRetention,
+        ReasoningOptimization,
+    };
+
+    #[test]
+    fn adds_cache_control_to_system_blocks() {
+        let request = CompletionRequest {
+            optimization: Some(OptimizationRequest {
+                cache: Some(CacheOptimization {
+                    strategy: CacheStrategy::ProviderNative,
+                    ttl: Some(CacheTtl::FiveMinutes),
+                    prompt_cache_key: None,
+                    retention: Some(PromptCacheRetention::InMemory),
+                    cached_content_name: None,
+                }),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+
+        let block = claude_text_block("stable".to_string(), should_cache_claude_system(&request));
+
+        assert_eq!(block["cache_control"]["type"], "ephemeral");
+    }
+
+    #[test]
+    fn enables_thinking_and_removes_temperature() {
+        let request = CompletionRequest {
+            optimization: Some(OptimizationRequest {
+                reasoning: Some(ReasoningOptimization {
+                    effort: None,
+                    budget_tokens: Some(4096),
+                    include_thoughts: false,
+                    preserve_reasoning_items: false,
+                }),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let mut body = json!({
+            "model": "claude-sonnet-4",
+            "messages": [],
+            "temperature": 0.7,
+        });
+
+        apply_claude_optimization_fields(&mut body, &request, vec![]);
+
+        assert_eq!(body["thinking"]["type"], "enabled");
+        assert_eq!(body["thinking"]["budget_tokens"], 4096);
+        assert!(body.get("temperature").is_none());
     }
 }

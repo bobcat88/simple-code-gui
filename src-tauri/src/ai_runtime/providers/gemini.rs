@@ -1,7 +1,9 @@
-use crate::ai_runtime::types::{CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse, ModelInfo, Usage};
+use crate::ai_runtime::types::{
+    CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse, ModelInfo, Usage,
+};
 use crate::ai_runtime::AIProvider;
-use serde_json::{json, Value};
 use reqwest::Client;
+use serde_json::{json, Value};
 
 use async_trait::async_trait;
 
@@ -15,6 +17,36 @@ impl GeminiProvider {
         Self {
             client: Client::new(),
             api_key,
+        }
+    }
+}
+
+fn apply_gemini_optimization_fields(body: &mut Value, request: &CompletionRequest) {
+    let Some(optimization) = request.optimization.as_ref() else {
+        return;
+    };
+
+    if let Some(cached_content_name) = optimization
+        .cache
+        .as_ref()
+        .and_then(|cache| cache.cached_content_name.as_ref())
+    {
+        body["cachedContent"] = json!(cached_content_name);
+    }
+
+    if let Some(reasoning) = optimization.reasoning.as_ref() {
+        let mut thinking_config = json!({});
+        if let Some(budget_tokens) = reasoning.budget_tokens {
+            thinking_config["thinkingBudget"] = json!(budget_tokens);
+        }
+        if reasoning.include_thoughts {
+            thinking_config["includeThoughts"] = json!(true);
+        }
+        if thinking_config
+            .as_object()
+            .is_some_and(|object| !object.is_empty())
+        {
+            body["generationConfig"]["thinkingConfig"] = thinking_config;
         }
     }
 }
@@ -42,7 +74,7 @@ impl AIProvider for GeminiProvider {
             }
 
             let mut parts = Vec::new();
-            
+
             if !m.content.is_empty() {
                 parts.push(json!({"text": m.content}));
             }
@@ -87,19 +119,28 @@ impl AIProvider for GeminiProvider {
             body["systemInstruction"] = sys;
         }
 
+        apply_gemini_optimization_fields(&mut body, &request);
+
         if let Some(tools) = request.tools {
-            let function_declarations: Vec<Value> = tools.into_iter().map(|t| json!({
-                "name": t.name,
-                "description": t.description,
-                "parameters": t.parameters,
-            })).collect();
-            
+            let function_declarations: Vec<Value> = tools
+                .into_iter()
+                .map(|t| {
+                    json!({
+                        "name": t.name,
+                        "description": t.description,
+                        "parameters": t.parameters,
+                    })
+                })
+                .collect();
+
             body["tools"] = json!([{
                 "functionDeclarations": function_declarations
             }]);
         }
 
-        let response = self.client.post(&url)
+        let response = self
+            .client
+            .post(&url)
             .json(&body)
             .send()
             .await
@@ -113,7 +154,7 @@ impl AIProvider for GeminiProvider {
         }
 
         let json: Value = serde_json::from_str(&body_text).map_err(|e| e.to_string())?;
-        
+
         let candidate = &json["candidates"][0];
         let mut content = String::new();
         let mut tool_calls = None;
@@ -138,8 +179,12 @@ impl AIProvider for GeminiProvider {
         }
 
         let usage = Usage {
-            input_tokens: json["usageMetadata"]["promptTokenCount"].as_u64().unwrap_or(0) as u32,
-            output_tokens: json["usageMetadata"]["candidatesTokenCount"].as_u64().unwrap_or(0) as u32,
+            input_tokens: json["usageMetadata"]["promptTokenCount"]
+                .as_u64()
+                .unwrap_or(0) as u32,
+            output_tokens: json["usageMetadata"]["candidatesTokenCount"]
+                .as_u64()
+                .unwrap_or(0) as u32,
             ..Default::default()
         };
 
@@ -153,7 +198,9 @@ impl AIProvider for GeminiProvider {
     }
 
     async fn embed(&self, request: EmbeddingRequest) -> Result<EmbeddingResponse, String> {
-        let model = request.model.unwrap_or_else(|| "text-embedding-004".to_string());
+        let model = request
+            .model
+            .unwrap_or_else(|| "text-embedding-004".to_string());
         let url = format!(
             "https://generativelanguage.googleapis.com/v1beta/models/{}:embedContent?key={}",
             model, self.api_key
@@ -165,7 +212,9 @@ impl AIProvider for GeminiProvider {
         let total_tokens = 0;
 
         for text in request.input {
-            let response = self.client.post(&url)
+            let response = self
+                .client
+                .post(&url)
                 .json(&json!({
                     "content": {
                         "parts": [{"text": text}]
@@ -183,7 +232,7 @@ impl AIProvider for GeminiProvider {
             }
 
             let json: Value = serde_json::from_str(&body).map_err(|e| e.to_string())?;
-            
+
             if let Some(embedding_values) = json["embedding"]["values"].as_array() {
                 let vec: Vec<f32> = embedding_values
                     .iter()
@@ -191,8 +240,8 @@ impl AIProvider for GeminiProvider {
                     .collect();
                 embeddings.push(vec);
             }
-            
-            // Gemini doesn't always return token count in embedContent in the same way, 
+
+            // Gemini doesn't always return token count in embedContent in the same way,
             // but we'll try to estimate or use what's there if present.
         }
 
@@ -234,7 +283,54 @@ impl AIProvider for GeminiProvider {
                 context_window: 2048,
                 pricing_input_1m: 0.0,
                 pricing_output_1m: 0.0,
-            }
+            },
         ])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ai_runtime::types::{
+        CacheOptimization, CacheStrategy, CacheTtl, OptimizationRequest, ReasoningOptimization,
+    };
+
+    #[test]
+    fn applies_cached_content_and_thinking_config() {
+        let request = CompletionRequest {
+            optimization: Some(OptimizationRequest {
+                cache: Some(CacheOptimization {
+                    strategy: CacheStrategy::ExplicitCachedContent,
+                    ttl: Some(CacheTtl::OneHour),
+                    prompt_cache_key: None,
+                    retention: None,
+                    cached_content_name: Some("cachedContents/abc".to_string()),
+                }),
+                reasoning: Some(ReasoningOptimization {
+                    effort: None,
+                    budget_tokens: Some(2048),
+                    include_thoughts: true,
+                    preserve_reasoning_items: true,
+                }),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let mut body = json!({
+            "contents": [],
+            "generationConfig": {},
+        });
+
+        apply_gemini_optimization_fields(&mut body, &request);
+
+        assert_eq!(body["cachedContent"], "cachedContents/abc");
+        assert_eq!(
+            body["generationConfig"]["thinkingConfig"]["thinkingBudget"],
+            2048
+        );
+        assert_eq!(
+            body["generationConfig"]["thinkingConfig"]["includeThoughts"],
+            true
+        );
     }
 }

@@ -1,5 +1,6 @@
 use crate::ai_runtime::types::{
-    CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse, ModelInfo, ModelTier, Usage,
+    CacheTtl, CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse,
+    ModelInfo, ModelTier, PromptCacheRetention, ReasoningEffort, Usage,
 };
 use crate::ai_runtime::AIProvider;
 use async_trait::async_trait;
@@ -32,28 +33,31 @@ impl AIProvider for OpenAIProvider {
         let model = request.model.clone().expect("Model must be specified");
         let messages: Vec<Value> = request
             .messages
-            .into_iter()
+            .iter()
             .map(|message| {
                 let mut m = json!({
                     "role": normalize_role(&message.role),
                     "content": message.content,
                 });
-                
-                if let Some(tool_calls) = message.tool_calls {
-                    m["tool_calls"] = json!(tool_calls.into_iter().map(|tc| json!({
-                        "id": tc.id,
-                        "type": "function",
-                        "function": {
-                            "name": tc.name,
-                            "arguments": tc.arguments,
-                        }
-                    })).collect::<Vec<Value>>());
+
+                if let Some(tool_calls) = &message.tool_calls {
+                    m["tool_calls"] = json!(tool_calls
+                        .iter()
+                        .map(|tc| json!({
+                            "id": tc.id,
+                            "type": "function",
+                            "function": {
+                                "name": tc.name,
+                                "arguments": tc.arguments,
+                            }
+                        }))
+                        .collect::<Vec<Value>>());
                 }
-                
-                if let Some(tool_call_id) = message.tool_call_id {
+
+                if let Some(tool_call_id) = &message.tool_call_id {
                     m["tool_call_id"] = json!(tool_call_id);
                 }
-                
+
                 m
             })
             .collect();
@@ -71,22 +75,28 @@ impl AIProvider for OpenAIProvider {
             body["temperature"] = json!(temperature);
         }
 
+        apply_openai_optimization_fields(&mut body, &request);
+
         if let Some(tools) = request.tools {
-            body["tools"] = json!(tools.into_iter().map(|t| json!({
-                "type": "function",
-                "function": {
-                    "name": t.name,
-                    "description": t.description,
-                    "parameters": t.parameters,
-                }
-            })).collect::<Vec<Value>>());
-            
+            body["tools"] = json!(tools
+                .into_iter()
+                .map(|t| json!({
+                    "type": "function",
+                    "function": {
+                        "name": t.name,
+                        "description": t.description,
+                        "parameters": t.parameters,
+                    }
+                }))
+                .collect::<Vec<Value>>());
+
             if let Some(choice) = request.tool_choice {
-                body["tool_choice"] = if choice == "auto" || choice == "none" || choice == "required" {
-                    json!(choice)
-                } else {
-                    json!({"type": "function", "function": {"name": choice}})
-                };
+                body["tool_choice"] =
+                    if choice == "auto" || choice == "none" || choice == "required" {
+                        json!(choice)
+                    } else {
+                        json!({"type": "function", "function": {"name": choice}})
+                    };
             }
         }
 
@@ -111,7 +121,7 @@ impl AIProvider for OpenAIProvider {
         }
 
         let json: Value = serde_json::from_str(&body_text).map_err(|e| e.to_string())?;
-        
+
         let choice = &json["choices"][0];
         let content = choice["message"]["content"]
             .as_str()
@@ -125,7 +135,10 @@ impl AIProvider for OpenAIProvider {
                 parsed_calls.push(crate::ai_runtime::types::ToolCall {
                     id: tc["id"].as_str().unwrap_or("").to_string(),
                     name: tc["function"]["name"].as_str().unwrap_or("").to_string(),
-                    arguments: tc["function"]["arguments"].as_str().unwrap_or("").to_string(),
+                    arguments: tc["function"]["arguments"]
+                        .as_str()
+                        .unwrap_or("")
+                        .to_string(),
                 });
             }
             tool_calls = Some(parsed_calls);
@@ -147,8 +160,10 @@ impl AIProvider for OpenAIProvider {
     }
 
     async fn embed(&self, request: EmbeddingRequest) -> Result<EmbeddingResponse, String> {
-        let model = request.model.unwrap_or_else(|| "text-embedding-3-small".to_string());
-        
+        let model = request
+            .model
+            .unwrap_or_else(|| "text-embedding-3-small".to_string());
+
         let body = json!({
             "model": model,
             "input": request.input,
@@ -175,7 +190,7 @@ impl AIProvider for OpenAIProvider {
         }
 
         let json: Value = serde_json::from_str(&body).map_err(|e| e.to_string())?;
-        
+
         let mut embeddings = Vec::new();
         if let Some(data) = json["data"].as_array() {
             for item in data {
@@ -247,6 +262,39 @@ impl AIProvider for OpenAIProvider {
     }
 }
 
+fn apply_openai_optimization_fields(body: &mut Value, request: &CompletionRequest) {
+    let Some(optimization) = request.optimization.as_ref() else {
+        return;
+    };
+
+    if let Some(cache) = optimization.cache.as_ref() {
+        if let Some(key) = cache.prompt_cache_key.as_ref() {
+            body["prompt_cache_key"] = json!(key);
+        }
+        if let Some(retention) = cache.retention.as_ref() {
+            body["prompt_cache_retention"] = json!(match retention {
+                PromptCacheRetention::InMemory => "in_memory",
+                PromptCacheRetention::TwentyFourHours => "24h",
+            });
+        } else if cache.ttl == Some(CacheTtl::TwentyFourHours) {
+            body["prompt_cache_retention"] = json!("24h");
+        }
+    }
+
+    if let Some(reasoning) = optimization.reasoning.as_ref() {
+        if let Some(effort) = reasoning.effort.as_ref() {
+            body["reasoning_effort"] = json!(match effort {
+                ReasoningEffort::None => "none",
+                ReasoningEffort::Minimal => "minimal",
+                ReasoningEffort::Low => "low",
+                ReasoningEffort::Medium => "medium",
+                ReasoningEffort::High => "high",
+                ReasoningEffort::XHigh => "xhigh",
+            });
+        }
+    }
+}
+
 fn normalize_role(role: &str) -> String {
     match role {
         "assistant" | "system" | "developer" | "tool" => role.to_string(),
@@ -257,6 +305,9 @@ fn normalize_role(role: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ai_runtime::types::{
+        CacheOptimization, CacheStrategy, OptimizationRequest, ReasoningOptimization,
+    };
 
     #[test]
     fn normalize_role_keeps_openai_roles() {
@@ -264,5 +315,35 @@ mod tests {
         assert_eq!(normalize_role("system"), "system");
         assert_eq!(normalize_role("developer"), "developer");
         assert_eq!(normalize_role("unknown"), "user");
+    }
+
+    #[test]
+    fn applies_openai_cache_and_reasoning_fields() {
+        let request = CompletionRequest {
+            optimization: Some(OptimizationRequest {
+                cache: Some(CacheOptimization {
+                    strategy: CacheStrategy::ProviderNative,
+                    ttl: Some(CacheTtl::TwentyFourHours),
+                    prompt_cache_key: Some("project-a".to_string()),
+                    retention: None,
+                    cached_content_name: None,
+                }),
+                reasoning: Some(ReasoningOptimization {
+                    effort: Some(ReasoningEffort::Low),
+                    budget_tokens: None,
+                    include_thoughts: false,
+                    preserve_reasoning_items: false,
+                }),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let mut body = json!({"model": "gpt-5.2", "messages": []});
+
+        apply_openai_optimization_fields(&mut body, &request);
+
+        assert_eq!(body["prompt_cache_key"], "project-a");
+        assert_eq!(body["prompt_cache_retention"], "24h");
+        assert_eq!(body["reasoning_effort"], "low");
     }
 }
