@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { OptimizationStatsResponse } from '../../api/types'
-import { tauriIpc } from '../../lib/tauri-ipc'
+import type { OptimizationStatsResponse } from '../api/types'
+import { tauriIpc } from '../lib/tauri-ipc'
 
 interface UseOptimizationStatsOptions {
-  sessionId: string
+  sessionId?: string | null
   enabled?: boolean
   pollingInterval?: number
 }
@@ -16,17 +16,17 @@ export function useOptimizationStats({
   sessionId,
   enabled = true,
   pollingInterval = 30000,
-}: UseOptimizationStatsOptions): UseOptimizationStatsReturn {
+}: UseOptimizationStatsOptions = {}): UseOptimizationStatsReturn {
   const [stats, setStats] = useState<OptimizationStatsResponse | null>(null)
 
   const fetchStats = useCallback(async () => {
-    if (!enabled || !sessionId) {
+    if (!enabled) {
       setStats(null)
       return
     }
 
     try {
-      const nextStats = await tauriIpc.aiGetOptimizationStats(sessionId)
+      const nextStats = await tauriIpc.aiGetOptimizationStats(sessionId || undefined)
       setStats(nextStats)
     } catch (err) {
       console.error('Failed to fetch optimization stats:', err)

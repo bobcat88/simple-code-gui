@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { 
   Sparkles, 
   Cpu, 
@@ -18,11 +18,10 @@ import type {
   AgentRoutingPolicy,
   ProviderHealth,
   OptimizationStats,
-  OptimizationStatsResponse,
 } from './settingsTypes'
 import { cn } from '../../lib/utils'
 import { tauriIpc } from '../../lib/tauri-ipc'
-import { useEffect } from 'react'
+import { useOptimizationStats } from '../../hooks/useOptimizationStats'
 
 interface AiRuntimeSettingsProps {
   settings: AiRuntimeSettingsType
@@ -71,7 +70,7 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
   const [editingPlan, setEditingPlan] = useState<ModelPlan | null>(null)
   const [isNewPlan, setIsNewPlan] = useState(false)
   const [healthStatus, setHealthStatus] = useState<Record<string, ProviderHealth>>({})
-  const [optimizationStats, setOptimizationStats] = useState<OptimizationStatsResponse | null>(null)
+  const { stats: optimizationStats } = useOptimizationStats()
 
   // Poll for provider health when on the providers tab
   useEffect(() => {
@@ -90,21 +89,6 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
     const interval = setInterval(fetchHealth, 30000)
     return () => clearInterval(interval)
   }, [activeSubTab])
-
-  useEffect(() => {
-    const fetchOptimizationStats = async () => {
-      try {
-        const stats = await tauriIpc.aiGetOptimizationStats()
-        setOptimizationStats(stats)
-      } catch (err) {
-        console.error('Failed to fetch optimization stats:', err)
-      }
-    }
-
-    fetchOptimizationStats()
-    const interval = setInterval(fetchOptimizationStats, 30000)
-    return () => clearInterval(interval)
-  }, [])
 
   const updateProvider = (id: string, updates: Partial<ProviderConfig>) => {
     const nextProviders = settings.providers.map(p => 
