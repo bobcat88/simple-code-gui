@@ -96,6 +96,114 @@ pub struct CompletionRequest {
     pub temperature: Option<f32>,
     pub max_tokens: Option<u32>,
     pub stream: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub optimization: Option<OptimizationRequest>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct OptimizationRequest {
+    pub provider: Option<ProviderKind>,
+    pub task: Option<TaskType>,
+    pub role: Option<AgentRole>,
+    pub human_facing: Option<bool>,
+    pub system_prompt: Option<SystemPromptOptimization>,
+    pub cache: Option<CacheOptimization>,
+    pub reasoning: Option<ReasoningOptimization>,
+    pub response_format: Option<ResponseFormat>,
+    pub fim: Option<FimRequest>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum ProviderKind {
+    Anthropic,
+    Gemini,
+    OpenAI,
+    OpenAICompatible,
+    DeepSeekFlash,
+    DeepSeekPro,
+    DeepSeekReasoner,
+    Ollama,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct SystemPromptOptimization {
+    pub content: Option<String>,
+    pub cacheable: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct CacheOptimization {
+    pub strategy: CacheStrategy,
+    pub ttl: Option<CacheTtl>,
+    pub prompt_cache_key: Option<String>,
+    pub retention: Option<PromptCacheRetention>,
+    pub cached_content_name: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum CacheStrategy {
+    Disabled,
+    StablePrefix,
+    ProviderNative,
+    ExplicitCachedContent,
+    Semantic,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum CacheTtl {
+    FiveMinutes,
+    OneHour,
+    TwentyFourHours,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum PromptCacheRetention {
+    InMemory,
+    TwentyFourHours,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct ReasoningOptimization {
+    pub effort: Option<ReasoningEffort>,
+    pub budget_tokens: Option<u32>,
+    pub include_thoughts: bool,
+    pub preserve_reasoning_items: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum ReasoningEffort {
+    None,
+    Minimal,
+    Low,
+    Medium,
+    High,
+    XHigh,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum ResponseFormat {
+    Text,
+    JsonObject,
+    JsonSchema { schema: serde_json::Value },
+    Yaml,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct FimRequest {
+    pub prefix: String,
+    pub suffix: Option<String>,
+    pub max_tokens: Option<u32>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

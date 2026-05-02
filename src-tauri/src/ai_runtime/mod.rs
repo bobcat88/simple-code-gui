@@ -1,5 +1,6 @@
 pub mod types;
 pub mod learning;
+pub mod optimizer;
 pub mod providers;
 
 use tauri::Emitter;
@@ -904,6 +905,7 @@ mod tests {
             temperature: None,
             max_tokens: None,
             stream: None,
+            optimization: None,
         }
     }
 
