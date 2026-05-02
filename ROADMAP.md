@@ -164,14 +164,21 @@ Advanced state management for long-running swarm sessions.
 - [x] **Cross-Session Recovery**: Automated hydration of swarm context from snapshot files.
 - [x] **Collaborative Handoff**: Generate structured handoff artifacts for human/AI collaboration.
 
-## Phase 35: Quantum Bridge & NeuralHUD Evolution (In Progress)
+## Phase 35: Quantum Bridge & NeuralHUD Evolution (Complete)
 Advanced orchestration and visualization for federated swarm intelligence.
 
 - [x] **NeuralHUD Foundation**: Initialize 3D rendering pipeline and core knowledge graph visualization.
 - [x] **NeuralHUD 3.0**: Immersive 3D execution visualization with real-time thought-chain playback.
 - [x] **Quantum Context Sync**: Low-latency synaptic synchronization across geographically distributed nodes.
-- [ ] **Swarm Evolution Feedback**: Direct instrumentation of autonomous learning results into the user interface.
+- [x] **Swarm Evolution Feedback**: Direct instrumentation of autonomous learning results into the user interface.
 
 ---
 
 *Last Updated: May 2, 2026*
+## Phase 36: LLM Middleware Layering (Antigravity Era)
+Modularizing the AI runtime optimization pipeline into extensible middlewares.
+- [x] Define `OptimizationMiddleware` trait and lifecycle.
+- [x] Implement `SystemPrompt`, `Budget`, and `FormatHint` middlewares.
+- [x] Modularize `optimizer.rs` into `ai_runtime/optimizer/` structure.
+- [x] Implement `ReasoningMiddleware` for high-precision model controls.
+- [ ] Integrate `CognitiveMiddleware` for swarm thought injection.
