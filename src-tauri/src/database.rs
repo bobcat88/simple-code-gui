@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{sqlite::SqliteConnectOptions, SqlitePool};
 use tauri::AppHandle;
 use tauri::Manager;
+use crate::ai_runtime::opt_metrics::{OptimizationStats, OptimizationStatsResponse};
 use crate::orchestration::AgentMessage;
 
 pub struct DatabaseManager {
@@ -234,6 +235,89 @@ pub async fn query_token_history(
         project_breakdown,
         backend_breakdown,
         daily,
+    })
+}
+
+pub async fn query_optimization_token_stats(
+    pool: &SqlitePool,
+    session_id: Option<&str>,
+) -> Result<OptimizationStatsResponse, String> {
+    let aggregate = optimization_token_totals(pool, None, None).await?;
+    let session = optimization_token_totals(pool, session_id, None).await?;
+    let provider_breakdown = optimization_provider_breakdown(pool, session_id).await?;
+
+    Ok(OptimizationStatsResponse {
+        aggregate,
+        session,
+        provider_breakdown,
+    })
+}
+
+async fn optimization_token_totals(
+    pool: &SqlitePool,
+    session_id: Option<&str>,
+    provider: Option<&str>,
+) -> Result<OptimizationStats, String> {
+    let row = sqlx::query_as::<_, (i64, i64, i64, i64)>(
+        "SELECT
+            COALESCE(SUM(input_tokens + output_tokens + CASE WHEN saved_tokens > 0 THEN saved_tokens ELSE 0 END), 0),
+            COALESCE(SUM(input_tokens + output_tokens), 0),
+            COALESCE(SUM(CASE WHEN saved_tokens > 0 THEN saved_tokens ELSE 0 END), 0),
+            COUNT(*)
+         FROM token_transactions
+         WHERE (? IS NULL OR session_id = ?)
+           AND (? IS NULL OR backend = ?)",
+    )
+    .bind(session_id)
+    .bind(session_id)
+    .bind(provider)
+    .bind(provider)
+    .fetch_one(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(OptimizationStats {
+        provider: provider.map(str::to_string),
+        raw_tokens: row.0 as u64,
+        optimized_tokens: row.1 as u64,
+        saved_tokens: row.2 as u64,
+        transaction_count: row.3 as u64,
+        ..Default::default()
+    })
+}
+
+async fn optimization_provider_breakdown(
+    pool: &SqlitePool,
+    session_id: Option<&str>,
+) -> Result<Vec<OptimizationStats>, String> {
+    sqlx::query_as::<_, (String, i64, i64, i64, i64)>(
+        "SELECT
+            backend,
+            COALESCE(SUM(input_tokens + output_tokens + CASE WHEN saved_tokens > 0 THEN saved_tokens ELSE 0 END), 0),
+            COALESCE(SUM(input_tokens + output_tokens), 0),
+            COALESCE(SUM(CASE WHEN saved_tokens > 0 THEN saved_tokens ELSE 0 END), 0),
+            COUNT(*)
+         FROM token_transactions
+         WHERE (? IS NULL OR session_id = ?)
+         GROUP BY backend
+         ORDER BY SUM(input_tokens + output_tokens) DESC",
+    )
+    .bind(session_id)
+    .bind(session_id)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())
+    .map(|rows| {
+        rows.into_iter()
+            .map(|(provider, raw_tokens, optimized_tokens, saved_tokens, transaction_count)| OptimizationStats {
+                provider: Some(provider),
+                raw_tokens: raw_tokens as u64,
+                optimized_tokens: optimized_tokens as u64,
+                saved_tokens: saved_tokens as u64,
+                transaction_count: transaction_count as u64,
+                ..Default::default()
+            })
+            .collect()
     })
 }
 
@@ -1111,5 +1195,66 @@ mod tests {
         assert_eq!(history.backend_breakdown[0].key, "codex");
         assert_eq!(history.project_breakdown[0].key, "/repo-a");
         assert_eq!(history.daily.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn queries_persisted_optimization_token_stats() {
+        let pool = memory_pool().await;
+        create_token_transactions_table(&pool).await;
+
+        for transaction in [
+            TokenTransactionInput {
+                session_id: "s1".into(),
+                nexus_session_id: None,
+                agent_id: None,
+                project_path: "/repo-a".into(),
+                backend: "codex".into(),
+                input_tokens: 100,
+                output_tokens: 50,
+                cost_estimate: 0.01,
+                saved_tokens: Some(25),
+                context_reuse_id: Some("reuse-1".into()),
+                timestamp: Some("2026-05-02 10:00:00".into()),
+            },
+            TokenTransactionInput {
+                session_id: "s1".into(),
+                nexus_session_id: None,
+                agent_id: None,
+                project_path: "/repo-a".into(),
+                backend: "claude".into(),
+                input_tokens: 40,
+                output_tokens: 10,
+                cost_estimate: 0.004,
+                saved_tokens: Some(5),
+                context_reuse_id: None,
+                timestamp: Some("2026-05-02 10:05:00".into()),
+            },
+            TokenTransactionInput {
+                session_id: "s2".into(),
+                nexus_session_id: None,
+                agent_id: None,
+                project_path: "/repo-b".into(),
+                backend: "codex".into(),
+                input_tokens: 30,
+                output_tokens: 10,
+                cost_estimate: 0.002,
+                saved_tokens: Some(10),
+                context_reuse_id: None,
+                timestamp: Some("2026-05-02 11:00:00".into()),
+            },
+        ] {
+            insert_token_transaction(&pool, &transaction).await.unwrap();
+        }
+
+        let stats = query_optimization_token_stats(&pool, Some("s1")).await.unwrap();
+
+        assert_eq!(stats.aggregate.raw_tokens, 280);
+        assert_eq!(stats.aggregate.optimized_tokens, 240);
+        assert_eq!(stats.aggregate.saved_tokens, 40);
+        assert_eq!(stats.session.raw_tokens, 230);
+        assert_eq!(stats.session.optimized_tokens, 200);
+        assert_eq!(stats.session.saved_tokens, 30);
+        assert_eq!(stats.provider_breakdown.len(), 2);
+        assert_eq!(stats.provider_breakdown[0].provider.as_deref(), Some("codex"));
     }
 }

@@ -106,6 +106,48 @@ impl OptimizationMetrics {
     }
 }
 
+impl OptimizationStatsResponse {
+    pub fn with_live_counters(mut self, live: OptimizationStatsResponse) -> Self {
+        self.aggregate.add_counters_from(&live.aggregate);
+        self.session.add_counters_from(&live.session);
+
+        for live_provider in live.provider_breakdown {
+            if let Some(provider) = live_provider.provider.as_deref() {
+                if let Some(existing) = self
+                    .provider_breakdown
+                    .iter_mut()
+                    .find(|stats| stats.provider.as_deref() == Some(provider))
+                {
+                    existing.add_counters_from(&live_provider);
+                    continue;
+                }
+            }
+            self.provider_breakdown
+                .push(live_provider.without_token_totals());
+        }
+
+        self
+    }
+}
+
+impl OptimizationStats {
+    fn add_counters_from(&mut self, counters: &OptimizationStats) {
+        self.cache_hits += counters.cache_hits;
+        self.cache_misses += counters.cache_misses;
+        self.compressions += counters.compressions;
+        self.reasoning_requests += counters.reasoning_requests;
+        self.fim_requests += counters.fim_requests;
+    }
+
+    fn without_token_totals(mut self) -> Self {
+        self.raw_tokens = 0;
+        self.optimized_tokens = 0;
+        self.saved_tokens = 0;
+        self.transaction_count = 0;
+        self
+    }
+}
+
 fn aggregate_events(
     events: &[OptimizationMetricEvent],
     session_id: Option<&str>,
@@ -194,5 +236,67 @@ mod tests {
         assert_eq!(stats.session.raw_tokens, 120);
         assert_eq!(stats.aggregate.saved_tokens, 30);
         assert_eq!(stats.provider_breakdown.len(), 1);
+    }
+
+    #[test]
+    fn merges_live_counters_without_duplicate_token_totals() {
+        let persisted = OptimizationStatsResponse {
+            aggregate: OptimizationStats {
+                raw_tokens: 120,
+                optimized_tokens: 100,
+                saved_tokens: 20,
+                transaction_count: 1,
+                ..Default::default()
+            },
+            session: OptimizationStats {
+                raw_tokens: 120,
+                optimized_tokens: 100,
+                saved_tokens: 20,
+                transaction_count: 1,
+                ..Default::default()
+            },
+            provider_breakdown: vec![OptimizationStats {
+                provider: Some("codex".to_string()),
+                raw_tokens: 120,
+                optimized_tokens: 100,
+                saved_tokens: 20,
+                transaction_count: 1,
+                ..Default::default()
+            }],
+        };
+        let live = OptimizationStatsResponse {
+            aggregate: OptimizationStats {
+                raw_tokens: 120,
+                optimized_tokens: 100,
+                saved_tokens: 20,
+                transaction_count: 1,
+                reasoning_requests: 1,
+                ..Default::default()
+            },
+            session: OptimizationStats {
+                raw_tokens: 120,
+                optimized_tokens: 100,
+                saved_tokens: 20,
+                transaction_count: 1,
+                reasoning_requests: 1,
+                ..Default::default()
+            },
+            provider_breakdown: vec![OptimizationStats {
+                provider: Some("codex".to_string()),
+                raw_tokens: 120,
+                optimized_tokens: 100,
+                saved_tokens: 20,
+                transaction_count: 1,
+                reasoning_requests: 1,
+                ..Default::default()
+            }],
+        };
+
+        let merged = persisted.with_live_counters(live);
+
+        assert_eq!(merged.aggregate.raw_tokens, 120);
+        assert_eq!(merged.aggregate.reasoning_requests, 1);
+        assert_eq!(merged.provider_breakdown[0].saved_tokens, 20);
+        assert_eq!(merged.provider_breakdown[0].reasoning_requests, 1);
     }
 }

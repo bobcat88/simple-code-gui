@@ -8,7 +8,7 @@ pub mod providers;
 
 use tauri::Emitter;
 
-use crate::database::{DatabaseManager, insert_token_transaction, TokenTransactionInput};
+use crate::database::{DatabaseManager, insert_token_transaction, query_optimization_token_stats, TokenTransactionInput};
 use opt_metrics::{OptimizationMetricEvent, OptimizationMetrics, OptimizationStatsResponse};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -658,8 +658,17 @@ impl RuntimeManager {
         }
     }
 
-    pub fn get_optimization_stats(&self, session_id: Option<&str>) -> OptimizationStatsResponse {
-        self.optimization_metrics.stats(session_id)
+    pub async fn get_optimization_stats(&self, session_id: Option<&str>) -> OptimizationStatsResponse {
+        let live_stats = self.optimization_metrics.stats(session_id);
+        let db_lock = self.db.lock().await;
+        let Some(db) = &*db_lock else {
+            return live_stats;
+        };
+
+        query_optimization_token_stats(&db.pool, session_id)
+            .await
+            .map(|persisted| persisted.with_live_counters(live_stats.clone()))
+            .unwrap_or(live_stats)
     }
 
     pub async fn get_health(&self) -> HashMap<String, ProviderHealth> {
@@ -796,7 +805,7 @@ pub async fn ai_get_optimization_stats(
     manager: tauri::State<'_, Arc<RuntimeManager>>,
     session_id: Option<String>,
 ) -> Result<OptimizationStatsResponse, String> {
-    Ok(manager.get_optimization_stats(session_id.as_deref()))
+    Ok(manager.get_optimization_stats(session_id.as_deref()).await)
 }
 
 #[tauri::command]
