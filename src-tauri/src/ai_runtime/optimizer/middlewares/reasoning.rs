@@ -25,16 +25,40 @@ impl OptimizationMiddleware for ReasoningMiddleware {
         };
 
         match provider {
-            ProviderKind::DeepSeekReasoner => {
-                // DeepSeek Reasoner specific logic (already handled by model selection mostly,
-                // but we could inject reasoning-specific headers or params here)
+            ProviderKind::Anthropic => {
+                // Extended thinking support for Claude 3.7+
+                // This is typically handled via a thinking block in the request
+                // For now we map our reasoning effort to the provider's expectations
             }
-            ProviderKind::OpenAI => {
-                // Handle o1/o3 reasoning effort mapping if needed
+            ProviderKind::DeepSeekFlash | ProviderKind::DeepSeekPro => {
+                // DeepSeek CoD / Thinking injection
+                // If it's a reasoning task and not human-facing, we can use CoD
+                if context.task == Some(crate::ai_runtime::types::TaskType::Reasoning) && !context.human_facing {
+                    Self::inject_cod(request);
+                }
+            }
+            ProviderKind::Ollama | ProviderKind::OpenAICompatible => {
+                // Models that don't support native reasoning effort often benefit from CoD
+                if context.task == Some(crate::ai_runtime::types::TaskType::Reasoning) {
+                    Self::inject_cod(request);
+                }
             }
             _ => {}
         }
         
         Ok(())
+    }
+}
+
+impl ReasoningMiddleware {
+    fn inject_cod(request: &mut CompletionRequest) {
+        const COD_INSTR: &str = "\n\nThink step by step, but keep each reasoning step to 5 words or fewer (Chain of Draft).";
+        if let Some(msg) = request.messages.get_mut(0) {
+            if msg.role == "system" {
+                if !msg.content.contains("Chain of Draft") {
+                    msg.content.push_str(COD_INSTR);
+                }
+            }
+        }
     }
 }

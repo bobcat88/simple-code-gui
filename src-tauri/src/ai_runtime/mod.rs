@@ -655,6 +655,7 @@ impl RuntimeManager {
                     saved_tokens: Some(saved_tokens),
                     cost_estimate: total_cost,
                     context_reuse_id: rtk_result.map(|r| r.reuse_id).flatten(),
+                    cache_control: None,
                     timestamp: None,
                 };
                 let _ = insert_token_transaction(&db.pool, &transaction).await;
@@ -958,6 +959,7 @@ mod tests {
                 content: "hello".to_string(),
                 tool_calls: None,
                 tool_call_id: None,
+                cache_control: None,
             }],
             model: None,
             policy,

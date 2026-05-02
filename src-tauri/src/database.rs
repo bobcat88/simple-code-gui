@@ -22,6 +22,7 @@ pub struct TokenTransactionInput {
     pub saved_tokens: Option<i64>,
     pub cost_estimate: f64,
     pub context_reuse_id: Option<String>,
+    pub cache_control: Option<serde_json::Value>,
     pub timestamp: Option<String>,
 }
 
@@ -94,8 +95,8 @@ pub async fn insert_token_transaction(
     // AC: @01KPNWTT ac-2
     sqlx::query(
         "INSERT INTO token_transactions
-            (session_id, nexus_session_id, agent_id, project_path, backend, input_tokens, output_tokens, saved_tokens, cost_estimate, context_reuse_id, timestamp)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))",
+            (session_id, nexus_session_id, agent_id, project_path, backend, input_tokens, output_tokens, saved_tokens, cost_estimate, context_reuse_id, cache_control, timestamp)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))",
     )
     .bind(&transaction.session_id)
     .bind(&transaction.nexus_session_id)
@@ -107,6 +108,7 @@ pub async fn insert_token_transaction(
     .bind(transaction.saved_tokens.unwrap_or(0))
     .bind(transaction.cost_estimate)
     .bind(&transaction.context_reuse_id)
+    .bind(transaction.cache_control.as_ref().map(|c| serde_json::to_string(c).unwrap()))
     .bind(&transaction.timestamp)
     .execute(pool)
     .await
@@ -774,6 +776,7 @@ impl DatabaseManager {
                 message_type TEXT NOT NULL,
                 content TEXT NOT NULL,
                 metadata TEXT,
+                cache_control TEXT,
                 FOREIGN KEY(snapshot_id) REFERENCES swarm_snapshots(id)
             )",
         )
@@ -878,11 +881,12 @@ pub async fn insert_swarm_message(
     snapshot_id: Option<&str>,
 ) -> Result<(), String> {
     let metadata_json = message.metadata.as_ref().map(|m| serde_json::to_string(m).unwrap());
+    let cache_control_json = message.cache_control.as_ref().map(|c| serde_json::to_string(c).unwrap());
 
     sqlx::query(
         "INSERT OR IGNORE INTO swarm_messages 
-            (id, snapshot_id, project_path, timestamp, from_agent, to_agent, message_type, content, metadata)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (id, snapshot_id, project_path, timestamp, from_agent, to_agent, message_type, content, metadata, cache_control)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(&message.id)
     .bind(snapshot_id)
@@ -893,6 +897,7 @@ pub async fn insert_swarm_message(
     .bind(&message.message_type)
     .bind(&message.content)
     .bind(metadata_json)
+    .bind(cache_control_json)
     .execute(pool)
     .await
     .map_err(|e| e.to_string())?;
@@ -908,8 +913,8 @@ pub async fn get_swarm_messages(
 ) -> Result<Vec<AgentMessage>, String> {
     let l = limit.map(|n| n as i64).unwrap_or(-1);
 
-    let rows = sqlx::query_as::<_, (String, i64, String, Option<String>, String, String, Option<String>)>(
-        "SELECT id, timestamp, from_agent, to_agent, message_type, content, metadata 
+    let rows = sqlx::query_as::<_, (String, i64, String, Option<String>, String, String, Option<String>, Option<String>)>(
+        "SELECT id, timestamp, from_agent, to_agent, message_type, content, metadata, cache_control 
          FROM swarm_messages 
          WHERE (? IS NULL OR project_path = ?)
            AND (? IS NULL OR snapshot_id = ?)
@@ -925,8 +930,9 @@ pub async fn get_swarm_messages(
     .await
     .map_err(|e| e.to_string())?;
 
-    let messages = rows.into_iter().map(|(id, timestamp, from_agent, to_agent, message_type, content, metadata_json)| {
+    let messages = rows.into_iter().map(|(id, timestamp, from_agent, to_agent, message_type, content, metadata_json, cache_control_json)| {
         let metadata = metadata_json.and_then(|s| serde_json::from_str(&s).ok());
+        let cache_control = cache_control_json.and_then(|s| serde_json::from_str(&s).ok());
 
         AgentMessage {
             id,
@@ -936,6 +942,7 @@ pub async fn get_swarm_messages(
             message_type,
             content,
             metadata,
+            cache_control,
         }
     }).collect();
 

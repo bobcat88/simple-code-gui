@@ -42,6 +42,8 @@ impl OptimizationPipeline {
             Arc::new(BudgetMiddleware),
             Arc::new(FormatHintMiddleware),
             Arc::new(ReasoningMiddleware),
+            Arc::new(CacheMiddleware),
+            Arc::new(CognitiveMiddleware),
         ];
         
         Self {
@@ -171,6 +173,7 @@ mod tests {
                 content: "build".to_string(),
                 tool_calls: None,
                 tool_call_id: None,
+                cache_control: None,
             }],
             policy: Some(RoutingPolicy::Tiered {
                 task: TaskType::Coding,
@@ -277,6 +280,7 @@ mod tests {
                 content: "work".to_string(),
                 tool_calls: None,
                 tool_call_id: None,
+                cache_control: None,
             }],
             optimization: Some(OptimizationRequest {
                 system_prompt: Some(SystemPromptOptimization {

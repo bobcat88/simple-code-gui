@@ -147,6 +147,7 @@ impl Executor {
         if let Some(state) = self.app.try_state::<Arc<crate::orchestration::OrchestrationState>>() {
             let mut messages = state.message_bus.lock();
             let msg = crate::orchestration::AgentMessage {
+                    cache_control: None,
                 id: format!("{}-{}", message_type, Utc::now().timestamp_nanos_opt().unwrap_or(0)),
                 timestamp: Utc::now().timestamp_millis() as u64,
                 from_agent: "Executor".to_string(),
@@ -425,13 +426,15 @@ impl Executor {
                     role: "system".to_string(), 
                     content: system_prompt.to_string(), 
                     tool_calls: None, 
-                    tool_call_id: None 
+                    tool_call_id: None,
+                    cache_control: None,
                 },
                 Message { 
                     role: "user".to_string(), 
                     content: format!("Task: {}\nDescription: {}", step.title, step.description), 
                     tool_calls: None, 
-                    tool_call_id: None 
+                    tool_call_id: None,
+                    cache_control: None,
                 },
             ];
 
@@ -468,6 +471,7 @@ impl Executor {
                     content: response.content.clone(),
                     tool_calls: response.tool_calls.clone(),
                     tool_call_id: None,
+                    cache_control: None,
                 });
 
                 if let Some(tool_calls) = response.tool_calls {
@@ -502,6 +506,7 @@ impl Executor {
                                     content: format!("Error: Tool execution blocked by policy: {}", reason),
                                     tool_calls: None,
                                     tool_call_id: Some(tc.id.clone()),
+                                    cache_control: None,
                                 });
                                 continue;
                             }
@@ -560,6 +565,7 @@ impl Executor {
                                             content: format!("Error: Tool execution rejected by user."),
                                             tool_calls: None,
                                             tool_call_id: Some(tc.id.clone()),
+                                            cache_control: None,
                                         });
                                         continue;
                                     }
@@ -642,6 +648,7 @@ impl Executor {
                                         content: format!("CONFLICT RESOLVED by user. Accepted Reviewer 1's Findings:\n{}", r1),
                                         tool_calls: None,
                                         tool_call_id: Some(tc.id),
+                                        cache_control: None,
                                     });
                                     step.status = StepStatus::InProgress;
                                     let _ = self.app.emit("gsd-step-updated", step.clone());
@@ -653,6 +660,7 @@ impl Executor {
                                         content: format!("CONFLICT RESOLVED by user. Accepted Reviewer 2's Findings:\n{}", r2),
                                         tool_calls: None,
                                         tool_call_id: Some(tc.id),
+                                        cache_control: None,
                                     });
                                     step.status = StepStatus::InProgress;
                                     let _ = self.app.emit("gsd-step-updated", step.clone());
@@ -727,12 +735,14 @@ impl Executor {
                                                 content: system_prompt.to_string(),
                                                 tool_calls: None,
                                                 tool_call_id: None,
+                                                cache_control: None,
                                             },
                                             crate::ai_runtime::types::Message {
                                                 role: "user".to_string(),
                                                 content: task.to_string(),
                                                 tool_calls: None,
                                                 tool_call_id: None,
+                                                cache_control: None,
                                             },
                                         ],
                                         tools: Some(crate::gsd_engine::tools::get_gsd_tools()), 
@@ -749,6 +759,7 @@ impl Executor {
                                         content: format!("Delegated Task Result ({}):\n{}", role, response.content),
                                         tool_calls: None,
                                         tool_call_id: Some(tc.id),
+                                        cache_control: None,
                                     });
                                     continue;
                                 }
@@ -758,6 +769,7 @@ impl Executor {
                                         content: "Delegation REJECTED by user. You must complete the task yourself or find another way.".to_string(),
                                         tool_calls: None,
                                         tool_call_id: Some(tc.id),
+                                        cache_control: None,
                                     });
                                     step.status = StepStatus::InProgress;
                                     let _ = self.app.emit("gsd-step-updated", step.clone());
@@ -781,6 +793,7 @@ impl Executor {
                             content: tool_result,
                             tool_calls: None,
                             tool_call_id: Some(tc.id),
+                            cache_control: None,
                         });
                     }
                 } else {
@@ -1002,6 +1015,7 @@ impl Executor {
                     content: prompt,
                     tool_calls: None,
                     tool_call_id: None,
+                    cache_control: None,
                 }],
                 project_path,
                 active_project_paths,
@@ -1060,6 +1074,7 @@ impl Executor {
                 content: prompt,
                 tool_calls: None,
                 tool_call_id: None,
+                cache_control: None,
             }],
             project_path: self.project_path.clone(),
             active_project_paths: self.active_project_paths.clone(),

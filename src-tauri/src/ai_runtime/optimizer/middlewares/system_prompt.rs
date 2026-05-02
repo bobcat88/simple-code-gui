@@ -40,6 +40,7 @@ impl OptimizationMiddleware for SystemPromptMiddleware {
                 content: content.clone(),
                 tool_calls: None,
                 tool_call_id: None,
+                cache_control: None,
             },
         );
         Ok(())

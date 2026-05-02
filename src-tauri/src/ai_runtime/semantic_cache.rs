@@ -165,6 +165,7 @@ mod tests {
                 content: content.to_string(),
                 tool_calls: None,
                 tool_call_id: None,
+                cache_control: None,
             }],
             model: Some("model".to_string()),
             ..Default::default()

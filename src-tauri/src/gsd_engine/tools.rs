@@ -223,6 +223,7 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
                 content: content.to_string(),
                 message_type: message_type.to_string(),
                 metadata: None,
+                cache_control: None,
             };
             
             let state = app.state::<Arc<crate::orchestration::OrchestrationState>>();
@@ -255,6 +256,7 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
                     content: reviewer_prompt.clone(),
                     tool_calls: None,
                     tool_call_id: None,
+                    cache_control: None,
                 }],
                 ..Default::default()
             };
@@ -265,6 +267,7 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
                     content: reviewer_prompt,
                     tool_calls: None,
                     tool_call_id: None,
+                    cache_control: None,
                 }],
                 ..Default::default()
             };

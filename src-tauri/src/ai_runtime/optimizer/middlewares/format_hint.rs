@@ -15,12 +15,13 @@ impl OptimizationMiddleware for FormatHintMiddleware {
         if context.human_facing || request.tools.is_some() || request.tool_choice.is_some() {
             return Ok(());
         }
-        let wants_yaml = request
-            .optimization
-            .as_ref()
-            .and_then(|opt| opt.response_format.as_ref())
-            == Some(&ResponseFormat::Yaml);
-        if !wants_yaml {
+        let current_format = request.optimization.as_ref().and_then(|opt| opt.response_format.as_ref());
+        
+        // If explicit YAML or (not human facing and explicit JSON) -> suggest YAML
+        let suggest_yaml = matches!(current_format, Some(ResponseFormat::Yaml)) || 
+                          (!context.human_facing && matches!(current_format, Some(ResponseFormat::JsonObject)));
+
+        if !suggest_yaml {
             return Ok(());
         }
 
@@ -40,6 +41,7 @@ impl OptimizationMiddleware for FormatHintMiddleware {
                 content: YAML_HINT.to_string(),
                 tool_calls: None,
                 tool_call_id: None,
+                cache_control: None,
             },
         );
         Ok(())

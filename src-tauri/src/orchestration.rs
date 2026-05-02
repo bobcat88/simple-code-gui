@@ -182,6 +182,7 @@ pub struct AgentMessage {
     pub message_type: String,
     pub content: String,
     pub metadata: Option<serde_json::Value>,
+    pub cache_control: Option<serde_json::Value>,
 }
 
 #[derive(Default)]
@@ -1163,12 +1164,14 @@ pub async fn brainstorm_agentic_sketch(
                 content: "You are a software architect and UX designer. The user will provide a feature idea or node content. Output a concise 'sketch' of how this feature should be designed and implemented. Keep it structured and actionable, focusing on UI layout, interaction flow, and basic data structures. Do not use markdown code blocks, just output text.".to_string(),
                 tool_calls: None,
                 tool_call_id: None,
+                cache_control: None,
             },
             crate::ai_runtime::types::Message {
                 role: "user".to_string(),
                 content: format!("Title: {}\n\nContent:\n{}", base_title, base_content),
                 tool_calls: None,
                 tool_call_id: None,
+                cache_control: None,
             }
         ],
         project_path: Some(cwd),
@@ -1214,12 +1217,14 @@ pub async fn brainstorm_architect_review(
                 content: "You are a software architect reviewing a proposed feature or implementation detail. Analyze the given content for completeness, potential architectural risks, edge cases, and readiness for implementation. Output your verdict as a concise text summary without markdown code blocks. End with a clear recommendation on next steps (e.g., 'Ready to implement', 'Needs more detail', 'Consider edge case X').".to_string(),
                 tool_calls: None,
                 tool_call_id: None,
+                cache_control: None,
             },
             crate::ai_runtime::types::Message {
                 role: "user".to_string(),
                 content: format!("Node Type: {}\nTitle: {}\n\nContent:\n{}", base_type, base_title, base_content),
                 tool_calls: None,
                 tool_call_id: None,
+                cache_control: None,
             }
         ],
         project_path: Some(cwd),
