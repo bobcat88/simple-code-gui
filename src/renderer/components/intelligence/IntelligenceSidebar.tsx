@@ -35,6 +35,7 @@ import type {
   OpenTab
 } from '../../api/types'
 import { BrainstormTab } from './BrainstormTab'
+import { GovernanceTab } from './GovernanceTab'
 
 interface IntelligenceSidebarProps {
   intelligence: ProjectIntelligence | null
@@ -78,7 +79,7 @@ export function IntelligenceSidebar({
   const [applying, setApplying] = useState(false)
   const [applyResult, setApplyResult] = useState<string[] | null>(null)
   const [progress, setProgress] = useState<ProposalProgress | null>(null)
-  const [activeSection, setActiveSection] = useState<'intelligence' | 'brainstorm'>('intelligence')
+  const [activeSection, setActiveSection] = useState<'intelligence' | 'brainstorm' | 'governance'>('intelligence')
   const [suggestions, setSuggestions] = useState<any[]>([])
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const healthScore = Math.round(capabilityScan?.projectHealthScore ?? 0)
@@ -270,6 +271,18 @@ export function IntelligenceSidebar({
           Brainstorm
           <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
         </button>
+        <button
+          onClick={() => setActiveSection('governance')}
+          className={cn(
+            "pb-2 text-[11px] font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
+            activeSection === 'governance' 
+              ? "text-white border-emerald-500" 
+              : "text-white/30 border-transparent hover:text-white/60"
+          )}
+        >
+          Governance
+          <ShieldCheck size={12} className={cn(activeSection === 'governance' ? "text-emerald-400" : "text-white/20")} />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
@@ -277,6 +290,11 @@ export function IntelligenceSidebar({
           <BrainstormTab 
             api={api} 
             projectPath={activeTab?.projectPath || ''} 
+          />
+        ) : activeSection === 'governance' ? (
+          <GovernanceTab 
+            api={api}
+            projectPath={activeTab?.projectPath || ''}
           />
         ) : (
           <>

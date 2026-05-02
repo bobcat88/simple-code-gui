@@ -733,10 +733,13 @@ pub fn run() {
             gsd_engine::gsd_swarm_query_memory,
             gsd_engine::gsd_swarm_record_pattern,
             gsd_engine::gsd_sync_memory,
+            gsd_engine::gsd_start_automatic_sync,
+            gsd_engine::gsd_stop_automatic_sync,
             gsd_engine::gsd_update_policy,
             gsd_engine::gsd_identify_refactors,
             gsd_engine::gsd_apply_refactor,
             gsd_engine::gsd_get_refactor_details,
+            gsd_engine::gsd_get_sync_status,
             rtk_check,
             rtk_get_stats,
             rtk_get_history,
@@ -784,6 +787,29 @@ pub fn run() {
             create_snapshot_workspace,
             get_swarm_snapshots,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            if let tauri::RunEvent::ExitRequested { .. } = event {
+                let state = app_handle.state::<OrchestrationState>();
+                let db = app_handle.state::<Arc<DatabaseManager>>();
+                
+                let current_path = {
+                    let path = state.current_project_path.lock();
+                    path.clone()
+                };
+
+                if let Some(path) = current_path {
+                    let db_clone = db.inner().clone();
+                    tauri::async_runtime::block_on(async move {
+                        let _ = orchestration::internal_create_snapshot(
+                            &db_clone,
+                            &path,
+                            "Automatic Shutdown Snapshot",
+                            Some("System initiated snapshot during project exit.".to_string())
+                        ).await;
+                    });
+                }
+            }
+        });
 }

@@ -1289,19 +1289,28 @@ pub async fn create_swarm_snapshot_file(
         path.clone()
     }.ok_or("No active project to snapshot")?;
 
+    internal_create_snapshot(&db, &current_path, &name, handoff_notes).await
+}
+
+pub async fn internal_create_snapshot(
+    db: &DatabaseManager,
+    project_path: &str,
+    name: &str,
+    handoff_notes: Option<String>,
+) -> Result<String, String> {
     let snapshot_id = Uuid::new_v4().to_string();
     
     // 1. Create Snapshot record in SQLite
-    crate::database::create_swarm_snapshot(&db.pool, &snapshot_id, &current_path, Some(&name), None, None, handoff_notes.as_deref()).await?;
+    crate::database::create_swarm_snapshot(&db.pool, &snapshot_id, project_path, Some(name), None, None, handoff_notes.as_deref()).await?;
     
     // 2. Fetch all messages for this project that aren't snapshotted yet
-    let messages = crate::database::get_swarm_messages(&db.pool, Some(&current_path), None, None).await?;
+    let messages = crate::database::get_swarm_messages(&db.pool, Some(project_path), None, None).await?;
     
     // 3. Link them in SQLite
-    crate::database::link_messages_to_snapshot(&db.pool, &snapshot_id, &current_path).await?;
+    crate::database::link_messages_to_snapshot(&db.pool, &snapshot_id, project_path).await?;
     
     // 4. Save to JSON
-    let snapshots_dir = std::path::Path::new(&current_path).join(".kspec").join("snapshots");
+    let snapshots_dir = std::path::Path::new(project_path).join(".kspec").join("snapshots");
     if !snapshots_dir.exists() {
         std::fs::create_dir_all(&snapshots_dir).map_err(|e| e.to_string())?;
     }
@@ -1310,7 +1319,7 @@ pub async fn create_swarm_snapshot_file(
     let snapshot_data = serde_json::json!({
         "id": snapshot_id,
         "name": name,
-        "project_path": current_path,
+        "project_path": project_path,
         "timestamp": Utc::now().to_rfc3339(),
         "handoff_notes": handoff_notes,
         "messages": messages
@@ -1324,7 +1333,7 @@ pub async fn create_swarm_snapshot_file(
     let timestamp = Utc::now().to_rfc3339();
     let md_content = generate_snapshot_markdown(
         &snapshot_id,
-        &snapshot_data["name"].as_str().unwrap_or("Unnamed Snapshot"),
+        name,
         &timestamp,
         handoff_notes.as_deref(),
         &messages,
@@ -1334,7 +1343,7 @@ pub async fn create_swarm_snapshot_file(
     // 5. Ensure Git tracks it immediately if we're in a git repo
     let _ = std::process::Command::new("python3")
         .arg("scripts/git_swarm_snapshot.py")
-        .current_dir(&current_path)
+        .current_dir(project_path)
         .output();
 
     Ok(snapshot_id)

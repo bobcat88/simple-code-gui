@@ -23,6 +23,7 @@ pub struct GsdEngine {
     pub db: Arc<DatabaseManager>,
     pub knowledge: Arc<Mutex<Option<knowledge::SwarmMemory>>>,
     pub governance: Arc<Mutex<governance::GovernanceEngine>>,
+    pub is_syncing: std::sync::Arc<std::sync::atomic::AtomicBool>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -45,6 +46,7 @@ impl GsdEngine {
             db,
             knowledge: Arc::new(Mutex::new(None)),
             governance: Arc::new(Mutex::new(governance::GovernanceEngine::new_default())),
+            is_syncing: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
         }
     }
 
@@ -531,6 +533,14 @@ pub async fn gsd_execute_plan(
 
         let _ = app_handle.emit("gsd-execution-completed", &plan_id);
 
+        // Automatic Snapshot on completion
+        if let Some(ref path) = project_path {
+            let db = engine.db.clone();
+            let name = format!("Execution Completed: {}", plan_id);
+            let notes = format!("Automatic snapshot triggered by successful completion of GSD plan {}.", plan_id);
+            let _ = crate::orchestration::internal_create_snapshot(&db, path, &name, Some(notes)).await;
+        }
+
         // Final save
         let mut plans = engine.active_plans.lock().await;
         plans.insert(plan_id, plan.clone());
@@ -708,10 +718,9 @@ pub async fn gsd_swarm_record_pattern(
 
 #[tauri::command]
 pub async fn gsd_sync_memory(
-    state: State<'_, Arc<Mutex<GsdEngine>>>,
+    state: State<'_, Arc<GsdEngine>>,
 ) -> Result<usize, String> {
-    let engine = state.lock().await;
-    let knowledge_lock = engine.knowledge.lock().await;
+    let knowledge_lock = state.knowledge.lock().await;
     
     if let Some(ref knowledge) = *knowledge_lock {
         // First import from global
@@ -726,20 +735,70 @@ pub async fn gsd_sync_memory(
 
 #[tauri::command]
 pub async fn gsd_update_policy(
-    state: State<'_, Arc<Mutex<GsdEngine>>>,
+    state: State<'_, Arc<GsdEngine>>,
     orch_state: State<'_, crate::orchestration::OrchestrationState>,
     policy: governance::SwarmPolicy,
 ) -> Result<(), String> {
-    let engine = state.lock().await;
-    let mut gov = engine.governance.lock().await;
+    let mut gov = state.governance.lock().await;
     gov.policy = policy;
     
     // Save to file if project path exists
     let project_path = orch_state.current_project_path.lock().clone();
     if let Some(path) = project_path {
         let policy_path = std::path::Path::new(&path).join(".planning/gsd/governance.yaml");
-        gov.save_to_file(policy_path)?;
+        let yaml = serde_yaml::to_string(&gov.policy).map_err(|e| e.to_string())?;
+        std::fs::write(policy_path, yaml).map_err(|e| e.to_string())?;
     }
     
     Ok(())
 }
+
+#[tauri::command]
+pub async fn gsd_start_automatic_sync(
+    state: State<'_, Arc<GsdEngine>>,
+    app: AppHandle,
+) -> Result<(), String> {
+    if state.is_syncing.load(std::sync::atomic::Ordering::SeqCst) {
+        return Ok(());
+    }
+
+    state.is_syncing.store(true, std::sync::atomic::Ordering::SeqCst);
+    let state_clone = Arc::clone(&state);
+    let is_syncing = Arc::clone(&state.is_syncing);
+
+    tauri::async_runtime::spawn(async move {
+        println!("[GSD] Starting automatic memory sync loop");
+        while is_syncing.load(std::sync::atomic::Ordering::SeqCst) {
+            // Perform sync
+            {
+                let knowledge_lock = state_clone.knowledge.lock().await;
+                if let Some(ref knowledge) = *knowledge_lock {
+                    let _ = sync::GlobalSync::import(knowledge);
+                    let _ = sync::GlobalSync::export(knowledge);
+                    let _ = app.emit("gsd-sync-complete", ());
+                }
+            }
+            // Sleep for 1 minute
+            tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+        }
+        println!("[GSD] Automatic memory sync loop stopped");
+    });
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn gsd_stop_automatic_sync(
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<(), String> {
+    state.is_syncing.store(false, std::sync::atomic::Ordering::SeqCst);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn gsd_get_sync_status(
+    state: State<'_, Arc<GsdEngine>>,
+) -> bool {
+    state.is_syncing.load(std::sync::atomic::Ordering::SeqCst)
+}
+

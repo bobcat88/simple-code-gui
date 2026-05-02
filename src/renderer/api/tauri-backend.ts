@@ -473,6 +473,18 @@ export class TauriBackend implements ExtendedApi {
     return await tauriIpc.gsdListTools();
   }
 
+  async gsdStartAutomaticSync(): Promise<void> {
+    await tauriIpc.gsdStartAutomaticSync();
+  }
+
+  async gsdStopAutomaticSync(): Promise<void> {
+    await tauriIpc.gsdStopAutomaticSync();
+  }
+
+  async gsdGetSyncStatus(): Promise<boolean> {
+    return await tauriIpc.gsdGetSyncStatus();
+  }
+
   async gsdSwarmQueryMemory(query: string, patternType?: string, limit?: number): Promise<any[]> {
     return await tauriIpc.gsdSwarmQueryMemory(query, patternType, limit);
   }

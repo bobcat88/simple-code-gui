@@ -345,6 +345,12 @@ export const tauriIpc = {
     invoke<any[]>('gsd_swarm_query_memory', { query, patternType, limit }),
   gsdSwarmRecordPattern: (patternType: string, patternKey: string, content: string, metadata?: string) =>
     invoke<void>('gsd_swarm_record_pattern', { patternType, patternKey, content, metadata }),
+  gsdStartAutomaticSync: () =>
+    invoke<void>('gsd_start_automatic_sync'),
+  gsdStopAutomaticSync: () =>
+    invoke<void>('gsd_stop_automatic_sync'),
+  gsdGetSyncStatus: () =>
+    invoke<boolean>('gsd_get_sync_status'),
 
   // Vector Engine
   vectorSearch: (query: string, limit?: number, projectPath?: string) =>

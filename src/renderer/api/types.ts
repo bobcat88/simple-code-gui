@@ -656,6 +656,9 @@ export interface Api {
   gsdGetPersonas?: () => Promise<SwarmPersona[]>
   gsdSyncMemory?: () => Promise<number>
   gsdUpdatePolicy?: (policy: SwarmPolicy) => Promise<void>
+  gsdStartAutomaticSync?: () => Promise<void>
+  gsdStopAutomaticSync?: () => Promise<void>
+  gsdGetSyncStatus?: () => Promise<boolean>
   gsdListTools?: () => Promise<ToolInfo[]>
   onGsdExecutionEvent?: (callback: (event: GsdExecutionEvent) => void) => Unsubscribe
   onGsdInsight?: (callback: (insight: NeuralInsight) => void) => Unsubscribe
