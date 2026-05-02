@@ -102,8 +102,13 @@ export function NeuralHUDTab({ api, projectPath }: NeuralHUDTabProps) {
   useEffect(() => {
     fetchGraphData()
 
+    // Initialize Quantum Sync
+    if (api.gsdQuantumSyncStart) {
+      api.gsdQuantumSyncStart().catch(err => console.error('Failed to start quantum sync:', err));
+    }
+
     // Listen for real-time swarm execution events
-    const unlisten = api.onGsdExecutionEvent((event: any) => {
+    const unlistenExecution = api.onGsdExecutionEvent((event: any) => {
       console.log('NeuralHUD received event:', event)
       
       // Add to history
@@ -146,8 +151,23 @@ export function NeuralHUDTab({ api, projectPath }: NeuralHUDTabProps) {
       }, 5000)
     })
 
+    // Listen for synaptic sync events
+    const unlistenSync = api.onGsdSyncEvent ? api.onGsdSyncEvent((event: any) => {
+      console.log('NeuralHUD received sync event:', event)
+      // Refresh graph data when sync occurs
+      fetchGraphData()
+      
+      // Add a special "Sync" event to history
+      setThoughtHistory(prev => [{
+        timestamp: Date.now(),
+        eventType: 'SYNC',
+        message: 'Synaptic shift detected. Knowledge graph re-synchronized.'
+      }, ...prev].slice(0, 50))
+    }) : Promise.resolve(() => {});
+
     return () => {
-      unlisten.then(fn => fn())
+      unlistenExecution.then(fn => fn())
+      unlistenSync.then(fn => fn())
     }
   }, [fetchGraphData, api, graphData.nodes])
 
@@ -229,6 +249,10 @@ export function NeuralHUDTab({ api, projectPath }: NeuralHUDTabProps) {
         </div>
 
         <div className="flex items-center gap-2 pointer-events-auto">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 mr-2">
+            <Zap size={10} className="text-emerald-400 animate-pulse" />
+            <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Quantum Sync Active</span>
+          </div>
           <button 
             onClick={() => fetchGraphData(searchQuery)}
             className="p-1.5 rounded-md bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/80 transition-all border border-white/5"

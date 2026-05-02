@@ -323,6 +323,8 @@ export const tauriIpc = {
     listen<any>('gsd-insight', (event) => callback(event.payload)),
   onGsdApprovalRequested: (callback: (approval: any) => void): Promise<UnlistenFn> =>
     listen<any>('gsd-approval-requested', (event) => callback(event.payload)),
+  onGsdSyncEvent: (callback: (event: any) => void): Promise<UnlistenFn> =>
+    listen<any>('gsd-sync-event', (event) => callback(event.payload)),
   gsdRespondToApproval: (approvalId: string, response: string) =>
     invoke<void>('gsd_respond_to_approval', { approvalId, response }),
   gsdGetGovernanceStatus: () =>
@@ -351,6 +353,8 @@ export const tauriIpc = {
     invoke<void>('gsd_stop_automatic_sync'),
   gsdGetSyncStatus: () =>
     invoke<boolean>('gsd_get_sync_status'),
+  gsdQuantumSyncStart: () =>
+    invoke<void>('gsd_quantum_sync_start'),
 
   // Vector Engine
   vectorSearch: (query: string, limit?: number, projectPath?: string) =>

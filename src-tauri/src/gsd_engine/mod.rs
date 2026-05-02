@@ -16,14 +16,17 @@ pub mod knowledge;
 pub mod forensics;
 pub mod governance;
 pub mod sync;
+pub mod quantum_sync;
+
 
 pub struct GsdEngine {
     pub active_plans: Arc<Mutex<HashMap<String, GsdPlan>>>,
     pub pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<UserResponse>>>>,
     pub db: Arc<DatabaseManager>,
-    pub knowledge: Arc<Mutex<Option<knowledge::SwarmMemory>>>,
+    pub knowledge: Arc<Mutex<Option<Arc<knowledge::SwarmMemory>>>>,
     pub governance: Arc<Mutex<governance::GovernanceEngine>>,
     pub is_syncing: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    pub quantum_sync: Arc<Mutex<Option<quantum_sync::QuantumSyncManager>>>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -47,6 +50,7 @@ impl GsdEngine {
             knowledge: Arc::new(Mutex::new(None)),
             governance: Arc::new(Mutex::new(governance::GovernanceEngine::new_default())),
             is_syncing: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            quantum_sync: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -89,7 +93,7 @@ impl GsdEngine {
             }
 
             let mem = knowledge::SwarmMemory::new(db_path).map_err(|e| e.to_string())?;
-            *knowledge = Some(mem);
+            *knowledge = Some(Arc::new(mem));
         }
         Ok(())
     }
@@ -801,4 +805,29 @@ pub fn gsd_get_sync_status(
 ) -> bool {
     state.is_syncing.load(std::sync::atomic::Ordering::SeqCst)
 }
+
+#[tauri::command]
+pub async fn gsd_quantum_sync_start(
+    app: AppHandle,
+    state: State<'_, Arc<GsdEngine>>,
+    orch: State<'_, Arc<OrchestrationState>>,
+) -> Result<(), String> {
+
+    let project_path = orch.current_project_path.lock().clone();
+    if let Some(path) = project_path {
+        state.ensure_knowledge_base(&path).await?;
+        
+        let mut qsync = state.quantum_sync.lock().await;
+        if qsync.is_none() {
+            let knowledge = state.knowledge.lock().await;
+            if let Some(mem) = knowledge.as_ref() {
+                let manager = quantum_sync::QuantumSyncManager::new(Arc::clone(mem), app.clone());
+                manager.start_synaptic_watch().await?;
+                *qsync = Some(manager);
+            }
+        }
+    }
+    Ok(())
+}
+
 

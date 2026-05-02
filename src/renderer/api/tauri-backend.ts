@@ -449,6 +449,12 @@ export class TauriBackend implements ExtendedApi {
     return () => unlisten?.();
   }
 
+  onGsdSyncEvent(callback: (event: any) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onGsdSyncEvent(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
   async gsdRespondToApproval(approvalId: string, response: string): Promise<void> {
     await tauriIpc.gsdRespondToApproval(approvalId, response);
   }
@@ -483,6 +489,10 @@ export class TauriBackend implements ExtendedApi {
 
   async gsdGetSyncStatus(): Promise<boolean> {
     return await tauriIpc.gsdGetSyncStatus();
+  }
+
+  async gsdQuantumSyncStart(): Promise<void> {
+    await tauriIpc.gsdQuantumSyncStart();
   }
 
   async gsdSwarmQueryMemory(query: string, patternType?: string, limit?: number): Promise<any[]> {

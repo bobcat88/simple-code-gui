@@ -4,11 +4,11 @@ use tokio::sync::Mutex;
 use crate::gsd_engine::knowledge::SwarmMemory;
 
 pub struct ForensicAgent {
-    memory: Arc<Mutex<Option<SwarmMemory>>>,
+    memory: Arc<Mutex<Option<Arc<SwarmMemory>>>>,
 }
 
 impl ForensicAgent {
-    pub fn new(memory: Arc<Mutex<Option<SwarmMemory>>>) -> Self {
+    pub fn new(memory: Arc<Mutex<Option<Arc<SwarmMemory>>>>) -> Self {
         Self { memory }
     }
 

@@ -39,6 +39,7 @@ export function NeuralHUD() {
   const [policy, setPolicy] = useState<SwarmPolicy | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [activeProjects, setActiveProjects] = useState<string[]>([]);
+  const [syncStatus, setSyncStatus] = useState<{ lastEvent: string; patternCount: number } | null>(null);
   const { projects } = useWorkspaceStore();
 
   const fetchActiveProjects = useCallback(async () => {
@@ -95,10 +96,34 @@ export function NeuralHUD() {
       setViewMode('insights');
     }) ?? (() => {});
 
+    const unsubscribeSync = api.onGsdSyncEvent?.((event: any) => {
+      setSyncStatus({
+        lastEvent: event.event_type || 'Sync',
+        patternCount: event.pattern_count || 0
+      });
+      
+      if (event.pattern_count > 0) {
+        const syncInsight: NeuralInsight = {
+          id: `sync-${Date.now()}`,
+          severity: 'low',
+          insightType: 'optimization',
+          message: 'Synaptic Shift Synchronized',
+          details: `Distributed swarm intelligence updated with ${event.pattern_count} new patterns.`,
+          timestamp: Date.now(),
+        };
+        setInsights(prev => [syncInsight, ...prev].slice(0, 10));
+      }
+    }) ?? (() => {});
+
+    if (api?.gsdQuantumSyncStart) {
+      api.gsdQuantumSyncStart().catch(err => console.error("Quantum sync failed to start:", err));
+    }
+
     return () => {
       unsubscribe();
       unsubscribeEvents();
       unsubscribeApprovals();
+      unsubscribeSync();
     };
   }, [api]);
 
@@ -316,8 +341,12 @@ export function NeuralHUD() {
                     {/* HUD Status Line */}
                     <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
                       <div className="flex items-center gap-2 text-[10px] text-white/40">
-                        <Activity size={10} className="animate-pulse" />
-                        <span>Swarm Consensus: 94%</span>
+                        <Activity size={10} className={cn(syncStatus ? "text-emerald-400" : "animate-pulse")} />
+                        <span>
+                          {syncStatus 
+                            ? `Quantum Sync: ${syncStatus.patternCount} bits` 
+                            : 'Swarm Consensus: 94%'}
+                        </span>
                       </div>
                       <span className="text-[9px] text-white/30 font-mono">
                         {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

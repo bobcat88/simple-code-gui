@@ -740,7 +740,9 @@ pub fn run() {
             gsd_engine::gsd_apply_refactor,
             gsd_engine::gsd_get_refactor_details,
             gsd_engine::gsd_get_sync_status,
+            gsd_engine::gsd_quantum_sync_start,
             rtk_check,
+
             rtk_get_stats,
             rtk_get_history,
             nexus_prune_context,

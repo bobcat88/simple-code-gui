@@ -82,7 +82,7 @@ pub struct Executor {
     pub pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<crate::gsd_engine::UserResponse>>>>,
     pub project_path: Option<String>,
     pub active_project_paths: Vec<String>,
-    pub knowledge: Arc<Mutex<Option<crate::gsd_engine::knowledge::SwarmMemory>>>,
+    pub knowledge: Arc<Mutex<Option<Arc<crate::gsd_engine::knowledge::SwarmMemory>>>>,
     pub governance: Arc<Mutex<crate::gsd_engine::governance::GovernanceEngine>>,
     pub dry_run: bool,
 }
@@ -95,7 +95,7 @@ impl Executor {
         pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<crate::gsd_engine::UserResponse>>>>,
         project_path: Option<String>,
         active_project_paths: Vec<String>,
-        knowledge: Arc<Mutex<Option<crate::gsd_engine::knowledge::SwarmMemory>>>,
+        knowledge: Arc<Mutex<Option<Arc<crate::gsd_engine::knowledge::SwarmMemory>>>>,
         governance: Arc<Mutex<crate::gsd_engine::governance::GovernanceEngine>>,
         dry_run: bool,
     ) -> Self {

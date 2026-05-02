@@ -2,7 +2,7 @@ use rusqlite::{params, Connection, Result};
 use std::path::Path;
 
 pub struct SwarmMemory {
-    conn: Connection,
+    conn: std::sync::Mutex<Connection>,
 }
 
 impl SwarmMemory {
@@ -20,19 +20,20 @@ impl SwarmMemory {
             [],
         )?;
 
-        Ok(SwarmMemory { conn })
+        Ok(SwarmMemory { conn: std::sync::Mutex::new(conn) })
     }
 
     /// Record a new learning entry
     pub fn record(&self, entry_type: &str, context: &str, content: &str, meta: &str) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
         // Simple duplicate check to keep collective memory clean
-        let mut stmt = self.conn.prepare(
+        let mut stmt = conn.prepare(
             "SELECT 1 FROM swarm_knowledge WHERE context = ?1 AND content = ?2 LIMIT 1"
         )?;
         let exists = stmt.exists(params![context, content])?;
         
         if !exists {
-            self.conn.execute(
+            conn.execute(
                 "INSERT INTO swarm_knowledge (type, context, content, meta) VALUES (?1, ?2, ?3, ?4)",
                 params![entry_type, context, content, meta],
             )?;
@@ -42,6 +43,7 @@ impl SwarmMemory {
 
     /// Query the collective memory
     pub fn query(&self, term: &str, entry_type: Option<&str>, limit: Option<usize>) -> Result<Vec<crate::gsd_engine::sync::MemoryEntry>> {
+        let conn = self.conn.lock().unwrap();
         let limit = limit.unwrap_or(5);
         let sql = if let Some(_t) = entry_type {
             format!("SELECT type, context, content, meta FROM swarm_knowledge WHERE type = ?1 AND swarm_knowledge MATCH ?2 ORDER BY rank LIMIT {}", limit)
@@ -49,7 +51,7 @@ impl SwarmMemory {
             format!("SELECT type, context, content, meta FROM swarm_knowledge WHERE swarm_knowledge MATCH ?1 ORDER BY rank LIMIT {}", limit)
         };
 
-        let mut stmt = self.conn.prepare(&sql)?;
+        let mut stmt = conn.prepare(&sql)?;
         let mut results = Vec::new();
 
         if let Some(t) = entry_type {
@@ -83,7 +85,8 @@ impl SwarmMemory {
 
     /// Get all entries for sync
     pub fn get_all_entries(&self) -> Result<Vec<crate::gsd_engine::sync::MemoryEntry>> {
-        let mut stmt = self.conn.prepare(
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
             "SELECT type, context, content, meta FROM swarm_knowledge"
         )?;
         let rows = stmt.query_map([], |row| {
