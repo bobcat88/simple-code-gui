@@ -1,6 +1,7 @@
 import React from 'react'
-import { Coins, Cpu, Gauge } from 'lucide-react'
+import { Coins, Cpu, Gauge, Zap } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import type { OptimizationStatsResponse } from '../../api/types'
 import type { TokenSessionMetrics } from './useTokenMeter'
 import {
   createTokenBudgetSnapshot,
@@ -11,6 +12,7 @@ import {
 
 interface TokenBudgetHudProps {
   snapshot: TokenSessionMetrics
+  optimizationStats?: OptimizationStatsResponse | null
   guardrails?: TokenBudgetGuardrails
   className?: string
 }
@@ -23,14 +25,20 @@ const STATUS_STYLES: Record<'idle' | 'healthy' | 'watch' | 'critical' | 'over', 
   over: 'text-rose-300',
 }
 
-export function TokenBudgetHud({ snapshot, guardrails = DEFAULT_TOKEN_GUARDRAILS, className }: TokenBudgetHudProps): React.ReactElement {
+export function TokenBudgetHud({ snapshot, optimizationStats, guardrails = DEFAULT_TOKEN_GUARDRAILS, className }: TokenBudgetHudProps): React.ReactElement {
   const derived = createTokenBudgetSnapshot(snapshot, guardrails)
   const statusClass = STATUS_STYLES[derived.budgetStatus]
+  const optimization = optimizationStats?.session
+  const savedTokens = optimization?.savedTokens ?? 0
+  const rawTokens = optimization?.rawTokens ?? 0
+  const optimizationLabel = rawTokens > 0
+    ? `${formatCompactNumber(savedTokens)} / ${formatCompactNumber(rawTokens)}`
+    : `${formatCompactNumber(savedTokens)} saved`
 
   return (
     <div
       className={cn(
-        'pointer-events-none w-full max-w-[24rem] rounded-full border border-white/10 bg-black/45 px-3 py-2 text-[10px] shadow-lg backdrop-blur-md',
+        'pointer-events-none w-full max-w-[32rem] rounded-full border border-white/10 bg-black/45 px-3 py-2 text-[10px] shadow-lg backdrop-blur-md',
         className,
       )}
       role="status"
@@ -58,6 +66,14 @@ export function TokenBudgetHud({ snapshot, guardrails = DEFAULT_TOKEN_GUARDRAILS
           <span className="text-white/55">Budget</span>
           <span className={cn('font-semibold', statusClass)}>{derived.budgetLabel}</span>
           <span className="text-white/50">{Math.min(100, Math.round(derived.burnRatio * 100))}%</span>
+        </div>
+
+        <div className="h-3 w-px bg-white/10" />
+
+        <div className="flex items-center gap-1.5 whitespace-nowrap" title="Measured optimization savings">
+          <Zap size={12} className="text-cyan-300" />
+          <span className="text-white/55">Opt</span>
+          <span className="font-semibold text-white/90">{optimizationLabel}</span>
         </div>
       </div>
 

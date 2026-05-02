@@ -12,6 +12,7 @@ import { useTTS } from './useTTS.js'
 import { useAutoWork } from './useAutoWork.js'
 import { useSummaryCapture } from './useSummaryCapture.js'
 import { useTokenMeter } from './useTokenMeter.js'
+import { useOptimizationStats } from './useOptimizationStats.js'
 import { TokenBudgetHud } from './TokenBudgetHud.js'
 import { clearTerminalBuffer, cleanupOrphanedBuffers, formatPathsForBackend } from './utils.js'
 import { useApi } from '../../contexts/ApiContext'
@@ -135,6 +136,10 @@ export function Terminal({
     api,
     projectPath: projectPath || undefined,
     backend
+  })
+  const { stats: optimizationStats } = useOptimizationStats({
+    sessionId: ptyId,
+    enabled: isActive,
   })
 
   // Terminal setup hook
@@ -398,6 +403,7 @@ export function Terminal({
         <div className="pointer-events-none absolute right-4 top-4 z-20 flex max-w-[calc(100%-2rem)] justify-end">
           <TokenBudgetHud
             snapshot={tokenSnapshot}
+            optimizationStats={optimizationStats}
             className={cn(!isActive && 'opacity-50')}
           />
         </div>
