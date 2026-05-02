@@ -1574,7 +1574,6 @@ pub async fn get_swarm_snapshots(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs;
     use tempfile::tempdir;
 
     #[tokio::test]

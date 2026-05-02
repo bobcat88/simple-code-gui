@@ -1125,6 +1125,7 @@ fn is_destructive_tool(name: &str) -> bool {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) fn build_wave_batches(total: usize, wave_size: usize) -> Vec<Vec<usize>> {
     if wave_size == 0 {
         return vec![(0..total).collect()];

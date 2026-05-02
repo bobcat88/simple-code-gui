@@ -3,7 +3,7 @@ use serde_json::{json, Value};
 use std::path::Path;
 use std::process::Command;
 use std::sync::Arc;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Manager};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(dead_code)]

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use serde_json::{json, Value};
+use serde_json::Value;
 
 use crate::ai_runtime::RuntimeManager;
 use crate::database::DatabaseManager;
@@ -20,7 +20,6 @@ pub mod sync;
 pub struct GsdEngine {
     pub active_plans: Arc<Mutex<HashMap<String, GsdPlan>>>,
     pub pending_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<UserResponse>>>>,
-    pub pending_approvals: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<bool>>>>,
     pub db: Arc<DatabaseManager>,
     pub knowledge: Arc<Mutex<Option<knowledge::SwarmMemory>>>,
     pub governance: Arc<Mutex<governance::GovernanceEngine>>,
@@ -43,7 +42,6 @@ impl GsdEngine {
         Self {
             active_plans: Arc::new(Mutex::new(HashMap::new())),
             pending_responses: Arc::new(Mutex::new(HashMap::new())),
-            pending_approvals: Arc::new(Mutex::new(HashMap::new())),
             db,
             knowledge: Arc::new(Mutex::new(None)),
             governance: Arc::new(Mutex::new(governance::GovernanceEngine::new_default())),
@@ -273,7 +271,7 @@ pub async fn gsd_apply_refactor(
     app: AppHandle,
     state: State<'_, Arc<GsdEngine>>,
     orch: State<'_, OrchestrationState>,
-    ai_runtime: State<'_, Arc<RuntimeManager>>,
+    _ai_runtime: State<'_, Arc<RuntimeManager>>,
     finding: Value,
     dry_run: Option<bool>,
 ) -> Result<String, String> {
@@ -385,7 +383,7 @@ pub async fn gsd_apply_refactor(
         completed_at: None,
     });
 
-    let mut plan = GsdPlan {
+    let plan = GsdPlan {
         id: plan_id.clone(),
         title: title.to_string(),
         task_id: format!("refactor-{}", uuid::Uuid::new_v4()),
@@ -684,7 +682,7 @@ pub async fn gsd_swarm_query_memory(
 #[tauri::command]
 pub async fn gsd_identify_refactors(
     app: AppHandle,
-    state: State<'_, Arc<GsdEngine>>,
+    _state: State<'_, Arc<GsdEngine>>,
     orch: State<'_, OrchestrationState>,
 ) -> Result<String, String> {
     let project_path = orch.current_project_path.lock().clone();
