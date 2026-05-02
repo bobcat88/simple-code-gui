@@ -885,6 +885,7 @@ mod tests {
             model: None,
             policy,
             project_path: None,
+            active_project_paths: Vec::new(),
             session_id: None,
             nexus_session_id: None,
             agent_id: None,

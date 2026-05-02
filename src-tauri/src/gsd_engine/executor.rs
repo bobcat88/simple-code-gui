@@ -1125,6 +1125,17 @@ fn is_destructive_tool(name: &str) -> bool {
     }
 }
 
+pub(crate) fn build_wave_batches(total: usize, wave_size: usize) -> Vec<Vec<usize>> {
+    if wave_size == 0 {
+        return vec![(0..total).collect()];
+    }
+    (0..total)
+        .collect::<Vec<_>>()
+        .chunks(wave_size)
+        .map(|c| c.to_vec())
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

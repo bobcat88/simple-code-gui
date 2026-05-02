@@ -11,6 +11,7 @@ import type { BrainstormCanvas as BrainstormCanvasData, BrainstormCanvasNode, Ex
 import { IdeaInbox } from './IdeaInbox'
 import { SpecDraftEditor } from './SpecDraftEditor'
 import { BrainstormCanvas } from './BrainstormCanvas'
+import { PromotionDialog } from './PromotionDialog'
 
 interface BrainstormTabProps {
   api: ExtendedApi
@@ -29,6 +30,8 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
   const [isSavingCanvas, setIsSavingCanvas] = useState(false)
   const [selectedCanvasNodeId, setSelectedCanvasNodeId] = useState<string | null>(null)
   const [promotionLoading, setPromotionLoading] = useState<string | null>(null)
+  const [selectedSeedForPromotion, setSelectedSeedForPromotion] = useState<GsdSeed | null>(null)
+  const [isPromoting, setIsPromoting] = useState(false)
 
   useEffect(() => {
     refresh()
@@ -58,51 +61,57 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
     }
   }
 
-  const handleSeedToDraft = async (seed: GsdSeed) => {
+  const handleSeedPromotionRequest = (seed: GsdSeed) => {
+    setSelectedSeedForPromotion(seed)
+  }
+
+  const executePromotion = async (type: 'draft' | 'task', title: string, why: string) => {
+    if (!selectedSeedForPromotion) return
+    setIsPromoting(true)
+    const seed = selectedSeedForPromotion
     const seedId = seed.id || seed.slug || seed.title
-    setPromotionLoading(seedId)
+
     try {
-      const moduleId = (seed.slug || seed.title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'brainstorm-seed'
-      const content = `title: ${seed.title}\ntype: module\nstatus:\n  maturity: draft\ndescription: ${seed.why || 'Draft created from a brainstorm seed.'}\nacceptance_criteria:\n  - id: ac-1\n    given: ${seed.title}\n    when: this seed is promoted into implementation work\n    then: the desired outcome is specified and testable\n`
-      await api.kspecWriteDraft(projectPath, moduleId, content)
-      
-      // Update seed status to reflected it's been promoted
-      if (seed.slug) {
-        await api.gsdUpdateSeedStatus?.(projectPath, seed.slug, 'promoted_to_draft')
+      if (type === 'draft') {
+        const moduleId = (seed.slug || title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'brainstorm-seed'
+        const content = `title: ${title}\ntype: module\nstatus:\n  maturity: draft\ndescription: ${why || 'Draft created from a brainstorm seed.'}\nacceptance_criteria:\n  - id: ac-1\n    given: ${title}\n    when: this seed is promoted into implementation work\n    then: the desired outcome is specified and testable\n`
+        await api.kspecWriteDraft(projectPath, moduleId, content)
+        
+        if (seed.slug) {
+          await api.gsdUpdateSeedStatus?.(projectPath, seed.slug, 'promoted_to_draft')
+        }
+        setActiveView('drafts')
+      } else {
+        const description = [
+          why ? `Seed rationale: ${why}` : 'Created from a Brainstorm Companion seed.',
+          `When to surface: ${seed.whenToSurface || 'Next Milestone'}`,
+          `Source seed: ${seed.slug || seed.id || seed.title}`
+        ].filter(Boolean).join('\n\n')
+
+        await api.beadsCreate(projectPath, title, description, 2, 'task', 'brainstorm,seed')
+        
+        if (seed.slug) {
+          await api.gsdUpdateSeedStatus?.(projectPath, seed.slug, 'promoted_to_task')
+        }
       }
 
-      setActiveView('drafts')
       await refresh()
+      setSelectedSeedForPromotion(null)
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Failed to promote seed to KSpec draft.')
+      setErrorMessage(err instanceof Error ? err.message : `Failed to promote seed to ${type}.`)
     } finally {
-      setPromotionLoading(null)
+      setIsPromoting(false)
     }
   }
 
+  const handleSeedToDraft = async (seed: GsdSeed) => {
+    // Legacy direct handler - now just sets the type in the dialog if needed, 
+    // but we'll just open the dialog for now.
+    handleSeedPromotionRequest(seed)
+  }
+
   const handleSeedToTask = async (seed: GsdSeed) => {
-    const seedId = seed.id || seed.slug || seed.title
-    setPromotionLoading(seedId)
-    try {
-      const description = [
-        seed.why ? `Seed rationale: ${seed.why}` : 'Created from a Brainstorm Companion seed.',
-        `When to surface: ${seed.whenToSurface || 'Next Milestone'}`,
-        `Source seed: ${seed.slug || seed.id || seed.title}`
-      ].filter(Boolean).join('\n\n')
-
-      await api.beadsCreate(projectPath, seed.title, description, 2, 'task', 'brainstorm,seed')
-      
-      // Update seed status to reflected it's been promoted
-      if (seed.slug) {
-        await api.gsdUpdateSeedStatus?.(projectPath, seed.slug, 'promoted_to_task')
-      }
-
-      await refresh()
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Failed to promote seed to Beads task.')
-    } finally {
-      setPromotionLoading(null)
-    }
+    handleSeedPromotionRequest(seed)
   }
 
   return (
@@ -208,6 +217,16 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
           <RefreshCw size={12} className={cn(loading && "animate-spin")} />
         </button>
       </div>
+
+      {/* Promotion Dialog */}
+      {selectedSeedForPromotion && (
+        <PromotionDialog 
+          seed={selectedSeedForPromotion}
+          isPromoting={isPromoting}
+          onClose={() => setSelectedSeedForPromotion(null)}
+          onPromote={executePromotion}
+        />
+      )}
     </div>
   )
 }

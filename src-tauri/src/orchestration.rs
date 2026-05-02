@@ -1570,3 +1570,49 @@ pub async fn get_swarm_snapshots(
 ) -> Result<Vec<crate::database::SwarmSnapshot>, String> {
     crate::database::get_swarm_snapshots(&db.pool, project_path.as_deref()).await
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::tempdir;
+
+    #[tokio::test]
+    async fn test_brainstorm_promotion_flow() {
+        let dir = tempdir().unwrap();
+        let cwd = dir.path().to_string_lossy().to_string();
+        
+        // 1. Plant a seed
+        let seed = GsdSeed {
+            id: "test-seed".to_string(),
+            title: "Test Seed".to_string(),
+            slug: "test-seed".to_string(),
+            why: "Testing promotion".to_string(),
+            when_to_surface: "Next Milestone".to_string(),
+            status: "planted".to_string(),
+            timestamp: 0,
+        };
+        gsd_plant_seed(cwd.clone(), seed.clone()).await.unwrap();
+        
+        // 2. Verify it exists
+        let seeds = gsd_list_seeds(cwd.clone()).await.unwrap();
+        assert_eq!(seeds.len(), 1);
+        assert_eq!(seeds[0].title, "Test Seed");
+        
+        // 3. Write a draft
+        let content = "title: Test Draft\ntype: module\n";
+        kspec_write_draft(cwd.clone(), "test-draft".to_string(), content.to_string()).await.unwrap();
+        
+        // 4. Update seed status
+        gsd_update_seed_status(cwd.clone(), "test-seed".to_string(), "promoted_to_draft".to_string()).await.unwrap();
+        
+        // 5. Verify draft exists
+        let drafts = kspec_list_drafts(cwd.clone()).await.unwrap();
+        assert_eq!(drafts.len(), 1);
+        assert_eq!(drafts[0].id, "test-draft");
+        
+        // 6. Verify seed status updated
+        let updated_seeds = gsd_list_seeds(cwd.clone()).await.unwrap();
+        assert_eq!(updated_seeds[0].status, "promoted_to_draft");
+    }
+}
