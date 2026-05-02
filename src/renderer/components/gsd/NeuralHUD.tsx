@@ -115,6 +115,26 @@ export function NeuralHUD() {
       }
     }) ?? (() => {});
 
+    const unsubscribeEvolution = api.onAiEvolutionCompleted?.((discoveries: any[]) => {
+      if (discoveries.length > 0) {
+        const avgConfidence = discoveries.reduce((sum, d) => sum + (d.confidence || 0), 0) / discoveries.length;
+        const evolutionInsight: NeuralInsight = {
+          id: `evolve-${Date.now()}`,
+          severity: avgConfidence > 0.8 ? 'medium' : 'low',
+          insightType: 'learning',
+          message: 'Swarm Intelligence Evolved',
+          details: `Analyzed ${discoveries.length} agents. New specialized configurations discovered with ${Math.round(avgConfidence * 100)}% confidence.`,
+          timestamp: Date.now(),
+        };
+        setInsights(prev => [evolutionInsight, ...prev].slice(0, 10));
+        
+        // Auto-refresh personas to show new scores/status
+        if (api.gsdGetPersonas) {
+          api.gsdGetPersonas().then(setPersonas);
+        }
+      }
+    }) ?? (() => {});
+
     if (api?.gsdQuantumSyncStart) {
       api.gsdQuantumSyncStart().catch(err => console.error("Quantum sync failed to start:", err));
     }
@@ -124,6 +144,7 @@ export function NeuralHUD() {
       unsubscribeEvents();
       unsubscribeApprovals();
       unsubscribeSync();
+      unsubscribeEvolution();
     };
   }, [api]);
 

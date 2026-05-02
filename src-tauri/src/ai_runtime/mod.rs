@@ -67,6 +67,15 @@ impl RuntimeManager {
         tauri::async_runtime::spawn(async move {
             loop {
                 manager.evaluate_plan_switching().await;
+                
+                // Trigger evolution cycle if learning manager is set
+                if let Some(learning) = &*manager.learning.lock().await {
+                    let app_handle = manager.app_handle.lock().await;
+                    if let Some(app) = &*app_handle {
+                        let _ = learning.run_evolution_cycle(app).await;
+                    }
+                }
+                
                 tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
             }
         });

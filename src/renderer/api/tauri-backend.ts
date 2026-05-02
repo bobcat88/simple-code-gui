@@ -686,4 +686,15 @@ export class TauriBackend implements ExtendedApi {
       return { success: false, error: String(e) };
     }
   }
+
+  // AI Evolution
+  async aiTriggerEvolution(): Promise<any[]> {
+    return await tauriIpc.aiTriggerEvolution();
+  }
+
+  onAiEvolutionCompleted(callback: (discoveries: any[]) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onAiEvolutionCompleted(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
 }

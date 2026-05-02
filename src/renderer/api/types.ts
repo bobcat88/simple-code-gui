@@ -386,6 +386,13 @@ export interface VectorSearchResult {
   score: number
 }
 
+export interface DiscoveryResult {
+  model_id: string
+  provider_name: string
+  new_quality_score: number
+  confidence: number
+}
+
 /**
  * Core API interface for the renderer
  */
@@ -694,6 +701,10 @@ export interface Api {
   brainstormSaveCanvas?: (cwd: string, canvas: BrainstormCanvas) => Promise<void>
   brainstormAgenticSketch?: (cwd: string, baseId: string, baseTitle: string, baseContent: string) => Promise<BrainstormCanvasNode>
   brainstormArchitectReview?: (cwd: string, baseId: string, baseType: string, baseTitle: string, baseContent: string) => Promise<BrainstormCanvasNode>
+  
+  // AI Evolution
+  aiTriggerEvolution?: () => Promise<DiscoveryResult[]>
+  onAiEvolutionCompleted?: (callback: (discoveries: DiscoveryResult[]) => void) => Unsubscribe
 }
 
 // ============================================================================

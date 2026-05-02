@@ -302,6 +302,9 @@ export const tauriIpc = {
   onModelPlanSwitched: (callback: (event: { old_plan: string; new_plan: string; health_score: number }) => void): Promise<UnlistenFn> =>
     listen<{ old_plan: string; new_plan: string; health_score: number }>('model-plan-switched', (event) => callback(event.payload)),
 
+  onAiEvolutionCompleted: (callback: (discoveries: any[]) => void): Promise<UnlistenFn> =>
+    listen<any[]>('ai-evolution-completed', (event) => callback(event.payload)),
+
   // GSD Engine
   gsdCreatePlan: (taskId: string, title: string) =>
     invoke<any>('gsd_create_plan', { taskId, title }),
