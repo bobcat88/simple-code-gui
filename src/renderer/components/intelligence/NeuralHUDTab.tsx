@@ -48,7 +48,11 @@ export function NeuralHUDTab({ api, projectPath }: NeuralHUDTabProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [viewMode, setViewMode] = useState<'3d' | '2d'>('3d') // For future 2D fallback if needed
+  const [activeThought, setActiveThought] = useState<{ message: string, nodeIds: string[] } | null>(null)
+  const [thoughtHistory, setThoughtHistory] = useState<any[]>([])
+  const [highlightNodes, setHighlightNodes] = useState(new Set())
+  const [highlightLinks, setHighlightLinks] = useState(new Set())
+  const [hoverNode, setHoverNode] = useState<any>(null)
 
   const fetchGraphData = useCallback(async (query: string = '') => {
     setIsLoading(true)
@@ -97,7 +101,55 @@ export function NeuralHUDTab({ api, projectPath }: NeuralHUDTabProps) {
 
   useEffect(() => {
     fetchGraphData()
-  }, [fetchGraphData])
+
+    // Listen for real-time swarm execution events
+    const unlisten = api.onGsdExecutionEvent((event: any) => {
+      console.log('NeuralHUD received event:', event)
+      
+      // Add to history
+      setThoughtHistory(prev => [event, ...prev].slice(0, 50))
+
+      // Identify related nodes based on message content or IDs in the event
+      const relatedNodeIds: string[] = []
+      // Simple keyword matching for demo/foundation
+      const message = event.message.toLowerCase()
+      
+      setGraphData(current => {
+        current.nodes.forEach(node => {
+          if (message.includes(node.name.toLowerCase())) {
+            relatedNodeIds.push(node.id)
+          }
+        });
+        return current
+      })
+
+      if (relatedNodeIds.length > 0) {
+        setHighlightNodes(new Set(relatedNodeIds))
+        
+        // Auto-orbit to the first related node if one exists
+        const firstNode = graphData.nodes.find(n => n.id === relatedNodeIds[0])
+        if (firstNode && fgRef.current) {
+          // Subtle camera nudge towards activity
+          // fgRef.current.cameraPosition(...)
+        }
+      }
+
+      setActiveThought({ message: event.message, nodeIds: relatedNodeIds })
+      
+      // Fade out the thought bubble after a few seconds
+      setTimeout(() => {
+        setActiveThought(current => {
+          if (current?.message === event.message) return null
+          return current
+        })
+        setHighlightNodes(new Set())
+      }, 5000)
+    })
+
+    return () => {
+      unlisten.then(fn => fn())
+    }
+  }, [fetchGraphData, api, graphData.nodes])
 
   const getNodeColor = (type: string) => {
     switch (type.toLowerCase()) {
@@ -124,14 +176,43 @@ export function NeuralHUDTab({ api, projectPath }: NeuralHUDTabProps) {
   }, [])
 
   const nodeThreeObject = useCallback((node: any) => {
+    const isHighlighted = highlightNodes.has(node.id)
+    const isHovered = hoverNode === node
+    
     const sprite = new SpriteText(node.name)
-    sprite.color = node.color
-    sprite.textHeight = 8
-    sprite.backgroundColor = 'rgba(0,0,0,0.5)'
-    sprite.padding = 2
+    sprite.color = isHighlighted ? '#ffffff' : (isHovered ? '#60a5fa' : node.color)
+    sprite.textHeight = isHighlighted || isHovered ? 12 : 8
+    sprite.backgroundColor = isHighlighted ? 'rgba(99, 102, 241, 0.8)' : 'rgba(0,0,0,0.5)'
+    sprite.padding = isHighlighted ? 4 : 2
     sprite.borderRadius = 4
+    
+    // Add a glow sphere if highlighted
+    if (isHighlighted) {
+      const group = new THREE.Group()
+      group.add(sprite)
+      
+      const glowGeometry = new THREE.SphereGeometry(15, 32, 32)
+      const glowMaterial = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(node.color),
+        transparent: true,
+        opacity: 0.15
+      })
+      const glow = new THREE.Mesh(glowGeometry, glowMaterial)
+      group.add(glow)
+      
+      return group
+    }
+    
     return sprite
-  }, [])
+  }, [highlightNodes, hoverNode])
+
+  const particleWidth = useCallback((link: any) => {
+    return highlightNodes.has(link.source.id) || highlightNodes.has(link.target.id) ? 4 : 1
+  }, [highlightNodes])
+
+  const particleCount = useCallback((link: any) => {
+    return highlightNodes.has(link.source.id) || highlightNodes.has(link.target.id) ? 8 : 0
+  }, [highlightNodes])
 
   return (
     <div className="flex flex-col h-full overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300 relative bg-black/40">
@@ -235,17 +316,74 @@ export function NeuralHUDTab({ api, projectPath }: NeuralHUDTabProps) {
           nodeLabel="name"
           nodeColor="color"
           nodeRelSize={4}
-          linkWidth={1}
-          linkColor={() => 'rgba(255,255,255,0.1)'}
-          linkDirectionalParticles={2}
-          linkDirectionalParticleSpeed={0.005}
+          linkWidth={link => highlightNodes.has((link.source as any).id) || highlightNodes.has((link.target as any).id) ? 3 : 1}
+          linkColor={link => highlightNodes.has((link.source as any).id) || highlightNodes.has((link.target as any).id) ? '#6366f1' : 'rgba(255,255,255,0.05)'}
+          linkDirectionalParticles={particleCount}
+          linkDirectionalParticleSpeed={0.02}
+          linkDirectionalParticleWidth={particleWidth}
           nodeThreeObject={nodeThreeObject}
           nodeThreeObjectExtend={true}
           onNodeClick={handleNodeClick}
+          onNodeHover={setHoverNode}
           enableNodeDrag={false}
           showNavInfo={false}
         />
       </div>
+
+      {/* Thought History Sidebar */}
+      <div className="absolute top-16 left-4 bottom-24 w-48 z-10 pointer-events-none flex flex-col gap-2">
+        <div className="flex items-center gap-2 px-2 mb-1">
+          <Activity className="w-3 h-3 text-indigo-400" />
+          <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">Live Telemetry</span>
+        </div>
+        <div className="flex-1 overflow-y-auto pointer-events-auto space-y-2 scrollbar-none pr-2">
+          {thoughtHistory.map((thought, i) => (
+            <div 
+              key={`${thought.timestamp}-${i}`}
+              className={cn(
+                "glass-panel p-2 text-[9px] leading-snug border-l-2 transition-all animate-in slide-in-from-left-2 duration-300",
+                i === 0 ? "border-l-indigo-500 bg-indigo-500/10 text-white/90" : "border-l-white/10 text-white/40 hover:text-white/60"
+              )}
+            >
+              <div className="flex items-center justify-between mb-1 opacity-60">
+                <span className="font-mono text-[7px]">{new Date(thought.timestamp).toLocaleTimeString()}</span>
+                <span className="uppercase text-[6px] tracking-tighter bg-white/5 px-1 rounded">{thought.eventType}</span>
+              </div>
+              <p className="line-clamp-3">{thought.message}</p>
+            </div>
+          ))}
+          {thoughtHistory.length === 0 && (
+            <div className="text-[9px] text-white/20 italic px-2">Awaiting synaptic events...</div>
+          )}
+        </div>
+      </div>
+
+      {/* Thought Bubble Overlay */}
+      {activeThought && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none w-full max-w-lg px-8 animate-in zoom-in-95 fade-in duration-500">
+          <div className="glass-panel p-6 bg-indigo-500/10 border-indigo-500/30 backdrop-blur-xl shadow-[0_0_50px_rgba(99,102,241,0.2)]">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+              <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Active Reasoning Step</span>
+            </div>
+            <p className="text-lg font-medium text-white/90 leading-relaxed italic">
+              "{activeThought.message}"
+            </p>
+            {activeThought.nodeIds.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {activeThought.nodeIds.map(id => {
+                  const node = graphData.nodes.find(n => n.id === id)
+                  return (
+                    <span key={id} className="text-[9px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold">
+                      {node?.name || 'Resolving...'}
+                    </span>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Legend & Stats */}
       <div className="absolute top-16 left-4 z-10 space-y-2">

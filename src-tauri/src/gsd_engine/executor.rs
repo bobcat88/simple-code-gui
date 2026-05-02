@@ -132,27 +132,26 @@ impl Executor {
 
         let _ = self.app.emit("gsd-execution-event", payload);
 
-        // If it's a simulation intercept, also broadcast as a swarm agent message
-        if event_type == "simulation_intercept" {
-            self.broadcast_simulation_message(plan_id, phase_id, step_id, msg_str).await;
-        }
+        // Broadcast as a swarm agent message for the NeuralHUD
+        self.broadcast_swarm_message(plan_id, phase_id, step_id, event_type, msg_str).await;
     }
 
-    async fn broadcast_simulation_message(
+    async fn broadcast_swarm_message(
         &self,
         plan_id: &str,
         phase_id: Option<&str>,
         step_id: Option<&str>,
+        message_type: &str,
         message: String,
     ) {
         if let Some(state) = self.app.try_state::<Arc<crate::orchestration::OrchestrationState>>() {
             let mut messages = state.message_bus.lock();
             let msg = crate::orchestration::AgentMessage {
-                id: format!("sim-{}", Utc::now().timestamp_nanos_opt().unwrap_or(0)),
+                id: format!("{}-{}", message_type, Utc::now().timestamp_nanos_opt().unwrap_or(0)),
                 timestamp: Utc::now().timestamp_millis() as u64,
                 from_agent: "Executor".to_string(),
                 to_agent: None,
-                message_type: "simulation".to_string(),
+                message_type: message_type.to_string(),
                 content: message,
                 metadata: Some(serde_json::json!({
                     "plan_id": plan_id,
