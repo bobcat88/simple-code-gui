@@ -18,6 +18,64 @@ pub struct OptimizationContext {
     pub human_facing: bool,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProviderCapabilities {
+    pub automatic_prefix_cache: bool,
+    pub prompt_cache_key: bool,
+    pub explicit_cached_content: bool,
+    pub reasoning_controls: bool,
+    pub fim_completion: bool,
+}
+
+impl ProviderCapabilities {
+    pub fn for_provider(provider: &ProviderKind) -> Self {
+        match provider {
+            ProviderKind::DeepSeekFlash => Self {
+                automatic_prefix_cache: true,
+                prompt_cache_key: false,
+                explicit_cached_content: false,
+                reasoning_controls: false,
+                fim_completion: true,
+            },
+            ProviderKind::DeepSeekPro | ProviderKind::DeepSeekReasoner => Self {
+                automatic_prefix_cache: true,
+                prompt_cache_key: false,
+                explicit_cached_content: false,
+                reasoning_controls: matches!(provider, ProviderKind::DeepSeekReasoner),
+                fim_completion: false,
+            },
+            ProviderKind::OpenAI | ProviderKind::OpenAICompatible => Self {
+                automatic_prefix_cache: true,
+                prompt_cache_key: true,
+                explicit_cached_content: false,
+                reasoning_controls: true,
+                fim_completion: false,
+            },
+            ProviderKind::Anthropic => Self {
+                automatic_prefix_cache: false,
+                prompt_cache_key: false,
+                explicit_cached_content: false,
+                reasoning_controls: true,
+                fim_completion: false,
+            },
+            ProviderKind::Gemini => Self {
+                automatic_prefix_cache: true,
+                prompt_cache_key: false,
+                explicit_cached_content: true,
+                reasoning_controls: true,
+                fim_completion: false,
+            },
+            ProviderKind::Ollama => Self {
+                automatic_prefix_cache: false,
+                prompt_cache_key: false,
+                explicit_cached_content: false,
+                reasoning_controls: false,
+                fim_completion: false,
+            },
+        }
+    }
+}
+
 impl OptimizationContext {
     pub fn from_request(request: &CompletionRequest) -> Self {
         let explicit = request.optimization.as_ref();
@@ -271,6 +329,19 @@ mod tests {
         assert_eq!(context.task, Some(TaskType::Reasoning));
         assert_eq!(context.role, Some(AgentRole::Planner));
         assert!(!context.human_facing);
+    }
+
+    #[test]
+    fn deepseek_capabilities_are_explicit() {
+        let flash = ProviderCapabilities::for_provider(&ProviderKind::DeepSeekFlash);
+        let reasoner = ProviderCapabilities::for_provider(&ProviderKind::DeepSeekReasoner);
+
+        assert!(flash.automatic_prefix_cache);
+        assert!(flash.fim_completion);
+        assert!(!flash.reasoning_controls);
+        assert!(reasoner.automatic_prefix_cache);
+        assert!(reasoner.reasoning_controls);
+        assert!(!reasoner.fim_completion);
     }
 
     #[test]

@@ -180,6 +180,12 @@ impl RuntimeManager {
                         )))
                         .await;
                     }
+                    "deepseek" => {
+                        self.register_provider(Arc::new(
+                            providers::deepseek::DeepSeekProvider::new(key, base_url),
+                        ))
+                        .await;
+                    }
                     "ollama" => {
                         self.register_provider(Arc::new(
                             providers::ollama::OllamaProvider::new(

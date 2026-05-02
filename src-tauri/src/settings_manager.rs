@@ -121,6 +121,19 @@ fn default_ai_runtime() -> AiRuntimeSettings {
                 default_model: Some("gpt-4o".to_string()),
             },
             ProviderConfig {
+                id: "deepseek".to_string(),
+                name: "DeepSeek".to_string(),
+                enabled: false,
+                api_key: None,
+                base_url: Some("https://api.deepseek.com".to_string()),
+                models: vec![
+                    "deepseek-v4-flash".to_string(),
+                    "deepseek-v4-pro".to_string(),
+                    "deepseek-reasoner".to_string(),
+                ],
+                default_model: Some("deepseek-v4-flash".to_string()),
+            },
+            ProviderConfig {
                 id: "ollama".to_string(),
                 name: "Local Ollama".to_string(),
                 enabled: false,
@@ -170,6 +183,20 @@ fn default_ai_runtime() -> AiRuntimeSettings {
     }
 }
 
+fn normalize_ai_runtime_settings(settings: &mut AppSettings) {
+    let defaults = default_ai_runtime();
+    for provider in defaults.providers {
+        if !settings
+            .ai_runtime
+            .providers
+            .iter()
+            .any(|existing| existing.id == provider.id)
+        {
+            settings.ai_runtime.providers.push(provider);
+        }
+    }
+}
+
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
@@ -211,7 +238,7 @@ impl SettingsManager {
             .ok()
             .flatten();
 
-        let settings = if let Some((_, value)) = db_settings {
+        let mut settings = if let Some((_, value)) = db_settings {
             serde_json::from_str(&value).unwrap_or_default()
         } else if path.exists() {
             // Migrate from JSON
@@ -235,6 +262,7 @@ impl SettingsManager {
         } else {
             AppSettings::default()
         };
+        normalize_ai_runtime_settings(&mut settings);
 
         Self {
             db,
@@ -260,4 +288,3 @@ impl SettingsManager {
         Ok(())
     }
 }
-

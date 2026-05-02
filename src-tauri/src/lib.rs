@@ -534,6 +534,14 @@ pub fn run() {
                         ))
                         .await;
                 }
+                if let Ok(key) = std::env::var("DEEPSEEK_API_KEY") {
+                    let base_url = std::env::var("DEEPSEEK_BASE_URL").ok();
+                    ai_runtime
+                        .register_provider(Arc::new(
+                            ai_runtime::providers::deepseek::DeepSeekProvider::new(key, base_url),
+                        ))
+                        .await;
+                }
                 // Ollama is usually local
                 ai_runtime
                     .register_provider(Arc::new(

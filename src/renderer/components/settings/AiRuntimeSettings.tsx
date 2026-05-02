@@ -336,6 +336,7 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
                       {provider.id === 'claude' && <Sparkles size={18} />}
                       {provider.id === 'gemini' && <Globe size={18} />}
                       {provider.id === 'openai' && <Cpu size={18} />}
+                      {provider.id === 'deepseek' && <Zap size={18} />}
                       {provider.id === 'ollama' && <Settings2 size={18} />}
                     </div>
                     <div>
@@ -394,7 +395,7 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
                       />
                     </div>
 
-                    {(provider.id === 'ollama' || provider.id === 'openai') && (
+                    {(provider.id === 'ollama' || provider.id === 'openai' || provider.id === 'deepseek') && (
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 flex items-center gap-1.5">
                           <Globe size={10} />
@@ -404,7 +405,13 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
                           type="text"
                           value={provider.baseUrl || ''}
                           onChange={(e) => updateProvider(provider.id, { baseUrl: e.target.value })}
-                          placeholder={provider.id === 'ollama' ? "http://localhost:11434" : "https://api.openai.com/v1"}
+                          placeholder={
+                            provider.id === 'ollama'
+                              ? "http://localhost:11434"
+                              : provider.id === 'deepseek'
+                                ? "https://api.deepseek.com"
+                                : "https://api.openai.com/v1"
+                          }
                           className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:border-primary/40 focus:outline-none transition-all"
                         />
                       </div>

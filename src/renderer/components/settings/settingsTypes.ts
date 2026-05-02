@@ -182,6 +182,7 @@ export const DEFAULT_GENERAL: GeneralSettings = {
       { id: 'claude', name: 'Anthropic Claude', enabled: true, models: ['claude-3-5-sonnet', 'claude-3-opus', 'claude-3-haiku'], defaultModel: 'claude-3-5-sonnet' },
       { id: 'gemini', name: 'Google Gemini', enabled: true, models: ['gemini-1.5-pro', 'gemini-1.5-flash'], defaultModel: 'gemini-1.5-pro' },
       { id: 'openai', name: 'OpenAI / Codex', enabled: false, models: ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'], defaultModel: 'gpt-4o' },
+      { id: 'deepseek', name: 'DeepSeek', enabled: false, baseUrl: 'https://api.deepseek.com', models: ['deepseek-v4-flash', 'deepseek-v4-pro', 'deepseek-reasoner'], defaultModel: 'deepseek-v4-flash' },
       { id: 'ollama', name: 'Local Ollama', enabled: false, models: ['llama3', 'codellama', 'mistral', 'phi3'], defaultModel: 'llama3' },
     ],
     plans: [
