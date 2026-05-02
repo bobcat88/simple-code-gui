@@ -122,7 +122,7 @@ export function AppConnection(): React.ReactElement | null {
     >
       <VoiceProvider>
         <ModalProvider>
-          <MainApp api={api} isElectron={false} isTauri={isTauri} onDisconnect={handleDisconnect} />
+          <MainApp api={api} isElectron={isDesktop} isTauri={isTauri} onDisconnect={handleDisconnect} />
         </ModalProvider>
       </VoiceProvider>
     </ApiProvider>
