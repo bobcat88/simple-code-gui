@@ -45,6 +45,7 @@ pub struct RuntimeManager {
     learning: Arc<Mutex<Option<Arc<learning::LearningManager>>>>,
     app_handle: Arc<Mutex<Option<tauri::AppHandle>>>,
     optimization_metrics: Arc<OptimizationMetrics>,
+    optimization_pipeline: Arc<optimizer::OptimizationPipeline>,
 }
 
 impl RuntimeManager {
@@ -61,6 +62,7 @@ impl RuntimeManager {
             learning: Arc::new(Mutex::new(None)),
             app_handle: Arc::new(Mutex::new(None)),
             optimization_metrics: Arc::new(OptimizationMetrics::default()),
+            optimization_pipeline: Arc::new(optimizer::OptimizationPipeline::disabled()),
         }
     }
 
@@ -126,6 +128,22 @@ impl RuntimeManager {
     pub async fn register_provider(&self, provider: Arc<dyn AIProvider>) {
         let mut providers = self.providers.lock().await;
         providers.insert(provider.name().to_string(), provider);
+    }
+
+    #[allow(dead_code)]
+    pub fn wrap_provider_for_optimization(
+        &self,
+        provider: Arc<dyn AIProvider>,
+    ) -> Arc<dyn AIProvider> {
+        Arc::new(optimizer::OptimizedProvider::new(
+            provider,
+            Arc::clone(&self.optimization_pipeline),
+        ))
+    }
+
+    #[allow(dead_code)]
+    pub fn optimization_pipeline_enabled(&self) -> bool {
+        self.optimization_pipeline.is_enabled()
     }
 
     pub async fn sync_settings(&self) -> Result<(), String> {
@@ -971,6 +989,36 @@ mod tests {
                 fail,
             }))
             .await;
+    }
+
+    #[tokio::test]
+    async fn optimization_wrapper_is_disabled_by_default() {
+        let manager = RuntimeManager::new();
+        let provider = Arc::new(MockProvider {
+            name: "mock".to_string(),
+            models: vec![model("raw-model", ModelTier::Tier2, 1.0)],
+            fail: false,
+        });
+        let wrapped = manager.wrap_provider_for_optimization(provider);
+
+        assert!(!manager.optimization_pipeline_enabled());
+        assert_eq!(wrapped.name(), "mock");
+        assert_eq!(wrapped.list_models().await.unwrap()[0].id, "raw-model");
+
+        let response = wrapped
+            .completion(CompletionRequest {
+                model: Some("raw-model".to_string()),
+                optimization: Some(types::OptimizationRequest {
+                    task: Some(TaskType::Fast),
+                    ..Default::default()
+                }),
+                ..request(None)
+            })
+            .await
+            .expect("disabled wrapper should preserve provider behavior");
+
+        assert_eq!(response.content, "mock");
+        assert_eq!(response.model, "raw-model");
     }
 
     #[tokio::test]
