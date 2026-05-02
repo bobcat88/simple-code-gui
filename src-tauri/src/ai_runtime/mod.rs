@@ -1,3 +1,6 @@
+pub mod context_compressor;
+pub mod opt_metrics;
+pub mod semantic_cache;
 pub mod types;
 pub mod learning;
 pub mod optimizer;

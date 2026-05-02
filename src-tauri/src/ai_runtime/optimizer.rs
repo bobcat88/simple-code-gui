@@ -4,6 +4,9 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
+use super::context_compressor::ContextCompressor;
+use super::opt_metrics::OptimizationMetrics;
+use super::semantic_cache::SemanticCache;
 use super::types::{
     AgentRole, CompletionRequest, CompletionResponse, EmbeddingRequest, EmbeddingResponse, Message,
     ModelInfo, ProviderKind, ResponseFormat, RoutingPolicy, TaskType,
@@ -100,18 +103,43 @@ impl OptimizationContext {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct OptimizationPipeline {
     enabled: bool,
+    semantic_cache: Option<Arc<SemanticCache>>,
+    compressor: Option<Arc<ContextCompressor>>,
+    metrics: Option<Arc<OptimizationMetrics>>,
 }
 
 impl OptimizationPipeline {
     pub fn disabled() -> Self {
-        Self { enabled: false }
+        Self {
+            enabled: false,
+            semantic_cache: None,
+            compressor: None,
+            metrics: None,
+        }
     }
 
     pub fn new() -> Self {
-        Self { enabled: true }
+        Self {
+            enabled: true,
+            semantic_cache: None,
+            compressor: None,
+            metrics: None,
+        }
+    }
+
+    pub fn with_components(
+        mut self,
+        semantic_cache: Option<Arc<SemanticCache>>,
+        compressor: Option<Arc<ContextCompressor>>,
+        metrics: Option<Arc<OptimizationMetrics>>,
+    ) -> Self {
+        self.semantic_cache = semantic_cache;
+        self.compressor = compressor;
+        self.metrics = metrics;
+        self
     }
 
     pub fn is_enabled(&self) -> bool {
@@ -128,7 +156,33 @@ impl OptimizationPipeline {
         apply_system_prompt(&mut request);
         apply_budget(&mut request, &context);
         apply_internal_format_hint(&mut request, &context);
+        if let Some(compressor) = &self.compressor {
+            if compressor.compress(&mut request) > 0 {
+                if let Some(metrics) = &self.metrics {
+                    metrics.record_compression();
+                }
+            }
+        }
         Ok(request)
+    }
+
+    async fn cached_response(&self, request: &CompletionRequest) -> Option<CompletionResponse> {
+        let cache = self.semantic_cache.as_ref()?;
+        let response = cache.get(request).await;
+        if let Some(metrics) = &self.metrics {
+            if response.is_some() {
+                metrics.record_cache_hit();
+            } else {
+                metrics.record_cache_miss();
+            }
+        }
+        response
+    }
+
+    async fn store_response(&self, request: &CompletionRequest, response: &CompletionResponse) {
+        if let Some(cache) = &self.semantic_cache {
+            cache.set(request, response).await;
+        }
     }
 }
 
@@ -263,8 +317,14 @@ impl AIProvider for OptimizedProvider {
     }
 
     async fn completion(&self, request: CompletionRequest) -> Result<CompletionResponse, String> {
+        if let Some(response) = self.pipeline.cached_response(&request).await {
+            return Ok(response);
+        }
+        let cache_request = request.clone();
         let optimized = self.pipeline.optimize(request)?;
-        self.inner.completion(optimized).await
+        let response = self.inner.completion(optimized).await?;
+        self.pipeline.store_response(&cache_request, &response).await;
+        Ok(response)
     }
 
     async fn embed(&self, request: EmbeddingRequest) -> Result<EmbeddingResponse, String> {
@@ -488,5 +548,37 @@ mod tests {
 
         assert_eq!(optimized.max_tokens, None);
         assert!(optimized.messages.is_empty());
+    }
+
+    #[tokio::test]
+    async fn pipeline_records_cache_hit_and_miss() {
+        let cache = Arc::new(SemanticCache::memory());
+        let metrics = Arc::new(OptimizationMetrics::default());
+        let pipeline =
+            OptimizationPipeline::new().with_components(Some(cache), None, Some(metrics.clone()));
+        let request = CompletionRequest {
+            messages: vec![Message {
+                role: "user".to_string(),
+                content: "cache me".to_string(),
+                tool_calls: None,
+                tool_call_id: None,
+            }],
+            ..Default::default()
+        };
+        let response = CompletionResponse {
+            id: "id".to_string(),
+            model: "model".to_string(),
+            content: "cached".to_string(),
+            tool_calls: None,
+            usage: None,
+        };
+
+        assert!(pipeline.cached_response(&request).await.is_none());
+        pipeline.store_response(&request, &response).await;
+        assert_eq!(pipeline.cached_response(&request).await.unwrap().content, "cached");
+
+        let stats = metrics.snapshot();
+        assert_eq!(stats.cache_misses, 1);
+        assert_eq!(stats.cache_hits, 1);
     }
 }
