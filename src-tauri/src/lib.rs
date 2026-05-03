@@ -44,6 +44,9 @@ use orchestration::{
     gsd_list_seeds, gsd_plant_seed, gsd_update_seed_status, kspec_list_drafts, kspec_write_draft,
     brainstorm_agentic_sketch, brainstorm_architect_review, brainstorm_save_topology,
     create_snapshot_workspace, get_swarm_snapshots,
+    claude_check, gemini_check, codex_check, opencode_check, aider_check,
+    claude_install, gemini_install, codex_install, opencode_install, aider_install,
+    gsd_check, gsd_install, beads_install, git_install, node_install, python_install,
 };
 use pty_manager::PtyManager;
 use settings_manager::{AppSettings, SettingsManager};
@@ -757,6 +760,22 @@ pub fn run() {
             gsd_engine::gsd_get_sync_status,
             gsd_engine::gsd_quantum_sync_start,
             rtk_check,
+            claude_check,
+            gemini_check,
+            codex_check,
+            opencode_check,
+            aider_check,
+            claude_install,
+            gemini_install,
+            codex_install,
+            opencode_install,
+            aider_install,
+            gsd_check,
+            gsd_install,
+            beads_install,
+            git_install,
+            node_install,
+            python_install,
 
             rtk_get_stats,
             rtk_get_history,

@@ -158,7 +158,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   padding-left: var(--space-md);
-  -webkit-app-region: drag;
+  cursor: default;
 }
 
 .title-bar-title {

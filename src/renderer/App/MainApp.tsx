@@ -488,7 +488,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
                   </>
                 ) : (
                   <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-700">
-                    <div className="w-20 h-20 mb-6 rounded-3xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shadow-inner">
+                    <div className="w-20 h-20 mb-6 rounded-codex bg-indigo-500/10 flex items-center justify-center text-indigo-400 shadow-inner">
                       <MessageSquare size={40} strokeWidth={1.5} />
                     </div>
                     <h2 className="text-2xl font-bold mb-2 text-white/90">No Active Threads</h2>

@@ -704,4 +704,70 @@ export class TauriBackend implements ExtendedApi {
     tauriIpc.onOptimizationStatsUpdated(callback).then(fn => unlisten = fn);
     return () => unlisten?.();
   }
+
+  // CLI Status & Health
+  async claudeCheck(): Promise<{ installed: boolean; npmInstalled: boolean; gitBashInstalled: boolean }> {
+    return tauriIpc.claudeCheck()
+  }
+
+  async geminiCheck(): Promise<{ installed: boolean; npmInstalled: boolean }> {
+    return tauriIpc.geminiCheck()
+  }
+
+  async codexCheck(): Promise<{ installed: boolean; npmInstalled: boolean }> {
+    return tauriIpc.codexCheck()
+  }
+
+  async opencodeCheck(): Promise<{ installed: boolean; npmInstalled: boolean }> {
+    return tauriIpc.opencodeCheck()
+  }
+
+  async aiderCheck(): Promise<{ installed: boolean; pipInstalled: boolean }> {
+    return tauriIpc.aiderCheck()
+  }
+
+  async gsdCheck(): Promise<{ installed: boolean; npmInstalled: boolean }> {
+    return tauriIpc.gsdCheck()
+  }
+
+  // Installation Handlers
+  async claudeInstall(): Promise<{ success: boolean; error?: string }> {
+    return tauriIpc.claudeInstall()
+  }
+
+  async geminiInstall(): Promise<{ success: boolean; error?: string }> {
+    return tauriIpc.geminiInstall()
+  }
+
+  async codexInstall(): Promise<{ success: boolean; error?: string }> {
+    return tauriIpc.codexInstall()
+  }
+
+  async opencodeInstall(): Promise<{ success: boolean; error?: string }> {
+    return tauriIpc.opencodeInstall()
+  }
+
+  async aiderInstall(): Promise<{ success: boolean; error?: string }> {
+    return tauriIpc.aiderInstall()
+  }
+
+  async gsdInstall(): Promise<{ success: boolean; error?: string }> {
+    return tauriIpc.gsdInstall()
+  }
+
+  async beadsInstall(): Promise<{ success: boolean; error?: string }> {
+    return tauriIpc.beadsInstall()
+  }
+
+  async gitInstall(): Promise<{ success: boolean; error?: string }> {
+    return tauriIpc.gitInstall()
+  }
+
+  async nodeInstall(): Promise<{ success: boolean; error?: string }> {
+    return tauriIpc.nodeInstall()
+  }
+
+  async pythonInstall(): Promise<{ success: boolean; error?: string }> {
+    return tauriIpc.pythonInstall()
+  }
 }

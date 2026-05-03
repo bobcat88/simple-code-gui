@@ -182,3 +182,17 @@ Modularizing the AI runtime optimization pipeline into extensible middlewares.
 - [x] Modularize `optimizer.rs` into `ai_runtime/optimizer/` structure.
 - [x] Implement `ReasoningMiddleware` for high-precision model controls.
 - [x] Integrate `CognitiveMiddleware` for swarm thought injection.
+
+## Phase 37: UI/UX Refinement & Production Hardening (Current)
+Finalizing the high-fidelity design system and cross-platform interaction parity.
+
+- [ ] **Visual Consistency Audit**: Standardize border radiuses (fix `rounded-3xl` etc.) and unify color palettes across all panels.
+- [ ] **Background Deepening**: Update CSS variables in `modernize.css` for a more premium "Codex-style" dark mode.
+- [ ] **Sidebar Interaction**: Implement the "light bubble + arrow" sidebar collapse button.
+- [ ] **Glassmorphism Polish**: Standardize backdrop-blur and border transparency across all functional overlays.
+- [x] **Linux Interaction Fix**: Restored window dragging and manual pointer event management for custom titlebars.
+- [ ] **Functional Hardening**: Audit and complete `TauriBackend` methods for full parity with legacy Electron shims.
+
+---
+
+*Last Updated: May 3, 2026*

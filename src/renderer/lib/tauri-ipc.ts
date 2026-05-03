@@ -422,4 +422,24 @@ export const tauriIpc = {
     invoke<any>('brainstorm_architect_review', { cwd, baseId, baseType, baseTitle, baseContent }),
   brainstormSaveTopology: (cwd: string, content: string) =>
     invoke<{ success: boolean; error?: string }>('brainstorm_save_topology', { cwd, content }),
+
+  // Health Checks
+  claudeCheck: () => invoke<any>('claude_check'),
+  geminiCheck: () => invoke<any>('gemini_check'),
+  codexCheck: () => invoke<any>('codex_check'),
+  opencodeCheck: () => invoke<any>('opencode_check'),
+  aiderCheck: () => invoke<any>('aider_check'),
+  gsdCheck: () => invoke<any>('gsd_check'),
+
+  // Installations
+  claudeInstall: () => invoke<{ success: boolean; error?: string }>('claude_install'),
+  geminiInstall: () => invoke<{ success: boolean; error?: string }>('gemini_install'),
+  codexInstall: () => invoke<{ success: boolean; error?: string }>('codex_install'),
+  opencodeInstall: () => invoke<{ success: boolean; error?: string }>('opencode_install'),
+  aiderInstall: () => invoke<{ success: boolean; error?: string }>('aider_install'),
+  gsdInstall: () => invoke<{ success: boolean; error?: string }>('gsd_install'),
+  beadsInstall: () => invoke<{ success: boolean; error?: string }>('beads_install'),
+  gitInstall: () => invoke<{ success: boolean; error?: string }>('git_install'),
+  nodeInstall: () => invoke<{ success: boolean; error?: string }>('node_install'),
+  pythonInstall: () => invoke<{ success: boolean; error?: string }>('python_install'),
 };

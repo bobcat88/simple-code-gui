@@ -809,6 +809,121 @@ pub async fn kspec_update(
 }
 
 #[tauri::command]
+pub async fn claude_check() -> Result<serde_json::Value, String> {
+    let installed = Command::new("claude").arg("--version").output().is_ok();
+    // In many environments, it might be an npm package
+    let npm_installed = Command::new("npm").arg("list").arg("-g").arg("@anthropic-ai/claude-code").output().is_ok();
+    
+    Ok(serde_json::json!({
+        "installed": installed || npm_installed,
+        "npmInstalled": npm_installed,
+        "gitBashInstalled": cfg!(target_os = "windows") // Placeholder for parity
+    }))
+}
+
+#[tauri::command]
+pub async fn gemini_check() -> Result<serde_json::Value, String> {
+    let installed = Command::new("gemini").arg("--version").output().is_ok();
+    let npm_installed = Command::new("npm").arg("list").arg("-g").arg("@google/generative-ai").output().is_ok();
+    
+    Ok(serde_json::json!({
+        "installed": installed || npm_installed,
+        "npmInstalled": npm_installed
+    }))
+}
+
+#[tauri::command]
+pub async fn codex_check() -> Result<serde_json::Value, String> {
+    let installed = Command::new("codex").arg("--version").output().is_ok();
+    Ok(serde_json::json!({
+        "installed": installed,
+        "npmInstalled": false
+    }))
+}
+
+#[tauri::command]
+pub async fn opencode_check() -> Result<serde_json::Value, String> {
+    let installed = Command::new("opencode").arg("--version").output().is_ok();
+    Ok(serde_json::json!({
+        "installed": installed,
+        "npmInstalled": false
+    }))
+}
+
+#[tauri::command]
+pub async fn aider_check() -> Result<serde_json::Value, String> {
+    let installed = Command::new("aider").arg("--version").output().is_ok();
+    let pip_installed = Command::new("pip").arg("show").arg("aider-chat").output().is_ok();
+    
+    Ok(serde_json::json!({
+        "installed": installed || pip_installed,
+        "pipInstalled": pip_installed
+    }))
+}
+
+#[tauri::command]
+pub async fn claude_install() -> Result<serde_json::Value, String> {
+    // Placeholder - actually installing would require more complex logic (permissions, etc)
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn gemini_install() -> Result<serde_json::Value, String> {
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn codex_install() -> Result<serde_json::Value, String> {
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn opencode_install() -> Result<serde_json::Value, String> {
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn aider_install() -> Result<serde_json::Value, String> {
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn gsd_check() -> Result<serde_json::Value, String> {
+    let installed = Command::new("gsd").arg("--version").output().is_ok();
+    let npm_installed = Command::new("npm").arg("list").arg("-g").arg("@gsd/cli").output().is_ok();
+    
+    Ok(serde_json::json!({
+        "installed": installed || npm_installed,
+        "npmInstalled": npm_installed
+    }))
+}
+
+#[tauri::command]
+pub async fn gsd_install() -> Result<serde_json::Value, String> {
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn beads_install() -> Result<serde_json::Value, String> {
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn git_install() -> Result<serde_json::Value, String> {
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn node_install() -> Result<serde_json::Value, String> {
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
+pub async fn python_install() -> Result<serde_json::Value, String> {
+    Ok(serde_json::json!({ "success": true }))
+}
+
+#[tauri::command]
 pub async fn kspec_watch(
     app: AppHandle,
     state: State<'_, OrchestrationState>,

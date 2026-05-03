@@ -35,7 +35,7 @@ export const HealthDashboard: React.FC = () => {
     value: string;
     icon: React.ReactNode;
   }) => (
-    <div className="rounded-xl border border-white/5 bg-zinc-900/50 px-3 py-2">
+    <div className="rounded-xl border border-white/5 bg-black/40 px-3 py-2 backdrop-blur-md shadow-sm">
       <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
         {icon}
         <span>{label}</span>
@@ -57,7 +57,7 @@ export const HealthDashboard: React.FC = () => {
     scope: string;
     detail: string;
   }) => (
-    <div className="flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-zinc-900/40 px-3 py-2.5">
+    <div className="flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-black/30 px-3 py-2.5 backdrop-blur-sm">
       <div className="min-w-0">
         <div className="truncate text-sm font-semibold text-zinc-100">{name}</div>
         <div className="mt-0.5 truncate text-[10px] uppercase tracking-widest text-zinc-500">{detail}</div>
@@ -81,25 +81,40 @@ export const HealthDashboard: React.FC = () => {
     const [expanded, setExpanded] = React.useState(false);
     const hasDiagnostics = service.diagnostics && service.diagnostics.length > 0;
 
+    const getServiceIcon = (id: string) => {
+      switch (id) {
+        case 'database': return <Database size={14} className="text-blue-400" />;
+        case 'project_capability': return <ShieldCheck size={14} className="text-emerald-400" />;
+        case 'environment': return <Cpu size={14} className="text-purple-400" />;
+        case 'ai_providers': return <Activity size={14} className="text-amber-400" />;
+        default: return <Server size={14} className="text-zinc-400" />;
+      }
+    };
+
     return (
       <div className="flex flex-col gap-1">
         <div
-          className={`flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-zinc-900/40 px-3 py-2.5 transition-all duration-200 ${
-            hasDiagnostics ? 'cursor-pointer hover:bg-zinc-900/60 hover:border-white/10' : ''
-          } ${expanded ? 'bg-zinc-900/60 border-white/10' : ''}`}
+          className={`flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-black/40 px-3 py-2.5 backdrop-blur-sm transition-all duration-200 ${
+            hasDiagnostics ? 'cursor-pointer hover:bg-black/60 hover:border-white/10' : ''
+          } ${expanded ? 'bg-black/60 border-white/10' : ''}`}
           onClick={() => hasDiagnostics && setExpanded(!expanded)}
         >
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <div className="text-sm font-semibold text-zinc-100">{service.name}</div>
-              {hasDiagnostics && (
-                <div className={`text-[10px] transition-transform duration-200 text-zinc-500 ${expanded ? 'rotate-180' : ''}`}>
-                  <ChevronDown size={10} />
-                </div>
-              )}
+          <div className="flex min-w-0 gap-3">
+            <div className="mt-0.5 shrink-0">
+              {getServiceIcon(service.id)}
             </div>
-            <div className="mt-0.5 truncate text-[10px] uppercase tracking-widest text-zinc-500">
-              {service.detail}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <div className="text-sm font-semibold text-zinc-100">{service.name}</div>
+                {hasDiagnostics && (
+                  <div className={`text-[10px] transition-transform duration-200 text-zinc-500 ${expanded ? 'rotate-180' : ''}`}>
+                    <ChevronDown size={10} />
+                  </div>
+                )}
+              </div>
+              <div className="mt-0.5 truncate text-[10px] uppercase tracking-widest text-zinc-500">
+                {service.detail}
+              </div>
             </div>
           </div>
           <span

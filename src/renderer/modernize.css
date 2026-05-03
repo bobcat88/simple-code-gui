@@ -145,7 +145,6 @@ html, body, #root {
   z-index: 9999;
   position: relative;
   pointer-events: auto !important;
-  -webkit-app-region: drag;
 }
 
 .title-bar-drag {
@@ -237,25 +236,28 @@ html, body, #root {
 /* Sidebar Hover Collapse Bubble */
 .collapse-bubble {
   position: absolute;
-  right: -12px;
+  right: -14px;
   top: 50%;
-  transform: translateY(-50%) scale(0.8);
-  width: 26px;
-  height: 26px;
-  background: rgba(20, 20, 30, 0.6);
+  transform: translateY(-50%) scale(0.6);
+  width: 28px;
+  height: 28px;
+  background: rgba(10, 10, 15, 0.6);
   backdrop-filter: blur(12px) saturate(180%);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
-  color: white;
+  color: rgba(255, 255, 255, 0.4);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
+  box-shadow: 
+    0 4px 12px rgba(0,0,0,0.4), 
+    inset 0 1px 1px rgba(255,255,255,0.05),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
   cursor: pointer;
   z-index: 1000;
   opacity: 0;
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-container:hover .collapse-bubble,
@@ -266,10 +268,13 @@ html, body, #root {
 }
 
 .collapse-bubble:hover {
-  background: rgba(40, 40, 60, 0.8);
+  background: rgba(59, 130, 246, 0.2);
   border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 0 20px var(--codex-blue-glow), inset 0 1px 1px rgba(255,255,255,0.2);
-  color: #60a5fa;
+  box-shadow: 
+    0 0 20px rgba(59, 130, 246, 0.4), 
+    inset 0 1px 1px rgba(255,255,255,0.15);
+  color: #fff;
+  transform: translateY(-50%) scale(1.1) !important;
 }
 
 /* Staggered Entry Animations */

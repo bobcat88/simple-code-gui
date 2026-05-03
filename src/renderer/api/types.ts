@@ -857,6 +857,26 @@ export interface ExtendedApi extends Api {
   gsdHydrateSwarm(cwd: string): Promise<{ success: boolean; count: number; error?: string }>;
   gsdGetSwarmSnapshots: (projectPath: string) => Promise<SwarmSnapshot[]>
   gsdCreateSnapshotWorkspace: (snapshotId: string) => Promise<{ success: boolean; path?: string; error?: string }>
+
+  // CLI Status & Health (Parity with Legacy)
+  claudeCheck(): Promise<{ installed: boolean; npmInstalled: boolean; gitBashInstalled: boolean }>
+  geminiCheck(): Promise<{ installed: boolean; npmInstalled: boolean }>
+  codexCheck(): Promise<{ installed: boolean; npmInstalled: boolean }>
+  opencodeCheck(): Promise<{ installed: boolean; npmInstalled: boolean }>
+  aiderCheck(): Promise<{ installed: boolean; pipInstalled: boolean }>
+  gsdCheck(): Promise<{ installed: boolean; npmInstalled: boolean }>
+
+  // Installation Handlers
+  claudeInstall(): Promise<{ success: boolean; error?: string }>
+  geminiInstall(): Promise<{ success: boolean; error?: string }>
+  codexInstall(): Promise<{ success: boolean; error?: string }>
+  opencodeInstall(): Promise<{ success: boolean; error?: string }>
+  aiderInstall(): Promise<{ success: boolean; error?: string }>
+  gsdInstall(): Promise<{ success: boolean; error?: string }>
+  beadsInstall(): Promise<{ success: boolean; error?: string }>
+  gitInstall(): Promise<{ success: boolean; error?: string }>
+  nodeInstall(): Promise<{ success: boolean; error?: string }>
+  pythonInstall(): Promise<{ success: boolean; error?: string }>
 }
 
 export interface SwarmSnapshot {

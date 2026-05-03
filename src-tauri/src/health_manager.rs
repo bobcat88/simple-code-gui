@@ -138,6 +138,8 @@ impl HealthManager {
 
         services.push(check_database_service(&self.db).await);
         services.push(check_project_capability_service(&self.orchestration).await);
+        services.push(check_environment_service().await);
+        services.push(check_ai_providers_service(&self.ai_runtime).await);
 
         let mut extension_diagnostics = Vec::new();
         let installed_extensions = match crate::extension_manager::extensions_get_installed().await
@@ -450,6 +452,108 @@ fn check_mcp_config_service(installed_extensions: &[InstalledExtension]) -> Serv
         name: "MCP Config".to_string(),
         status,
         detail,
+        diagnostics,
+    }
+}
+
+async fn check_ai_providers_service(
+    ai_runtime: &crate::ai_runtime::RuntimeManager,
+) -> ServiceStatus {
+    let mut diagnostics = Vec::new();
+    let health_map = ai_runtime.get_health().await;
+    
+    let mut healthy_count = 0;
+    for (name, health) in &health_map {
+        if health.is_healthy {
+            healthy_count += 1;
+        } else {
+            diagnostics.push(DiagnosticItem {
+                level: "error".to_string(),
+                message: format!("AI Provider '{}' is degraded", name),
+                suggestion: health.last_error.clone().or_else(|| Some("Check API configuration and network connectivity".to_string())),
+                code: Some(format!("AI_PROVIDER_{}_DEGRADED", name.to_uppercase())),
+            });
+        }
+    }
+
+    let status = if health_map.is_empty() {
+        "Warning".to_string()
+    } else if healthy_count == health_map.len() {
+        "Healthy".to_string()
+    } else if healthy_count > 0 {
+        "Warning".to_string()
+    } else {
+        "Error".to_string()
+    };
+
+    let detail = if health_map.is_empty() {
+        "No providers configured or active".to_string()
+    } else {
+        format!("{}/{} providers healthy", healthy_count, health_map.len())
+    };
+
+    if health_map.is_empty() {
+        diagnostics.push(DiagnosticItem {
+            level: "warning".to_string(),
+            message: "No AI providers are currently active".to_string(),
+            suggestion: Some("Configure API keys in settings to enable AI features".to_string()),
+            code: Some("AI_NO_PROVIDERS".to_string()),
+        });
+    }
+
+    ServiceStatus {
+        id: "ai_providers".to_string(),
+        name: "AI Providers".to_string(),
+        status,
+        detail,
+        diagnostics,
+    }
+}
+
+async fn check_environment_service() -> ServiceStatus {
+    let mut diagnostics = Vec::new();
+    let mut installed_count = 0;
+    let tools = [
+        ("claude", "Claude CLI"),
+        ("gemini", "Gemini CLI"),
+        ("gsd", "GSD CLI"),
+        ("bd", "Beads CLI"), // Beads binary is 'bd'
+        ("git", "Git"),
+        ("node", "Node.js"),
+        ("python3", "Python"),
+    ];
+
+    for (bin, name) in tools {
+        let is_installed = std::process::Command::new(bin)
+            .arg(if bin == "git" || bin == "node" || bin == "python3" { "--version" } else { "version" })
+            .output()
+            .is_ok();
+        
+        if is_installed {
+            installed_count += 1;
+        } else {
+            diagnostics.push(DiagnosticItem {
+                level: "warning".to_string(),
+                message: format!("{} is not installed or not in PATH", name),
+                suggestion: Some(format!("Install {} to enable full agent capabilities", name)),
+                code: Some(format!("ENV_{}_MISSING", bin.to_uppercase().replace("3", ""))),
+            });
+        }
+    }
+
+    let status = if installed_count == tools.len() {
+        "Healthy".to_string()
+    } else if installed_count > 0 {
+        "Warning".to_string()
+    } else {
+        "Error".to_string()
+    };
+
+    ServiceStatus {
+        id: "environment".to_string(),
+        name: "CLI Environment".to_string(),
+        status,
+        detail: format!("{}/{} tools available", installed_count, tools.len()),
         diagnostics,
     }
 }
