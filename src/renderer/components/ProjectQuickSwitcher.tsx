@@ -166,7 +166,7 @@ export function ProjectQuickSwitcher({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <div className="text-[15px] font-medium text-white truncate">
+                    <div className="text-sm font-medium text-white truncate">
                       {project.name || project.path.split('/').pop() || 'Untitled'}
                     </div>
                   </div>

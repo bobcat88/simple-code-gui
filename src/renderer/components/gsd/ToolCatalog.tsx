@@ -207,7 +207,7 @@ export function ToolCatalog() {
       </div>
 
       {/* Footer Stats */}
-      <div className="px-6 py-4 bg-white/[0.02] border-t border-white/5 flex items-center justify-between text-[11px] text-white/30 font-medium">
+      <div className="px-6 py-4 bg-white/[0.02] border-t border-white/5 flex items-center justify-between text-xs text-white/30 font-medium">
         <div className="flex gap-4">
           <span>Active Capabilities: {tools.filter(t => t.is_enabled).length}</span>
           <span>MCP Servers: 4</span>

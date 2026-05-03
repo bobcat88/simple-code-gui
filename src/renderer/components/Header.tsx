@@ -47,7 +47,7 @@ export function Header({
     <header className="h-14 glass-header flex items-center px-4 gap-4 sticky top-0 z-10" data-tauri-drag-region>
       <div className="flex items-center gap-2 text-muted-foreground shrink-0 border-r border-border pr-4 h-8" data-tauri-drag-region>
         <MessageSquare size={16} strokeWidth={2.5} className="text-primary" data-tauri-drag-region />
-        <span className="text-[13px] font-bold tracking-tight text-white/90 select-none" data-tauri-drag-region>Codex</span>
+        <span className="text-sm font-bold tracking-tight text-white/90 select-none" data-tauri-drag-region>Codex</span>
       </div>
       
       <SessionSwitcher 
@@ -72,7 +72,7 @@ export function Header({
           <input 
             type="text" 
             placeholder="Search commands..." 
-            className="h-8 w-40 bg-white/5 border border-white/5 hover:border-white/10 focus:border-primary/40 focus:bg-white/10 rounded-md pl-8 pr-3 text-[11px] outline-none transition-all placeholder:text-white/20"
+            className="h-8 w-40 bg-white/5 border border-white/5 hover:border-white/10 focus:border-primary/40 focus:bg-white/10 rounded-md pl-8 pr-3 text-xs outline-none transition-all placeholder:text-white/20"
           />
         </div>
 

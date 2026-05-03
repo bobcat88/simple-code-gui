@@ -483,7 +483,7 @@ export function BrainstormCanvas({
                   {edge.label && selectedEdgeId !== edge.id && (
                     <text 
                       x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 8}
-                      className="text-[8px] fill-white/40 font-bold uppercase pointer-events-none"
+                      className="text-[9px] fill-white/40 font-bold uppercase pointer-events-none"
                       textAnchor="middle"
                     >
                       {edge.label}
@@ -605,15 +605,15 @@ export function BrainstormCanvas({
                 <>
                   <div className="space-y-3">
                     <div>
-                      <label className="text-[8px] font-bold text-white/20 uppercase tracking-widest mb-1 block">Title</label>
+                      <label className="text-[9px] font-bold text-white/20 uppercase tracking-widest mb-1 block">Title</label>
                       <input 
                         value={selectedNode.title}
                         onChange={(e) => updateNode(selectedNode.id, { title: e.target.value })}
-                        className="w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[11px] text-white focus:outline-none focus:border-indigo-500/50"
+                        className="w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500/50"
                       />
                     </div>
                     <div>
-                      <label className="text-[8px] font-bold text-white/20 uppercase tracking-widest mb-1 block">Content</label>
+                      <label className="text-[9px] font-bold text-white/20 uppercase tracking-widest mb-1 block">Content</label>
                       <textarea 
                         value={selectedNode.content}
                         rows={6}
@@ -728,12 +728,12 @@ export function BrainstormCanvas({
              <div className="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10 text-left">
                 <Lightbulb size={12} className="text-indigo-400/60 mb-2" />
                 <div className="text-[9px] font-bold text-indigo-300/80 mb-1">Seeds</div>
-                <div className="text-[8px] text-white/20">Raw ideas waiting for architectural refinement.</div>
+                <div className="text-[9px] text-white/20">Raw ideas waiting for architectural refinement.</div>
              </div>
              <div className="p-3 rounded-xl bg-purple-500/5 border border-purple-500/10 text-left">
                 <FileEdit size={12} className="text-purple-400/60 mb-2" />
                 <div className="text-[9px] font-bold text-purple-300/80 mb-1">Drafts</div>
-                <div className="text-[8px] text-white/20">KSpec modules being drafted for implementation.</div>
+                <div className="text-[9px] text-white/20">KSpec modules being drafted for implementation.</div>
              </div>
           </div>
         </div>

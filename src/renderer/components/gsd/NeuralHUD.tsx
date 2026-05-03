@@ -355,7 +355,7 @@ export function NeuralHUD() {
 
                         {insight.actionLabel && (
                           <button 
-                            className="w-full py-1.5 px-3 rounded-lg bg-white/10 hover:bg-white/15 border border-white/5 text-[11px] font-medium flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                            className="w-full py-1.5 px-3 rounded-lg bg-white/10 hover:bg-white/15 border border-white/5 text-xs font-medium flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                             onClick={() => handleAction(insight)}
                           >
                             {insight.actionLabel}
@@ -522,7 +522,7 @@ export function NeuralHUD() {
                           <div className="flex items-center justify-between gap-2 mb-0.5">
                             <h4 className="text-sm font-semibold text-white/90 truncate">{persona.name}</h4>
                             <span className={cn(
-                              "text-[8px] px-1.5 py-0.5 rounded-full border uppercase tracking-widest font-bold",
+                              "text-[9px] px-1.5 py-0.5 rounded-full border uppercase tracking-widest font-bold",
                               persona.governanceTier === 'elevated' ? "bg-amber-500/10 border-amber-500/30 text-amber-400" : 
                               persona.governanceTier === 'restricted' ? "bg-red-500/10 border-red-500/30 text-red-400" : 
                               "bg-indigo-500/10 border-indigo-500/30 text-indigo-400"
@@ -621,7 +621,7 @@ export function NeuralHUD() {
                                   <Plus size={12} />
                                 </div>
                                 <div className="overflow-hidden">
-                                  <div className="text-[11px] font-medium text-white/70 truncate">{p.name}</div>
+                                  <div className="text-xs font-medium text-white/70 truncate">{p.name}</div>
                                 </div>
                               </div>
                             </button>
@@ -652,7 +652,7 @@ export function NeuralHUD() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsMinimized(!isMinimized)}
-        className="pointer-events-auto mt-2 px-4 py-2 rounded-full bg-black/40 border border-white/10 backdrop-blur-md text-[11px] font-bold text-white/80 flex items-center gap-2 shadow-lg ring-1 ring-white/5 hover:bg-black/60 transition-all"
+        className="pointer-events-auto mt-2 px-4 py-2 rounded-full bg-black/40 border border-white/10 backdrop-blur-md text-xs font-bold text-white/80 flex items-center gap-2 shadow-lg ring-1 ring-white/5 hover:bg-black/60 transition-all"
       >
         {healedSteps.size > 0 && (
           <div className="relative">

@@ -176,12 +176,12 @@ export const UpgradePanel: React.FC = () => {
 
                   <div className="flex flex-wrap gap-1.5">
                     {report.affectedFiles?.slice(0, 3).map((f: any, i: number) => (
-                      <span key={i} className="rounded-md bg-zinc-800/50 px-1.5 py-0.5 text-[8px] font-mono text-zinc-500 border border-white/5">
+                      <span key={i} className="rounded-md bg-zinc-800/50 px-1.5 py-0.5 text-[9px] font-mono text-zinc-500 border border-white/5">
                         {f.split('/').pop()}
                       </span>
                     ))}
                     {report.affectedFiles?.length > 3 && (
-                      <span className="text-[8px] text-zinc-600">+{report.affectedFiles.length - 3} more</span>
+                      <span className="text-[9px] text-zinc-600">+{report.affectedFiles.length - 3} more</span>
                     )}
                   </div>
                 </div>

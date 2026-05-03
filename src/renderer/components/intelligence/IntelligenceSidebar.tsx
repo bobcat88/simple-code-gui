@@ -252,7 +252,7 @@ export function IntelligenceSidebar({
         <button
           onClick={() => setActiveSection('intelligence')}
           className={cn(
-            "pb-2 text-[11px] font-bold uppercase tracking-wider transition-all border-b-2",
+            "pb-2 text-xs font-bold uppercase tracking-wider transition-all border-b-2",
             activeSection === 'intelligence' 
               ? "text-white border-indigo-500" 
               : "text-white/30 border-transparent hover:text-white/60"
@@ -263,7 +263,7 @@ export function IntelligenceSidebar({
         <button
           onClick={() => setActiveSection('brainstorm')}
           className={cn(
-            "pb-2 text-[11px] font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
+            "pb-2 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
             activeSection === 'brainstorm' 
               ? "text-white border-purple-500" 
               : "text-white/30 border-transparent hover:text-white/60"
@@ -275,7 +275,7 @@ export function IntelligenceSidebar({
         <button
           onClick={() => setActiveSection('governance')}
           className={cn(
-            "pb-2 text-[11px] font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
+            "pb-2 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
             activeSection === 'governance' 
               ? "text-white border-emerald-500" 
               : "text-white/30 border-transparent hover:text-white/60"
@@ -287,7 +287,7 @@ export function IntelligenceSidebar({
         <button
           onClick={() => setActiveSection('neuralhud')}
           className={cn(
-            "pb-2 text-[11px] font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
+            "pb-2 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
             activeSection === 'neuralhud' 
               ? "text-white border-indigo-400" 
               : "text-white/30 border-transparent hover:text-white/60"
@@ -320,7 +320,7 @@ export function IntelligenceSidebar({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShieldCheck size={14} className="text-indigo-400" />
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/70">Nerve Center</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-white/70">Nerve Center</h3>
             </div>
             {capabilityScan && (
               <div className="flex items-center gap-2">
@@ -546,7 +546,7 @@ export function IntelligenceSidebar({
 
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/40">Repo Health</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white/40">Repo Health</h3>
             {health && (
               <span className={cn(
                 "px-2.5 py-1 rounded-full text-[10px] font-bold tracking-tight shadow-lg backdrop-blur-md",
@@ -569,7 +569,7 @@ export function IntelligenceSidebar({
         </section>
 
         <section>
-          <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/40 mb-3">Detected Stacks</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-white/40 mb-3">Detected Stacks</h3>
           <div className="space-y-2">
             {stacks && stacks.length > 0 ? stacks.map((stack: any, i: number) => (
               <div 
@@ -597,7 +597,7 @@ export function IntelligenceSidebar({
         </section>
 
         <section>
-          <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/40 mb-3">Git Context</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-white/40 mb-3">Git Context</h3>
           {git ? (
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-xs">
@@ -629,7 +629,7 @@ export function IntelligenceSidebar({
                   <History size={10} /> Recent Changes
                 </div>
                 {git.recentCommits.map((commit: any, i: number) => (
-                  <div key={i} className="text-[11px] leading-relaxed border-l-2 border-white/10 pl-3 py-1 group hover:border-indigo-500/50 transition-colors">
+                  <div key={i} className="text-xs leading-relaxed border-l-2 border-white/10 pl-3 py-1 group hover:border-indigo-500/50 transition-colors">
                     <div className="text-white/80 line-clamp-1 group-hover:text-white">{commit.message}</div>
                     <div className="text-white/30 text-[9px] mt-0.5">{commit.author} • {new Date(commit.date).toLocaleDateString()}</div>
                   </div>
@@ -646,7 +646,7 @@ export function IntelligenceSidebar({
 
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/40">Cognitive Context</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white/40">Cognitive Context</h3>
             <div className="flex items-center gap-1.5">
               <Brain size={12} className="text-purple-400" />
               <span className="text-[10px] text-purple-400/80 font-medium">Transwarp</span>
@@ -706,7 +706,7 @@ export function IntelligenceSidebar({
               <div className="flex items-start gap-2">
                 <Brain size={14} className="text-purple-400 shrink-0 mt-0.5" />
                 <div>
-                  <div className="text-[11px] font-medium text-purple-400">Long-term Memory</div>
+                  <div className="text-xs font-medium text-purple-400">Long-term Memory</div>
                   <p className="text-[10px] text-white/40 leading-normal">
                     Vector index enables semantic codebase understanding and global knowledge recall.
                   </p>
@@ -723,7 +723,7 @@ export function IntelligenceSidebar({
 
             <div className="intelligence-sidebar-section mb-6 mt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/40 flex items-center gap-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white/40 flex items-center gap-2">
                   <Sparkles size={12} className="text-indigo-400" />
                   Refactoring Opportunities
                 </h3>
@@ -771,11 +771,11 @@ export function IntelligenceSidebar({
                 {refactoringResults && refactoringResults.map((finding, idx) => (
                   <div key={idx} className="group bg-white/5 border border-white/5 hover:border-indigo-500/30 rounded-xl p-3 space-y-2 transition-all">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="text-[11px] font-bold text-white/90 line-clamp-1">
+                      <div className="text-xs font-bold text-white/90 line-clamp-1">
                         {finding.title || finding.symbolName || 'Architectural Debt'}
                       </div>
                       <div className={cn(
-                        "text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider",
+                        "text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider",
                         finding.risk === 'HIGH' ? "bg-rose-500/20 text-rose-400" :
                         finding.risk === 'MEDIUM' ? "bg-amber-500/20 text-amber-400" :
                         "bg-indigo-500/20 text-indigo-400"
@@ -853,7 +853,7 @@ export function IntelligenceSidebar({
 
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/40">Architectural Context</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white/40">Architectural Context</h3>
             <span className="text-[10px] text-indigo-400/80 font-medium">GitNexus</span>
           </div>
           {gitnexus ? (
@@ -868,7 +868,7 @@ export function IntelligenceSidebar({
                 <div className="p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/10 flex items-start gap-2">
                   <AlertCircle size={14} className="text-amber-400 shrink-0 mt-0.5" />
                   <div>
-                    <div className="text-[11px] font-medium text-amber-400">Index Stale</div>
+                    <div className="text-xs font-medium text-amber-400">Index Stale</div>
                     <p className="text-[10px] text-white/40 leading-normal">The code graph is out of sync with recent changes. Re-index recommended.</p>
                   </div>
                 </div>
@@ -889,7 +889,7 @@ export function IntelligenceSidebar({
 
         <section className="flex-1 min-h-[400px] flex flex-col">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-white/40">Swarm Intelligence</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white/40">Swarm Intelligence</h3>
             <div className="flex items-center gap-1.5">
               <Users size={12} className="text-blue-400" />
               <span className="text-[10px] text-blue-400/80 font-medium">Live Stream</span>
@@ -1030,7 +1030,7 @@ function RiskBadge({ risk }: { risk: string }) {
   }
   return (
     <span className={cn(
-      "px-1.5 py-0.5 rounded border text-[8px] font-bold uppercase tracking-tighter",
+      "px-1.5 py-0.5 rounded border text-[9px] font-bold uppercase tracking-tighter",
       colors[risk as keyof typeof colors] || colors.low
     )}>
       {risk}

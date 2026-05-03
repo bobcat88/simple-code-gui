@@ -167,7 +167,7 @@ export function FloatingInput({
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted text-[11px] font-medium text-muted-foreground transition-colors"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted text-xs font-medium text-muted-foreground transition-colors"
               >
                 <Command size={12} />
                 <span>Commands</span>
@@ -175,7 +175,7 @@ export function FloatingInput({
               <div className="w-[1px] h-3 bg-border mx-1" />
               <button
                 type="button"
-                className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted text-[11px] font-medium text-muted-foreground transition-colors"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted text-xs font-medium text-muted-foreground transition-colors"
               >
                 <Sparkles size={12} />
                 <span>Auto Work</span>
@@ -187,7 +187,7 @@ export function FloatingInput({
                 type="button"
                 onClick={onToggleAutoAccept}
                 className={cn(
-                  "flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium transition-all",
+                  "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all",
                   autoAccept 
                     ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20" 
                     : "hover:bg-muted text-muted-foreground"
@@ -202,7 +202,7 @@ export function FloatingInput({
 
               <button
                 type="button"
-                className="flex items-center gap-1.5 px-2 py-1 rounded-sm bg-muted/50 hover:bg-muted text-[11px] font-medium text-foreground border border-border/50 transition-colors capitalize"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-sm bg-muted/50 hover:bg-muted text-xs font-medium text-foreground border border-border/50 transition-colors capitalize"
               >
                 <Globe size={12} className="text-primary" />
                 <span>{currentBackend}</span>

@@ -157,7 +157,7 @@ export const AgentBoard: React.FC = () => {
                   <div className={`w-2 h-2 rounded-full ${getStatusColor(agent.status)}`} />
                   <span className="text-[10px] text-zinc-400 capitalize">{agent.status}</span>
                   {(agent.queue_size || 0) > 0 && (
-                    <span className="ml-1 text-[8px] bg-zinc-800 text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/20 font-bold">
+                    <span className="ml-1 text-[9px] bg-zinc-800 text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/20 font-bold">
                       {agent.queue_size}
                     </span>
                   )}

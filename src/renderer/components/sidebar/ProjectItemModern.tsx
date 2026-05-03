@@ -131,7 +131,7 @@ export const ProjectItemModern = React.memo(function ProjectItemModern({
           <div className="flex items-center gap-2 mt-0.5">
             {taskCounts ? (
               <span className={cn(
-                "text-[11px] font-medium",
+                "text-xs font-medium",
                 (taskCounts.open + taskCounts.inProgress > 0) ? "text-primary/70" : "text-muted-foreground/60"
               )}>
                 {taskCounts.open + taskCounts.inProgress} tasks
@@ -218,7 +218,7 @@ export const ProjectItemModern = React.memo(function ProjectItemModern({
                 index === 0 ? "bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "bg-muted-foreground/30 group-hover/session:bg-muted-foreground/60"
               )} />
               <div className="flex-1 min-w-0">
-                <div className="text-[12px] font-medium truncate" title={session.slug}>
+                <div className="text-xs font-medium truncate" title={session.slug}>
                   {session.slug}
                 </div>
                 <div className="text-[10px] text-muted-foreground/40 mt-0.5">

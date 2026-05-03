@@ -251,7 +251,7 @@ export function NeuralHUDTab({ api, projectPath }: NeuralHUDTabProps) {
         <div className="flex items-center gap-2 pointer-events-auto">
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 mr-2">
             <Zap size={10} className="text-emerald-400 animate-pulse" />
-            <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Quantum Sync Active</span>
+            <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Quantum Sync Active</span>
           </div>
           <button 
             onClick={() => fetchGraphData(searchQuery)}
@@ -296,7 +296,7 @@ export function NeuralHUDTab({ api, projectPath }: NeuralHUDTabProps) {
             
             <div className="flex items-center justify-between">
               <span className={cn(
-                "text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider",
+                "text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider",
                 "bg-white/10 text-white/60"
               )} style={{ color: selectedNode.color, backgroundColor: `${selectedNode.color}15` }}>
                 {selectedNode.type}
@@ -370,8 +370,8 @@ export function NeuralHUDTab({ api, projectPath }: NeuralHUDTabProps) {
               )}
             >
               <div className="flex items-center justify-between mb-1 opacity-60">
-                <span className="font-mono text-[7px]">{new Date(thought.timestamp).toLocaleTimeString()}</span>
-                <span className="uppercase text-[6px] tracking-tighter bg-white/5 px-1 rounded">{thought.eventType}</span>
+                <span className="font-mono text-[9px]">{new Date(thought.timestamp).toLocaleTimeString()}</span>
+                <span className="uppercase text-[9px] tracking-tighter bg-white/5 px-1 rounded">{thought.eventType}</span>
               </div>
               <p className="line-clamp-3">{thought.message}</p>
             </div>
@@ -428,12 +428,12 @@ export function NeuralHUDTab({ api, projectPath }: NeuralHUDTabProps) {
 
         <div className="glass-panel p-2 flex items-center gap-3">
           <div className="flex flex-col">
-            <span className="text-[8px] text-white/30 uppercase font-bold">Nodes</span>
+            <span className="text-[9px] text-white/30 uppercase font-bold">Nodes</span>
             <span className="text-xs font-bold text-white/80 tabular-nums">{graphData.nodes.length}</span>
           </div>
           <div className="w-px h-6 bg-white/5" />
           <div className="flex flex-col">
-            <span className="text-[8px] text-white/30 uppercase font-bold">Synapses</span>
+            <span className="text-[9px] text-white/30 uppercase font-bold">Synapses</span>
             <span className="text-xs font-bold text-white/80 tabular-nums">{graphData.links.length}</span>
           </div>
         </div>

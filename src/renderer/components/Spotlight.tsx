@@ -243,7 +243,7 @@ export function Spotlight({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <div className="text-[15px] font-medium text-white truncate">{result.title}</div>
+                      <div className="text-sm font-medium text-white truncate">{result.title}</div>
                       <div className={cn(
                         "text-[9px] px-1.5 py-0.5 rounded uppercase font-bold tracking-tighter",
                         result.type === 'command' ? "bg-blue-500/20 text-blue-400" :

@@ -483,7 +483,7 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                                             {/* Checkpoint UI */}
                                             {isWaiting && (
                                               <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-3">
-                                                <p className="text-[11px] font-medium text-amber-200/80 leading-snug">
+                                                <p className="text-xs font-medium text-amber-200/80 leading-snug">
                                                   {(step.status as any).WaitingForUser}
                                                 </p>
                                                 <div className="flex flex-wrap gap-2">
@@ -513,7 +513,7 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                                             {isAutoFixing && (
                                               <div className="mt-4 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center gap-3">
                                                 <div className="w-4 h-4 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin shrink-0" />
-                                                <p className="text-[11px] font-medium text-blue-200/80">
+                                                <p className="text-xs font-medium text-blue-200/80">
                                                   {(step.status as any).AutoFixing}
                                                 </p>
                                               </div>
@@ -526,7 +526,7 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                                                   <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                                                   <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Proposed Auto-Fix</span>
                                                 </div>
-                                                <p className="text-[11px] font-medium text-white/90 leading-relaxed italic">
+                                                <p className="text-xs font-medium text-white/90 leading-relaxed italic">
                                                   "{(step.status as any).AwaitingFixApproval[1]}"
                                                 </p>
                                                 <div className="flex flex-wrap gap-2 pt-1">
@@ -560,7 +560,7 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                                                   <Scale size={14} className="text-purple-400" />
                                                   <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Consensus Conflict</span>
                                                 </div>
-                                                <p className="text-[11px] font-medium text-white/90 leading-relaxed italic">
+                                                <p className="text-xs font-medium text-white/90 leading-relaxed italic">
                                                   "{(step.status as any).Conflict[0]}"
                                                 </p>
                                                 <div className="grid grid-cols-2 gap-2">
@@ -615,12 +615,12 @@ export function GSDPlanner({ projectPath, api }: GSDPlannerProps) {
                                                 </div>
                                                 <div className="p-3 rounded-lg bg-black/30 border border-white/5">
                                                   <div className="text-[9px] font-bold text-cyan-400/60 uppercase mb-1">Target Specialist</div>
-                                                  <div className="text-[11px] font-bold text-white mb-2 flex items-center gap-2">
+                                                  <div className="text-xs font-bold text-white mb-2 flex items-center gap-2">
                                                     <Users size={12} className="text-cyan-500" />
                                                     {(step.status as any).AwaitingDelegationApproval[1]}
                                                   </div>
                                                   <div className="text-[9px] font-bold text-muted-foreground/60 uppercase mb-1">Delegated Task</div>
-                                                  <p className="text-[11px] text-white/90 leading-relaxed font-mono">
+                                                  <p className="text-xs text-white/90 leading-relaxed font-mono">
                                                     {(step.status as any).AwaitingDelegationApproval[0]}
                                                   </p>
                                                 </div>

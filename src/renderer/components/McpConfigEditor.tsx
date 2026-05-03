@@ -61,7 +61,7 @@ export function McpConfigEditor({ mcp, onSave, onCancel }: McpConfigEditorProps)
         {/* Arguments */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-[11px] font-bold uppercase text-white/40 tracking-wider">Arguments</label>
+            <label className="text-xs font-bold uppercase text-white/40 tracking-wider">Arguments</label>
             <button 
               onClick={handleAddArg}
               className="flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 font-medium px-1.5 py-0.5 rounded hover:bg-primary/5"
@@ -96,7 +96,7 @@ export function McpConfigEditor({ mcp, onSave, onCancel }: McpConfigEditorProps)
         {/* Environment Variables */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-[11px] font-bold uppercase text-white/40 tracking-wider">Environment Variables</label>
+            <label className="text-xs font-bold uppercase text-white/40 tracking-wider">Environment Variables</label>
             <button 
               onClick={handleAddEnv}
               className="flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 font-medium px-1.5 py-0.5 rounded hover:bg-primary/5"

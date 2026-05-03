@@ -68,7 +68,7 @@ export const ActivityFeed: React.FC = () => {
                       {formatDistanceToNow(new Date(event.timestamp), { addSuffix: true })}
                     </span>
                   </div>
-                  <p className="text-[11px] text-zinc-300 leading-snug break-words font-medium">
+                  <p className="text-xs text-zinc-300 leading-snug break-words font-medium">
                     {event.message}
                   </p>
                   {event.metadata && (

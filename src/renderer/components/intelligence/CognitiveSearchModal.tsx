@@ -163,7 +163,7 @@ export function CognitiveSearchModal({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 min-w-0">
                       <FileCode size={14} className="text-purple-400 shrink-0" />
-                      <span className="text-[13px] font-medium text-white/90 truncate">
+                      <span className="text-sm font-medium text-white/90 truncate">
                         {result.chunk.symbolName || result.chunk.filePath.split('/').pop()}
                       </span>
                       <span className="text-[10px] text-white/30 truncate font-mono">
@@ -179,7 +179,7 @@ export function CognitiveSearchModal({
                   </div>
                   
                   <div className="relative">
-                    <pre className="text-[11px] text-white/50 font-mono line-clamp-3 leading-relaxed bg-black/20 p-2 rounded-lg border border-white/5 whitespace-pre-wrap break-all">
+                    <pre className="text-xs text-white/50 font-mono line-clamp-3 leading-relaxed bg-black/20 p-2 rounded-lg border border-white/5 whitespace-pre-wrap break-all">
                       {result.chunk.content}
                     </pre>
                   </div>

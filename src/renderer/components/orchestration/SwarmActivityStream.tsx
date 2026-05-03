@@ -253,7 +253,7 @@ export const SwarmActivityStream: React.FC<SwarmActivityStreamProps> = ({ api, p
                             {formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true })}
                           </span>
                         </div>
-                        <p className="text-[11px] text-zinc-300 leading-relaxed font-medium">
+                        <p className="text-xs text-zinc-300 leading-relaxed font-medium">
                           {msg.content}
                         </p>
                         {msg.metadata && Object.keys(msg.metadata).length > 0 && (
@@ -286,7 +286,7 @@ export const SwarmActivityStream: React.FC<SwarmActivityStreamProps> = ({ api, p
                         <Layers size={14} className="text-indigo-400" />
                       </div>
                       <div>
-                        <h4 className="text-[11px] font-bold text-white leading-tight">{snapshot.name}</h4>
+                        <h4 className="text-xs font-bold text-white leading-tight">{snapshot.name}</h4>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[9px] text-zinc-500 font-mono">{snapshot.commit_sha?.substring(0, 7) || 'NO_COMMIT'}</span>
                           <span className="text-zinc-700">•</span>
@@ -332,7 +332,7 @@ export const SwarmActivityStream: React.FC<SwarmActivityStreamProps> = ({ api, p
                     </div>
                   )}
                   {snapshot.worktree_path && (
-                    <div className="mt-2 flex items-center gap-2 p-1.5 rounded bg-black/40 border border-emerald-500/10 font-mono text-[8px] text-emerald-400/60 overflow-hidden">
+                    <div className="mt-2 flex items-center gap-2 p-1.5 rounded bg-black/40 border border-emerald-500/10 font-mono text-[9px] text-emerald-400/60 overflow-hidden">
                       <ExternalLink size={8} />
                       <span className="truncate">{snapshot.worktree_path}</span>
                     </div>
@@ -367,7 +367,7 @@ export const SwarmActivityStream: React.FC<SwarmActivityStreamProps> = ({ api, p
                   value={handoffNotes}
                   onChange={(e) => setHandoffNotes(e.target.value)}
                   placeholder="Describe the current context, goals, and any specific blockers for the next agent..."
-                  className="w-full h-32 bg-black/40 border border-white/10 rounded-lg p-2.5 text-[11px] text-zinc-300 placeholder:text-zinc-700 focus:outline-none focus:border-indigo-500/50 resize-none custom-scrollbar font-medium"
+                  className="w-full h-32 bg-black/40 border border-white/10 rounded-lg p-2.5 text-xs text-zinc-300 placeholder:text-zinc-700 focus:outline-none focus:border-indigo-500/50 resize-none custom-scrollbar font-medium"
                   autoFocus
                 />
               </div>

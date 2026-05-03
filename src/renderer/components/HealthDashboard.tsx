@@ -147,7 +147,7 @@ export const HealthDashboard: React.FC = () => {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[11px] font-medium leading-tight text-zinc-200">
+                    <div className="text-xs font-medium leading-tight text-zinc-200">
                       {diag.message}
                     </div>
                     {diag.suggestion && (
@@ -156,7 +156,7 @@ export const HealthDashboard: React.FC = () => {
                       </div>
                     )}
                     {diag.code && (
-                      <div className="mt-1 text-[8px] font-mono uppercase tracking-tighter text-zinc-600">
+                      <div className="mt-1 text-[9px] font-mono uppercase tracking-tighter text-zinc-600">
                         {diag.code}
                       </div>
                     )}
@@ -201,7 +201,7 @@ export const HealthDashboard: React.FC = () => {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold uppercase tracking-tighter text-rose-400/80">{issue.serviceName}</span>
-                    {issue.code && <span className="text-[8px] font-mono text-rose-400/40">{issue.code}</span>}
+                    {issue.code && <span className="text-[9px] font-mono text-rose-400/40">{issue.code}</span>}
                   </div>
                   <div className="mt-0.5 text-xs font-semibold text-zinc-100">{issue.message}</div>
                   {issue.suggestion && (

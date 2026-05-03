@@ -117,7 +117,7 @@ export function ConsensusOverlay() {
               <h4 className="text-xs font-semibold text-white/90 leading-snug">
                 {step.title}
               </h4>
-              <p className="text-[11px] text-white/50 leading-relaxed">
+              <p className="text-xs text-white/50 leading-relaxed">
                 {step.description}
               </p>
 
@@ -135,14 +135,14 @@ export function ConsensusOverlay() {
               <div className="flex items-center gap-2 mt-2">
                 <button 
                   onClick={() => handleRespond(step.id, 'ApproveFix')}
-                  className="flex-1 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/20 text-[11px] font-bold text-emerald-400 transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/20 text-xs font-bold text-emerald-400 transition-all flex items-center justify-center gap-2"
                 >
                   <CheckCircle2 size={14} />
                   APPROVE FIX
                 </button>
                 <button 
                   onClick={() => handleRespond(step.id, 'Retry')}
-                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-bold text-white/60 transition-all"
+                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-white/60 transition-all"
                 >
                   RETRY
                 </button>
@@ -231,7 +231,7 @@ function DelegationDetails({ status, onApprove, onReject }: { status: GsdStepSta
           <Zap size={12} />
           Delegated Task
         </div>
-        <div className="text-[11px] text-white/70 leading-relaxed italic">
+        <div className="text-xs text-white/70 leading-relaxed italic">
           "{task}"
         </div>
       </div>
@@ -239,14 +239,14 @@ function DelegationDetails({ status, onApprove, onReject }: { status: GsdStepSta
       <div className="flex items-center gap-2 mt-2">
         <button 
           onClick={onApprove}
-          className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-[11px] font-bold text-white shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center gap-2"
+          className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center gap-2"
         >
           <CheckCircle2 size={14} />
           AUTHORIZE DELEGATION
         </button>
         <button 
           onClick={onReject}
-          className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 text-[11px] font-bold text-white/60 hover:text-red-400 transition-all flex items-center justify-center gap-2"
+          className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/30 text-xs font-bold text-white/60 hover:text-red-400 transition-all flex items-center justify-center gap-2"
         >
           <XCircle size={14} />
           REJECT

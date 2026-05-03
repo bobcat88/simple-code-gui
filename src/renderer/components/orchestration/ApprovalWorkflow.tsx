@@ -95,7 +95,7 @@ function DiffHunkBlock({
       <div className="border-b border-white/5 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-zinc-500">
         @@ -{oldStart} +{newStart} @@
       </div>
-      <div className="space-y-0.5 px-2 py-2 font-mono text-[11px] leading-5">
+      <div className="space-y-0.5 px-2 py-2 font-mono text-xs leading-5">
         {lines.map((line, index) => (
           <div
             key={`${line}-${index}`}

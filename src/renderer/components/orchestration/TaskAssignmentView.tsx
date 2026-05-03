@@ -91,7 +91,7 @@ function ProjectAssignmentRow({ project, sessionCount, onAssign, onOpenSession }
               <button
                 type="button"
                 onClick={handleOpenSession}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-white/80 transition-colors hover:bg-white/10"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-white/80 transition-colors hover:bg-white/10"
                 aria-label={`Open session for ${projectName}`}
               >
                 <Terminal size={12} />
@@ -104,7 +104,7 @@ function ProjectAssignmentRow({ project, sessionCount, onAssign, onOpenSession }
                 type="button"
                 onClick={() => setDropdownOpen((value) => !value)}
                 className={cn(
-                  'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-all hover:brightness-125',
+                  'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all hover:brightness-125',
                   agentStyle.color
                 )}
                 aria-haspopup="menu"
@@ -194,7 +194,7 @@ function TaskSessionRow({ tab, active, onOpenSession }: TaskSessionRowProps) {
             <button
               type="button"
               onClick={handleOpen}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-white/80 transition-colors hover:bg-white/10"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-white/80 transition-colors hover:bg-white/10"
               aria-label={`Open task session ${tab.title}`}
             >
               <ExternalLink size={12} />

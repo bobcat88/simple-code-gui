@@ -337,7 +337,7 @@ export function ExtensionBrowser({ projectPath, projectName, onClose, api }: Ext
                 href={ext.repo} 
                 target="_blank" 
                 rel="noreferrer"
-                className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-white transition-colors"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-white transition-colors"
                 onClick={(e) => {
                   e.preventDefault()
                   api.openExternal?.(ext.repo!)
@@ -571,7 +571,7 @@ export function ExtensionBrowser({ projectPath, projectName, onClose, api }: Ext
               <div className="config-content">
                 <div className="mb-4 flex items-start gap-3 p-3 rounded-xl bg-primary/10 border border-primary/20">
                   <AlertCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                  <p className="text-[11px] leading-relaxed text-primary/90 font-medium">
+                  <p className="text-xs leading-relaxed text-primary/90 font-medium">
                     Changes to MCP server configurations require a restart of the Claude Code backend to take full effect. 
                     Ensure the JSON is valid before saving.
                   </p>
@@ -727,7 +727,7 @@ export function ExtensionBrowser({ projectPath, projectName, onClose, api }: Ext
                     {toolResult && (
                       <div className="space-y-3">
                         <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Result</h4>
-                        <div className="p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-[11px] overflow-x-auto">
+                        <div className="p-4 bg-black/40 rounded-xl border border-white/5 font-mono text-xs overflow-x-auto">
                           <pre className="text-primary-foreground/90">{JSON.stringify(toolResult, null, 2)}</pre>
                         </div>
                       </div>

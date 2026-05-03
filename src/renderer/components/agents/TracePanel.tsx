@@ -66,7 +66,7 @@ export const TracePanel: React.FC<TracePanelProps> = ({ agentId, onClose }) => {
               </div>
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-zinc-200 uppercase tracking-tight">{trace.step_name}</span>
+                  <span className="text-xs font-bold text-zinc-200 uppercase tracking-tight">{trace.step_name}</span>
                   <span className="text-[9px] text-zinc-600 font-mono">
                     {new Date(trace.timestamp).toLocaleTimeString()}
                   </span>

@@ -261,13 +261,13 @@ export function ProjectInitializationWizard({ isOpen, onClose, onProjectCreated,
                           
                           <div className="flex items-center gap-1.5">
                             <div className={cn(
-                              "px-1.5 py-0.5 rounded-[4px] text-[8px] font-bold uppercase",
+                              "px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold uppercase",
                               c.installed ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "bg-white/5 text-white/20 border border-white/5"
                             )}>
                               {c.installed ? 'Installed' : 'Missing'}
                             </div>
                             <div className={cn(
-                              "px-1.5 py-0.5 rounded-[4px] text-[8px] font-bold uppercase",
+                              "px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold uppercase",
                               c.initialized ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
                             )}>
                               {c.initialized ? 'Ready' : 'New'}
@@ -439,7 +439,7 @@ export function ProjectInitializationWizard({ isOpen, onClose, onProjectCreated,
                   <div className="text-xs font-bold text-white/40 uppercase tracking-widest">Modified Files</div>
                   <div className="space-y-1.5">
                     {wizard.appliedFiles.map(f => (
-                      <div key={f} className="text-[11px] text-white/60 font-mono truncate">{f}</div>
+                      <div key={f} className="text-xs text-white/60 font-mono truncate">{f}</div>
                     ))}
                   </div>
                 </div>

@@ -112,7 +112,7 @@ export function IdeaInbox({
           <textarea 
             placeholder="Why is this important? (Optional)"
             rows={2}
-            className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-[11px] text-white/80 placeholder:text-white/20 focus:outline-none focus:border-indigo-500/50 resize-none"
+            className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white/80 placeholder:text-white/20 focus:outline-none focus:border-indigo-500/50 resize-none"
             value={newSeedWhy}
             onChange={e => setNewSeedWhy(e.target.value)}
           />
@@ -154,7 +154,7 @@ export function IdeaInbox({
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     {isPromoted && (
-                      <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 text-[8px] font-bold uppercase tracking-tight border border-emerald-500/20 mb-2 w-fit animate-in fade-in zoom-in-95 duration-500">
+                      <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 text-[9px] font-bold uppercase tracking-tight border border-emerald-500/20 mb-2 w-fit animate-in fade-in zoom-in-95 duration-500">
                         <Check size={8} /> Promoted
                       </div>
                     )}
@@ -176,7 +176,7 @@ export function IdeaInbox({
                 </div>
                 <div className="flex items-center gap-2 mt-3">
                   <span className={cn(
-                    "px-1.5 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-tight border transition-colors",
+                    "px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-tight border transition-colors",
                     isPromoted 
                       ? "bg-emerald-500/5 text-emerald-500/40 border-emerald-500/10" 
                       : "bg-indigo-500/10 text-indigo-400 border-indigo-500/10"

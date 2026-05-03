@@ -245,7 +245,7 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
                 className="flex items-center justify-between rounded-lg border border-white/10 bg-black/20 px-3 py-2"
               >
                 <span className="text-xs font-semibold text-white/80">{providerStats.provider || 'unknown'}</span>
-                <span className="text-[11px] text-white/50">
+                <span className="text-xs text-white/50">
                   {formatMetricNumber(providerStats.optimizedTokens)} tokens, {formatMetricNumber(providerStats.savedTokens)} saved
                 </span>
               </div>
@@ -393,11 +393,11 @@ export function AiRuntimeSettings({ settings, onChange }: AiRuntimeSettingsProps
                     <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 w-full pt-4 border-t border-white/5">
                       <div className="space-y-0.5">
                         <span className="text-[10px] text-white/30 uppercase font-bold tracking-tighter">Planner</span>
-                        <span className="text-[11px] text-white/70 block truncate font-mono">{plan.plannerModel}</span>
+                        <span className="text-xs text-white/70 block truncate font-mono">{plan.plannerModel}</span>
                       </div>
                       <div className="space-y-0.5">
                         <span className="text-[10px] text-white/30 uppercase font-bold tracking-tighter">Builder</span>
-                        <span className="text-[11px] text-white/70 block truncate font-mono">{plan.builderModel}</span>
+                        <span className="text-xs text-white/70 block truncate font-mono">{plan.builderModel}</span>
                       </div>
                     </div>
                   </button>

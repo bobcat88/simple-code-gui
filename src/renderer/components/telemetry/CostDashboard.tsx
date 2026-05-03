@@ -99,7 +99,7 @@ export function CostDashboard({ projectPath, className }: CostDashboardProps) {
                     </div>
                   </div>
                 </div>
-                <span className="text-[8px] text-white/20 rotate-45 origin-left whitespace-nowrap mt-1">
+                <span className="text-[9px] text-white/20 rotate-45 origin-left whitespace-nowrap mt-1">
                   {i % 5 === 0 ? format(new Date(point.date), 'MM/dd') : ''}
                 </span>
               </div>
@@ -132,7 +132,7 @@ export function CostDashboard({ projectPath, className }: CostDashboardProps) {
       {/* Recent Sessions */}
       <Section title="Recent Sessions" icon={<Clock size={16} />}>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-[11px]">
+          <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-white/5 text-white/30 uppercase tracking-tighter">
                 <th className="py-2 font-medium">Session / Project</th>

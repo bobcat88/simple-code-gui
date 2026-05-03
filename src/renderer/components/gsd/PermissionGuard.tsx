@@ -63,7 +63,7 @@ export function PermissionGuard({ approval, onResolve }: PermissionGuardProps) {
           <Terminal size={14} className="text-indigo-400" />
           {approval.tool}
         </h3>
-        <p className="text-[11px] text-white/60 leading-relaxed italic mb-3">
+        <p className="text-xs text-white/60 leading-relaxed italic mb-3">
           "{approval.reason}"
         </p>
         
@@ -78,14 +78,14 @@ export function PermissionGuard({ approval, onResolve }: PermissionGuardProps) {
       <div className="flex gap-2">
         <button
           onClick={() => onResolve('reject')}
-          className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-red-500/20 border border-white/5 hover:border-red-500/30 text-white/60 hover:text-red-400 text-[11px] font-bold flex items-center justify-center gap-2 transition-all active:scale-95"
+          className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-red-500/20 border border-white/5 hover:border-red-500/30 text-white/60 hover:text-red-400 text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95"
         >
           <X size={14} />
           REJECT
         </button>
         <button
           onClick={() => onResolve('approve')}
-          className="flex-2 px-6 py-2 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 hover:border-indigo-500/50 text-indigo-300 text-[11px] font-bold flex items-center justify-center gap-2 transition-all active:scale-95"
+          className="flex-2 px-6 py-2 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 hover:border-indigo-500/50 text-indigo-300 text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95"
         >
           <Check size={14} />
           APPROVE
