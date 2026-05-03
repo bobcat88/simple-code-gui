@@ -91,9 +91,17 @@ export function CreateTaskModal({
 
   return ReactDOM.createPortal(
     <div className="beads-modal-overlay" onClick={onClose}>
-      <div className="beads-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="beads-modal"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-task-modal-title"
+        onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Escape') onClose() }}
+        tabIndex={-1}
+      >
         <div className="beads-modal-header">
-          <h3>Create Task</h3>
+          <h3 id="create-task-modal-title">Create Task</h3>
           <button className="beads-modal-close" onClick={onClose}>×</button>
         </div>
         <div className="beads-modal-body">
@@ -199,7 +207,7 @@ export function CreateTaskModal({
           </div>
         </div>
         <div className="beads-modal-footer">
-          <button className="beads-btn-cancel" onClick={onClose}>Cancel</button>
+          <button className="beads-btn-cancel" onClick={onClose}>Discard</button>
           <button className="beads-btn-create" onClick={onCreate} disabled={!title.trim()}>Create</button>
         </div>
       </div>

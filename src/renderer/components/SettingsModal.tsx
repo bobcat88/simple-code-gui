@@ -72,6 +72,9 @@ export function SettingsModal({
   const [activeCategory, setActiveCategory] = useState(initialCategory)
   const [general, setGeneral] = useState<GeneralSettings>(DEFAULT_GENERAL)
   const focusTrapRef = useFocusTrap<HTMLDivElement>(isOpen)
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') onClose()
+  }
   const { whisperModel: activeWhisperModel, setWhisperModel: setActiveWhisperModel, volume: voiceVolume } = useVoice()
   const [installedExtensions, setInstalledExtensions] = useState<Array<{ id: string; name: string; type: string }>>([])
   const [voice, setVoice] = useState<VoiceSettings>(DEFAULT_VOICE)
@@ -235,15 +238,20 @@ export function SettingsModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
-      <div 
+      <div
         ref={focusTrapRef}
         className="codex-modal-content w-full max-w-4xl h-[650px] rounded-[var(--radius-modal)] flex overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-modal-title"
+        onKeyDown={handleKeyDown}
+        tabIndex={-1}
       >
         {/* Sidebar */}
         <div className="w-64 border-r border-white/10 bg-black/20 flex flex-col">
           <div className="p-6">
-            <h2 className="text-xl font-bold bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent">Config</h2>
+            <h2 id="settings-modal-title" className="text-xl font-bold bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent">Settings</h2>
             <p className="text-xs text-white/40 mt-1">Manage your environment</p>
           </div>
           

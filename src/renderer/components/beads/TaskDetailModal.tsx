@@ -53,10 +53,18 @@ export function TaskDetailModal({
 
   return ReactDOM.createPortal(
     <div className="beads-modal-overlay" onClick={onClose}>
-      <div className="beads-modal beads-detail-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="beads-modal beads-detail-modal"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="task-detail-modal-title"
+        onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Escape') onClose() }}
+        tabIndex={-1}
+      >
         <div className="beads-modal-header">
-          <h3>{task?.id || 'Task Details'}</h3>
-          <button className="beads-modal-close" onClick={onClose}>×</button>
+          <h3 id="task-detail-modal-title">{task?.id || 'Task Details'}</h3>
+          <button className="beads-modal-close" onClick={onClose} aria-label="Close">×</button>
         </div>
         <div className="beads-modal-body">
           {loading ? (
@@ -337,7 +345,7 @@ export function TaskDetailModal({
           {editing ? (
             <>
               <button className="beads-btn-cancel" onClick={() => setEditing(false)}>Cancel</button>
-              <button className="beads-btn-create" onClick={onSave} disabled={!editTitle.trim()}>Save</button>
+              <button className="beads-btn-create" onClick={onSave} disabled={!editTitle.trim()}>Save Changes</button>
             </>
           ) : (
             <>
