@@ -181,4 +181,4 @@ Modularizing the AI runtime optimization pipeline into extensible middlewares.
 - [x] Implement `SystemPrompt`, `Budget`, and `FormatHint` middlewares.
 - [x] Modularize `optimizer.rs` into `ai_runtime/optimizer/` structure.
 - [x] Implement `ReasoningMiddleware` for high-precision model controls.
-- [ ] Integrate `CognitiveMiddleware` for swarm thought injection.
+- [x] Integrate `CognitiveMiddleware` for swarm thought injection.
