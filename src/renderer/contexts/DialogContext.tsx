@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from 'react'
 
 interface DialogState {
-  type: 'error' | 'confirm'
+  type: 'error' | 'confirm' | 'info'
   message: string
   resolve: (value: boolean) => void
 }
@@ -9,6 +9,7 @@ interface DialogState {
 interface DialogContextValue {
   showError: (message: string) => void
   showConfirm: (message: string) => Promise<boolean>
+  showInfo: (message: string) => void
 }
 
 const DialogContext = createContext<DialogContextValue | null>(null)
@@ -28,13 +29,19 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
+  const showInfo = useCallback((message: string): void => {
+    new Promise<boolean>((resolve) => {
+      setDialog({ type: 'info', message, resolve })
+    })
+  }, [])
+
   const handleClose = (value: boolean) => {
     dialog?.resolve(value)
     setDialog(null)
   }
 
   return (
-    <DialogContext.Provider value={{ showError, showConfirm }}>
+    <DialogContext.Provider value={{ showError, showConfirm, showInfo }}>
       {children}
       {dialog && (
         <div
@@ -54,7 +61,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
               id="app-dialog-title"
               className="text-base font-semibold text-white mb-3"
             >
-              {dialog.type === 'error' ? 'Error' : 'Confirm'}
+              {dialog.type === 'error' ? 'Error' : dialog.type === 'info' ? 'Info' : 'Confirm'}
             </h2>
             <p className="text-sm text-white/70 mb-6 whitespace-pre-wrap">{dialog.message}</p>
             <div className="flex justify-end gap-3">
@@ -69,12 +76,12 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
               <button
                 onClick={() => handleClose(true)}
                 className={`px-4 py-2 text-sm rounded-md font-medium transition-colors ${
-                  dialog.type === 'error'
-                    ? 'bg-white text-black hover:bg-white/90'
-                    : 'bg-red-600 text-white hover:bg-red-700'
+                  dialog.type === 'confirm'
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-white text-black hover:bg-white/90'
                 }`}
               >
-                {dialog.type === 'error' ? 'Dismiss' : 'Confirm'}
+                {dialog.type === 'error' ? 'Dismiss' : dialog.type === 'info' ? 'OK' : 'Confirm'}
               </button>
             </div>
           </div>

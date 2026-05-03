@@ -50,7 +50,7 @@ export function BrainstormCanvas({
   onPromoteToDraft,
   onPromoteToTask
 }: BrainstormCanvasProps) {
-  const { showError } = useDialog()
+  const { showError, showInfo } = useDialog()
   const [canvas, setCanvas] = useState<CanvasType>(initialCanvas)
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([])
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
@@ -137,7 +137,7 @@ export function BrainstormCanvas({
     try {
       await navigator.clipboard.writeText(report)
       await api.brainstormSaveTopology(projectPath, report)
-      showError('Topology exported to clipboard and saved to .kspec/brainstorm/topology.md')
+      showInfo('Topology exported to clipboard and saved to .kspec/brainstorm/topology.md')
     } catch (err) {
       console.error('Export failed:', err)
       showError('Export failed. Check the browser console for details.')
