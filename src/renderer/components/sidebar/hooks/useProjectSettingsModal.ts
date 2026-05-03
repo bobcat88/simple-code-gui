@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { useDialog } from '../../../contexts/DialogContext'
 import { Project } from '../../../stores/workspace.js'
 import { ProjectSettingsModalState, InstalledVoice } from '../types.js'
 import { COMMON_TOOLS } from '../constants.js'
@@ -48,6 +49,7 @@ export function useProjectSettingsModal({
     Record<string, { running: boolean; port?: number }>
   >({})
   const api = useApi() as ExtendedApi
+  const { showError } = useDialog()
 
   const handleOpenProjectSettings = useCallback(async (project: Project) => {
     const settings = await api?.getSettings()
@@ -185,7 +187,7 @@ export function useProjectSettingsModal({
             [project.path]: { running: true, port: project.apiPort },
           }))
         } else {
-          alert(`Failed to start API server: ${result?.error || 'Unknown error'}`)
+          showError(`Failed to start API server: ${result?.error || 'Unknown error'}`)
         }
       }
     },

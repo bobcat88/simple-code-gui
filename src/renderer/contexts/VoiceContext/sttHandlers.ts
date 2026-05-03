@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState, useEffect } from 'react'
+import { useDialog } from '../DialogContext'
 import { useApi } from '../ApiContext'
 import type { ExtendedApi } from '../../api/types'
 import type { WhisperModelSize, WhisperInstance, WhisperTranscriberConfig, STTRefs } from './types.js'
@@ -62,6 +63,7 @@ export function useSTTHandlers({ saveVoiceSetting }: UseSTTHandlersOptions): Use
   const [silenceThreshold, setSilenceThresholdState] = useState(5)
   const [pushToTalkEnabled, setPushToTalkEnabledState] = useState(false)
   const api = useApi() as ExtendedApi
+  const { showError } = useDialog()
   const pushToTalkRef = useRef(false)
 
   // Refs
@@ -315,7 +317,7 @@ export function useSTTHandlers({ saveVoiceSetting }: UseSTTHandlersOptions): Use
       const errorMessage = error instanceof Error ? error.message : ''
       const errorName = error instanceof Error ? error.name : ''
       if (errorMessage.includes('Permission denied') || errorName === 'NotAllowedError') {
-        alert('Microphone access denied. Please allow microphone access in your browser/system settings.')
+        showError('Microphone access denied. Please allow microphone access in your browser/system settings.')
       }
     }
   }, [isRecording, initWhisper, startAudioMonitoring])

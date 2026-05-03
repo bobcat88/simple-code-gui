@@ -37,6 +37,7 @@ import type {
 import { BrainstormTab } from './BrainstormTab'
 import { GovernanceTab } from './GovernanceTab'
 import { NeuralHUDTab } from './NeuralHUDTab'
+import { useDialog } from '../../contexts/DialogContext'
 
 interface IntelligenceSidebarProps {
   intelligence: ProjectIntelligence | null
@@ -73,6 +74,7 @@ export function IntelligenceSidebar({
   gitnexus,
   activeTab
 }: IntelligenceSidebarProps) {
+  const { showConfirm } = useDialog()
   const [isResizing, setIsResizing] = useState(false)
   const [showWizard, setShowWizard] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState<string>('Standard')
@@ -480,7 +482,7 @@ export function IntelligenceSidebar({
                         disabled={applying}
                         onClick={async () => {
                           if (!proposal) return
-                          const confirmApply = confirm('Are you sure you want to apply this initialization? This will create or modify files in your repository.')
+                          const confirmApply = await showConfirm('Apply this initialization? This will create or modify files in your repository. This cannot be undone.')
                           if (!confirmApply) return
 
                           try {

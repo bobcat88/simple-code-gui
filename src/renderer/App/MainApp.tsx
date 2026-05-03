@@ -41,6 +41,7 @@ import { Activity } from 'lucide-react'
 import { TranscriptionOverlay } from '../components/voice/TranscriptionOverlay'
 import { NeuralHUD } from '../components/gsd/NeuralHUD'
 import { ConsensusOverlay } from '../components/orchestration/ConsensusOverlay'
+import { DialogProvider } from '../contexts/DialogContext'
 
 export interface MainAppProps {
   api: Api
@@ -337,6 +338,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
   }
 
   return (
+    <DialogProvider>
     <div className="flex flex-row h-screen w-screen bg-transparent">
       <div className="flex-1 flex flex-row bg-background/60 backdrop-blur-2xl text-foreground overflow-hidden shadow-2xl relative app-container">
         {!isMobile && (
@@ -568,5 +570,6 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
         />
       </div>
     </div>
+    </DialogProvider>
   )
 }

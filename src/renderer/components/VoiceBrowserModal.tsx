@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useVoice } from '../contexts/VoiceContext.js'
 import { useApi } from '../contexts/ApiContext.js'
+import { useDialog } from '../contexts/DialogContext'
 import { getSampleUrl } from '../utils/voiceUtils.js'
 import { VoiceFilters } from './VoiceFilters.js'
 import { VoiceList } from './VoiceList.js'
@@ -26,6 +27,7 @@ interface VoiceBrowserModalProps {
 export function VoiceBrowserModal({ isOpen, onClose, onVoiceSelect }: VoiceBrowserModalProps): React.ReactElement | null {
   const { volume: voiceVolume } = useVoice()
   const api = useApi() as Required<ExtendedApi>
+  const { showConfirm } = useDialog()
   const [catalog, setCatalog] = useState<VoiceCatalogEntry[]>([])
   const [installed, setInstalled] = useState<InstalledVoice[]>([])
   const [xttsVoices, setXttsVoices] = useState<XTTSVoice[]>([])
@@ -288,7 +290,8 @@ export function VoiceBrowserModal({ isOpen, onClose, onVoiceSelect }: VoiceBrows
 
   async function handleDeleteXtts(voiceId: string, e: React.MouseEvent): Promise<void> {
     e.stopPropagation()
-    if (!confirm('Delete this voice clone?')) return
+    const confirmed = await showConfirm('Delete this voice clone? This action cannot be undone.')
+    if (!confirmed) return
     const result = await api.xttsDeleteVoice(voiceId)
     if (result?.success) {
       setXttsVoices((prev) => prev.filter((v) => v.id !== voiceId))

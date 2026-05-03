@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
+import { useDialog } from '../contexts/DialogContext'
 import type { Api } from '../api'
 import type { BackendId } from '../api/types'
 import type { AppSettings } from './useSettings'
@@ -63,6 +64,7 @@ export function useProjectHandlers({
   setActiveTab,
   setTileTree
 }: UseProjectHandlersOptions): UseProjectHandlersReturn {
+  const { showError } = useDialog()
   const closedTabsRef = useRef<ClosedTabInfo[]>([])
   const [closedTabCount, setClosedTabCount] = useState(0)
 
@@ -168,9 +170,9 @@ export function useProjectHandlers({
     } catch (e: any) {
       console.error('Failed to spawn PTY:', e)
       const errorMsg = e?.message || String(e)
-      alert(`Failed to start Claude session:\n\n${errorMsg}\n\nPlease ensure Claude Code is installed and try restarting the application.`)
+      showError(`Failed to start Claude session:\n\n${errorMsg}\n\nPlease ensure Claude Code is installed and try restarting the application.`)
     }
-  }, [api, addTab, openTabs, projects, setActiveTab, settings?.backend, setTileTree])
+  }, [api, addTab, openTabs, projects, setActiveTab, settings?.backend, setTileTree, showError])
 
   const handleOpenSessionAtPosition = useCallback(async (projectPath: string, dropZone: DropZone | null, containerSize: { width: number; height: number }, currentTree?: TileNode | null) => {
     const treeToUse = currentTree !== undefined ? currentTree : tileTreeRef.current
@@ -244,9 +246,9 @@ export function useProjectHandlers({
     } catch (e: any) {
       console.error('Failed to spawn PTY:', e)
       const errorMsg = e?.message || String(e)
-      alert(`Failed to start Claude session:\n\n${errorMsg}\n\nPlease ensure Claude Code is installed and try restarting the application.`)
+      showError(`Failed to start Claude session:\n\n${errorMsg}\n\nPlease ensure Claude Code is installed and try restarting the application.`)
     }
-  }, [api, addTab, projects, openTabs, settings?.backend, setTileTree])
+  }, [api, addTab, projects, openTabs, settings?.backend, setTileTree, showError])
 
   const handleAddTabToTile = useCallback(async (projectPath: string, tileId: string) => {
     const project = projects.find((p) => p.path === projectPath)
@@ -285,9 +287,9 @@ export function useProjectHandlers({
     } catch (e: any) {
       console.error('Failed to spawn PTY:', e)
       const errorMsg = e?.message || String(e)
-      alert(`Failed to start Claude session:\n\n${errorMsg}\n\nPlease ensure Claude Code is installed and try restarting the application.`)
+      showError(`Failed to start Claude session:\n\n${errorMsg}\n\nPlease ensure Claude Code is installed and try restarting the application.`)
     }
-  }, [api, addTab, projects, settings?.backend, setTileTree])
+  }, [api, addTab, projects, settings?.backend, setTileTree, showError])
 
   const handleCloseTab = useCallback((tabId: string) => {
     const tab = openTabs.find(t => t.id === tabId)

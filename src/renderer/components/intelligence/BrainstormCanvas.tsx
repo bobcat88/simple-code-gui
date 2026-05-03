@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react'
+import { useDialog } from '../../contexts/DialogContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Network, 
@@ -49,6 +50,7 @@ export function BrainstormCanvas({
   onPromoteToDraft,
   onPromoteToTask
 }: BrainstormCanvasProps) {
+  const { showError } = useDialog()
   const [canvas, setCanvas] = useState<CanvasType>(initialCanvas)
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([])
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null)
@@ -135,10 +137,10 @@ export function BrainstormCanvas({
     try {
       await navigator.clipboard.writeText(report)
       await api.brainstormSaveTopology(projectPath, report)
-      alert('Topology exported to clipboard and saved to .kspec/brainstorm/topology.md')
+      showError('Topology exported to clipboard and saved to .kspec/brainstorm/topology.md')
     } catch (err) {
       console.error('Export failed:', err)
-      alert('Export failed, check console for details.')
+      showError('Export failed. Check the browser console for details.')
     }
   }
 
