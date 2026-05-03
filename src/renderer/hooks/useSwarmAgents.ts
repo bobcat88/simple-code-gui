@@ -46,10 +46,11 @@ export function useSwarmAgents() {
       await Promise.all(
         changed.map((a) => tauriIpc.setPtyBackend(a.id, pending[a.id].provider))
       );
+      const changeMap = new Map(changed.map((a) => [a.id, pending[a.id]]));
       setAgents((prev) =>
         prev.map((a) => {
-          const p = pending[a.id];
-          return p && p.provider !== a.provider ? { ...a, provider: p.provider, model: p.model } : a;
+          const p = changeMap.get(a.id);
+          return p ? { ...a, provider: p.provider, model: p.model } : a;
         })
       );
       setPendingMap({});
