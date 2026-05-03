@@ -175,14 +175,69 @@ export class TauriBackend implements ExtendedApi {
     }
   }
 
+  onSettingsChanged(callback: (settings: Settings) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onSettingsChanged(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  onWorkspaceChanged(callback: (workspace: Workspace) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onWorkspaceChanged(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  onJobProgress(callback: (data: { jobId: string; progress: number; message?: string }) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.listen<{ jobId: string; progress: number; message?: string }>('job-progress', (event) => callback(event.payload)).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  onJobStatusChanged(callback: (data: { jobId: string; status: string }) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.listen<{ jobId: string; status: string }>('job-status-changed', (event) => callback(event.payload)).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  onAgentStatusChanged(callback: (data: { agentId: string; status: string }) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.listen<{ agentId: string; status: string }>('agent-status-changed', (event) => callback(event.payload)).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  onAgentMetricsChanged(callback: (data: { agentId: string; metrics: any }) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.listen<{ agentId: string; metrics: any }>('agent-metrics-changed', (event) => callback(event.payload)).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  onModelPlanSwitched(callback: (event: { old_plan: string; new_plan: string; health_score: number }) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.listen<{ old_plan: string; new_plan: string; health_score: number }>('model-plan-switched', (event) => callback(event.payload)).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  onAiEvolutionCompleted(callback: (discoveries: any[]) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.listen<any[]>('ai-evolution-completed', (event) => callback(event.payload)).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  onOptimizationStatsUpdated(callback: (stats: any) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.listen<any>('optimization-stats-updated', (event) => callback(event.payload)).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
   // Voice & TTS
   async ttsInstallInstructions(projectPath: string): Promise<{ success: boolean }> { 
     return await tauriIpc.voiceInstallPiper(); 
   }
-  async ttsSpeak(text: string, voice?: string, speed?: number): Promise<{ success: boolean; error?: string }> { 
+  async voiceSpeak(text: string, voice?: string, speed?: number): Promise<{ success: boolean; error?: string }> { 
     return await tauriIpc.voiceSpeak(text, voice, speed); 
   }
-  async ttsStop(): Promise<{ success: boolean }> { 
+
+  async voiceStopSpeaking(): Promise<{ success: boolean }> { 
     await tauriIpc.voiceStop();
     return { success: true };
   }
@@ -769,5 +824,18 @@ export class TauriBackend implements ExtendedApi {
 
   async pythonInstall(): Promise<{ success: boolean; error?: string }> {
     return tauriIpc.pythonInstall()
+  }
+
+  // Mobile Sync (Transwarp Nexus)
+  async mobileGetConnectionInfo(): Promise<{ success: boolean; ip?: string; port?: number; token?: string; error?: string }> {
+    return await tauriIpc.mobileGetConnectionInfo();
+  }
+
+  async mobileRegenerateToken(): Promise<string> {
+    return await tauriIpc.mobileRegenerateToken();
+  }
+
+  async readClipboardImage(): Promise<{ success: boolean; hasImage?: boolean; path?: string; error?: string }> {
+    return await tauriIpc.readClipboardImage();
   }
 }

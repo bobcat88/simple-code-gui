@@ -746,6 +746,12 @@ export interface ExtendedApi extends Api {
   getCategoryMetaPath?: (categoryName: string) => Promise<string>
   getMetaProjectsPath?: () => Promise<string>
 
+  // NeuralHUD Telemetry
+  onJobProgress?: (callback: (data: { jobId: string; progress: number; message?: string }) => void) => Unsubscribe
+  onJobStatusChanged?: (callback: (data: { jobId: string; status: string }) => void) => Unsubscribe
+  onAgentStatusChanged?: (callback: (data: { agentId: string; status: string }) => void) => Unsubscribe
+  onAgentMetricsChanged?: (callback: (data: { agentId: string; metrics: any }) => void) => Unsubscribe
+
   // Window controls (Desktop-only)
   windowMinimize: () => void
   windowMaximize: () => void

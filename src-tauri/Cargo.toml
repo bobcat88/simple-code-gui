@@ -53,6 +53,9 @@ zip = "4.2.0"
 async-trait = "0.1"
 sysinfo = "0.29"
 notify = "8.2.0"
+local-ip-address = "0.6.12"
+arboard = "3.6.1"
+png = "0.18.1"
 
 [dev-dependencies]
 tempfile = "3"

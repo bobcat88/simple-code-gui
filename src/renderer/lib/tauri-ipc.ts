@@ -15,6 +15,9 @@ export const tauriIpc = {
   spawnSession: (cwd: string, backend: string, sessionId?: string, slug?: string, rows?: number, cols?: number, nexusSessionId?: string) => 
     invoke<string>('spawn_session', { cwd, backend, session_id: sessionId, slug, rows, cols, nexus_session_id: nexusSessionId }),
     
+  listen: <T>(event: string, handler: (event: { payload: T }) => void): Promise<UnlistenFn> =>
+    listen<T>(event, handler),
+
   writeToPty: (id: string, data: string) => 
     invoke<void>('write_to_pty', { id, data }),
     
@@ -442,4 +445,11 @@ export const tauriIpc = {
   gitInstall: () => invoke<{ success: boolean; error?: string }>('git_install'),
   nodeInstall: () => invoke<{ success: boolean; error?: string }>('node_install'),
   pythonInstall: () => invoke<{ success: boolean; error?: string }>('python_install'),
+
+  // Mobile Sync (Transwarp Nexus)
+  mobileGetConnectionInfo: (): Promise<{ success: boolean; ip?: string; port?: number; token?: string; error?: string }> => 
+    invoke('mobile_get_connection_info'),
+  mobileRegenerateToken: (): Promise<string> => invoke('mobile_regenerate_token'),
+  readClipboardImage: (): Promise<{ success: boolean; hasImage?: boolean; path?: string; error?: string }> => 
+    invoke('read_clipboard_image'),
 };

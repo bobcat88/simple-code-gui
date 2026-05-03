@@ -21,6 +21,8 @@ mod workspace_manager;
 mod rtk_context;
 mod upgrade_manager;
 mod vector_engine;
+mod mobile_sync;
+mod clipboard_manager;
 
 use database::{
     insert_token_transaction, query_token_history, DatabaseManager, TokenHistoryFilters,
@@ -58,6 +60,8 @@ use voice_manager::{
     voice_stop, VoiceManager,
 };
 use workspace_manager::{Workspace, WorkspaceManager};
+use mobile_sync::{mobile_get_connection_info, mobile_regenerate_token};
+use clipboard_manager::read_clipboard_image;
 mod project_intelligence;
 mod project_scanner;
 
@@ -798,6 +802,9 @@ pub fn run() {
             health_manager::health_get_status,
             health_manager::health_log_check,
             diagnostic_manager::diagnostics_generate_bundle,
+            mobile_get_connection_info,
+            mobile_regenerate_token,
+            read_clipboard_image,
             claude_md_read,
             claude_md_save,
             rtk_context::rtk_optimize_context,
