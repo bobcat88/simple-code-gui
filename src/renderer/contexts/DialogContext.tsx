@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react'
 
 interface DialogState {
   type: 'error' | 'confirm' | 'info'
@@ -18,9 +18,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
   const [dialog, setDialog] = useState<DialogState | null>(null)
 
   const showError = useCallback((message: string): void => {
-    new Promise<boolean>((resolve) => {
-      setDialog({ type: 'error', message, resolve })
-    })
+    setDialog({ type: 'error', message, resolve: () => {} })
   }, [])
 
   const showConfirm = useCallback((message: string): Promise<boolean> => {
@@ -30,10 +28,16 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const showInfo = useCallback((message: string): void => {
-    new Promise<boolean>((resolve) => {
-      setDialog({ type: 'info', message, resolve })
-    })
+    setDialog({ type: 'info', message, resolve: () => {} })
   }, [])
+
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (dialog) {
+      dialogRef.current?.focus()
+    }
+  }, [dialog])
 
   const handleClose = (value: boolean) => {
     dialog?.resolve(value)
@@ -49,6 +53,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
           onClick={() => handleClose(false)}
         >
           <div
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="app-dialog-title"

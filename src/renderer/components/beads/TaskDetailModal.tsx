@@ -4,7 +4,7 @@ import type { UnifiedTask } from './adapters/types.js'
 import { getPriorityClass, formatStatusLabel } from './types.js'
 import { VoiceControls } from '../VoiceControls.js'
 import { Mic } from 'lucide-react'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 
 interface TaskDetailModalProps {
   show: boolean
@@ -39,6 +39,13 @@ export function TaskDetailModal({
   onClose, onSave
 }: TaskDetailModalProps) {
   const [activeVoiceField, setActiveVoiceField] = useState<'title' | 'description' | null>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (show) {
+      panelRef.current?.focus()
+    }
+  }, [show])
 
   const handleTranscription = useCallback((text: string) => {
     if (!text.trim()) return
@@ -54,6 +61,7 @@ export function TaskDetailModal({
   return ReactDOM.createPortal(
     <div className="beads-modal-overlay" onClick={onClose}>
       <div
+        ref={panelRef}
         className="beads-modal beads-detail-modal"
         onClick={(e) => e.stopPropagation()}
         role="dialog"

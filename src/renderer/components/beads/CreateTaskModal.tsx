@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 import type { BackendKind, AutomationEligibility } from './adapters/types.js'
 import { VoiceControls } from '../VoiceControls.js'
 import { Mic } from 'lucide-react'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 
 const BEADS_TYPES = [
   { value: 'task', label: 'Task' },
@@ -73,6 +73,13 @@ export function CreateTaskModal({
   automation, setAutomation
 }: CreateTaskModalProps) {
   const [activeVoiceField, setActiveVoiceField] = useState<'title' | 'description' | null>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (show) {
+      panelRef.current?.focus()
+    }
+  }, [show])
 
   const handleTranscription = useCallback((text: string) => {
     if (!text.trim()) return
@@ -92,6 +99,7 @@ export function CreateTaskModal({
   return ReactDOM.createPortal(
     <div className="beads-modal-overlay" onClick={onClose}>
       <div
+        ref={panelRef}
         className="beads-modal"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
