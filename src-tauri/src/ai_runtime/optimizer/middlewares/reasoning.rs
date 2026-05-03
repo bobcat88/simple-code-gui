@@ -11,7 +11,12 @@ impl OptimizationMiddleware for ReasoningMiddleware {
         "reasoning"
     }
 
-    async fn apply(&self, request: &mut CompletionRequest, context: &OptimizationContext) -> Result<(), String> {
+    async fn apply(
+        &self, 
+        request: &mut CompletionRequest, 
+        context: &OptimizationContext,
+        _embedding_service: Option<&dyn crate::ai_runtime::optimizer::context::EmbeddingService>
+    ) -> Result<(), String> {
         let Some(provider) = &context.provider else {
             return Ok(());
         };

@@ -14,7 +14,7 @@ use super::types::{
 };
 use super::AIProvider;
 
-pub use context::{OptimizationContext, ProviderCapabilities};
+pub use context::{OptimizationContext, ProviderCapabilities, EmbeddingService};
 pub use middleware::OptimizationMiddleware;
 use middlewares::*;
 
@@ -74,15 +74,19 @@ impl OptimizationPipeline {
         self.enabled
     }
 
-    pub async fn optimize(&self, mut request: CompletionRequest) -> Result<CompletionRequest, String> {
+    pub async fn optimize(
+        &self, 
+        mut request: CompletionRequest,
+        embedding_service: Option<&dyn EmbeddingService>
+    ) -> Result<CompletionRequest, String> {
         if !self.enabled {
             return Ok(request);
         }
-
+ 
         let context = OptimizationContext::from_request(&request);
         
         for middleware in &self.middlewares {
-            middleware.apply(&mut request, &context).await?;
+            middleware.apply(&mut request, &context, embedding_service).await?;
             
             // Special case for compression metrics for now
             if middleware.name() == "compression" {
@@ -126,6 +130,21 @@ pub struct OptimizedProvider {
     pipeline: Arc<OptimizationPipeline>,
 }
 
+struct ProviderEmbeddingAdapter<'a>(&'a dyn AIProvider);
+
+#[async_trait]
+impl<'a> EmbeddingService for ProviderEmbeddingAdapter<'a> {
+    async fn embed(&self, input: Vec<String>) -> Result<Vec<Vec<f32>>, String> {
+        let request = EmbeddingRequest {
+            input,
+            model: None,
+            policy: None,
+        };
+        let response = self.0.embed(request).await?;
+        Ok(response.embeddings)
+    }
+}
+
 impl OptimizedProvider {
     pub fn new(inner: Arc<dyn AIProvider>, pipeline: Arc<OptimizationPipeline>) -> Self {
         Self { inner, pipeline }
@@ -143,7 +162,8 @@ impl AIProvider for OptimizedProvider {
             return Ok(response);
         }
         let cache_request = request.clone();
-        let optimized = self.pipeline.optimize(request).await?;
+        let adapter = ProviderEmbeddingAdapter(self.inner.as_ref());
+        let optimized = self.pipeline.optimize(request, Some(&adapter)).await?;
         let response = self.inner.completion(optimized).await?;
         self.pipeline.store_response(&cache_request, &response).await;
         Ok(response)

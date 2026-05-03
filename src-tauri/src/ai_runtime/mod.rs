@@ -48,6 +48,19 @@ pub struct RuntimeManager {
     optimization_pipeline: Arc<optimizer::OptimizationPipeline>,
 }
 
+#[async_trait]
+impl optimizer::context::EmbeddingService for RuntimeManager {
+    async fn embed(&self, input: Vec<String>) -> Result<Vec<Vec<f32>>, String> {
+        let request = crate::ai_runtime::types::EmbeddingRequest {
+            input,
+            model: None,
+            policy: None,
+        };
+        let response = self.embed(request).await?;
+        Ok(response.embeddings)
+    }
+}
+
 impl RuntimeManager {
     pub fn new() -> Self {
         Self {
@@ -62,7 +75,7 @@ impl RuntimeManager {
             learning: Arc::new(Mutex::new(None)),
             app_handle: Arc::new(Mutex::new(None)),
             optimization_metrics: Arc::new(OptimizationMetrics::default()),
-            optimization_pipeline: Arc::new(optimizer::OptimizationPipeline::disabled()),
+            optimization_pipeline: Arc::new(optimizer::OptimizationPipeline::new()),
         }
     }
 
@@ -319,6 +332,9 @@ impl RuntimeManager {
     }
 
     pub async fn dispatch(&self, request: CompletionRequest) -> Result<CompletionResponse, String> {
+        // Run optimization pipeline
+        let request = self.optimization_pipeline.optimize(request, Some(self)).await?;
+
         let routes = self.resolve_routes_for_completion(&request).await?;
         let retry_config = request.retry.clone().unwrap_or_default();
 

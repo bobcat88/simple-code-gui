@@ -1,6 +1,12 @@
 use crate::ai_runtime::types::{
     AgentRole, CompletionRequest, ProviderKind, RoutingPolicy, TaskType,
 };
+use async_trait::async_trait;
+
+#[async_trait]
+pub trait EmbeddingService: Send + Sync {
+    async fn embed(&self, input: Vec<String>) -> Result<Vec<Vec<f32>>, String>;
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OptimizationContext {

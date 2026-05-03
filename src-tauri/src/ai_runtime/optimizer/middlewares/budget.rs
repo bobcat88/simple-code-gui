@@ -11,7 +11,12 @@ impl OptimizationMiddleware for BudgetMiddleware {
         "budget"
     }
 
-    async fn apply(&self, request: &mut CompletionRequest, context: &OptimizationContext) -> Result<(), String> {
+    async fn apply(
+        &self, 
+        request: &mut CompletionRequest, 
+        context: &OptimizationContext,
+        _embedding_service: Option<&dyn crate::ai_runtime::optimizer::context::EmbeddingService>
+    ) -> Result<(), String> {
         if request.max_tokens.is_some() {
             return Ok(());
         }

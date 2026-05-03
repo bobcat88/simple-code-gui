@@ -21,7 +21,12 @@ impl OptimizationMiddleware for CompressionMiddleware {
         "compression"
     }
 
-    async fn apply(&self, request: &mut CompletionRequest, _context: &OptimizationContext) -> Result<(), String> {
+    async fn apply(
+        &self, 
+        request: &mut CompletionRequest, 
+        _context: &OptimizationContext,
+        _embedding_service: Option<&dyn crate::ai_runtime::optimizer::context::EmbeddingService>
+    ) -> Result<(), String> {
         self.compressor.compress(request);
         Ok(())
     }

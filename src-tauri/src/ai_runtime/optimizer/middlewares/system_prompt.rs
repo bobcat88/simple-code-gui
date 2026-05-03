@@ -11,7 +11,12 @@ impl OptimizationMiddleware for SystemPromptMiddleware {
         "system_prompt"
     }
 
-    async fn apply(&self, request: &mut CompletionRequest, _context: &OptimizationContext) -> Result<(), String> {
+    async fn apply(
+        &self, 
+        request: &mut CompletionRequest, 
+        _context: &OptimizationContext,
+        _embedding_service: Option<&dyn crate::ai_runtime::optimizer::context::EmbeddingService>
+    ) -> Result<(), String> {
         let Some(system_prompt) = request
             .optimization
             .as_ref()
