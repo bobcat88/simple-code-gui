@@ -69,9 +69,10 @@ export function Header({
 
         <div className="relative hidden lg:block">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60" size={13} />
-          <input 
-            type="text" 
-            placeholder="Search commands..." 
+          <input
+            type="text"
+            placeholder="Search commands..."
+            aria-label="Search commands"
             className="h-8 w-40 bg-white/5 border border-white/5 hover:border-white/10 focus:border-primary/40 focus:bg-white/10 rounded-md pl-8 pr-3 text-xs outline-none transition-all placeholder:text-white/20"
           />
         </div>
@@ -101,7 +102,11 @@ export function Header({
           <Activity size={16} />
         </button>
 
-        <button className="p-2 rounded-md hover:bg-white/5 text-white/40 hover:text-white/80 transition-all active:scale-95">
+        <button
+          className="p-2 rounded-md hover:bg-white/5 text-white/40 hover:text-white/80 transition-all active:scale-95"
+          aria-label="More options"
+          title="More options"
+        >
           <MoreVertical size={16} />
         </button>
       </div>

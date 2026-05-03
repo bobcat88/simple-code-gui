@@ -15,12 +15,13 @@ export function TaskStatusButton({
 }: TaskStatusButtonProps): React.ReactElement {
   switch (status) {
     case 'closed':
-      return <span className="beads-task-done">&#10003;</span>
+      return <span className="beads-task-done" aria-label="Mark complete" title="Mark complete">&#10003;</span>
     case 'in_progress':
       return (
         <button
           className="beads-task-check in-progress"
           onClick={() => onComplete(taskId)}
+          aria-label="Mark complete"
           title="Mark complete"
         >
           ◉
@@ -31,7 +32,8 @@ export function TaskStatusButton({
         <button
           className="beads-task-start"
           onClick={(e) => onStart(e, taskId)}
-          title="Start task"
+          aria-label="Start"
+          title="Start"
         >
           &#9654;
         </button>

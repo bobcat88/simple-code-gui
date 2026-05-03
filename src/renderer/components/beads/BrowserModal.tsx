@@ -74,11 +74,18 @@ export function BrowserModal({
       <div className="beads-browser-modal" onClick={(e) => e.stopPropagation()}>
         <div className="beads-browser-header">
           <div className="beads-browser-title-row">
-            <span className="beads-icon">&#128255;</span>
+            <span className="beads-icon" aria-label="Music" title="Music">&#128255;</span>
             <h2>{backendLabel} Tasks</h2>
             <span className="beads-browser-project">{projectName}</span>
           </div>
-          <button className="beads-modal-close" onClick={onClose}>×</button>
+          <button
+            className="beads-modal-close"
+            onClick={onClose}
+            aria-label="Close modal"
+            title="Close modal"
+          >
+            ×
+          </button>
         </div>
 
         <div className="beads-browser-toolbar">
@@ -108,7 +115,14 @@ export function BrowserModal({
             </select>
           </div>
           <div className="beads-browser-actions">
-            <button className="beads-refresh-btn" onClick={onRefresh} title="Refresh">&#8635;</button>
+            <button
+              className="beads-refresh-btn"
+              onClick={onRefresh}
+              aria-label="Refresh"
+              title="Refresh"
+            >
+              &#8635;
+            </button>
             <button className="beads-btn-create" onClick={onCreateNew}>+ New Task</button>
           </div>
         </div>
@@ -128,11 +142,12 @@ export function BrowserModal({
                   <div className="beads-browser-item-header">
                     <div className="beads-browser-item-status">
                       {task.status === 'closed' ? (
-                        <span className="beads-task-done">&#10003;</span>
+                        <span className="beads-task-done" aria-label="Mark complete" title="Mark complete">&#10003;</span>
                       ) : task.status === 'in_progress' ? (
                         <button
                           className="beads-task-check"
                           onClick={() => onComplete(task.id)}
+                          aria-label="Mark complete"
                           title="Mark complete"
                         >
                           &#9675;
@@ -141,7 +156,8 @@ export function BrowserModal({
                         <button
                           className="beads-task-start"
                           onClick={(e) => onStart(e, task.id)}
-                          title="Start task"
+                          aria-label="Start"
+                          title="Start"
                         >
                           &#9654;
                         </button>
@@ -167,6 +183,7 @@ export function BrowserModal({
                       <button
                         className="beads-task-delete"
                         onClick={() => onDelete(task.id)}
+                        aria-label="Delete task"
                         title="Delete task"
                       >
                         ×
@@ -252,7 +269,8 @@ export function BrowserModal({
             <button
               className="beads-clear-btn"
               onClick={onClearCompleted}
-              title="Clear completed tasks"
+              aria-label="Mark complete"
+              title="Mark complete"
             >
               Clear Completed
             </button>

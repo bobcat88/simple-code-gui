@@ -154,21 +154,38 @@
   pointer-events: none;
 }
 
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient 8s ease infinite;
+@media (prefers-reduced-motion: no-preference) {
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 8s ease infinite;
+  }
+
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
 }
 
-@keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-gradient {
+    animation: none;
+  }
 }
 
-.text-vibrant {
-  @apply bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent;
-  background-size: 200% 200%;
-  animation: gradient 8s ease infinite;
+@media (prefers-reduced-motion: no-preference) {
+  .text-vibrant {
+    @apply bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent;
+    background-size: 200% 200%;
+    animation: gradient 8s ease infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-vibrant {
+    @apply bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent;
+    animation: none;
+  }
 }
 
 @layer utilities {
@@ -188,24 +205,36 @@
   }
 }
 /* Spotlight Search */
-.spotlight-overlay {
-  @apply fixed inset-0 z-[100] bg-black/70 backdrop-blur-[2px] flex items-start justify-center pt-[12vh] px-4;
-  animation: spotlight-fade-in 0.2s ease-out;
+@media (prefers-reduced-motion: no-preference) {
+  .spotlight-overlay {
+    @apply fixed inset-0 z-[100] bg-black/70 backdrop-blur-[2px] flex items-start justify-center pt-[12vh] px-4;
+    animation: spotlight-fade-in 0.2s ease-out;
+  }
+
+  .spotlight-container {
+    @apply w-full max-w-2xl bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden;
+    animation: spotlight-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes spotlight-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes spotlight-slide-up {
+    from { transform: translateY(30px) scale(0.92); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+  }
 }
 
-.spotlight-container {
-  @apply w-full max-w-2xl bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden;
-  animation: spotlight-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
+@media (prefers-reduced-motion: reduce) {
+  .spotlight-overlay {
+    animation: none;
+  }
 
-@keyframes spotlight-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes spotlight-slide-up {
-  from { transform: translateY(30px) scale(0.92); opacity: 0; }
-  to { transform: translateY(0) scale(1); opacity: 1; }
+  .spotlight-container {
+    animation: none;
+  }
 }
 
 /* Beads Voice Controls */
@@ -362,14 +391,28 @@
 }
 
 /* Brainstorm Companion Styles */
-.brainstorm-card {
-  @apply rounded-2xl border border-white/5 bg-white/[0.03] backdrop-blur-xl transition-all duration-300;
-  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.3);
+@media (prefers-reduced-motion: no-preference) {
+  .brainstorm-card {
+    @apply rounded-2xl border border-white/5 bg-white/[0.03] backdrop-blur-xl transition-all duration-300;
+    box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.3);
+  }
+
+  .brainstorm-card:hover {
+    @apply border-indigo-500/20 bg-white/[0.05] shadow-indigo-500/5;
+    transform: translateY(-2px);
+  }
 }
 
-.brainstorm-card:hover {
-  @apply border-indigo-500/20 bg-white/[0.05] shadow-indigo-500/5;
-  transform: translateY(-2px);
+@media (prefers-reduced-motion: reduce) {
+  .brainstorm-card {
+    @apply rounded-2xl border border-white/5 bg-white/[0.03] backdrop-blur-xl;
+    box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.3);
+  }
+
+  .brainstorm-card:hover {
+    @apply border-indigo-500/20 bg-white/[0.05] shadow-indigo-500/5;
+    transform: none;
+  }
 }
 
 .seed-input-group {

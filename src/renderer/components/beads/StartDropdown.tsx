@@ -70,7 +70,8 @@ export function StartDropdown({
           onCloseBrowser()
         }}
         disabled={!currentTabPtyId}
-        title={!currentTabPtyId ? 'No active terminal tab' : ''}
+        aria-label="Next"
+        title={!currentTabPtyId ? 'No active terminal tab' : 'Next'}
       >
         <span className="beads-start-icon">&#8594;</span>
         Send to current tab

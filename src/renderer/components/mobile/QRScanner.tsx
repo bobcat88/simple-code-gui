@@ -22,7 +22,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onCancel, onError 
     <div className="p-4 text-center">
       <p>QR Scanner not supported in this environment.</p>
       <div className="flex gap-4 justify-center mt-4">
-        <button onClick={onCancel} className="px-4 py-2 bg-gray-200 rounded">Cancel</button>
+        <button onClick={onCancel} className="px-4 py-2 bg-gray-200 rounded">Cancel Scan</button>
       </div>
     </div>
   )

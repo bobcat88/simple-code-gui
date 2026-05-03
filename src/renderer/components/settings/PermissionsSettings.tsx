@@ -60,7 +60,13 @@ export function PermissionsSettings({
             {customTools.map((tool) => (
               <span key={tool} className="custom-tool-tag">
                 {tool}
-                <button onClick={() => onRemoveCustomTool(tool)}>x</button>
+                <button
+                  onClick={() => onRemoveCustomTool(tool)}
+                  aria-label="Remove tool"
+                  title="Remove tool"
+                >
+                  x
+                </button>
               </span>
             ))}
           </div>

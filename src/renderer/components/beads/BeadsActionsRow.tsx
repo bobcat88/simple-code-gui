@@ -22,12 +22,18 @@ export function BeadsActionsRow({
         <button
           className="beads-clear-btn"
           onClick={onClearCompleted}
-          title="Clear completed tasks"
+          aria-label="Mark complete"
+          title="Mark complete"
         >
           &#10003;
         </button>
       )}
-      <button className="beads-refresh-btn" onClick={onRefresh} title="Refresh">
+      <button
+        className="beads-refresh-btn"
+        onClick={onRefresh}
+        aria-label="Refresh"
+        title="Refresh"
+      >
         &#8635;
       </button>
     </div>
