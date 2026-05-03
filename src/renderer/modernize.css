@@ -44,7 +44,7 @@ html, body, #root {
 }
 
 .app-container {
-  background-color: #050508; /* Even deeper dark for premium feel */
+  background-color: var(--bg-codex-dark);
   color: #f0f0f0;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: var(--radius-codex);
@@ -530,4 +530,22 @@ html, body, #root {
   font-size: 12px;
   color: white;
   margin-top: 8px;
+}
+
+/* ── Mobile component tokens ────────────────────────────── */
+:root {
+  --mobile-bg: #1a1a1a;
+  --mobile-surface: #252525;
+  --mobile-border: #333;
+  --mobile-text: #fff;
+  --mobile-text-muted: rgba(255, 255, 255, 0.6);
+  --mobile-accent: #4a90d9;
+  --mobile-success-bg: #2d4a3e;
+  --mobile-success-text: #4ade80;
+  --mobile-warning-bg: #4a3a2d;
+  --mobile-warning-text: #fbbf24;
+  --mobile-info-bg: #2d3a4a;
+  --mobile-info-border: #4a90d9;
+  --mobile-error-bg: #4a2d2d;
+  --mobile-separator: #444;
 }

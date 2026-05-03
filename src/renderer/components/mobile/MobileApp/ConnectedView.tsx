@@ -160,7 +160,7 @@ export function ConnectedView({
         alignItems: 'center',
         marginBottom: '16px',
         paddingBottom: '12px',
-        borderBottom: '1px solid #333'
+        borderBottom: '1px solid var(--mobile-border)'
       }}>
         <div>
           <h2 style={{ margin: 0, fontSize: '18px' }}>Connected</h2>
@@ -172,8 +172,8 @@ export function ConnectedView({
           fontSize: '10px',
           padding: '2px 6px',
           borderRadius: '4px',
-          background: isWebSocket ? '#2d4a3e' : '#4a3a2d',
-          color: isWebSocket ? '#4ade80' : '#fbbf24'
+          background: isWebSocket ? 'var(--mobile-success-bg)' : 'var(--mobile-warning-bg)',
+          color: isWebSocket ? 'var(--mobile-success-text)' : 'var(--mobile-warning-text)'
         }}>
           {isWebSocket ? 'WS' : 'HTTP'}
         </span>
@@ -184,11 +184,11 @@ export function ConnectedView({
         <div style={{
           marginBottom: '16px',
           padding: '12px',
-          background: '#2d3a4a',
+          background: 'var(--mobile-info-bg)',
           borderRadius: '8px',
-          border: '1px solid #4a90d9'
+          border: '1px solid var(--mobile-info-border)'
         }}>
-          <h3 style={{ margin: '0 0 8px', fontSize: '14px', color: '#4a90d9' }}>
+          <h3 style={{ margin: '0 0 8px', fontSize: '14px', color: 'var(--mobile-info-border)' }}>
             Files Ready to Download
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -198,7 +198,7 @@ export function ConnectedView({
                 alignItems: 'center',
                 gap: '8px',
                 padding: '8px',
-                background: '#1a1a1a',
+                background: 'var(--mobile-bg)',
                 borderRadius: '6px'
               }}>
                 <span style={{ fontSize: '20px' }}>
@@ -227,9 +227,9 @@ export function ConnectedView({
                   onClick={() => downloadPendingFile(file)}
                   disabled={downloadingFile === file.id}
                   style={{
-                    background: downloadingFile === file.id ? '#555' : '#4a90d9',
+                    background: downloadingFile === file.id ? 'var(--mobile-border)' : 'var(--mobile-accent)',
                     border: 'none',
-                    color: '#fff',
+                    color: 'var(--mobile-text)',
                     padding: '8px 16px',
                     borderRadius: '6px',
                     cursor: downloadingFile === file.id ? 'not-allowed' : 'pointer',
@@ -244,7 +244,7 @@ export function ConnectedView({
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: '#888',
+                    color: 'var(--mobile-text-muted)',
                     padding: '4px 8px',
                     cursor: 'pointer',
                     fontSize: '16px'
@@ -271,9 +271,9 @@ export function ConnectedView({
             height: '80px',
             padding: '8px',
             borderRadius: '8px',
-            border: '1px solid #444',
-            background: '#1a1a1a',
-            color: '#fff',
+            border: '1px solid var(--mobile-separator)',
+            background: 'var(--mobile-bg)',
+            color: 'var(--mobile-text)',
             fontSize: '14px',
             resize: 'none'
           }}

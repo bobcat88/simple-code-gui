@@ -128,15 +128,15 @@ export function FileBrowser({ host, basePath, initialPath, onClose }: FileBrowse
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
-      background: '#1a1a1a',
-      color: '#fff'
+      background: 'var(--mobile-bg)',
+      color: 'var(--mobile-text)'
     }}>
       {/* Header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         padding: '12px 16px',
-        borderBottom: '1px solid #333',
+        borderBottom: '1px solid var(--mobile-border)',
         gap: '12px'
       }}>
         <button
@@ -144,7 +144,7 @@ export function FileBrowser({ host, basePath, initialPath, onClose }: FileBrowse
           style={{
             background: 'transparent',
             border: 'none',
-            color: '#fff',
+            color: 'var(--mobile-text)',
             fontSize: '20px',
             cursor: 'pointer',
             padding: '4px'
@@ -160,17 +160,17 @@ export function FileBrowser({ host, basePath, initialPath, onClose }: FileBrowse
         display: 'flex',
         alignItems: 'center',
         padding: '8px 16px',
-        background: '#252525',
-        borderBottom: '1px solid #333',
+        background: 'var(--mobile-surface)',
+        borderBottom: '1px solid var(--mobile-border)',
         gap: '8px'
       }}>
         {canGoUp && (
           <button
             onClick={goUp}
             style={{
-              background: '#333',
+              background: 'var(--mobile-border)',
               border: 'none',
-              color: '#fff',
+              color: 'var(--mobile-text)',
               padding: '4px 8px',
               borderRadius: '4px',
               cursor: 'pointer',
@@ -197,8 +197,8 @@ export function FileBrowser({ host, basePath, initialPath, onClose }: FileBrowse
       {error && (
         <div style={{
           padding: '12px 16px',
-          background: '#4a2d2d',
-          color: '#ff6b6b',
+          background: 'var(--mobile-error-bg)',
+          color: 'var(--mobile-accent)',
           fontSize: '14px'
         }}>
           {error}
@@ -239,7 +239,7 @@ export function FileBrowser({ host, basePath, initialPath, onClose }: FileBrowse
                 display: 'flex',
                 alignItems: 'center',
                 padding: '12px 16px',
-                borderBottom: '1px solid #2a2a2a',
+                borderBottom: '1px solid var(--mobile-separator)',
                 gap: '12px',
                 cursor: file.type === 'directory' ? 'pointer' : 'default'
               }}
@@ -280,9 +280,9 @@ export function FileBrowser({ host, basePath, initialPath, onClose }: FileBrowse
                   }}
                   disabled={downloading === file.name}
                   style={{
-                    background: downloading === file.name ? '#555' : '#4a90d9',
+                    background: downloading === file.name ? 'var(--mobile-border)' : 'var(--mobile-accent)',
                     border: 'none',
-                    color: '#fff',
+                    color: 'var(--mobile-text)',
                     padding: '6px 12px',
                     borderRadius: '4px',
                     cursor: downloading === file.name ? 'not-allowed' : 'pointer',
