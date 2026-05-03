@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  Brain, 
-  Zap, 
-  History, 
-  Shield, 
-  Activity, 
-  Share2, 
+import {
+  Brain,
+  Zap,
+  History,
+  Shield,
+  Activity,
+  Share2,
   Layers,
   ChevronRight,
   Download,
@@ -19,6 +19,7 @@ import { cn } from '../../lib/utils';
 import type { ExtendedApi, SwarmSnapshot } from '../../api/types';
 import { SwarmActivityStream } from '../orchestration/SwarmActivityStream';
 import { NeuralHUDTab } from './NeuralHUDTab';
+import { OrchestrationPanel } from './OrchestrationPanel';
 import { useSwarmSnapshots } from '../../hooks/useSwarmSnapshots';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -89,6 +90,9 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({ api, proje
             <MemoryVault snapshots={snapshots} onRefresh={refreshSnapshots} api={api} />
           </div>
         )}
+
+        {/* Orchestration Controls */}
+        <OrchestrationPanel />
 
         {/* Global Controls Overlay */}
         <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover/hub:opacity-100 transition-opacity duration-300">
