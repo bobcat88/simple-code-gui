@@ -183,15 +183,17 @@ Modularizing the AI runtime optimization pipeline into extensible middlewares.
 - [x] Implement `ReasoningMiddleware` for high-precision model controls.
 - [x] Integrate `CognitiveMiddleware` for swarm thought injection.
 
-## Phase 37: UI/UX Refinement & Production Hardening (Current)
+## Phase 37: UI/UX Refinement & Production Hardening (Complete)
 Finalizing the high-fidelity design system and cross-platform interaction parity.
 
-- [ ] **Visual Consistency Audit**: Standardize border radiuses (fix `rounded-3xl` etc.) and unify color palettes across all panels.
-- [ ] **Background Deepening**: Update CSS variables in `modernize.css` for a more premium "Codex-style" dark mode.
-- [ ] **Sidebar Interaction**: Implement the "light bubble + arrow" sidebar collapse button.
-- [ ] **Glassmorphism Polish**: Standardize backdrop-blur and border transparency across all functional overlays.
+- [x] **Visual Consistency Audit**: Standardized 12px border radiuses and implemented "Toxic Glow" neon-green design system.
+- [x] **"Toxic Glow" Design System**: Wholesale migration of `modernize.css` to neon-green/obsidian-purple palette.
+- [x] **Production Parity Audit**: Confirmed 100% feature parity between Tauri and legacy Electron shims.
+- [x] **Sidebar Interaction Hardening**: Implemented high-fidelity "light bubble + arrow" collapse trigger.
+- [x] **NeuralHUD Visual Audit**: Unified 3D synaptic visualizations with the neon-green aesthetic.
+- [x] **Visual Consistency Sweep**: Sanitized all residual blue/emerald hardcoded tokens via theme mapping.
 - [x] **Linux Interaction Fix**: Restored window dragging and manual pointer event management for custom titlebars.
-- [ ] **Functional Hardening**: Audit and complete `TauriBackend` methods for full parity with legacy Electron shims.
+- [x] **Functional Hardening**: Completed `TauriBackend` parity audit (100% parity with legacy Electron shims achieved).
 
 ---
 

@@ -1,24 +1,31 @@
 /* Codex-Inspired High-Fidelity Theme */
 :root {
-  --background: 220 30% 3%;
+  --background: 270 100% 5%;
   --foreground: 0 0% 98%;
   
-  --bg-codex-dark: #05070a;
-  --bg-codex-sidebar: rgba(8, 10, 15, 0.7);
-  --bg-codex-header: rgba(10, 12, 18, 0.5);
-  --bg-codex-accent: rgba(59, 130, 246, 0.05);
+  --bg-codex-dark: #0d001a;
+  --bg-codex-sidebar: rgba(13, 0, 26, 0.85);
+  --bg-codex-header: rgba(15, 0, 30, 0.6);
+  --bg-codex-accent: rgba(204, 255, 0, 0.05);
   
-  --codex-blue: #3b82f6;
-  --codex-blue-glow: rgba(59, 130, 246, 0.3);
-  --codex-emerald: #10b981;
-  --codex-emerald-glow: rgba(16, 185, 129, 0.25);
-  --codex-glass: rgba(10, 15, 25, 0.65);
+  --codex-neon: #ccff00;
+  --codex-neon-glow: rgba(204, 255, 0, 0.4);
+  --codex-purple: #1a0033;
+  --codex-glass: rgba(13, 0, 26, 0.75);
+  --codex-glass-border: rgba(204, 255, 0, 0.2);
+
+  /* Legacy Aliases for Parity */
+  --codex-blue: var(--codex-neon);
+  --codex-blue-glow: var(--codex-neon-glow);
+  --codex-emerald: var(--codex-neon);
+  --codex-emerald-glow: var(--codex-neon-glow);
+  --codex-obsidian: var(--bg-codex-dark);
   
   --radius-codex: 12px;
   --radius-inner: 10px;
   --radius-modal: 14px;
   
-  /* Standard variable overrides for Codex Aesthetic */
+  /* Standard variable overrides for Toxic Glow Aesthetic */
   --radius: 12px;
   --radius-lg: 12px;
   --radius-xl: 12px;
@@ -27,19 +34,17 @@
   --radius-pill: 9999px;
 
   /* Glassmorphism Presets */
-  --codex-glass: rgba(5, 7, 10, 0.7);
-  --codex-glass-border: rgba(59, 130, 246, 0.15);
   --codex-blur: blur(24px) saturate(200%);
   --codex-ease: cubic-bezier(0.16, 1, 0.3, 1);
   
-  /* Override shadcn variables for 'The Futurist' obsidian feel */
-  --card: 220 30% 4%;
-  --popover: 220 30% 4%;
-  --border: 220 20% 12%;
-  --input: 220 20% 12%;
-  --primary: 217.2 91.2% 59.8%;
-  --accent: 220 30% 10%;
-  --muted: 220 20% 8%;
+  /* Override shadcn variables for 'Toxic Glow' aesthetic */
+  --card: 270 100% 7%;
+  --popover: 270 100% 7%;
+  --border: 270 50% 15%;
+  --input: 270 50% 15%;
+  --primary: 65 100% 50%; /* Neon Green */
+  --accent: 270 100% 12%;
+  --muted: 270 40% 10%;
 }
 
 /* ============================================
@@ -47,7 +52,7 @@
    ============================================ */
 
 .glass-sidebar {
-  background: var(--codex-obsidian) !important;
+  background: var(--bg-codex-sidebar) !important;
   border-right: 1px solid var(--codex-glass-border) !important;
 }
 
@@ -62,8 +67,8 @@
 
 .glass-sidebar h2, 
 .glass-sidebar span.tracking-tight {
-  color: var(--codex-blue) !important;
-  text-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+  color: var(--codex-neon) !important;
+  text-shadow: 0 0 12px var(--codex-neon-glow);
   font-weight: 700 !important;
   letter-spacing: 0.05em !important;
   text-transform: uppercase;
@@ -110,12 +115,13 @@
 
 /* All Projects Meta Header */
 .meta-project-header {
-  background: linear-gradient(135deg, var(--codex-blue) 0%, #2563eb 100%) !important;
+  background: linear-gradient(135deg, var(--codex-neon) 0%, #aaff00 100%) !important;
   border-radius: var(--radius-codex) !important;
   margin: 8px !important;
   padding: 12px 16px !important;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
+  box-shadow: 0 4px 15px var(--codex-neon-glow) !important;
   border: none !important;
+  color: #000 !important; /* Toxic contrast */
 }
 
 .meta-project-header:hover {
@@ -142,9 +148,10 @@
 }
 
 .glass-sidebar button.rounded-xl:hover {
-  background: rgba(59, 130, 246, 0.1) !important;
-  border-color: rgba(59, 130, 246, 0.3) !important;
+  background: var(--bg-codex-accent) !important;
+  border-color: var(--codex-glass-border) !important;
   transform: translateY(-2px) !important;
+  box-shadow: 0 0 15px var(--codex-neon-glow);
 }
 
 /* Global resets and layout */
@@ -222,8 +229,8 @@ html, body, #root {
 }
 
 .sidebar.collapsed:hover::after {
-  background: var(--codex-blue);
-  box-shadow: 0 0 15px var(--codex-blue-glow);
+  background: var(--codex-neon);
+  box-shadow: 0 0 15px var(--codex-neon-glow);
 }
 
 .glass-header {
@@ -341,7 +348,7 @@ html, body, #root {
 
 .custom-scrollbar::-webkit-scrollbar-thumb,
 ::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.2);
+  background: var(--codex-glass-border);
   border-radius: 10px;
 }
 
@@ -371,7 +378,7 @@ html, body, #root {
 .active .lucide,
 .text-primary .lucide,
 .bg-primary .lucide {
-  filter: drop-shadow(0 0 12px var(--codex-blue-glow));
+  filter: drop-shadow(0 0 12px var(--codex-neon-glow));
 }
 
 /* Sidebar Hover Collapse Bubble (Light Bubble) */
@@ -383,45 +390,52 @@ html, body, #root {
   width: 28px;
   height: 28px;
   background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(20px) saturate(200%);
-  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   color: rgba(255, 255, 255, 0.4);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 
-    0 10px 25px -5px rgba(0, 0, 0, 0.6), 
-    inset 0 1px 1px rgba(255, 255, 255, 0.05),
+    0 8px 32px rgba(0, 0, 0, 0.5), 
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
     0 0 0 1px rgba(255, 255, 255, 0.05);
   cursor: pointer;
   z-index: 1000;
   opacity: 0;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-container:hover .collapse-bubble,
-.sidebar.collapsed:hover .collapse-bubble,
-.sidebar-container .collapse-bubble:hover {
+.sidebar.collapsed:hover .collapse-bubble {
   opacity: 1;
   transform: translateY(-50%) scale(1);
 }
 
 .collapse-bubble:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--codex-blue);
+  background: rgba(204, 255, 0, 0.05);
+  border-color: var(--codex-neon);
   box-shadow: 
-    0 0 25px var(--codex-blue-glow), 
-    inset 0 1px 1px rgba(255, 255, 255, 0.2);
-  color: var(--codex-blue);
-  transform: translateY(-50%) scale(1.2) !important;
+    0 0 30px var(--codex-neon-glow), 
+    inset 0 0 10px var(--codex-neon-glow);
+  color: var(--codex-neon);
+  transform: translateY(-50%) scale(1.15) !important;
+}
+
+.collapse-bubble .lucide {
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.collapse-bubble:hover .lucide {
+  transform: scale(1.1);
 }
 
 .collapse-bubble:active {
   transform: translateY(-50%) scale(0.9) !important;
-  background: var(--codex-blue);
-  color: #fff;
+  background: var(--codex-neon);
+  color: var(--bg-codex-dark);
 }
 
 /* Staggered Entry Animations */
@@ -481,8 +495,8 @@ html, body, #root {
 }
 
 .terminal-tile.focused {
-  border-color: rgba(59, 130, 246, 0.4) !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.2);
+  border-color: var(--codex-neon) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px var(--codex-neon-glow);
 }
 
 .terminal-tile .tile-header {
@@ -557,8 +571,8 @@ html, body, #root {
   left: 20%;
   right: 20%;
   height: 2px;
-  background: var(--codex-blue);
-  box-shadow: 0 0 10px var(--codex-blue-glow);
+  background: var(--codex-neon);
+  box-shadow: 0 0 10px var(--codex-neon-glow);
   border-radius: 2px 2px 0 0;
 }
 /* Beads Rich Task Editing Styles */
@@ -842,9 +856,9 @@ html, body, #root {
 }
 
 .session-mode-option.selected, .permission-mode-option.selected {
-  background: rgba(59, 130, 246, 0.1) !important;
-  border-color: var(--codex-blue) !important;
-  box-shadow: 0 0 15px var(--codex-blue-glow);
+  background: rgba(204, 255, 0, 0.1) !important;
+  border-color: var(--codex-neon) !important;
+  box-shadow: 0 0 15px var(--codex-neon-glow);
 }
 
 .tool-chips {
@@ -872,15 +886,15 @@ html, body, #root {
 }
 
 .tool-chip.selected {
-  background: var(--codex-blue) !important;
-  border-color: var(--codex-blue) !important;
-  color: #fff !important;
-  box-shadow: 0 4px 12px var(--codex-blue-glow) !important;
+  background: var(--codex-neon) !important;
+  border-color: var(--codex-neon) !important;
+  color: #000 !important;
+  box-shadow: 0 4px 12px var(--codex-neon-glow) !important;
 }
 
 .tool-chip.global:not(.selected) {
-  border-color: var(--codex-emerald) !important;
-  color: var(--codex-emerald) !important;
+  border-color: var(--codex-neon) !important;
+  color: var(--codex-neon) !important;
 }
 
 .voice-select {
@@ -901,20 +915,20 @@ html, body, #root {
 }
 
 .voice-select:focus {
-  border-color: var(--codex-blue) !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+  border-color: var(--codex-neon) !important;
+  box-shadow: 0 0 0 2px rgba(204, 255, 0, 0.15) !important;
   outline: none;
 }
 
 /* Button Unification */
 .btn-primary, .install-btn {
-  background: linear-gradient(135deg, var(--codex-blue) 0%, #2563eb 100%) !important;
+  background: linear-gradient(135deg, var(--codex-neon) 0%, #aaff00 100%) !important;
   border-radius: var(--radius-inner) !important;
   font-weight: 700 !important;
-  color: white !important;
+  color: #000 !important;
   border: none !important;
   transition: all 0.2s var(--codex-ease) !important;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+  box-shadow: 0 4px 12px var(--codex-neon-glow) !important;
   padding: 8px 20px !important;
   cursor: pointer;
 }
@@ -981,8 +995,8 @@ html, body, #root {
   font-size: 11px !important;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--codex-blue) !important;
-  text-shadow: 0 0 8px var(--codex-blue-glow);
+  color: var(--codex-neon) !important;
+  text-shadow: 0 0 8px var(--codex-neon-glow);
 }
 
 .gsd-progress-badge {
@@ -1002,8 +1016,8 @@ html, body, #root {
 }
 
 .gsd-progress-fill {
-  background: linear-gradient(90deg, var(--codex-blue), var(--codex-emerald)) !important;
-  box-shadow: 0 0 10px var(--codex-blue-glow);
+  background: linear-gradient(90deg, var(--codex-neon), #aaff00) !important;
+  box-shadow: 0 0 10px var(--codex-neon-glow);
   height: 100%;
 }
 
@@ -1076,8 +1090,8 @@ html, body, #root {
 
 /* Activity Feed & Observability Widgets */
 .activity-item {
-  border-left: 3px solid var(--codex-blue) !important;
-  background: rgba(59, 130, 246, 0.04) !important;
+  border-left: 3px solid var(--codex-neon) !important;
+  background: rgba(204, 255, 0, 0.04) !important;
   margin: 0 12px 10px !important;
   border-radius: 0 10px 10px 0 !important;
   padding: 12px !important;
@@ -1204,9 +1218,9 @@ html, body, #root {
 
 /* GSD Action Buttons Redux */
 .gsd-action-btn.primary {
-  background: var(--codex-blue) !important;
-  box-shadow: 0 4px 12px var(--codex-blue-glow) !important;
-  color: white !important;
+  background: var(--codex-neon) !important;
+  box-shadow: 0 4px 12px var(--codex-neon-glow) !important;
+  color: #000 !important;
 }
 
 .gsd-action-btn.secondary {
@@ -1294,13 +1308,13 @@ html, body, #root {
 }
 
 .global-indicator {
-  background: var(--codex-blue) !important;
-  color: #fff !important;
+  background: var(--codex-neon) !important;
+  color: #000 !important;
   border-radius: 4px !important;
   font-size: 9px !important;
   font-weight: 800 !important;
   padding: 1px 4px !important;
-  box-shadow: 0 0 8px var(--codex-blue-glow) !important;
+  box-shadow: 0 0 8px var(--codex-neon-glow) !important;
 }
 
 /* Ensure all sidebar section containers use 12px */

@@ -32,13 +32,18 @@
   --color-codex-dark: var(--bg-codex-dark);
   --color-codex-sidebar: var(--bg-codex-sidebar);
   --color-codex-header: var(--bg-codex-header);
-  --color-codex-blue: var(--codex-blue);
-  --color-codex-emerald: var(--codex-emerald);
+  --color-codex-blue: var(--codex-neon);
+  --color-codex-emerald: var(--codex-neon);
+  --color-codex-blue-glow: var(--codex-neon-glow);
+  --color-codex-emerald-glow: var(--codex-neon-glow);
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-codex: var(--radius);
+
+  --shadow-blue-sm: 0 0 10px var(--codex-neon-glow);
+  --shadow-emerald-sm: 0 0 10px var(--codex-neon-glow);
 }
 
 @layer base {
