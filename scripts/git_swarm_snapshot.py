@@ -28,7 +28,7 @@ def main():
 
     # 2. Fetch messages for this project that aren't snapshotted
     cursor.execute("""
-        SELECT id, timestamp, from_agent, to_agent, message_type, content, metadata 
+        SELECT id, timestamp, from_agent, to_agent, message_type, content, metadata, cache_control 
         FROM swarm_messages 
         WHERE project_path = ? AND snapshot_id IS NULL
     """, (project_path,))
@@ -47,7 +47,8 @@ def main():
             "to_agent": row[3],
             "message_type": row[4],
             "content": row[5],
-            "metadata": json.loads(row[6]) if row[6] else None
+            "metadata": json.loads(row[6]) if row[6] else None,
+            "cache_control": json.loads(row[7]) if row[7] else None
         })
 
     # 3. Create Snapshot in DB

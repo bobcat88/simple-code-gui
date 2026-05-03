@@ -8,6 +8,36 @@ use serde_json::Value;
 
 pub struct CognitiveMiddleware;
 
+impl CognitiveMiddleware {
+    fn extract_keywords(&self, text: &str) -> Vec<String> {
+        text.split_whitespace()
+            .map(|s| s.to_lowercase().chars().filter(|c| c.is_alphanumeric()).collect::<String>())
+            .filter(|s| s.len() > 3) // Ignore short words
+            .collect()
+    }
+
+    fn score_message(&self, content: &str, from_agent: &str, keywords: &[String], current_agent_id: Option<&str>) -> i32 {
+        let mut score = 0;
+        let lower_content = content.to_lowercase();
+        
+        // Match keywords
+        for kw in keywords {
+            if lower_content.contains(kw) {
+                score += 2;
+            }
+        }
+
+        // Match agent_id
+        if let Some(agent_id) = current_agent_id {
+            if from_agent == agent_id {
+                score += 5;
+            }
+        }
+
+        score
+    }
+}
+
 #[async_trait]
 impl OptimizationMiddleware for CognitiveMiddleware {
     fn name(&self) -> &str {
@@ -15,8 +45,6 @@ impl OptimizationMiddleware for CognitiveMiddleware {
     }
 
     async fn apply(&self, request: &mut CompletionRequest, _context: &OptimizationContext) -> Result<(), String> {
-        // Cognitive Middleware: Injects swarm thought chains and cross-session context.
-        
         let Some(project_path) = &request.project_path else {
             return Ok(());
         };
@@ -26,7 +54,17 @@ impl OptimizationMiddleware for CognitiveMiddleware {
             return Ok(());
         }
 
-        // 1. Find the latest snapshot
+        // 1. Collect keywords from current request
+        let mut keywords = Vec::new();
+        for msg in &request.messages {
+            if msg.role == "user" {
+                keywords.extend(self.extract_keywords(&msg.content));
+            }
+        }
+        keywords.sort();
+        keywords.dedup();
+
+        // 2. Find the latest snapshot
         let mut latest_file = None;
         let mut latest_time = 0;
 
@@ -44,27 +82,38 @@ impl OptimizationMiddleware for CognitiveMiddleware {
             }
         }
 
-        // 2. Load and inject context
+        // 3. Load and score messages from snapshot
         if let Some(path) = latest_file {
             if let Ok(content) = fs::read_to_string(path) {
                 if let Ok(json) = serde_json::from_str::<Value>(&content) {
                     if let Some(messages) = json.get("messages").and_then(|m| m.as_array()) {
-                        // Extract last 3 messages as cognitive context
-                        let context_msgs: Vec<String> = messages.iter().rev().take(3)
+                        let mut scored_msgs: Vec<(i32, String)> = messages.iter()
                             .filter_map(|m| {
                                 let agent = m.get("from_agent")?.as_str()?;
                                 let content = m.get("content")?.as_str()?;
-                                Some(format!("[{}]: {}", agent, content))
+                                let score = self.score_message(content, agent, &keywords, request.agent_id.as_deref());
+                                
+                                if score > 0 {
+                                    Some((score, format!("[{}]: {}", agent, content)))
+                                } else {
+                                    None
+                                }
                             })
                             .collect();
 
+                        // Sort by score descending
+                        scored_msgs.sort_by(|a, b| b.0.cmp(&a.0));
+
+                        // Take top 5 relevant messages
+                        let context_msgs: Vec<String> = scored_msgs.into_iter().take(5).map(|m| m.1).collect();
+
                         if !context_msgs.is_empty() {
                             let cognitive_context = format!(
-                                "\n[COGNITIVE_SNAPSHOT_CONTEXT]\nLatest swarm thoughts:\n{}\n",
+                                "\n[COGNITIVE_SNAPSHOT_CONTEXT]\nRelevant swarm thoughts from previous session:\n{}\n",
                                 context_msgs.join("\n")
                             );
 
-                            // Inject into system prompt (first message usually)
+                            // Inject into system prompt
                             if let Some(system_msg) = request.messages.iter_mut().find(|m| m.role == "system") {
                                 system_msg.content.push_str(&cognitive_context);
                             }
