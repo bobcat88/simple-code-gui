@@ -293,7 +293,7 @@ export function ExtensionBrowser({ projectPath, projectName, onClose, api }: Ext
           <div className="pt-1">
             <input
               type="checkbox"
-              className="w-4 h-4 rounded border-white/10 bg-white/5 text-primary focus:ring-primary focus:ring-offset-0 transition-all cursor-pointer"
+              className="w-4 h-4 rounded-md border-white/10 bg-white/5 text-primary focus:ring-primary focus:ring-offset-0 transition-all cursor-pointer"
               checked={enabled}
               onChange={(e) => handleToggle(ext.id, e.target.checked)}
               title={enabled ? "Disable for this project" : "Enable for this project"}
@@ -586,7 +586,7 @@ export function ExtensionBrowser({ projectPath, projectName, onClose, api }: Ext
                     className="w-full bg-[#050505] border border-white/10 rounded-xl p-4 font-mono text-sm focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none"
                   />
                   <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-1 rounded-md text-muted-foreground">JSON</span>
+                    <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-1 rounded-xl text-muted-foreground">JSON</span>
                   </div>
                 </div>
               </div>
@@ -631,7 +631,7 @@ export function ExtensionBrowser({ projectPath, projectName, onClose, api }: Ext
                   <div className="flex items-center gap-2">
                     {executingTool && (
                       <button 
-                        className="p-1.5 hover:bg-white/5 rounded-lg text-muted-foreground transition-colors mr-1"
+                        className="p-1.5 hover:bg-white/5 rounded-xl text-muted-foreground transition-colors mr-1"
                         onClick={() => setExecutingTool(null)}
                       >
                         <ChevronLeft className="w-4 h-4" />
@@ -669,14 +669,14 @@ export function ExtensionBrowser({ projectPath, projectName, onClose, api }: Ext
                                 <label className="text-xs font-bold text-white flex items-center gap-2">
                                   {name}
                                   {isRequired && <span className="text-destructive">*</span>}
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-muted-foreground font-mono">{type}</span>
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded-xl bg-white/5 text-muted-foreground font-mono">{type}</span>
                                 </label>
                                 
                                 {type === 'boolean' ? (
                                   <div className="flex items-center gap-3 p-3 rounded-xl bg-[#050505] border border-white/10">
                                     <input
                                       type="checkbox"
-                                      className="w-4 h-4 rounded border-white/10 bg-white/5 text-primary focus:ring-primary focus:ring-offset-0 transition-all cursor-pointer"
+                                      className="w-4 h-4 rounded-md border-white/10 bg-white/5 text-primary focus:ring-primary focus:ring-offset-0 transition-all cursor-pointer"
                                       checked={!!toolArgs[name]}
                                       onChange={(e) => setToolArgs(prev => ({ ...prev, [name]: e.target.checked }))}
                                     />
@@ -756,7 +756,7 @@ export function ExtensionBrowser({ projectPath, projectName, onClose, api }: Ext
                               <div className="font-bold text-sm text-white group-hover:text-primary transition-colors">{tool.name}</div>
                               <div className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{tool.description}</div>
                             </div>
-                            <div className="p-2 rounded-lg bg-white/5 text-muted-foreground group-hover:bg-primary group-hover:text-white transition-all opacity-0 group-hover:opacity-100">
+                            <div className="p-2 rounded-xl bg-white/5 text-muted-foreground group-hover:bg-primary group-hover:text-white transition-all opacity-0 group-hover:opacity-100">
                               <Play className="w-3.5 h-3.5 fill-current" />
                             </div>
                           </button>

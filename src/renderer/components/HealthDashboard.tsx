@@ -21,9 +21,10 @@ export const HealthDashboard: React.FC = () => {
 
   const getStatusColor = (value: string) => {
     const normalized = value.toLowerCase();
-    if (normalized === 'healthy') return 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10';
-    if (normalized === 'warning') return 'text-amber-400 border-amber-500/20 bg-amber-500/10';
-    return 'text-rose-400 border-rose-500/20 bg-rose-500/10';
+    if (normalized === 'healthy') return 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10 shadow-[0_0_12px_rgba(16,185,129,0.1)]';
+    if (normalized === 'warning') return 'text-amber-400 border-amber-500/20 bg-amber-500/10 shadow-[0_0_12px_rgba(245,158,11,0.1)]';
+    if (normalized === 'scanning') return 'text-blue-400 border-blue-500/20 bg-blue-500/10 shadow-[0_0_12px_rgba(59,130,246,0.1)]';
+    return 'text-rose-400 border-rose-500/20 bg-rose-500/10 shadow-[0_0_12px_rgba(244,63,94,0.1)]';
   };
 
   const StatCard = ({
@@ -35,7 +36,7 @@ export const HealthDashboard: React.FC = () => {
     value: string;
     icon: React.ReactNode;
   }) => (
-    <div className="rounded-xl border border-white/5 bg-black/40 px-3 py-2 backdrop-blur-md shadow-sm">
+    <div className="rounded-xl border border-white/5 bg-black/40 px-3 py-2 backdrop-blur-md shadow-sm transition-all hover:bg-black/60 hover:border-white/10">
       <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
         {icon}
         <span>{label}</span>
@@ -57,7 +58,7 @@ export const HealthDashboard: React.FC = () => {
     scope: string;
     detail: string;
   }) => (
-    <div className="flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-black/30 px-3 py-2.5 backdrop-blur-sm">
+    <div className="flex items-start justify-between gap-3 rounded-xl border border-white/5 bg-black/30 px-3 py-2.5 backdrop-blur-sm hover:bg-black/50 transition-colors">
       <div className="min-w-0">
         <div className="truncate text-sm font-semibold text-zinc-100">{name}</div>
         <div className="mt-0.5 truncate text-[10px] uppercase tracking-widest text-zinc-500">{detail}</div>
@@ -83,10 +84,10 @@ export const HealthDashboard: React.FC = () => {
 
     const getServiceIcon = (id: string) => {
       switch (id) {
-        case 'database': return <Database size={14} className="text-blue-400" />;
-        case 'project_capability': return <ShieldCheck size={14} className="text-emerald-400" />;
-        case 'environment': return <Cpu size={14} className="text-purple-400" />;
-        case 'ai_providers': return <Activity size={14} className="text-amber-400" />;
+        case 'database': return <Database size={14} className="text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]" />;
+        case 'project_capability': return <ShieldCheck size={14} className="text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]" />;
+        case 'environment': return <Cpu size={14} className="text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.3)]" />;
+        case 'ai_providers': return <Activity size={14} className="text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]" />;
         default: return <Server size={14} className="text-zinc-400" />;
       }
     };

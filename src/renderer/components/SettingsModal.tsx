@@ -261,7 +261,7 @@ export function SettingsModal({
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group",
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group",
                   activeCategory === cat.id 
                     ? "bg-white/10 text-white shadow-sm" 
                     : "text-white/40 hover:text-white/80 hover:bg-white/5"
@@ -284,7 +284,7 @@ export function SettingsModal({
           <div className="p-4 mt-auto border-t border-white/5 space-y-2">
              <button 
               onClick={handleSave}
-              className="w-full flex items-center justify-center gap-2 bg-white text-black hover:bg-white/90 px-4 py-2.5 rounded-md text-sm font-semibold transition-all active:scale-95 shadow-lg shadow-white/5"
+              className="w-full flex items-center justify-center gap-2 bg-white text-black hover:bg-white/90 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95 shadow-lg shadow-white/5"
             >
               <Save className="w-4 h-4" />
               Save Changes
@@ -347,7 +347,7 @@ export function SettingsModal({
                 <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-300">
                   <section>
                     <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider mb-4">Global Styling</h3>
-                    <div className="bg-white/5 border border-white/10 rounded-lg p-6 space-y-6">
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-6">
                       <div className="flex items-center justify-between">
                         <div>
                           <label className="text-sm font-medium text-white/80">Glow Effect</label>
@@ -377,7 +377,7 @@ export function SettingsModal({
                             type="color"
                             value={general.accentColor}
                             onChange={(e) => setGeneral(prev => ({ ...prev, accentColor: e.target.value }))}
-                            className="w-8 h-8 bg-transparent border-0 cursor-pointer rounded-lg overflow-hidden"
+                            className="w-8 h-8 bg-transparent border-0 cursor-pointer rounded-xl overflow-hidden"
                           />
                           <span className="text-xs font-mono text-white/40 uppercase">{general.accentColor}</span>
                         </div>

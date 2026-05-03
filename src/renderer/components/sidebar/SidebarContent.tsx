@@ -355,7 +355,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           <div className="space-y-3">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">GSD Task Status</h4>
-            <div className="p-1 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5">
+            <div className="p-1 rounded-xl bg-white/5 backdrop-blur-md border border-white/5">
               <GSDStatus
                 projectPath={beadsProjectPath}
                 onCommand={(cmd) => {
@@ -370,7 +370,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
           
           <div className="space-y-3 pt-4 border-t border-white/5">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Active Beads</h4>
-            <div className="p-1 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5">
+            <div className="p-1 rounded-xl bg-white/5 backdrop-blur-md border border-white/5">
               <BeadsPanel
                 projectPath={beadsProjectPath}
                 isExpanded={true}
@@ -391,14 +391,14 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
 
           <div className="space-y-3 pt-4 border-t border-white/5">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Token Burn History</h4>
-            <div className="p-2 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5">
+            <div className="p-2 rounded-xl bg-white/5 backdrop-blur-md border border-white/5">
               <TokenBurnHistory api={api} />
             </div>
           </div>
 
           <div className="space-y-3 pt-4 border-t border-white/5">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Agent Assignments</h4>
-            <div className="p-2 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5">
+            <div className="p-2 rounded-xl bg-white/5 backdrop-blur-md border border-white/5">
               <TaskAssignmentView
                 onOpenSession={beadsProjectPath ? () => onOpenSession(beadsProjectPath) : undefined}
               />
@@ -407,7 +407,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
 
           <div className="space-y-3 pt-4 border-t border-white/5">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Approval Workflow</h4>
-            <div className="h-[520px] p-2 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
+            <div className="h-[520px] p-2 rounded-xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
               <ApprovalWorkflow
                 requests={approvalRequests}
                 onApprove={(request, note) => respondToApproval(request, 'approved', note)}
@@ -429,35 +429,35 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
         <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
           <section className="space-y-3">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">App & Plugin Health</h4>
-            <div className="p-1 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
+            <div className="p-1 rounded-xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
               <HealthDashboard />
             </div>
           </section>
 
           <section className="space-y-3 pt-4 border-t border-white/5">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Agent Board</h4>
-            <div className="p-1 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
+            <div className="p-1 rounded-xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
               <AgentBoard />
             </div>
           </section>
 
           <section className="space-y-3 pt-4 border-t border-white/5 h-[300px] flex flex-col">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Swarm Stream</h4>
-            <div className="flex-1 p-1 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
+            <div className="flex-1 p-1 rounded-xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
               <SwarmActivityStream />
             </div>
           </section>
           
           <section className="space-y-3 pt-4 border-t border-white/5">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Job Monitor</h4>
-            <div className="p-0 rounded-2xl overflow-hidden">
+            <div className="p-0 rounded-xl overflow-hidden">
               <JobMonitor />
             </div>
           </section>
           
           <section className="space-y-3 pt-4 border-t border-white/5 h-[400px] flex flex-col">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Activity Feed</h4>
-            <div className="flex-1 rounded-2xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
+            <div className="flex-1 rounded-xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
               <ActivityFeed />
             </div>
           </section>

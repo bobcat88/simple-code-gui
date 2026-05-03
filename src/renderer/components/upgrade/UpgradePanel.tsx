@@ -95,9 +95,9 @@ export const UpgradePanel: React.FC = () => {
   };
 
   const getRiskColor = (score: number) => {
-    if (score >= 7) return 'text-rose-400 border-rose-500/20 bg-rose-500/10';
-    if (score >= 4) return 'text-amber-400 border-amber-500/20 bg-amber-500/10';
-    return 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10';
+    if (score >= 7) return 'text-rose-400 border-rose-500/20 bg-rose-500/10 shadow-[0_0_10px_rgba(244,63,94,0.15)]';
+    if (score >= 4) return 'text-amber-400 border-amber-500/20 bg-amber-500/10 shadow-[0_0_10px_rgba(251,191,36,0.15)]';
+    return 'text-codex-emerald border-codex-emerald/20 bg-codex-emerald/10 shadow-emerald-sm';
   };
 
   return (
@@ -115,18 +115,18 @@ export const UpgradePanel: React.FC = () => {
           const currentProgress = progress[dep];
 
           return (
-            <div key={dep} className="rounded-xl border border-white/5 bg-zinc-900/40 p-3">
+            <div key={dep} className="rounded-xl border border-white/10 bg-codex-obsidian/40 p-4 backdrop-blur-md transition-all hover:border-white/20 shadow-inner">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-zinc-100 uppercase tracking-tight">{dep}</span>
+                    <span className="text-sm font-bold text-white uppercase tracking-tighter">{dep}</span>
                     {report && (
-                      <span className="rounded-full bg-zinc-800 px-1.5 py-0.5 text-[9px] font-mono text-zinc-400">
-                        {report.currentVersion} → {report.latestVersion}
+                      <span className="rounded-md bg-white/5 px-2 py-0.5 text-[9px] font-mono text-zinc-400 border border-white/5">
+                        {report.currentVersion} <span className="text-codex-blue">→</span> {report.latestVersion}
                       </span>
                     )}
                   </div>
-                  <div className="mt-1 text-[10px] text-zinc-500 uppercase tracking-widest">
+                  <div className="mt-1 text-[10px] text-zinc-500 uppercase tracking-widest font-medium">
                     External dependency integrator
                   </div>
                 </div>
@@ -135,24 +135,24 @@ export const UpgradePanel: React.FC = () => {
                   {!report && !isAnalyzing && (
                     <button
                       onClick={() => analyzeUpgrade(dep)}
-                      className="rounded-lg border border-white/5 bg-white/5 p-1.5 text-zinc-400 transition-colors hover:bg-white/10 hover:text-zinc-200"
+                      className="rounded-xl border border-white/5 bg-white/5 p-2 text-zinc-400 transition-all hover:bg-white/10 hover:text-codex-blue hover:border-codex-blue/30"
                     >
                       <RefreshCw size={14} />
                     </button>
                   )}
                   {isAnalyzing && (
-                    <div className="p-1.5">
-                      <Loader2 size={14} className="animate-spin text-zinc-500" />
+                    <div className="p-2">
+                      <Loader2 size={14} className="animate-spin text-codex-blue" />
                     </div>
                   )}
                   {report && !isUpgrading && (
                     <button
                       onClick={() => startUpgrade(dep)}
                       disabled={isUpgrading}
-                      className="flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight text-emerald-400 border border-emerald-500/20 transition-all hover:bg-emerald-500/20"
+                      className="flex items-center gap-2 rounded-xl bg-codex-emerald/10 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-codex-emerald border border-codex-emerald/20 transition-all hover:bg-codex-emerald/20 shadow-emerald-sm"
                     >
                       <Shield size={12} />
-                      Assimilate Latest
+                      Assimilate
                     </button>
                   )}
                 </div>
@@ -188,17 +188,17 @@ export const UpgradePanel: React.FC = () => {
               )}
 
               {isUpgrading && currentProgress && (
-                <div className="mt-3 space-y-2 border-t border-white/5 pt-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="mt-4 space-y-2 border-t border-white/5 pt-4 animate-in fade-in slide-in-from-top-1 duration-200">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-tight">
-                      <Loader2 size={12} className="animate-spin text-emerald-400" />
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                      <Loader2 size={12} className="animate-spin text-codex-emerald" />
                       <span>{currentProgress.message}</span>
                     </div>
                     <span className="text-[10px] font-mono text-zinc-500">{(currentProgress.percentage * 100).toFixed(0)}%</span>
                   </div>
-                  <div className="h-1 overflow-hidden rounded-full bg-zinc-800 border border-white/5">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800 border border-white/5">
                     <div 
-                      className="h-full bg-emerald-500 transition-all duration-300 shadow-[0_0_10px_rgba(16,185,129,0.3)]" 
+                      className="h-full bg-codex-emerald transition-all duration-300 shadow-emerald-sm" 
                       style={{ width: `${currentProgress.percentage * 100}%` }}
                     />
                   </div>

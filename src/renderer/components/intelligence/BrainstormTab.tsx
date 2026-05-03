@@ -117,13 +117,13 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
   return (
     <div className="flex flex-col h-full space-y-4">
       {/* Sub-tabs */}
-      <div className="flex items-center gap-1 p-1 bg-white/5 rounded-lg border border-white/5 shadow-inner">
+      <div className="flex items-center gap-1 p-1 bg-codex-obsidian/40 rounded-xl border border-white/5 shadow-inner backdrop-blur-md">
         <button
           onClick={() => setActiveView('inbox')}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-[10px] font-bold transition-all",
+            "flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-300",
             activeView === 'inbox' 
-              ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 shadow-sm" 
+              ? "bg-codex-blue/10 text-codex-blue border border-codex-blue/30 shadow-blue-sm" 
               : "text-white/30 hover:text-white/60 hover:bg-white/5 border border-transparent"
           )}
         >
@@ -133,9 +133,9 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
         <button
           onClick={() => setActiveView('drafts')}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-[10px] font-bold transition-all",
+            "flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-300",
             activeView === 'drafts' 
-              ? "bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-sm" 
+              ? "bg-codex-blue/10 text-codex-blue border border-codex-blue/30 shadow-blue-sm" 
               : "text-white/30 hover:text-white/60 hover:bg-white/5 border border-transparent"
           )}
         >
@@ -145,9 +145,9 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
         <button
           onClick={() => setActiveView('canvas')}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-[10px] font-bold transition-all",
+            "flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-300",
             activeView === 'canvas' 
-              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm" 
+              ? "bg-codex-emerald/10 text-codex-emerald border border-codex-emerald/30 shadow-emerald-sm" 
               : "text-white/30 hover:text-white/60 hover:bg-white/5 border border-transparent"
           )}
         >
@@ -204,15 +204,15 @@ export function BrainstormTab({ api, projectPath }: BrainstormTabProps) {
         <div className="flex items-center gap-2">
           <div className={cn(
             "w-1.5 h-1.5 rounded-full",
-            loading ? "bg-white/20 animate-pulse" : "bg-emerald-500/40"
+            loading ? "bg-white/20 animate-pulse" : "bg-codex-emerald shadow-emerald-sm"
           )} />
           <span className="text-[9px] text-white/20 uppercase tracking-widest font-bold">
-            {loading ? 'Syncing...' : 'Connected'}
+            {loading ? 'Syncing...' : 'Synchronized'}
           </span>
         </div>
         <button 
           onClick={refresh}
-          className="p-1 hover:bg-white/5 rounded-md text-white/20 hover:text-white/40 transition-colors"
+          className="p-1 hover:bg-codex-blue/10 rounded-lg text-white/20 hover:text-codex-blue transition-all border border-transparent hover:border-codex-blue/20"
         >
           <RefreshCw size={12} className={cn(loading && "animate-spin")} />
         </button>

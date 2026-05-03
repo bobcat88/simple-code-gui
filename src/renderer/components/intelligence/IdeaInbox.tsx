@@ -83,28 +83,28 @@ export function IdeaInbox({
       {!showSeedForm ? (
         <button 
           onClick={() => setShowSeedForm(true)}
-          className="w-full p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center gap-3 group hover:bg-indigo-500/20 transition-all text-left"
+          className="w-full p-4 rounded-xl bg-codex-blue/5 border border-codex-blue/20 flex items-center gap-3 group hover:bg-codex-blue/10 transition-all text-left shadow-inner"
         >
-          <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+          <div className="w-8 h-8 rounded-xl bg-codex-blue/20 flex items-center justify-center text-codex-blue group-hover:scale-110 group-hover:shadow-blue-sm transition-all duration-300">
             <Plus size={16} />
           </div>
           <div>
-            <div className="text-xs font-bold text-indigo-300">Plant a new Seed</div>
-            <div className="text-[10px] text-white/40">Capture an idea for the future...</div>
+            <div className="text-xs font-bold text-codex-blue uppercase tracking-tight">Plant a new Seed</div>
+            <div className="text-[10px] text-white/40 uppercase tracking-widest font-medium">Capture an idea for the future...</div>
           </div>
         </button>
       ) : (
-        <div className="p-4 rounded-xl bg-black/40 border border-indigo-500/30 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="p-4 rounded-xl bg-codex-obsidian/40 border border-codex-blue/30 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300 backdrop-blur-md shadow-blue-sm">
           <div className="flex items-center justify-between">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">New Idea</h4>
-            <button onClick={() => setShowSeedForm(false)} className="text-white/20 hover:text-white/60">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-codex-blue">Quantum Idea Capture</h4>
+            <button onClick={() => setShowSeedForm(false)} className="text-white/20 hover:text-white/60 transition-colors">
               <X size={14} />
             </button>
           </div>
           <input 
             autoFocus
             placeholder="What's the idea?"
-            className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-indigo-500/50"
+            className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-codex-blue/50 transition-all uppercase tracking-tight"
             value={newSeedTitle}
             onChange={e => setNewSeedTitle(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handlePlantSeed()}
@@ -112,14 +112,14 @@ export function IdeaInbox({
           <textarea 
             placeholder="Why is this important? (Optional)"
             rows={2}
-            className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white/80 placeholder:text-white/20 focus:outline-none focus:border-indigo-500/50 resize-none"
+            className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs text-white/80 placeholder:text-white/20 focus:outline-none focus:border-codex-blue/50 resize-none transition-all"
             value={newSeedWhy}
             onChange={e => setNewSeedWhy(e.target.value)}
           />
           <button 
             disabled={!newSeedTitle.trim() || isPlanting}
             onClick={handlePlantSeed}
-            className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all"
+            className="w-full py-2.5 bg-codex-blue/20 hover:bg-codex-blue/30 disabled:opacity-50 text-codex-blue border border-codex-blue/30 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all uppercase tracking-widest shadow-blue-sm"
           >
             {isPlanting ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />}
             Plant Seed
@@ -159,8 +159,8 @@ export function IdeaInbox({
                       </div>
                     )}
                     <div className={cn(
-                      "text-xs font-semibold truncate transition-colors",
-                      isPromoted ? "text-emerald-400/80" : "text-white/90 group-hover:text-indigo-300"
+                      "text-xs font-bold truncate transition-colors uppercase tracking-tight",
+                      isPromoted ? "text-codex-emerald/80" : "text-white/90 group-hover:text-codex-blue shadow-blue-sm"
                     )}>
                       {seed.title}
                     </div>
@@ -176,10 +176,10 @@ export function IdeaInbox({
                 </div>
                 <div className="flex items-center gap-2 mt-3">
                   <span className={cn(
-                    "px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-tight border transition-colors",
+                    "px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest border transition-all",
                     isPromoted 
-                      ? "bg-emerald-500/5 text-emerald-500/40 border-emerald-500/10" 
-                      : "bg-indigo-500/10 text-indigo-400 border-indigo-500/10"
+                      ? "bg-codex-emerald/5 text-codex-emerald/40 border-codex-emerald/10" 
+                      : "bg-codex-blue/10 text-codex-blue/80 border-codex-blue/20 shadow-blue-sm"
                   )}>
                     {getSeedSurface(seed)}
                   </span>

@@ -33,6 +33,7 @@
   --color-codex-sidebar: var(--bg-codex-sidebar);
   --color-codex-header: var(--bg-codex-header);
   --color-codex-blue: var(--codex-blue);
+  --color-codex-emerald: var(--codex-emerald);
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
