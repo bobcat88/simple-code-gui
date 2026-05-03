@@ -52,6 +52,7 @@ export const OrchestrationPanel: React.FC = () => {
             </span>
             <button
               onClick={() => setOpen(false)}
+              aria-label="Close orchestration panel"
               className="text-white/30 hover:text-white/60 transition-colors text-xs leading-none"
             >
               ✕
@@ -95,6 +96,7 @@ export const OrchestrationPanel: React.FC = () => {
                           <button
                             key={p}
                             onClick={() => setPending(agent.id, { provider: p, model: 'default' })}
+                            aria-pressed={activeProvider === p}
                             className={cn(
                               'text-[7px] font-800 uppercase px-1.5 py-0.5 rounded transition-all',
                               activeProvider === p
@@ -116,6 +118,7 @@ export const OrchestrationPanel: React.FC = () => {
                           <button
                             key={m}
                             onClick={() => setPending(agent.id, { provider: activeProvider, model: m })}
+                            aria-pressed={activeModel === m}
                             className={cn(
                               'text-[7px] font-800 uppercase px-1.5 py-0.5 rounded transition-all',
                               activeModel === m

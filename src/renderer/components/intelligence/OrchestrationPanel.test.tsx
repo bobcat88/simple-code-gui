@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { OrchestrationPanel } from './OrchestrationPanel';
 import * as useSwarmAgentsModule from '../../hooks/useSwarmAgents';
 import type { BackendId } from '../../api/types';
@@ -24,6 +24,8 @@ beforeEach(() => {
   mockSetPending.mockClear();
   mockApplyChanges.mockClear();
 });
+
+afterEach(() => vi.restoreAllMocks());
 
 describe('OrchestrationPanel', () => {
   it('renders FAB button', () => {
