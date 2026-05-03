@@ -198,3 +198,11 @@ Finalizing the high-fidelity design system and cross-platform interaction parity
 ---
 
 *Last Updated: May 3, 2026*
+
+## Phase 38: Synaptic Orchestration (In Progress)
+Implementing the high-fidelity swarm management layer and unified cognitive observability.
+
+- [x] **Swarm Cognitive Hub**: Integrated the NeuralHUD, Activity Stream, and Memory Vault into a unified dashboard.
+- [ ] **Real-time Synaptic Feedback**: Harden the backend-to-frontend thought-chain streaming for sub-100ms latency.
+- [ ] **Multi-Model Orchestration**: Implement visual controls for dynamic provider/model switching during swarm execution.
+- [ ] **Cognitive Snapshotting v2**: Enable partial memory restorations and point-in-time thought-chain branching.

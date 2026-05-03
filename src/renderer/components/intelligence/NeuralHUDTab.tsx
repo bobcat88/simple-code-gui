@@ -40,9 +40,10 @@ interface GraphData {
 interface NeuralHUDTabProps {
   api: ExtendedApi
   projectPath?: string | null
+  embedded?: boolean
 }
 
-export function NeuralHUDTab({ api, projectPath }: NeuralHUDTabProps) {
+export function NeuralHUDTab({ api, projectPath, embedded }: NeuralHUDTabProps) {
   const fgRef = useRef<any>()
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] })
   const [isLoading, setIsLoading] = useState(false)
@@ -235,71 +236,70 @@ export function NeuralHUDTab({ api, projectPath }: NeuralHUDTabProps) {
   }, [highlightNodes])
 
   return (
-    <div className="flex flex-col h-full overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300 relative bg-black/40">
+    <div className={cn(
+      "flex flex-col h-full overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300 relative",
+      !embedded && "bg-black/40"
+    )}>
       {/* Header Overlay */}
-      <div className="absolute top-0 left-0 right-0 p-4 z-10 flex items-center justify-between pointer-events-none">
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="w-8 h-8 rounded-xl bg-codex-blue/20 flex items-center justify-center border border-codex-blue/30 shadow-blue-sm">
-            <Brain className="w-4 h-4 text-codex-blue" />
+      {!embedded && (
+        <div className="absolute top-0 left-0 right-0 p-4 z-10 flex items-center justify-between pointer-events-none">
+          <div className="flex items-center gap-2 pointer-events-auto">
+            <div className="w-8 h-8 rounded-xl bg-codex-neon/20 flex items-center justify-center border border-codex-neon/30 shadow-neon-sm">
+              <Brain className="w-4 h-4 text-codex-neon" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white tracking-tight uppercase">NeuralHUD</h3>
+              <p className="text-[10px] text-white/40 font-medium uppercase tracking-widest">Real-time Knowledge Graph</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-bold text-white tracking-tight uppercase">NeuralHUD</h3>
-            <p className="text-[10px] text-white/40 font-medium uppercase tracking-widest">Real-time Knowledge Graph</p>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-codex-emerald/10 border border-codex-emerald/20 mr-2 shadow-emerald-sm">
-            <Zap size={10} className="text-codex-emerald animate-pulse" />
-            <span className="text-[9px] font-black text-codex-emerald uppercase tracking-widest">Quantum Sync Active</span>
+          <div className="flex items-center gap-2 pointer-events-auto">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-codex-neon/10 border border-codex-neon/20 mr-2 shadow-neon-sm">
+              <Zap size={10} className="text-codex-neon animate-pulse" />
+              <span className="text-[9px] font-black text-codex-neon uppercase tracking-widest">Quantum Sync Active</span>
+            </div>
+            <button 
+              onClick={() => fetchGraphData(searchQuery)}
+              className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/80 transition-all border border-white/5"
+              title="Refresh Knowledge"
+            >
+              <RefreshCw size={14} className={cn(isLoading && "animate-spin")} />
+            </button>
           </div>
-          <button 
-            onClick={() => fetchGraphData(searchQuery)}
-            className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/80 transition-all border border-white/5"
-            title="Refresh Knowledge"
-          >
-            <RefreshCw size={14} className={cn(isLoading && "animate-spin")} />
-          </button>
         </div>
-      </div>
+      )}
 
       {/* Search Overlay */}
-      <div className="absolute bottom-4 left-4 right-4 z-10 pointer-events-none">
-        <div className="glass-panel p-2 flex items-center gap-2 pointer-events-auto max-w-md mx-auto rounded-xl border-white/10 shadow-blue-sm">
-          <Search className="w-3.5 h-3.5 text-white/20 ml-2" />
-          <input 
-            type="text"
-            placeholder="Search neural patterns..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && fetchGraphData(searchQuery)}
-            className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/20 flex-1 py-1 uppercase tracking-tight"
-          />
-          <div className="h-4 w-px bg-white/10 mx-1" />
-          <button 
-            onClick={() => fetchGraphData(searchQuery)}
-            className="px-2 py-1 rounded-lg bg-codex-blue/20 hover:bg-codex-blue/30 text-codex-blue text-[10px] font-bold transition-all border border-codex-blue/20 uppercase tracking-widest"
-          >
-            RESOLVE
-          </button>
+      {!embedded && (
+        <div className="absolute bottom-4 left-4 right-4 z-10 pointer-events-none">
+          <div className="glass-panel p-2 flex items-center gap-2 pointer-events-auto max-w-md mx-auto rounded-xl border-white/10 shadow-neon-sm">
+            <Search className="w-3.5 h-3.5 text-white/20 ml-2" />
+            <input 
+              type="text"
+              placeholder="Search neural patterns..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && fetchGraphData(searchQuery)}
+              className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/20 flex-1 py-1 uppercase tracking-tight"
+            />
+            <div className="h-4 w-px bg-white/10 mx-1" />
+            <button 
+              onClick={() => fetchGraphData(searchQuery)}
+              className="px-2 py-1 rounded-lg bg-codex-neon/20 hover:bg-codex-neon/30 text-codex-neon text-[10px] font-bold transition-all border border-codex-neon/20 uppercase tracking-widest"
+            >
+              RESOLVE
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Node Details Overlay */}
       {selectedNode && (
         <div className="absolute top-16 right-4 z-10 w-64 animate-in fade-in slide-in-from-right-4 duration-300">
-          <div className="glass-panel p-4 space-y-3 relative overflow-hidden rounded-xl border-white/10">
-            <div 
-              className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-codex-blue/20 to-transparent opacity-50" 
-              style={{ transform: 'rotate(45deg) translate(20px, -40px)' }}
-            />
-            
+          <div className="p-4 bg-black/80 backdrop-blur-xl border border-codex-neon/20 rounded-2xl shadow-2xl space-y-4 shadow-neon-sm">
             <div className="flex items-center justify-between">
-              <span className={cn(
-                "text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider shadow-sm",
-                "bg-white/10 text-white/60"
-              )} style={{ color: selectedNode.color, backgroundColor: `${selectedNode.color}15`, borderColor: `${selectedNode.color}30` }}>
-                {selectedNode.type}
+              <span className="px-1.5 py-0.5 rounded bg-codex-neon/10 border border-codex-neon/20 text-codex-neon text-[8px] font-black uppercase tracking-widest">
+                ACTIVE SYNAPSE
               </span>
               <button 
                 onClick={() => setSelectedNode(null)}
@@ -317,14 +317,14 @@ export function NeuralHUDTab({ api, projectPath }: NeuralHUDTabProps) {
             <div className="pt-2 border-t border-white/5 space-y-2">
               <div className="flex items-center justify-between text-[10px]">
                 <span className="text-white/30 uppercase font-bold">Synapse Strength</span>
-                <span className="text-codex-blue font-bold">84%</span>
+                <span className="text-codex-neon font-bold">84%</span>
               </div>
               <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-                <div className="h-full bg-codex-blue w-[84%] shadow-blue-sm" />
+                <div className="h-full bg-codex-neon w-[84%] shadow-neon-sm" />
               </div>
             </div>
 
-            <button className="w-full py-1.5 bg-codex-blue/10 hover:bg-codex-blue/20 text-codex-blue rounded-xl text-[10px] font-bold transition-all border border-codex-blue/20 uppercase tracking-widest">
+            <button className="w-full py-1.5 bg-codex-neon/10 hover:bg-codex-neon/20 text-codex-neon rounded-xl text-[10px] font-bold transition-all border border-codex-neon/20 uppercase tracking-widest">
               EXPLORE CONNECTIONS
             </button>
           </div>

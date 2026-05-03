@@ -40,8 +40,8 @@ export const NeuralSwarmGraph: React.FC<NeuralSwarmGraphProps> = ({ messages }) 
       <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
         <defs>
           <linearGradient id="linkGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="rgba(99, 102, 241, 0.2)" />
-            <stop offset="100%" stopColor="rgba(168, 85, 247, 0.2)" />
+            <stop offset="0%" stopColor="rgba(204, 255, 0, 0.2)" />
+            <stop offset="100%" stopColor="rgba(204, 255, 0, 0.05)" />
           </linearGradient>
           <filter id="glow">
             <feGaussianBlur stdDeviation="1.5" result="coloredBlur" />
@@ -61,7 +61,7 @@ export const NeuralSwarmGraph: React.FC<NeuralSwarmGraphProps> = ({ messages }) 
             x2={`${link.x2}%`}
             y2={`${link.y2}%`}
             stroke="url(#linkGradient)"
-            strokeWidth="0.5"
+            strokeWidth="0.4"
             initial={{ pathLength: 0, opacity: 0 }}
             animate={{ pathLength: 1, opacity: 1 }}
             transition={{ duration: 1.5, ease: "easeInOut" }}
@@ -94,8 +94,8 @@ export const NeuralSwarmGraph: React.FC<NeuralSwarmGraphProps> = ({ messages }) 
         {/* Pulsing connections */}
         {links.length > 0 && (
           <motion.circle
-            r="0.8"
-            fill="#fff"
+            r="0.6"
+            fill="#ccff00"
             initial={{ opacity: 0 }}
             animate={{ 
               cx: links.map(l => [`${l.x1}%`, `${l.x2}%`]).flat(),
@@ -103,28 +103,28 @@ export const NeuralSwarmGraph: React.FC<NeuralSwarmGraphProps> = ({ messages }) 
               opacity: [0, 1, 0]
             }}
             transition={{ 
-              duration: 10, 
+              duration: 8, 
               repeat: Infinity, 
               ease: "linear" 
             }}
-            style={{ filter: 'blur(1px)' }}
+            style={{ filter: 'blur(1px)', shadowBlur: 5, shadowColor: '#ccff00' }}
           />
         )}
       </svg>
 
       {/* Backdrop patterns */}
-      <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]" />
+      <div className="absolute inset-0 opacity-[0.02] bg-[radial-gradient(#ccff00_1px,transparent_1px)] [background-size:20px_20px]" />
     </div>
   );
 };
 
 function getMessageColor(type: string): string {
   switch (type) {
-    case 'finding': return '#10b981'; // emerald
-    case 'request': return '#3b82f6'; // blue
+    case 'finding': return '#ccff00'; // Neon Green
+    case 'request': return '#ccff00'; // Neon Green
     case 'warning': return '#f59e0b'; // amber
-    case 'alert': return '#ef4444'; // red
+    case 'alert': return '#ff0055'; // Cyber Red
     case 'simulation': return '#a855f7'; // purple
-    default: return '#71717a'; // zinc
+    default: return '#ccff00'; // Neon Green
   }
 }

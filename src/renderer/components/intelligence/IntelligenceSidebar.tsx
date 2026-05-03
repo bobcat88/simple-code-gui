@@ -37,6 +37,7 @@ import type {
 import { BrainstormTab } from './BrainstormTab'
 import { GovernanceTab } from './GovernanceTab'
 import { NeuralHUDTab } from './NeuralHUDTab'
+import { SwarmCognitiveHub } from './SwarmCognitiveHub'
 import { useDialog } from '../../contexts/DialogContext'
 
 interface IntelligenceSidebarProps {
@@ -82,7 +83,7 @@ export function IntelligenceSidebar({
   const [applying, setApplying] = useState(false)
   const [applyResult, setApplyResult] = useState<string[] | null>(null)
   const [progress, setProgress] = useState<ProposalProgress | null>(null)
-  const [activeSection, setActiveSection] = useState<'intelligence' | 'brainstorm' | 'governance' | 'neuralhud'>('intelligence')
+  const [activeSection, setActiveSection] = useState<'intelligence' | 'brainstorm' | 'governance' | 'swarmhub'>('intelligence')
   const [suggestions, setSuggestions] = useState<any[]>([])
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const healthScore = Math.round(capabilityScan?.projectHealthScore ?? 0)
@@ -287,16 +288,16 @@ export function IntelligenceSidebar({
           <ShieldCheck size={12} className={cn(activeSection === 'governance' ? "text-emerald-400" : "text-white/20")} />
         </button>
         <button
-          onClick={() => setActiveSection('neuralhud')}
+          onClick={() => setActiveSection('swarmhub')}
           className={cn(
             "pb-2 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
-            activeSection === 'neuralhud' 
-              ? "text-white border-indigo-400" 
+            activeSection === 'swarmhub' 
+              ? "text-white border-codex-neon" 
               : "text-white/30 border-transparent hover:text-white/60"
           )}
         >
-          NeuralHUD
-          <Brain size={12} className={cn(activeSection === 'neuralhud' ? "text-indigo-400" : "text-white/20")} />
+          Swarm Hub
+          <Brain size={12} className={cn(activeSection === 'swarmhub' ? "text-codex-neon" : "text-white/20")} />
         </button>
       </div>
 
@@ -311,8 +312,8 @@ export function IntelligenceSidebar({
             api={api}
             projectPath={activeTab?.projectPath || ''}
           />
-        ) : activeSection === 'neuralhud' ? (
-          <NeuralHUDTab 
+        ) : activeSection === 'swarmhub' ? (
+          <SwarmCognitiveHub 
             api={api}
             projectPath={activeTab?.projectPath || ''}
           />
