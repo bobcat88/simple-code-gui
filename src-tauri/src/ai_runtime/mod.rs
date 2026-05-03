@@ -59,6 +59,14 @@ impl optimizer::context::EmbeddingService for RuntimeManager {
         let response = self.embed(request).await?;
         Ok(response.embeddings)
     }
+
+    fn record_semantic_hit(&self) {
+        self.optimization_metrics.record_semantic_hit("hybrid");
+    }
+
+    fn record_semantic_miss(&self) {
+        self.optimization_metrics.record_semantic_miss("hybrid");
+    }
 }
 
 impl RuntimeManager {
@@ -99,6 +107,19 @@ impl RuntimeManager {
                 }
                 
                 tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+            }
+        });
+
+        let telemetry_manager = Arc::clone(&self);
+        tauri::async_runtime::spawn(async move {
+            loop {
+                let stats = telemetry_manager.get_optimization_stats(None).await;
+                let app_handle = telemetry_manager.app_handle.lock().await;
+                if let Some(app) = &*app_handle {
+                    let _ = app.emit("optimization-stats-updated", stats);
+                }
+                drop(app_handle);
+                tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
             }
         });
     }
@@ -689,6 +710,8 @@ impl RuntimeManager {
                 compressions: u64::from(saved_tokens > 0),
                 reasoning_requests: u64::from(optimization.and_then(|opt| opt.reasoning.as_ref()).is_some()),
                 fim_requests: u64::from(optimization.and_then(|opt| opt.fim.as_ref()).is_some()),
+                semantic_hits: 0,
+                semantic_misses: 0,
             });
         }
     }

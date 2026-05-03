@@ -359,6 +359,11 @@ async fn window_is_maximized(window: tauri::Window) -> Result<bool, String> {
 }
 
 #[tauri::command]
+async fn window_start_dragging(window: tauri::Window) -> Result<(), String> {
+    window.start_dragging().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn claude_md_read(project_path: String) -> Result<serde_json::Value, String> {
     let path = std::path::Path::new(&project_path).join(".claude").join("CLAUDE.md");
     if !path.exists() {
@@ -641,7 +646,8 @@ pub fn run() {
             window_maximize,
             window_close,
             window_is_maximized,
-            report_ready,
+            window_start_dragging,
+            log_token_event,
             voice_speak,
             voice_stop,
             set_current_project,

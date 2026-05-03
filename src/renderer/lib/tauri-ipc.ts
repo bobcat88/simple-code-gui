@@ -131,6 +131,9 @@ export const tauriIpc = {
 
   windowIsMaximized: () =>
     invoke<boolean>('window_is_maximized'),
+
+  windowStartDragging: () =>
+    invoke<void>('window_start_dragging'),
     
   logTokenEvent: (transaction: any, savedTokens?: number) =>
     invoke<void>('log_token_event', { transaction, saved_tokens: savedTokens }),
@@ -307,6 +310,9 @@ export const tauriIpc = {
 
   onAiEvolutionCompleted: (callback: (discoveries: any[]) => void): Promise<UnlistenFn> =>
     listen<any[]>('ai-evolution-completed', (event) => callback(event.payload)),
+
+  onOptimizationStatsUpdated: (callback: (stats: any) => void): Promise<UnlistenFn> =>
+    listen<any>('optimization-stats-updated', (event) => callback(event.payload)),
 
   // GSD Engine
   gsdCreatePlan: (taskId: string, title: string) =>

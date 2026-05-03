@@ -23,6 +23,8 @@ pub struct OptimizationMetricEvent {
     pub compressions: u64,
     pub reasoning_requests: u64,
     pub fim_requests: u64,
+    pub semantic_hits: u64,
+    pub semantic_misses: u64,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -37,6 +39,8 @@ pub struct OptimizationStats {
     pub compressions: u64,
     pub reasoning_requests: u64,
     pub fim_requests: u64,
+    pub semantic_hits: u64,
+    pub semantic_misses: u64,
     pub transaction_count: u64,
 }
 
@@ -69,6 +73,22 @@ impl OptimizationMetrics {
         self.record_event(OptimizationMetricEvent {
             compressions: 1,
             provider: "unknown".to_string(),
+            ..Default::default()
+        });
+    }
+
+    pub fn record_semantic_hit(&self, provider: &str) {
+        self.record_event(OptimizationMetricEvent {
+            semantic_hits: 1,
+            provider: provider.to_string(),
+            ..Default::default()
+        });
+    }
+
+    pub fn record_semantic_miss(&self, provider: &str) {
+        self.record_event(OptimizationMetricEvent {
+            semantic_misses: 1,
+            provider: provider.to_string(),
             ..Default::default()
         });
     }
@@ -137,6 +157,8 @@ impl OptimizationStats {
         self.compressions += counters.compressions;
         self.reasoning_requests += counters.reasoning_requests;
         self.fim_requests += counters.fim_requests;
+        self.semantic_hits += counters.semantic_hits;
+        self.semantic_misses += counters.semantic_misses;
     }
 
     fn without_token_totals(mut self) -> Self {
@@ -174,6 +196,8 @@ fn aggregate_events(
         stats.compressions += event.compressions;
         stats.reasoning_requests += event.reasoning_requests;
         stats.fim_requests += event.fim_requests;
+        stats.semantic_hits += event.semantic_hits;
+        stats.semantic_misses += event.semantic_misses;
         stats.transaction_count += 1;
     }
 

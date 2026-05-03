@@ -236,6 +236,7 @@ export class TauriBackend implements ExtendedApi {
   windowMaximize(): void { tauriIpc.windowMaximize(); }
   windowClose(): void { tauriIpc.windowClose(); }
   async windowIsMaximized(): Promise<boolean> { return await tauriIpc.windowIsMaximized(); }
+  windowStartDragging(): void { tauriIpc.windowStartDragging(); }
   getPathForFile(file: File): string { return (file as any).path || ''; }
   async readClipboardImage(): Promise<{ success: boolean; hasImage?: boolean; path?: string; error?: string }> { return { success: false }; }
   async getVersion(): Promise<string> { return '2.0.0-tauri'; }
@@ -695,6 +696,12 @@ export class TauriBackend implements ExtendedApi {
   onAiEvolutionCompleted(callback: (discoveries: any[]) => void): Unsubscribe {
     let unlisten: (() => void) | undefined;
     tauriIpc.onAiEvolutionCompleted(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
+
+  onOptimizationStatsUpdated(callback: (stats: OptimizationStatsResponse) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onOptimizationStatsUpdated(callback).then(fn => unlisten = fn);
     return () => unlisten?.();
   }
 }

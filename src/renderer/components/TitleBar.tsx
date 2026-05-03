@@ -65,8 +65,15 @@ export function TitleBar({ api, title = 'Simple Code GUI' }: TitleBarProps) {
     api.windowClose()
   }
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Only drag on left click and if it's not a button or other interactive element
+    if (e.button === 0 && !(e.target as HTMLElement).closest('button')) {
+      api.windowStartDragging?.();
+    }
+  }
+
   return (
-    <div className="title-bar" data-tauri-drag-region>
+    <div className="title-bar" data-tauri-drag-region onMouseDown={handleMouseDown}>
       <div className="title-bar-drag" data-tauri-drag-region>
         <span className="title-bar-title" data-tauri-drag-region>{title}</span>
       </div>

@@ -40,6 +40,7 @@ export function NeuralHUD() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [activeProjects, setActiveProjects] = useState<string[]>([]);
   const [syncStatus, setSyncStatus] = useState<{ lastEvent: string; patternCount: number } | null>(null);
+  const [optStats, setOptStats] = useState<any | null>(null);
   const { projects } = useWorkspaceStore();
 
   const fetchActiveProjects = useCallback(async () => {
@@ -135,6 +136,10 @@ export function NeuralHUD() {
       }
     }) ?? (() => {});
 
+    const unsubscribeOptStats = api.onOptimizationStatsUpdated?.((stats: any) => {
+      setOptStats(stats);
+    }) ?? (() => {});
+
     if (api?.gsdQuantumSyncStart) {
       api.gsdQuantumSyncStart().catch(err => console.error("Quantum sync failed to start:", err));
     }
@@ -145,6 +150,7 @@ export function NeuralHUD() {
       unsubscribeApprovals();
       unsubscribeSync();
       unsubscribeEvolution();
+      unsubscribeOptStats();
     };
   }, [api]);
 
@@ -361,13 +367,29 @@ export function NeuralHUD() {
                     
                     {/* HUD Status Line */}
                     <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-[10px] text-white/40">
-                        <Activity size={10} className={cn(syncStatus ? "text-emerald-400" : "animate-pulse")} />
-                        <span>
-                          {syncStatus 
-                            ? `Quantum Sync: ${syncStatus.patternCount} bits` 
-                            : 'Swarm Consensus: 94%'}
-                        </span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2 text-[10px] text-white/40">
+                          <Activity size={10} className={cn(syncStatus ? "text-emerald-400" : "animate-pulse")} />
+                          <span>
+                            {syncStatus 
+                              ? `Quantum Sync: ${syncStatus.patternCount} bits` 
+                              : 'Swarm Consensus: 94%'}
+                          </span>
+                        </div>
+                        {optStats && (
+                          <div className="flex items-center gap-2 text-[10px]">
+                            <Zap size={10} className="text-amber-400" />
+                            <span className="text-white/50">Semantic Efficiency:</span>
+                            <span className={cn(
+                              "font-bold",
+                              (optStats.aggregate.semanticHits / (optStats.aggregate.semanticHits + optStats.aggregate.semanticMisses || 1)) > 0.7 
+                                ? "text-emerald-400" 
+                                : "text-amber-400"
+                            )}>
+                              {Math.round((optStats.aggregate.semanticHits / (optStats.aggregate.semanticHits + optStats.aggregate.semanticMisses || 1)) * 100)}%
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <span className="text-[9px] text-white/30 font-mono">
                         {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

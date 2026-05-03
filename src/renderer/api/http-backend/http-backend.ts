@@ -167,6 +167,8 @@ export class HttpBackend implements Api {
     // Not yet supported via HTTP
   }
 
+  windowStartDragging(): void {}
+
   // Session Management
 
   discoverSessions(projectPath: string, backend?: BackendId): Promise<Session[]> {

@@ -326,6 +326,8 @@ export interface OptimizationStats {
   reasoningRequests: number
   fimRequests: number
   transactionCount: number
+  semanticHits: number
+  semanticMisses: number
 }
 
 export interface OptimizationStatsResponse {
@@ -724,6 +726,7 @@ export interface Api {
   // AI Evolution
   aiTriggerEvolution?: () => Promise<DiscoveryResult[]>
   onAiEvolutionCompleted?: (callback: (discoveries: DiscoveryResult[]) => void) => Unsubscribe
+  onOptimizationStatsUpdated?: (callback: (stats: OptimizationStatsResponse) => void) => Unsubscribe
 }
 
 // ============================================================================
@@ -748,6 +751,7 @@ export interface ExtendedApi extends Api {
   windowMaximize: () => void
   windowClose: () => void
   windowIsMaximized: () => Promise<boolean>
+  windowStartDragging: () => void
 
   // File utilities
   getPathForFile: (file: File) => string

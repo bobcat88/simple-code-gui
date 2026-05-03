@@ -150,7 +150,7 @@ impl OptimizationMiddleware for CognitiveMiddleware {
 
                 if let Ok(embeddings) = service.embed(texts_to_embed).await {
                     let user_embedding = &embeddings[0];
-                    let mut reranked: Vec<(f32, String)> = Vec::new();
+                    let mut reranked: Vec<(f32, f32, String)> = Vec::new();
 
                     for (i, (kw_score, agent, content)) in top_candidates.into_iter().enumerate() {
                         let doc_embedding = &embeddings[i + 1];
@@ -158,13 +158,26 @@ impl OptimizationMiddleware for CognitiveMiddleware {
                         
                         // Hybrid score: 30% keyword, 70% semantic
                         let hybrid_score = (semantic_score * 0.7) + ((kw_score as f32 / 10.0).min(1.0) * 0.3);
-                        reranked.push((hybrid_score, format!("[{}]: {}", agent, content)));
+                        reranked.push((hybrid_score, semantic_score, format!("[{}]: {}", agent, content)));
                     }
 
                     reranked.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
-                    reranked.into_iter().take(5).map(|m| m.1).collect()
+                    
+                    // Telemetry: Record hit if top result is semantically strong
+                    if let Some(top) = reranked.first() {
+                        if top.1 > 0.7 {
+                            service.record_semantic_hit();
+                        } else {
+                            service.record_semantic_miss();
+                        }
+                    } else {
+                        service.record_semantic_miss();
+                    }
+
+                    reranked.into_iter().take(5).map(|m| m.2).collect()
                 } else {
                     // Fallback to keyword-only if embedding fails
+                    service.record_semantic_miss();
                     top_candidates.into_iter().take(5).map(|m| format!("[{}]: {}", m.1, m.2)).collect()
                 }
             }

@@ -6,6 +6,8 @@ use async_trait::async_trait;
 #[async_trait]
 pub trait EmbeddingService: Send + Sync {
     async fn embed(&self, input: Vec<String>) -> Result<Vec<Vec<f32>>, String>;
+    fn record_semantic_hit(&self);
+    fn record_semantic_miss(&self);
 }
 
 #[derive(Debug, Clone, PartialEq)]

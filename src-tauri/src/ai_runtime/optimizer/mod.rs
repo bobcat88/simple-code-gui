@@ -130,7 +130,7 @@ pub struct OptimizedProvider {
     pipeline: Arc<OptimizationPipeline>,
 }
 
-struct ProviderEmbeddingAdapter<'a>(&'a dyn AIProvider);
+struct ProviderEmbeddingAdapter<'a>(&'a dyn AIProvider, Option<Arc<OptimizationMetrics>>);
 
 #[async_trait]
 impl<'a> EmbeddingService for ProviderEmbeddingAdapter<'a> {
@@ -142,6 +142,18 @@ impl<'a> EmbeddingService for ProviderEmbeddingAdapter<'a> {
         };
         let response = self.0.embed(request).await?;
         Ok(response.embeddings)
+    }
+
+    fn record_semantic_hit(&self) {
+        if let Some(metrics) = &self.1 {
+            metrics.record_semantic_hit("provider");
+        }
+    }
+
+    fn record_semantic_miss(&self) {
+        if let Some(metrics) = &self.1 {
+            metrics.record_semantic_miss("provider");
+        }
     }
 }
 
@@ -162,7 +174,7 @@ impl AIProvider for OptimizedProvider {
             return Ok(response);
         }
         let cache_request = request.clone();
-        let adapter = ProviderEmbeddingAdapter(self.inner.as_ref());
+        let adapter = ProviderEmbeddingAdapter(self.inner.as_ref(), self.pipeline.metrics.clone());
         let optimized = self.pipeline.optimize(request, Some(&adapter)).await?;
         let response = self.inner.completion(optimized).await?;
         self.pipeline.store_response(&cache_request, &response).await;
