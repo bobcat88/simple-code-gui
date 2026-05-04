@@ -728,35 +728,98 @@ impl Executor {
                                         _ => "You are a specialized GSD Agent. Complete the task as requested.",
                                     };
 
-                                    let request = crate::ai_runtime::types::CompletionRequest {
-                                        messages: vec![
-                                            crate::ai_runtime::types::Message {
-                                                role: "system".to_string(),
-                                                content: system_prompt.to_string(),
-                                                tool_calls: None,
-                                                tool_call_id: None,
-                                                cache_control: None,
-                                            },
-                                            crate::ai_runtime::types::Message {
-                                                role: "user".to_string(),
-                                                content: task.to_string(),
-                                                tool_calls: None,
-                                                tool_call_id: None,
-                                                cache_control: None,
-                                            },
-                                        ],
-                                        tools: Some(crate::gsd_engine::tools::get_gsd_tools()), 
-                                        tool_choice: Some("auto".to_string()),
-                                        project_path: self.project_path.clone(),
-                                        active_project_paths: self.active_project_paths.clone(),
-                                        ..Default::default()
-                                    };
+                                    let mut sub_messages = vec![
+                                        crate::ai_runtime::types::Message {
+                                            role: "system".to_string(),
+                                            content: system_prompt.to_string(),
+                                            tool_calls: None,
+                                            tool_call_id: None,
+                                            cache_control: None,
+                                        },
+                                        crate::ai_runtime::types::Message {
+                                            role: "user".to_string(),
+                                            content: task.to_string(),
+                                            tool_calls: None,
+                                            tool_call_id: None,
+                                            cache_control: None,
+                                        },
+                                    ];
 
-                                    let response = ai.dispatch(request).await.map_err(|e| e.to_string())?;
-                                    
+                                    let mut sub_agent_result = String::new();
+                                    let mut delegation_turns = 0;
+                                    let max_delegation_turns = 10;
+
+                                    while delegation_turns < max_delegation_turns {
+                                        delegation_turns += 1;
+                                        
+                                        let request = crate::ai_runtime::types::CompletionRequest {
+                                            messages: sub_messages.clone(),
+                                            tools: Some(crate::gsd_engine::tools::get_gsd_tools()), 
+                                            tool_choice: Some("auto".to_string()),
+                                            project_path: self.project_path.clone(),
+                                            active_project_paths: self.active_project_paths.clone(),
+                                            optimization: Some(crate::ai_runtime::types::OptimizationRequest {
+                                                human_facing: Some(false), // Internal swarm communication
+                                                ..Default::default()
+                                            }),
+                                            ..Default::default()
+                                        };
+
+                                        let response = ai.dispatch(request).await.map_err(|e| e.to_string())?;
+                                        
+                                        // Update sub-agent memory
+                                        sub_messages.push(crate::ai_runtime::types::Message {
+                                            role: "assistant".to_string(),
+                                            content: response.content.clone(),
+                                            tool_calls: response.tool_calls.clone(),
+                                            tool_call_id: None,
+                                            cache_control: None,
+                                        });
+
+                                        if let Some(tool_calls) = response.tool_calls {
+                                            for sub_tc in tool_calls {
+                                                self.emit_execution_event(
+                                                    plan_id,
+                                                    Some(phase_id),
+                                                    Some(&step.id),
+                                                    "sub_agent_tool",
+                                                    format!("Sub-agent ({}) executing tool: {}", role, sub_tc.name),
+                                                ).await;
+
+                                                let res = crate::gsd_engine::tools::execute_tool(
+                                                    &sub_tc.name,
+                                                    &sub_tc.arguments,
+                                                    &self.project_path,
+                                                    &self.app,
+                                                ).await;
+
+                                                let tool_output = match res {
+                                                    Ok(o) => o,
+                                                    Err(e) => format!("Error: {}", e),
+                                                };
+
+                                                sub_messages.push(crate::ai_runtime::types::Message {
+                                                    role: "tool".to_string(),
+                                                    content: tool_output,
+                                                    tool_calls: None,
+                                                    tool_call_id: Some(sub_tc.id),
+                                                    cache_control: None,
+                                                });
+                                            }
+                                        } else {
+                                            // Final answer from sub-agent
+                                            sub_agent_result = response.content;
+                                            break;
+                                        }
+                                    }
+
+                                    if delegation_turns >= max_delegation_turns && sub_agent_result.is_empty() {
+                                        sub_agent_result = "Sub-agent reached maximum turns without a final response.".to_string();
+                                    }
+
                                     messages.push(Message {
                                         role: "tool".to_string(),
-                                        content: format!("Delegated Task Result ({}):\n{}", role, response.content),
+                                        content: format!("Delegated Task Result ({}):\n{}", role, sub_agent_result),
                                         tool_calls: None,
                                         tool_call_id: Some(tc.id),
                                         cache_control: None,

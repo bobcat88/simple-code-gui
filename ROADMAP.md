@@ -197,7 +197,7 @@ Finalizing the high-fidelity design system and cross-platform interaction parity
 
 ---
 
-*Last Updated: May 4, 2026*
+*Last Updated: May 4, 2026 (Phase 39 Complete)*
 
 ## Phase 38: Synaptic Orchestration (Complete)
 Implementing the high-fidelity swarm management layer and unified cognitive observability.
@@ -206,3 +206,12 @@ Implementing the high-fidelity swarm management layer and unified cognitive obse
 - [x] **Real-time Synaptic Feedback**: Extracted `useThoughtChain` hook from NeuralHUDTab; fixed subscription churn and state mutation bug for stable sub-100ms event delivery.
 - [x] **Multi-Model Orchestration**: Per-agent provider/model switcher panel (OrchestrationPanel) with live `setPtyBackend` IPC.
 - [x] **Cognitive Snapshotting v2**: MemoryVault snapshot rows expand inline with Restore Messages and Branch Workspace actions.
+
+## Phase 39: Swarm Token Optimization & Hardening (Complete)
+Implementing systematic context compression and swarm communication efficiency.
+
+- [x] **LLMLingua v2 Bridge**: Python-based context compression using `llmlingua` and `uv run`.
+- [x] **Chain of Draft (CoD)**: Implemented high-density reasoning middleware for internal deliberations.
+- [x] **Caveman Middleware**: Filler-stripping for agent-to-agent internal communication (~65% reduction).
+- [x] **Hardened Swarm Delegation**: Native autonomous multi-turn tool-calling loops for sub-agents in `executor.rs`.
+- [x] **Context Optimization Pipeline**: Integrated compression, caveman, and CoD into the core AI runtime.

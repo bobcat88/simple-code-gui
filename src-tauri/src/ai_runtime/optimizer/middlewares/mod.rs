@@ -6,6 +6,7 @@ mod reasoning;
 mod cache;
 
 mod cognitive;
+mod caveman;
 
 pub use system_prompt::SystemPromptMiddleware;
 pub use budget::BudgetMiddleware;
@@ -14,3 +15,4 @@ pub use compression::CompressionMiddleware;
 pub use reasoning::ReasoningMiddleware;
 pub use cache::CacheMiddleware;
 pub use cognitive::CognitiveMiddleware;
+pub use caveman::CavemanMiddleware;

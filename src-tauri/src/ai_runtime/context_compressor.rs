@@ -26,28 +26,61 @@ impl ContextCompressor {
     }
 
     pub fn is_available(&self) -> bool {
-        let Some(command) = self.command.as_ref() else {
-            return false;
-        };
-        Command::new(command)
+        Command::new("uv")
             .arg("--version")
             .output()
             .is_ok_and(|output| output.status.success())
     }
 
     pub fn compress(&self, request: &mut CompletionRequest) -> usize {
-        if self.command.is_none() || contains_tool_boundary(request) {
+        if contains_tool_boundary(request) {
             return 0;
         }
-        let before = request
-            .messages
-            .iter()
-            .map(|message| message.content.len())
-            .sum::<usize>();
-        if before < self.min_chars {
-            return 0;
+
+        let mut total_saved = 0;
+        
+        for message in request.messages.iter_mut() {
+            if message.content.len() < self.min_chars {
+                continue;
+            }
+
+            // Call LLMLingua v2 bridge
+            let input = serde_json::json!({
+                "text": message.content,
+                "rate": 0.6
+            });
+
+            let child = Command::new("uv")
+                .args(["run", "--with", "llmlingua", "--with", "torch", "--with", "transformers", "scripts/llmlingua_v2.py"])
+                .stdin(std::process::Stdio::piped())
+                .stdout(std::process::Stdio::piped())
+                .stderr(std::process::Stdio::piped())
+                .spawn()
+                .map_err(|e| e.to_string());
+
+            if let Ok(mut child) = child {
+                use std::io::Write;
+                if let Some(mut stdin) = child.stdin.take() {
+                    let _ = stdin.write_all(input.to_string().as_bytes());
+                }
+
+                if let Ok(output) = child.wait_with_output() {
+                    if output.status.success() {
+                        let res: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap_or_default();
+                        if let Some(compressed) = res["compressed"].as_str() {
+                            let saved = message.content.len().saturating_sub(compressed.len());
+                            message.content = compressed.to_string();
+                            total_saved += saved;
+                        }
+                    } else {
+                        let err = String::from_utf8_lossy(&output.stderr);
+                        eprintln!("LLMLingua compression failed: {}", err);
+                    }
+                }
+            }
         }
-        0
+        
+        total_saved
     }
 }
 

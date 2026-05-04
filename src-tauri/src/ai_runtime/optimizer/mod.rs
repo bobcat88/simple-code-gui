@@ -42,6 +42,7 @@ impl OptimizationPipeline {
             Arc::new(BudgetMiddleware),
             Arc::new(FormatHintMiddleware),
             Arc::new(ReasoningMiddleware),
+            Arc::new(CavemanMiddleware),
             Arc::new(CacheMiddleware),
             Arc::new(CognitiveMiddleware),
         ];

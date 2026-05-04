@@ -29,26 +29,13 @@ impl OptimizationMiddleware for ReasoningMiddleware {
             return Ok(());
         };
 
-        match provider {
-            ProviderKind::Anthropic => {
-                // Extended thinking support for Claude 3.7+
-                // This is typically handled via a thinking block in the request
-                // For now we map our reasoning effort to the provider's expectations
-            }
-            ProviderKind::DeepSeekFlash | ProviderKind::DeepSeekPro => {
-                // DeepSeek CoD / Thinking injection
-                // If it's a reasoning task and not human-facing, we can use CoD
-                if context.task == Some(crate::ai_runtime::types::TaskType::Reasoning) && !context.human_facing {
-                    Self::inject_cod(request);
-                }
-            }
-            ProviderKind::Ollama | ProviderKind::OpenAICompatible => {
-                // Models that don't support native reasoning effort often benefit from CoD
-                if context.task == Some(crate::ai_runtime::types::TaskType::Reasoning) {
-                    Self::inject_cod(request);
-                }
-            }
-            _ => {}
+        // Apply CoD to all internal reasoning or coding tasks to save tokens
+        let is_internal_reasoning = (context.task == Some(crate::ai_runtime::types::TaskType::Reasoning) 
+            || context.task == Some(crate::ai_runtime::types::TaskType::Coding)) 
+            && !context.human_facing;
+
+        if is_internal_reasoning {
+            Self::inject_cod(request);
         }
         
         Ok(())
