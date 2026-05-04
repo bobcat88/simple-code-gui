@@ -184,7 +184,7 @@ export const MemoryVault: React.FC<{
     setActionState((prev) => ({ ...prev, [id]: { ...(prev[id] ?? { loading: null, message: null, isError: false }), loading } }));
 
   const setMessage = (id: string, message: string | null, isError = false) => {
-    setActionState((prev) => ({ ...prev, [id]: { ...getState(id), loading: null, message, isError } }));
+    setActionState((prev) => ({ ...prev, [id]: { ...(prev[id] ?? { loading: null, message: null, isError: false }), loading: null, message, isError } }));
     if (message) setTimeout(() => setActionState((prev) => ({ ...prev, [id]: { ...(prev[id] ?? { loading: null, message: null, isError: false }), message: null, isError: false } })), 3000);
   };
 
