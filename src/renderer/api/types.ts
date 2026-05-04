@@ -206,6 +206,7 @@ export interface ApprovalResponse {
   conditions?: string[]
 }
 
+
 export interface AgentAction {
   id: string
   agentId: string
@@ -223,6 +224,21 @@ export interface AgentStatus {
   status: 'idle' | 'busy' | 'blocked' | 'error'
   currentTask?: string
   progress?: number
+  lastAction?: string
+  worktree?: string
+  metrics?: {
+    tasksCompleted: number
+    uptime: number
+    memoryUsage?: number
+  }
+}
+
+export interface SystemTelemetry {
+  cpu: number
+  memory: number
+  activeJobs: number
+  uptime: number
+  health: 'healthy' | 'warning' | 'degraded'
 }
 
 // ============================================================================
@@ -722,11 +738,40 @@ export interface Api {
   brainstormSaveCanvas?: (cwd: string, canvas: BrainstormCanvas) => Promise<void>
   brainstormAgenticSketch?: (cwd: string, baseId: string, baseTitle: string, baseContent: string) => Promise<BrainstormCanvasNode>
   brainstormArchitectReview?: (cwd: string, baseId: string, baseType: string, baseTitle: string, baseContent: string) => Promise<BrainstormCanvasNode>
-  
+
   // AI Evolution
   aiTriggerEvolution?: () => Promise<DiscoveryResult[]>
   onAiEvolutionCompleted?: (callback: (discoveries: DiscoveryResult[]) => void) => Unsubscribe
   onOptimizationStatsUpdated?: (callback: (stats: OptimizationStatsResponse) => void) => Unsubscribe
+
+  // ==========================================================================
+  // Orchestration
+  // ==========================================================================
+
+  /**
+   * Subscribe to agent actions
+   */
+  onAgentAction?: (callback: (action: AgentAction) => void) => Unsubscribe
+
+  /**
+   * Subscribe to agent status updates
+   */
+  onAgentStatus?: (callback: (status: AgentStatus) => void) => Unsubscribe
+
+  /**
+   * Subscribe to system telemetry updates
+   */
+  onTelemetry?: (callback: (telemetry: SystemTelemetry) => void) => Unsubscribe
+
+  /**
+   * Approve a pending action
+   */
+  approveAction?: (actionId: string) => Promise<{ success: boolean }>
+
+  /**
+   * Reject a pending action
+   */
+  rejectAction?: (actionId: string) => Promise<{ success: boolean }>
 }
 
 // ============================================================================

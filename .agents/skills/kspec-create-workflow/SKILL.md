@@ -5,7 +5,6 @@ description: Formalize repeatable patterns into trackable kspec workflows.
   skills.
 ---
 <!-- kspec-managed -->
-
 # Create Workflow
 
 Formalize repeatable patterns into trackable kspec workflows. A meta-workflow for building new workflows with consistent structure.

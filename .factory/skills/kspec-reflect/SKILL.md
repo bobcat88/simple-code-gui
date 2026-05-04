@@ -4,7 +4,6 @@ description: Structured reflection at the end of work sessions. Identifies
   learnings, friction points, and improvements for system evolution.
 ---
 <!-- kspec-managed -->
-
 # Session Reflection
 
 Structured reflection at the end of a work session. Identifies learnings, friction points, and improvements — the raw material for system evolution.

@@ -4,7 +4,6 @@ description: Assess and prepare tasks for automation eligibility. Verify spec
   coverage, acceptance criteria, and task readiness for automated agents.
 ---
 <!-- kspec-managed -->
-
 # Automation Triage
 
 Assess and prepare tasks for automation eligibility. Goal: make tasks self-contained so they can be worked on by automated agents.

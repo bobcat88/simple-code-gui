@@ -42,6 +42,7 @@ import { TranscriptionOverlay } from '../components/voice/TranscriptionOverlay'
 import { NeuralHUD } from '../components/gsd/NeuralHUD'
 import { ConsensusOverlay } from '../components/orchestration/ConsensusOverlay'
 import { DialogProvider } from '../contexts/DialogContext'
+import { OrchestrationPanel } from '../components/orchestration/OrchestrationPanel'
 
 export interface MainAppProps {
   api: Api
@@ -213,6 +214,7 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
   const [mobileConnectOpen, setMobileConnectOpen] = useState(false)
   const [showFileBrowser, setShowFileBrowser] = useState(false)
+  const [orchestrationOpen, setOrchestrationOpen] = useState(false)
   const [fileBrowserPath, setFileBrowserPath] = useState<string | null>(null)
   const [activeSection, setActiveSection] = useState('terminal')
   const [settingsCategory, setSettingsCategory] = useState('general')
@@ -437,8 +439,18 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
                       onCloseTab={handleCloseTab}
                       onToggleIntelligence={() => setIntelligenceCollapsed(!intelligenceCollapsed)}
                       intelligenceCollapsed={intelligenceCollapsed}
+                      onRenameTab={handleRenameTab}
+                      swipeContainerRef={terminalContainerRef as RefObject<HTMLElement>}
+                      onOpenSidebar={openMobileDrawer}
                       api={api}
                     />
+                    <button
+                      className={`orchestration-toggle-btn ${orchestrationOpen ? 'active' : ''}`}
+                      onClick={() => setOrchestrationOpen(!orchestrationOpen)}
+                      title="Toggle Orchestration Hub"
+                    >
+                      🤖
+                    </button>
                     {viewMode === 'tabs' ? (
                       <div className="flex-1 relative overflow-hidden" ref={terminalContainerRef}>
                         {openTabs.map((tab) => (
@@ -518,6 +530,11 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
                   width={intelligenceWidth}
                   activeTab={activeTab}
                 />
+              )}
+              {orchestrationOpen && (
+                <div className="orchestration-sidebar">
+                  <OrchestrationPanel />
+                </div>
               )}
             </>
           )}

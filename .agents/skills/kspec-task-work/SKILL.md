@@ -5,7 +5,6 @@ description: Structured task lifecycle — start, work, note, submit, complete. 
   quality checks.
 ---
 <!-- kspec-managed -->
-
 # Task Work
 
 Structured workflow for working on tasks. Full lifecycle from start through completion.

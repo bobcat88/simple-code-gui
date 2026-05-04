@@ -80,7 +80,9 @@ export type {
   PtyRecreatedCallback,
   ApiOpenSessionCallback,
   Unsubscribe,
-  ApiContext
+  ApiContext,
+  AgentAction,
+  AgentStatus
 } from './types'
 
 export { HttpBackend, createHttpBackend } from './http-backend'

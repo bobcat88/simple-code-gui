@@ -5,7 +5,6 @@ description: Triage inbox items systematically. Records decisions with audit
   eligibility triage.
 ---
 <!-- kspec-managed -->
-
 # Triage
 
 Systematically process items: inbox, observations, or automation eligibility.

@@ -6,7 +6,6 @@ description: How to review work and use kspec review records. Covers both
   interface.
 ---
 <!-- kspec-managed -->
-
 # Review
 
 How to review work and use kspec review records. Covers creating reviews, structuring findings, AC coverage verification, and the full review record interface.

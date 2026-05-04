@@ -5,7 +5,6 @@ description: Process inbox items using the record-act pattern. Categorize,
   audit trail.
 ---
 <!-- kspec-managed -->
-
 # Inbox Triage
 
 Systematically process inbox items using the **record → act** pattern. Records decisions with audit trail, then executes actions.

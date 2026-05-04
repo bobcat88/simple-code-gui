@@ -1,0 +1,15 @@
+node_modules/
+dist/
+out/
+*.log
+.DS_Store
+dist-build/
+.kspec/
+.kspec-sessions/
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+.gitnexus
+.kspec-worktrees/
