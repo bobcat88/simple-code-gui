@@ -38,7 +38,9 @@ export function useThoughtChain(api: ExtendedApi, nodes: Node[]): ThoughtChainSt
   }, []);
 
   useEffect(() => {
-    const unsubExecution = api.onGsdExecutionEvent(handleExecutionEvent);
+    const unsubExecution = api.onGsdExecutionEvent
+      ? api.onGsdExecutionEvent(handleExecutionEvent)
+      : () => {};
 
     const unsubSync = api.onGsdSyncEvent
       ? api.onGsdSyncEvent(() => {
