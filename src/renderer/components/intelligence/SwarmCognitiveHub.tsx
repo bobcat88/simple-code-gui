@@ -8,6 +8,7 @@ import {
   Share2,
   Layers,
   ChevronRight,
+  ChevronDown,
   Download,
   Camera,
   CheckCircle2,
@@ -87,7 +88,7 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({ api, proje
         )}
         {activeLayer === 'memory' && (
           <div className="absolute inset-0 p-4 animate-in slide-in-from-right-4 duration-500 overflow-y-auto custom-scrollbar">
-            <MemoryVault snapshots={snapshots} onRefresh={refreshSnapshots} api={api} />
+            <MemoryVault snapshots={snapshots} onRefresh={refreshSnapshots} api={api} projectPath={projectPath} />
           </div>
         )}
 
@@ -165,51 +166,149 @@ const TelemetryCard: React.FC<{ label: string; value: string; trend: 'up' | 'dow
   </div>
 );
 
-const MemoryVault: React.FC<{ snapshots: SwarmSnapshot[]; onRefresh: () => void; api: ExtendedApi }> = ({ snapshots, onRefresh, api }) => (
-  <div className="space-y-4">
-    <div className="flex items-center justify-between mb-2 px-1">
-      <div className="flex items-center gap-2">
-        <Shield size={14} className="text-codex-neon" />
-        <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Cognitive Backups</span>
-      </div>
-      <button onClick={onRefresh} className="text-[9px] font-bold text-codex-neon/60 hover:text-codex-neon uppercase">Refresh Vault</button>
-    </div>
-    
-    <div className="space-y-2">
-      {snapshots.length === 0 ? (
-        <div className="py-20 text-center opacity-20 space-y-4">
-          <History size={48} className="mx-auto" />
-          <p className="text-[10px] font-bold uppercase tracking-widest">No neural footprints detected</p>
+export const MemoryVault: React.FC<{
+  snapshots: SwarmSnapshot[];
+  onRefresh: () => void;
+  api: ExtendedApi;
+  projectPath: string;
+}> = ({ snapshots, onRefresh, api, projectPath }) => {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [actionState, setActionState] = useState<
+    Record<string, { loading: 'restore' | 'branch' | null; message: string | null; isError: boolean }>
+  >({});
+
+  const getState = (id: string) =>
+    actionState[id] ?? { loading: null, message: null, isError: false };
+
+  const setLoading = (id: string, loading: 'restore' | 'branch' | null) =>
+    setActionState((prev) => ({ ...prev, [id]: { ...getState(id), loading } }));
+
+  const setMessage = (id: string, message: string | null, isError = false) => {
+    setActionState((prev) => ({ ...prev, [id]: { ...getState(id), loading: null, message, isError } }));
+    if (message) setTimeout(() => setActionState((prev) => ({ ...prev, [id]: { ...getState(id), message: null, isError: false } })), 3000);
+  };
+
+  const handleRestore = async (snapshot: SwarmSnapshot) => {
+    setLoading(snapshot.id, 'restore');
+    try {
+      const result = await api.gsdHydrateSwarm(projectPath);
+      if (result.success) setMessage(snapshot.id, `Restored ${result.count} messages`);
+      else setMessage(snapshot.id, result.error ?? 'Restore failed', true);
+    } catch (err) {
+      setMessage(snapshot.id, err instanceof Error ? err.message : String(err), true);
+    }
+  };
+
+  const handleBranch = async (snapshot: SwarmSnapshot) => {
+    setLoading(snapshot.id, 'branch');
+    try {
+      const result = await api.gsdCreateSnapshotWorkspace(snapshot.id);
+      if (result.success) setMessage(snapshot.id, `Workspace isolated at: ${result.path}`);
+      else setMessage(snapshot.id, result.error ?? 'Branch failed', true);
+    } catch (err) {
+      setMessage(snapshot.id, err instanceof Error ? err.message : String(err), true);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-2 px-1">
+        <div className="flex items-center gap-2">
+          <Shield size={14} className="text-codex-neon" />
+          <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Cognitive Backups</span>
         </div>
-      ) : (
-        snapshots.map((snapshot) => (
-          <div 
-            key={snapshot.id}
-            className="group p-3 rounded-xl bg-white/5 border border-white/5 hover:border-codex-neon/30 transition-all relative overflow-hidden"
-          >
-            <div className="flex items-center justify-between relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-codex-neon/10 border border-codex-neon/20">
-                  <Layers size={14} className="text-codex-neon" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-white/90 uppercase tracking-tight">{snapshot.name}</h4>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[9px] text-white/30 font-mono">@{snapshot.commit_sha?.substring(0, 7)}</span>
-                    <span className="text-white/10">•</span>
-                    <span className="text-[9px] text-white/30 italic">
-                      {formatDistanceToNow(new Date(snapshot.timestamp), { addSuffix: true })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <button className="p-2 rounded-lg bg-white/5 text-white/40 hover:text-codex-neon transition-colors">
-                <ChevronRight size={16} />
-              </button>
-            </div>
+        <button onClick={onRefresh} className="text-[9px] font-bold text-codex-neon/60 hover:text-codex-neon uppercase">
+          Refresh Vault
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        {snapshots.length === 0 ? (
+          <div className="py-20 text-center opacity-20 space-y-4">
+            <History size={48} className="mx-auto" />
+            <p className="text-[10px] font-bold uppercase tracking-widest">No neural footprints detected</p>
           </div>
-        ))
-      )}
+        ) : (
+          snapshots.map((snapshot) => {
+            const isExpanded = expandedId === snapshot.id;
+            const state = getState(snapshot.id);
+            return (
+              <div
+                key={snapshot.id}
+                className={cn(
+                  'rounded-xl border transition-all relative overflow-hidden',
+                  isExpanded
+                    ? 'bg-codex-neon/5 border-codex-neon/20'
+                    : 'bg-white/5 border-white/5 hover:border-codex-neon/30'
+                )}
+              >
+                {/* Row header — clickable */}
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : snapshot.id)}
+                  className="w-full flex items-center justify-between p-3 text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-codex-neon/10 border border-codex-neon/20">
+                      <Layers size={14} className="text-codex-neon" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white/90 uppercase tracking-tight">{snapshot.name}</h4>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[9px] text-white/30 font-mono">@{snapshot.commit_sha?.substring(0, 7)}</span>
+                        <span className="text-white/10">•</span>
+                        <span className="text-[9px] text-white/30 italic">
+                          {formatDistanceToNow(new Date(snapshot.timestamp), { addSuffix: true })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {isExpanded
+                    ? <ChevronDown size={16} className="text-codex-neon/60 transition-transform duration-200" />
+                    : <ChevronRight size={16} className="text-white/40 transition-transform duration-200" />
+                  }
+                </button>
+
+                {/* Expanded actions */}
+                {isExpanded && (
+                  <div className="px-3 pb-3 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                    {state.message && (
+                      <p className={cn('text-[8px] px-1', state.isError ? 'text-red-400' : 'text-codex-neon/60')}>
+                        {state.message}
+                      </p>
+                    )}
+                    <div className="flex gap-2">
+                      <button
+                        aria-label="Restore Messages"
+                        onClick={() => handleRestore(snapshot)}
+                        disabled={state.loading !== null}
+                        className={cn(
+                          'flex-1 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest border transition-all',
+                          'bg-codex-neon/10 text-codex-neon border-codex-neon/30 hover:bg-codex-neon/20',
+                          state.loading !== null && 'opacity-40 cursor-not-allowed'
+                        )}
+                      >
+                        {state.loading === 'restore' ? '…' : '⬇ Restore Messages'}
+                      </button>
+                      <button
+                        aria-label="Branch Workspace"
+                        onClick={() => handleBranch(snapshot)}
+                        disabled={state.loading !== null}
+                        className={cn(
+                          'flex-1 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest border transition-all',
+                          'bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/20',
+                          state.loading !== null && 'opacity-40 cursor-not-allowed'
+                        )}
+                      >
+                        {state.loading === 'branch' ? '…' : '⎇ Branch Workspace'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
