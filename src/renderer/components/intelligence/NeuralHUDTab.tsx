@@ -16,6 +16,7 @@ import {
   Brain
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import { useThoughtChain } from '../../hooks/useThoughtChain'
 import type { ExtendedApi } from '../../api/types'
 
 export interface Node {
@@ -49,9 +50,6 @@ export function NeuralHUDTab({ api, projectPath, embedded }: NeuralHUDTabProps) 
   const [isLoading, setIsLoading] = useState(false)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeThought, setActiveThought] = useState<{ message: string, nodeIds: string[] } | null>(null)
-  const [thoughtHistory, setThoughtHistory] = useState<any[]>([])
-  const [highlightNodes, setHighlightNodes] = useState(new Set())
   const [highlightLinks, setHighlightLinks] = useState(new Set())
   const [hoverNode, setHoverNode] = useState<any>(null)
 
@@ -100,77 +98,16 @@ export function NeuralHUDTab({ api, projectPath, embedded }: NeuralHUDTabProps) 
     }
   }, [api])
 
+  const { thoughtHistory, activeThought, highlightNodes } = useThoughtChain(api, graphData.nodes);
+
   useEffect(() => {
-    fetchGraphData()
-
-    // Initialize Quantum Sync
+    fetchGraphData();
     if (api.gsdQuantumSyncStart) {
-      api.gsdQuantumSyncStart().catch(err => console.error('Failed to start quantum sync:', err));
+      api.gsdQuantumSyncStart().catch((err) =>
+        console.error('Failed to start quantum sync:', err)
+      );
     }
-
-    // Listen for real-time swarm execution events
-    const unlistenExecution = api.onGsdExecutionEvent((event: any) => {
-      console.log('NeuralHUD received event:', event)
-      
-      // Add to history
-      setThoughtHistory(prev => [event, ...prev].slice(0, 50))
-
-      // Identify related nodes based on message content or IDs in the event
-      const relatedNodeIds: string[] = []
-      // Simple keyword matching for demo/foundation
-      const message = event.message.toLowerCase()
-      
-      setGraphData(current => {
-        current.nodes.forEach(node => {
-          if (message.includes(node.name.toLowerCase())) {
-            relatedNodeIds.push(node.id)
-          }
-        });
-        return current
-      })
-
-      if (relatedNodeIds.length > 0) {
-        setHighlightNodes(new Set(relatedNodeIds))
-        
-        // Auto-orbit to the first related node if one exists
-        const firstNode = graphData.nodes.find(n => n.id === relatedNodeIds[0])
-        if (firstNode && fgRef.current) {
-          // Subtle camera nudge towards activity
-          // fgRef.current.cameraPosition(...)
-        }
-      }
-
-      setActiveThought({ message: event.message, nodeIds: relatedNodeIds })
-      
-      // Fade out the thought bubble after a few seconds
-      setTimeout(() => {
-        setActiveThought(current => {
-          if (current?.message === event.message) return null
-          return current
-        })
-        setHighlightNodes(new Set())
-      }, 5000)
-    })
-
-    // Listen for synaptic sync events
-    const unlistenSync = api.onGsdSyncEvent ? api.onGsdSyncEvent((event: any) => {
-      console.log('NeuralHUD received sync event:', event)
-      // Refresh graph data when sync occurs
-      fetchGraphData()
-      
-      // Add a special "Sync" event to history
-      setThoughtHistory(prev => [{
-        timestamp: Date.now(),
-        eventType: 'SYNC',
-        message: 'Synaptic shift detected. Knowledge graph re-synchronized.'
-      }, ...prev].slice(0, 50))
-    }) : Promise.resolve(() => {});
-
-    return () => {
-      unlistenExecution.then(fn => fn())
-      unlistenSync.then(fn => fn())
-    }
-  }, [fetchGraphData, api, graphData.nodes])
+  }, [fetchGraphData, api])
 
   const getNodeColor = (type: string) => {
     switch (type.toLowerCase()) {
