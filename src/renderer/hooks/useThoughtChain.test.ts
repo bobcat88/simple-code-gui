@@ -12,8 +12,8 @@ const makeEvent = (message: string, eventType = 'STEP'): GsdExecutionEvent => ({
 });
 
 const makeApi = (overrides: Partial<ExtendedApi> = {}): ExtendedApi => ({
-  onGsdExecutionEvent: vi.fn(() => Promise.resolve(() => {})),
-  onGsdSyncEvent: vi.fn(() => Promise.resolve(() => {})),
+  onGsdExecutionEvent: vi.fn(() => () => {}),
+  onGsdSyncEvent: vi.fn(() => () => {}),
   ...overrides,
 } as unknown as ExtendedApi);
 
@@ -32,22 +32,20 @@ describe('useThoughtChain', () => {
     expect(api.onGsdExecutionEvent).toHaveBeenCalledOnce();
   });
 
-  it('unsubscribes on unmount', async () => {
+  it('unsubscribes on unmount', () => {
     const unsub = vi.fn();
     const api = makeApi({
-      onGsdExecutionEvent: vi.fn(() => Promise.resolve(unsub)),
+      onGsdExecutionEvent: vi.fn(() => unsub),
     });
     const { unmount } = renderHook(() => useThoughtChain(api, nodes));
-    await act(async () => {});
     unmount();
-    await act(async () => {});
     expect(unsub).toHaveBeenCalledOnce();
   });
 
   it('adds incoming events to thoughtHistory newest first', async () => {
     let trigger: (e: GsdExecutionEvent) => void = () => {};
     const api = makeApi({
-      onGsdExecutionEvent: vi.fn((cb) => { trigger = cb; return Promise.resolve(() => {}); }),
+      onGsdExecutionEvent: vi.fn((cb) => { trigger = cb; return () => {}; }),
     });
     const { result } = renderHook(() => useThoughtChain(api, nodes));
     await act(async () => { trigger(makeEvent('first')); });
@@ -59,7 +57,7 @@ describe('useThoughtChain', () => {
   it('caps thoughtHistory at 50 entries', async () => {
     let trigger: (e: GsdExecutionEvent) => void = () => {};
     const api = makeApi({
-      onGsdExecutionEvent: vi.fn((cb) => { trigger = cb; return Promise.resolve(() => {}); }),
+      onGsdExecutionEvent: vi.fn((cb) => { trigger = cb; return () => {}; }),
     });
     const { result } = renderHook(() => useThoughtChain(api, nodes));
     await act(async () => {
@@ -71,7 +69,7 @@ describe('useThoughtChain', () => {
   it('sets activeThought with matched nodeIds', async () => {
     let trigger: (e: GsdExecutionEvent) => void = () => {};
     const api = makeApi({
-      onGsdExecutionEvent: vi.fn((cb) => { trigger = cb; return Promise.resolve(() => {}); }),
+      onGsdExecutionEvent: vi.fn((cb) => { trigger = cb; return () => {}; }),
     });
     const { result } = renderHook(() => useThoughtChain(api, nodes));
     await act(async () => { trigger(makeEvent('authservice is being updated')); });
@@ -83,7 +81,7 @@ describe('useThoughtChain', () => {
   it('highlightNodes contains matched node IDs', async () => {
     let trigger: (e: GsdExecutionEvent) => void = () => {};
     const api = makeApi({
-      onGsdExecutionEvent: vi.fn((cb) => { trigger = cb; return Promise.resolve(() => {}); }),
+      onGsdExecutionEvent: vi.fn((cb) => { trigger = cb; return () => {}; }),
     });
     const { result } = renderHook(() => useThoughtChain(api, nodes));
     await act(async () => { trigger(makeEvent('database migration running')); });
@@ -94,7 +92,7 @@ describe('useThoughtChain', () => {
   it('activeThought clears after 5000ms', async () => {
     let trigger: (e: GsdExecutionEvent) => void = () => {};
     const api = makeApi({
-      onGsdExecutionEvent: vi.fn((cb) => { trigger = cb; return Promise.resolve(() => {}); }),
+      onGsdExecutionEvent: vi.fn((cb) => { trigger = cb; return () => {}; }),
     });
     const { result } = renderHook(() => useThoughtChain(api, nodes));
     await act(async () => { trigger(makeEvent('something')); });
@@ -106,7 +104,7 @@ describe('useThoughtChain', () => {
   it('sync events add SYNC entry to thoughtHistory', async () => {
     let triggerSync: (e: any) => void = () => {};
     const api = makeApi({
-      onGsdSyncEvent: vi.fn((cb) => { triggerSync = cb; return Promise.resolve(() => {}); }),
+      onGsdSyncEvent: vi.fn((cb) => { triggerSync = cb; return () => {}; }),
     });
     const { result } = renderHook(() => useThoughtChain(api, nodes));
     await act(async () => { triggerSync({ type: 'sync' }); });
@@ -118,7 +116,7 @@ describe('useThoughtChain', () => {
     let trigger: (e: GsdExecutionEvent) => void = () => {};
     const subscribeCount = { n: 0 };
     const api = makeApi({
-      onGsdExecutionEvent: vi.fn((cb) => { trigger = cb; subscribeCount.n++; return Promise.resolve(() => {}); }),
+      onGsdExecutionEvent: vi.fn((cb) => { trigger = cb; subscribeCount.n++; return () => {}; }),
     });
     const initialNodes: Node[] = [];
     const { result, rerender } = renderHook(
@@ -129,5 +127,16 @@ describe('useThoughtChain', () => {
     expect(subscribeCount.n).toBe(1);
     await act(async () => { trigger(makeEvent('authservice check')); });
     expect(result.current.highlightNodes.has('n1')).toBe(true);
+  });
+
+  it('highlightNodes is empty when no nodes match', async () => {
+    let trigger: (e: GsdExecutionEvent) => void = () => {};
+    const api = makeApi({
+      onGsdExecutionEvent: vi.fn((cb) => { trigger = cb; return () => {}; }),
+    });
+    const { result } = renderHook(() => useThoughtChain(api, nodes));
+    await act(async () => { trigger(makeEvent('database migration running')); }); // matches n2
+    await act(async () => { trigger(makeEvent('something unrelated')); }); // matches nothing
+    expect(result.current.highlightNodes.size).toBe(0);
   });
 });

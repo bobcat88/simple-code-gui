@@ -27,9 +27,7 @@ export function useThoughtChain(api: ExtendedApi, nodes: Node[]): ThoughtChainSt
       .map((n) => n.id);
 
     setActiveThought({ message: event.message, nodeIds: matched });
-    if (matched.length > 0) {
-      setHighlightNodes(new Set(matched));
-    }
+    setHighlightNodes(new Set(matched));
 
     setTimeout(() => {
       setActiveThought((current) =>
@@ -40,10 +38,10 @@ export function useThoughtChain(api: ExtendedApi, nodes: Node[]): ThoughtChainSt
   }, []);
 
   useEffect(() => {
-    const unsubExecution = (api.onGsdExecutionEvent as unknown as (cb: (event: GsdExecutionEvent) => void) => Promise<() => void>)(handleExecutionEvent);
+    const unsubExecution = api.onGsdExecutionEvent(handleExecutionEvent);
 
     const unsubSync = api.onGsdSyncEvent
-      ? (api.onGsdSyncEvent as unknown as (cb: (event: any) => void) => Promise<() => void>)(() => {
+      ? api.onGsdSyncEvent(() => {
           setThoughtHistory((prev) =>
             [
               {
@@ -56,11 +54,11 @@ export function useThoughtChain(api: ExtendedApi, nodes: Node[]): ThoughtChainSt
             ].slice(0, 50)
           );
         })
-      : Promise.resolve(() => {});
+      : () => {};
 
     return () => {
-      unsubExecution.then((fn) => fn());
-      unsubSync.then((fn) => fn());
+      unsubExecution();
+      unsubSync();
     };
   }, [api, handleExecutionEvent]);
 
