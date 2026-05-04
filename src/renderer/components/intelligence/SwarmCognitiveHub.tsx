@@ -181,11 +181,11 @@ export const MemoryVault: React.FC<{
     actionState[id] ?? { loading: null, message: null, isError: false };
 
   const setLoading = (id: string, loading: 'restore' | 'branch' | null) =>
-    setActionState((prev) => ({ ...prev, [id]: { ...getState(id), loading } }));
+    setActionState((prev) => ({ ...prev, [id]: { ...(prev[id] ?? { loading: null, message: null, isError: false }), loading } }));
 
   const setMessage = (id: string, message: string | null, isError = false) => {
     setActionState((prev) => ({ ...prev, [id]: { ...getState(id), loading: null, message, isError } }));
-    if (message) setTimeout(() => setActionState((prev) => ({ ...prev, [id]: { ...getState(id), message: null, isError: false } })), 3000);
+    if (message) setTimeout(() => setActionState((prev) => ({ ...prev, [id]: { ...(prev[id] ?? { loading: null, message: null, isError: false }), message: null, isError: false } })), 3000);
   };
 
   const handleRestore = async (snapshot: SwarmSnapshot) => {
