@@ -18,7 +18,7 @@ import {
 import { cn } from '../../lib/utils'
 import type { ExtendedApi } from '../../api/types'
 
-interface Node {
+export interface Node {
   id: string
   name: string
   type: string
