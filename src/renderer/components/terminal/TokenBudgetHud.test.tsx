@@ -52,6 +52,8 @@ describe('TokenBudgetHud', () => {
             compressions: 1,
             reasoningRequests: 0,
             fimRequests: 0,
+            semanticHits: 0,
+            semanticMisses: 0,
             transactionCount: 2,
           },
           session: {
@@ -64,6 +66,8 @@ describe('TokenBudgetHud', () => {
             compressions: 1,
             reasoningRequests: 0,
             fimRequests: 0,
+            semanticHits: 0,
+            semanticMisses: 0,
             transactionCount: 2,
           },
           providerBreakdown: [],

@@ -3,7 +3,6 @@ import { listen, UnlistenFn } from '@tauri-apps/api/event';
 import type { BackendId, Settings, Workspace, TokenHistoryResponse, OptimizationStatsResponse } from '../api/types';
 import type {
   TokenStatsResponse,
-  HealthStatusResponse,
   ExtensionRegistryResponse,
   ProjectScanResponse,
   InitializationProposalResponse,
@@ -298,7 +297,7 @@ export const tauriIpc = {
 
   // Health & Diagnostics
   healthGetStatus: () =>
-    invoke<HealthStatusResponse>('health_get_status'),
+    invoke<any>('health_get_status'),
   healthLogCheck: (checkType: string, status: string, details?: string) =>
     invoke<void>('health_log_check', { checkType, status, details }),
   diagnosticsGenerateBundle: () =>

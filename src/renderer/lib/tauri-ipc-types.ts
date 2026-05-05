@@ -6,12 +6,6 @@ export interface TokenStatsResponse {
 }
 
 
-export interface HealthStatusResponse {
-  status: string
-  checks: unknown[]
-  [key: string]: unknown
-}
-
 export interface ExtensionRegistryResponse {
   extensions: unknown[]
   [key: string]: unknown
