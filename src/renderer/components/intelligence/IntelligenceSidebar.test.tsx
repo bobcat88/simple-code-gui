@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { IntelligenceSidebar } from './IntelligenceSidebar'
+import { DialogProvider } from '../../contexts/DialogContext'
 import type { ExtendedApi, ProjectCapabilityScan, ProjectIntelligence } from '../../api/types'
 
 vi.mock('../../hooks/useSwarmMessages', () => ({
@@ -58,6 +59,7 @@ const baseCapabilityScan: ProjectCapabilityScan = {
 
 function renderSidebar(capabilityScan: ProjectCapabilityScan | null) {
   return render(
+    <DialogProvider>
     <IntelligenceSidebar
       intelligence={baseIntelligence}
       capabilityScan={capabilityScan}
@@ -73,6 +75,7 @@ function renderSidebar(capabilityScan: ProjectCapabilityScan | null) {
       vectorStatus={null}
       width={320}
     />
+    </DialogProvider>
   )
 }
 
