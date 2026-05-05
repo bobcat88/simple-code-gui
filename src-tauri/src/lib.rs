@@ -31,7 +31,7 @@ use database::{
 use mcp_bridge::{
     get_registered_mcp_servers, mcp_call_tool, mcp_discover_servers, mcp_is_node_trusted,
     mcp_list_resources, mcp_list_tools, mcp_load_config, mcp_read_resource, mcp_trust_node,
-    register_mcp_server, McpManager,
+    register_mcp_server, McpManager, gsd_spawn_remote_worker,
 };
 use orchestration::{
     beads_check, beads_complete, beads_create, beads_delete, beads_init, beads_list, beads_show,
@@ -775,6 +775,7 @@ pub fn run() {
             gsd_engine::gsd_start_distributed_discovery,
             gsd_engine::gsd_stop_distributed_discovery,
             gsd_engine::gsd_get_distributed_nodes,
+            gsd_spawn_remote_worker,
             rtk_check,
             claude_check,
             gemini_check,

@@ -724,6 +724,7 @@ pub async fn gsd_identify_refactors(
 #[tauri::command]
 pub async fn gsd_swarm_record_pattern(
     state: State<'_, Arc<GsdEngine>>,
+    mcp: State<'_, Arc<crate::mcp_bridge::McpManager>>,
     pattern_type: String,
     pattern_key: String,
     content: String,
@@ -732,7 +733,18 @@ pub async fn gsd_swarm_record_pattern(
     let knowledge = state.knowledge.lock().await;
     if let Some(mem) = knowledge.as_ref() {
         mem.record(&pattern_type, &pattern_key, &content, &metadata)
-            .map_err(|e| e.to_string())
+            .map_err(|e| e.to_string())?;
+
+        // Phase 42: Broadcast to remote swarm nodes
+        let entry = crate::gsd_engine::sync::MemoryEntry {
+            entry_type: pattern_type,
+            context: pattern_key,
+            content,
+            meta: metadata,
+        };
+        mcp.broadcast("memory-update", serde_json::to_value(&entry).unwrap()).await;
+
+        Ok(())
     } else {
         Err("Swarm memory not initialized for current project".to_string())
     }

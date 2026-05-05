@@ -5,11 +5,14 @@ use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{ChildStdin, Command};
 use tokio::sync::{oneshot, Mutex};
-use tauri::State;
+use tauri::{AppHandle, Manager, State, Emitter};
 use std::time::Duration;
 use local_ip_address::local_ip;
 use futures::future::join_all;
+use futures::StreamExt;
 use mdns_sd::{ServiceDaemon, ServiceEvent};
+use uuid::Uuid;
+use chrono::Utc;
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct McpServerConfig {
@@ -29,6 +32,7 @@ pub enum McpTransport {
     Remote {
         url: String,
         client: reqwest::Client,
+        post_url: Arc<Mutex<Option<String>>>,
     },
 }
 
@@ -36,6 +40,7 @@ pub struct McpServerHandle {
     pub config: McpServerConfig,
     pub transport: McpTransport,
     pub pending_requests: Arc<Mutex<HashMap<Value, oneshot::Sender<Result<Value, String>>>>>,
+    pub app_handle: Option<AppHandle>,
 }
 
 pub struct McpManager {
@@ -49,6 +54,28 @@ impl McpManager {
             servers: Arc::new(Mutex::new(HashMap::new())),
             trusted_nodes: Arc::new(Mutex::new(HashSet::new())),
         }
+    }
+
+    pub async fn broadcast(&self, method: &str, params: Value) {
+        let servers = self.servers.lock().await;
+        for handle in servers.values() {
+            let _ = handle.notify(method, params.clone()).await;
+        }
+    }
+
+    pub async fn get_best_worker_node(&self) -> Option<String> {
+        let trusted = self.trusted_nodes.lock().await;
+        let servers = self.servers.lock().await;
+        
+        // Simple heuristic: pick first trusted remote server
+        for (name, handle) in servers.iter() {
+            if trusted.contains(name) {
+                if let McpTransport::Remote { .. } = &handle.transport {
+                    return Some(name.clone());
+                }
+            }
+        }
+        None
     }
 }
 
@@ -76,18 +103,84 @@ struct JsonRpcError {
 }
 
 impl McpServerHandle {
-    pub async fn spawn(config: McpServerConfig) -> Result<Self, String> {
+    pub async fn spawn(config: McpServerConfig, app_handle: Option<AppHandle>) -> Result<Self, String> {
         let pending_requests: Arc<Mutex<HashMap<Value, oneshot::Sender<Result<Value, String>>>>> = Arc::new(Mutex::new(HashMap::new()));
 
         let transport = if let Some(url) = &config.url {
             // Remote HTTP/SSE Transport
             let client = reqwest::Client::new();
-            
-            // For now, assume simple POST-based JSON-RPC if no SSE is established yet
-            // TODO: Establish SSE connection for real-time notifications from server
+            let post_url = Arc::new(Mutex::new(None));
+            let post_url_clone = post_url.clone();
+            let sse_url = if url.ends_with('/') { format!("{}sse", url) } else { format!("{}/sse", url) };
+            let name_clone = config.name.clone();
+            let client_clone = client.clone();
+            let app_handle_clone = app_handle.clone();
+
+            // Background SSE listener for remote server
+            tokio::spawn(async move {
+                let res = match client_clone.get(&sse_url).send().await {
+                    Ok(res) => res,
+                    Err(e) => {
+                        eprintln!("Failed to connect to SSE for {}: {}", name_clone, e);
+                        return;
+                    }
+                };
+
+                let mut stream = res.bytes_stream();
+                let mut current_event = String::new();
+
+                while let Some(item) = stream.next().await {
+                    if let Ok(bytes) = item {
+                        if let Ok(text) = std::str::from_utf8(&bytes) {
+                            for line in text.lines() {
+                                if line.is_empty() {
+                                    // End of event - currently not doing complex parsing
+                                    current_event.clear();
+                                    continue;
+                                }
+
+                                if line.starts_with("event:") {
+                                    current_event = line["event:".len()..].trim().to_string();
+                                } else if line.starts_with("data:") {
+                                    let data = line["data:".len()..].trim();
+                                    
+                                    if current_event == "endpoint" {
+                                        let mut p_url = post_url_clone.lock().await;
+                                        *p_url = Some(data.to_string());
+                                        eprintln!("Established MCP SSE endpoint for {}: {}", name_clone, data);
+                                    } else {
+                                        // Other notifications - broadcast to frontend
+                                        if let Some(app) = &app_handle_clone {
+                                            if current_event == "memory-update" {
+                                                if let Ok(entry) = serde_json::from_str::<crate::gsd_engine::sync::MemoryEntry>(data) {
+                                                    let gsd = app.state::<Arc<crate::gsd_engine::GsdEngine>>();
+                                                    let knowledge = gsd.knowledge.lock().await;
+                                                    if let Some(mem) = knowledge.as_ref() {
+                                                        let _ = mem.record(&entry.entry_type, &entry.context, &entry.content, &entry.meta);
+                                                        eprintln!("[Swarm] Synchronized remote memory from {}: {}", name_clone, entry.content);
+                                                    }
+                                                }
+                                            }
+
+                                            let _ = app.emit("mcp-notification", json!({
+                                                "server": name_clone,
+                                                "event": current_event,
+                                                "data": data
+                                            }));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                eprintln!("MCP SSE stream for {} closed", name_clone);
+            });
+
             McpTransport::Remote {
                 url: url.clone(),
                 client,
+                post_url,
             }
         } else if let Some(command) = &config.command {
             // Local Process Transport
@@ -146,6 +239,7 @@ impl McpServerHandle {
             config,
             transport,
             pending_requests,
+            app_handle,
         };
 
         // Send initialize request
@@ -190,9 +284,14 @@ impl McpServerHandle {
 
                 rx.await.map_err(|e| format!("oneshot error: {}", e))?
             }
-            McpTransport::Remote { url, client } => {
+            McpTransport::Remote { url, client, post_url } => {
+                let target_url = {
+                    let p_url = post_url.lock().await;
+                    p_url.as_ref().cloned().unwrap_or_else(|| url.clone())
+                };
+
                 let response = client
-                    .post(url)
+                    .post(&target_url)
                     .json(&request)
                     .send()
                     .await
@@ -227,9 +326,14 @@ impl McpServerHandle {
                 stdin_lock.flush().await.map_err(|e| e.to_string())?;
                 Ok(())
             }
-            McpTransport::Remote { url, client } => {
-                let _ = client
-                    .post(url)
+            McpTransport::Remote { url, client, post_url } => {
+                let target_url = {
+                    let p_url = post_url.lock().await;
+                    p_url.as_ref().cloned().unwrap_or_else(|| url.clone())
+                };
+
+                client
+                    .post(&target_url)
                     .json(&request)
                     .send()
                     .await
@@ -242,6 +346,7 @@ impl McpServerHandle {
 
 #[tauri::command]
 pub async fn mcp_load_config(
+    app_handle: AppHandle,
     manager: State<'_, McpManager>,
 ) -> Result<(), String> {
     let home = dirs::home_dir().ok_or("Could not find home directory")?;
@@ -287,7 +392,7 @@ pub async fn mcp_load_config(
                     };
 
                     // Register (and spawn) the server
-                    let _ = register_mcp_server(config, manager.clone()).await;
+                    let _ = register_mcp_server(config, app_handle.clone(), manager.clone()).await;
                 }
             }
         }
@@ -299,6 +404,7 @@ pub async fn mcp_load_config(
 #[tauri::command]
 pub async fn register_mcp_server(
     config: McpServerConfig,
+    app_handle: AppHandle,
     manager: State<'_, McpManager>,
 ) -> Result<(), String> {
     let mut servers = manager.servers.lock().await;
@@ -309,7 +415,7 @@ pub async fn register_mcp_server(
         servers.remove(&config.name);
     }
 
-    let handle = McpServerHandle::spawn(config.clone()).await?;
+    let handle = McpServerHandle::spawn(config.clone(), Some(app_handle)).await?;
     servers.insert(config.name.clone(), handle);
     Ok(())
 }
@@ -488,4 +594,27 @@ async fn discover_mdns() -> Result<Vec<McpServerConfig>, String> {
     }
 
     Ok(nodes)
+}
+#[tauri::command]
+pub async fn gsd_spawn_remote_worker(
+    mcp: State<'_, Arc<McpManager>>,
+    task_description: String,
+) -> Result<String, String> {
+    let node_name = mcp.get_best_worker_node().await
+        .ok_or_else(|| "No trusted remote nodes available for worker spawning".to_string())?;
+
+    let servers = mcp.servers.lock().await;
+    let handle = servers.get(&node_name)
+        .ok_or_else(|| "Selected node unexpectedly vanished".to_string())?;
+
+    // Phase 42: Spawn worker via notification
+    let params = json!({
+        "task": task_description,
+        "worker_id": Uuid::new_v4().to_string(),
+        "timestamp": Utc::now().to_rfc3339()
+    });
+
+    handle.notify("swarm/spawn-worker", params).await?;
+
+    Ok(node_name)
 }
