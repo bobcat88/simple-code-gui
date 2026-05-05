@@ -526,5 +526,29 @@ features:
         notes: []
     created: 2026-04-29T06:07:54.511Z
     notes: []
+  - _ulid: 01KQV53J0YBKZJD84T5B289W3B
+    slugs: []
+    title: Distributed MCP Orchestration
+    type: feature
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-05-05T04:07:28.030Z
+    notes: []
+  - _ulid: 01KQV53J49ZWM4A2SG52KYWT5P
+    slugs: []
+    title: Cognitive Feedback Loops
+    type: feature
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-05-05T04:07:28.137Z
+    notes: []
 created: 2026-04-28T22:21:13.876Z
 notes: []

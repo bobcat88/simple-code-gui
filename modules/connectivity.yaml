@@ -39,5 +39,17 @@ features:
     tags: []
     created: 2026-03-08T08:00:55.507Z
     notes: []
+  - _ulid: 01KQV53JA9N30W50356Q8K350Q
+    slugs: []
+    title: Borg Knowledge Bridge
+    type: feature
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    tags: []
+    created: 2026-05-05T04:07:28.330Z
+    notes: []
 created: 2026-04-28T22:21:13.865Z
 notes: []
