@@ -88,6 +88,28 @@ pub struct TokenHistoryResponse {
     pub daily: Vec<TokenHistoryPoint>,
 }
 
+pub async fn insert_cognitive_feedback(
+    pool: &SqlitePool,
+    context_id: &str,
+    action: &str,
+    feedback: &str,
+    is_positive: bool,
+) -> Result<(), String> {
+    sqlx::query(
+        "INSERT INTO cognitive_feedback (context_id, action, feedback, is_positive)
+         VALUES (?, ?, ?, ?)",
+    )
+    .bind(context_id)
+    .bind(action)
+    .bind(feedback)
+    .bind(is_positive)
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 pub async fn insert_token_transaction(
     pool: &SqlitePool,
     transaction: &TokenTransactionInput,
@@ -795,6 +817,21 @@ impl DatabaseManager {
         sqlx::query(
             "CREATE INDEX IF NOT EXISTS idx_swarm_messages_project
              ON swarm_messages (project_path)",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        // Cognitive Feedback Table
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS cognitive_feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                context_id TEXT NOT NULL,
+                action TEXT NOT NULL,
+                feedback TEXT,
+                is_positive BOOLEAN NOT NULL,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )",
         )
         .execute(&self.pool)
         .await

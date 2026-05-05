@@ -307,6 +307,8 @@ export const tauriIpc = {
     invoke<any>('ai_trigger_evolution'),
   aiSwitchModelPlan: (planId: string) =>
     invoke<void>('ai_switch_model_plan', { plan_id: planId }),
+  aiRecordFeedback: (feedback: any) =>
+    invoke<{ success: boolean }>('ai_record_feedback', { ...feedback }),
 
   onModelPlanSwitched: (callback: (event: { old_plan: string; new_plan: string; health_score: number }) => void): Promise<UnlistenFn> =>
     listen<{ old_plan: string; new_plan: string; health_score: number }>('model-plan-switched', (event) => callback(event.payload)),
@@ -316,6 +318,8 @@ export const tauriIpc = {
 
   onOptimizationStatsUpdated: (callback: (stats: any) => void): Promise<UnlistenFn> =>
     listen<any>('optimization-stats-updated', (event) => callback(event.payload)),
+  onAiLearningCaptured: (callback: (data: { eventType: string; payload: any }) => void): Promise<UnlistenFn> =>
+    listen<{ eventType: string; payload: any }>('ai-learning-captured', (event) => callback(event.payload)),
 
   // GSD Engine
   gsdCreatePlan: (taskId: string, title: string) =>

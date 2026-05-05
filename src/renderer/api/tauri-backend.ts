@@ -210,6 +210,11 @@ export class TauriBackend implements ExtendedApi {
     tauriIpc.listen<{ agentId: string; metrics: any }>('agent-metrics-changed', (event) => callback(event.payload)).then(fn => unlisten = fn);
     return () => unlisten?.();
   }
+  onAiLearningCaptured(callback: (data: { eventType: string; payload: any }) => void): Unsubscribe {
+    let unlisten: (() => void) | undefined;
+    tauriIpc.onAiLearningCaptured(callback).then(fn => unlisten = fn);
+    return () => unlisten?.();
+  }
 
   onModelPlanSwitched(callback: (event: { old_plan: string; new_plan: string; health_score: number }) => void): Unsubscribe {
     let unlisten: (() => void) | undefined;
@@ -745,7 +750,10 @@ export class TauriBackend implements ExtendedApi {
 
   // AI Evolution
   async aiTriggerEvolution(): Promise<any[]> {
-    return await tauriIpc.aiTriggerEvolution();
+    return await tauriIpc.ai_trigger_evolution();
+  }
+  async aiRecordFeedback(feedback: { actionId: string; stepId: string; feedbackType: string; comment?: string }): Promise<{ success: boolean }> {
+    return await tauriIpc.aiRecordFeedback(feedback);
   }
 
   onAiEvolutionCompleted(callback: (discoveries: any[]) => void): Unsubscribe {

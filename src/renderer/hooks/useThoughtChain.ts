@@ -58,9 +58,26 @@ export function useThoughtChain(api: ExtendedApi, nodes: Node[]): ThoughtChainSt
         })
       : () => {};
 
+    const unsubLearning = api.onAiLearningCaptured
+      ? api.onAiLearningCaptured((payload) => {
+          setThoughtHistory((prev) =>
+            [
+              {
+                planId: '',
+                eventType: 'LEARNING',
+                message: `Cognitive adjustment captured: ${payload.action} - ${payload.feedback}`,
+                timestamp: Date.now(),
+              } as GsdExecutionEvent,
+              ...prev,
+            ].slice(0, 50)
+          );
+        })
+      : () => {};
+
     return () => {
       unsubExecution();
       unsubSync();
+      unsubLearning();
     };
   }, [api, handleExecutionEvent]);
 

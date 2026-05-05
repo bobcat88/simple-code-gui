@@ -815,6 +815,7 @@ pub fn run() {
             claude_md_save,
             rtk_context::rtk_optimize_context,
             ai_runtime::learning::ai_trigger_evolution,
+            ai_runtime::learning::ai_record_feedback,
             upgrade_manager::project_analyze_upgrade,
             upgrade_manager::project_upgrade_dependency,
             upgrade_manager::project_rollback_dependency,

@@ -87,6 +87,36 @@ impl LearningManager {
 
         Ok(discoveries)
     }
+
+    /// Record explicit user feedback for cognitive learning
+    pub async fn record_feedback(
+        &self, 
+        app: &tauri::AppHandle,
+        context_id: String,
+        action: String,
+        feedback: String,
+        is_positive: bool
+    ) -> Result<(), String> {
+        // Record the feedback in the knowledge base
+        let _ = crate::database::insert_cognitive_feedback(
+            &self.db.pool,
+            &context_id,
+            &action,
+            &feedback,
+            is_positive
+        ).await;
+
+        println!("Learning captured: context={} action={} positive={} feedback={}", context_id, action, is_positive, feedback);
+        
+        let _ = app.emit("ai-learning-captured", serde_json::json!({
+            "contextId": context_id,
+            "action": action,
+            "isPositive": is_positive,
+            "feedback": feedback
+        }));
+        
+        Ok(())
+    }
 }
 
 // Tauri Commands
@@ -96,4 +126,16 @@ pub async fn ai_trigger_evolution(
     state: tauri::State<'_, Arc<LearningManager>>,
 ) -> Result<Vec<DiscoveryResult>, String> {
     state.run_evolution_cycle(&app).await
+}
+
+#[tauri::command]
+pub async fn ai_record_feedback(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, Arc<LearningManager>>,
+    context_id: String,
+    action: String,
+    feedback: String,
+    is_positive: bool
+) -> Result<(), String> {
+    state.record_feedback(&app, context_id, action, feedback, is_positive).await
 }

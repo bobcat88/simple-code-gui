@@ -592,13 +592,26 @@ pub async fn gsd_respond_to_checkpoint(
 
 #[tauri::command]
 pub async fn gsd_respond_to_approval(
+    app: AppHandle,
     state: State<'_, Arc<GsdEngine>>,
     approval_id: String,
     response: String,
 ) -> Result<(), String> {
     let user_res = match response.to_lowercase().as_str() {
         "approve" => UserResponse::Approve,
-        "reject" => UserResponse::Abort,
+        "reject" => {
+            // Cognitive Feedback Loop: Capture rejection for learning
+            if let Some(learning) = app.try_state::<Arc<crate::ai_runtime::learning::LearningManager>>() {
+                let _ = learning.record_feedback(
+                    &app,
+                    approval_id.clone(),
+                    "approval_request".to_string(),
+                    "User rejected the proposed action".to_string(),
+                    false
+                ).await;
+            }
+            UserResponse::Abort
+        },
         _ => return Err(format!("Invalid response: {}", response)),
     };
 

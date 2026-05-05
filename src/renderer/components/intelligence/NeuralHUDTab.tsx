@@ -303,7 +303,9 @@ export function NeuralHUDTab({ api, projectPath, embedded }: NeuralHUDTabProps) 
               key={`${thought.timestamp}-${i}`}
               className={cn(
                 "glass-panel p-2 text-[9px] leading-snug border-l-2 transition-all animate-in slide-in-from-left-2 duration-300",
-                i === 0 ? "border-l-codex-neon bg-codex-neon/10 text-white/90" : "border-l-white/10 text-white/40 hover:text-white/60"
+                i === 0 ? "border-l-codex-neon bg-codex-neon/10 text-white/90" : 
+                thought.eventType === 'LEARNING' ? "border-l-blue-500 bg-blue-500/10 text-blue-100/90" :
+                "border-l-white/10 text-white/40 hover:text-white/60"
               )}
             >
               <div className="flex items-center justify-between mb-1 opacity-60">

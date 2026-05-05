@@ -804,6 +804,7 @@ export interface ExtendedApi extends Api {
   onJobStatusChanged?: (callback: (data: { jobId: string; status: string }) => void) => Unsubscribe
   onAgentStatusChanged?: (callback: (data: { agentId: string; status: string }) => void) => Unsubscribe
   onAgentMetricsChanged?: (callback: (data: { agentId: string; metrics: any }) => void) => Unsubscribe
+  onAiLearningCaptured?: (callback: (data: { eventType: string; payload: any }) => void) => Unsubscribe
 
   // Window controls (Desktop-only)
   windowMinimize: () => void
@@ -910,6 +911,7 @@ export interface ExtendedApi extends Api {
   brainstormSaveTopology: (cwd: string, content: string) => Promise<{ success: boolean; error?: string }>
   gsdSwarmQueryMemory: (query: string, patternType?: string, limit?: number) => Promise<SwarmKnowledge[]>
   gsdSwarmRecordPattern: (patternType: string, patternKey: string, content: string, metadata?: string) => Promise<void>
+  aiRecordFeedback: (feedback: { context_id: string; action: string; feedback: string; is_positive: boolean }) => Promise<{ success: boolean }>
 
   // Swarm Snapshotting
   gsdCreateSwarmSnapshot(cwd: string, name: string, handoffNotes?: string): Promise<{ success: boolean; snapshotId?: string; error?: string }>;
