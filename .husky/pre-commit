@@ -1,0 +1,2 @@
+#!/bin/sh
+bunx tsc --noEmit && bunx vitest run --reporter=dot
