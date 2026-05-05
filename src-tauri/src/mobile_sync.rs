@@ -1,6 +1,7 @@
 use serde::Serialize;
 use tauri::command;
 use local_ip_address::local_ip;
+use uuid::Uuid;
 
 #[derive(Debug, Serialize)]
 pub struct ConnectionInfo {
@@ -18,7 +19,7 @@ pub async fn mobile_get_connection_info() -> Result<ConnectionInfo, String> {
             success: true,
             ip: Some(ip.to_string()),
             port: Some(4747), // Default Insight/Sync port
-            token: Some("demo-token-123".to_string()), // TODO: Generate/fetch real token
+            token: Some(Uuid::new_v4().to_string()),
             error: None,
         }),
         Err(e) => Ok(ConnectionInfo {
@@ -33,6 +34,5 @@ pub async fn mobile_get_connection_info() -> Result<ConnectionInfo, String> {
 
 #[command]
 pub async fn mobile_regenerate_token() -> Result<String, String> {
-    // TODO: Implement real token regeneration logic in database
-    Ok("new-demo-token-456".to_string())
+    Ok(Uuid::new_v4().to_string())
 }

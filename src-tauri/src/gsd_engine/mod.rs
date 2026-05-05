@@ -74,11 +74,14 @@ impl GsdEngine {
         std::fs::write(&plan_path, content).map_err(|e| e.to_string())?;
 
         // Automatic git add (optional but recommended for 'git-backed')
-        let _ = std::process::Command::new("git")
+        if let Err(e) = std::process::Command::new("git")
             .arg("add")
             .arg(&plan_path)
             .current_dir(project_path)
-            .output();
+            .output()
+        {
+            log::warn!("save_plan: git add failed (non-critical): {e}");
+        }
 
         Ok(())
     }
@@ -742,7 +745,10 @@ pub async fn gsd_swarm_record_pattern(
             content,
             meta: metadata,
         };
-        mcp.broadcast("memory-update", serde_json::to_value(&entry).unwrap()).await;
+        match serde_json::to_value(&entry) {
+            Ok(v) => { mcp.broadcast("memory-update", v).await; }
+            Err(e) => { log::error!("swarm_record_pattern: serialize failed: {e}"); }
+        }
 
         Ok(())
     } else {
@@ -910,12 +916,14 @@ pub async fn gsd_start_distributed_discovery(
 ) -> Result<(), String> {
     let mut dist = state.distributed.lock().await;
     if dist.is_none() {
-        // TODO: Get real redis URL and node name from settings
-        let redis_url = "redis://127.0.0.1/".to_string();
-        let node_name = "Nexus-Node".to_string();
+        let redis_url = std::env::var("GSD_REDIS_URL")
+            .or_else(|_| std::env::var("REDIS_URL"))
+            .unwrap_or_else(|_| "redis://127.0.0.1/".to_string());
+        let node_name = std::env::var("GSD_NODE_NAME")
+            .unwrap_or_else(|_| format!("nexus-{}", &uuid::Uuid::new_v4().to_string()[..8]));
         *dist = Some(distributed::DistributedManager::new(node_name, redis_url));
     }
-    
+
     if let Some(mgr) = dist.as_ref() {
         mgr.start_discovery().await?;
     }
@@ -970,9 +978,11 @@ pub async fn gsd_apply_distributed_credit_delta(
 ) -> Result<distributed::DistributedNode, String> {
     let mut dist = state.distributed.lock().await;
     if dist.is_none() {
-        // TODO: Get real redis URL and node name from settings
-        let redis_url = "redis://127.0.0.1/".to_string();
-        let node_name = "Nexus-Node".to_string();
+        let redis_url = std::env::var("GSD_REDIS_URL")
+            .or_else(|_| std::env::var("REDIS_URL"))
+            .unwrap_or_else(|_| "redis://127.0.0.1/".to_string());
+        let node_name = std::env::var("GSD_NODE_NAME")
+            .unwrap_or_else(|_| format!("nexus-{}", &uuid::Uuid::new_v4().to_string()[..8]));
         *dist = Some(distributed::DistributedManager::new(node_name, redis_url));
     }
 

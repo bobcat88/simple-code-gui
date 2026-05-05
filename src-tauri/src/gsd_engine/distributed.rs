@@ -112,7 +112,10 @@ impl DistributedManager {
 
             while is_running.load(std::sync::atomic::Ordering::SeqCst) {
                 // Heartbeat: register self
-                let node_json = serde_json::to_string(&local_node).unwrap();
+                let node_json = match serde_json::to_string(&local_node) {
+                    Ok(j) => j,
+                    Err(e) => { log::error!("distributed: heartbeat serialize failed: {e}"); continue; }
+                };
                 let _: redis::RedisResult<()> =
                     conn.hset(registry_key, &local_node.id, node_json).await;
                 let _: redis::RedisResult<()> = conn.expire(registry_key, 60).await; // Cleanup if registry is stale

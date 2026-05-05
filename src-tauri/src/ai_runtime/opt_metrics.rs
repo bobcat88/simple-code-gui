@@ -94,15 +94,18 @@ impl OptimizationMetrics {
     }
 
     pub fn record_event(&self, event: OptimizationMetricEvent) {
-        self.events.lock().unwrap().push(event);
+        if let Ok(mut events) = self.events.lock() {
+            events.push(event);
+        }
     }
 
     pub fn snapshot(&self) -> OptimizationStats {
-        aggregate_events(&self.events.lock().unwrap(), None, None)
+        let events = self.events.lock().unwrap_or_else(|e| e.into_inner());
+        aggregate_events(&events, None, None)
     }
 
     pub fn stats(&self, session_id: Option<&str>) -> OptimizationStatsResponse {
-        let events = self.events.lock().unwrap();
+        let events = self.events.lock().unwrap_or_else(|e| e.into_inner());
         let session = aggregate_events(&events, session_id, None);
         let aggregate = aggregate_events(&events, None, None);
         let mut providers = BTreeMap::new();
