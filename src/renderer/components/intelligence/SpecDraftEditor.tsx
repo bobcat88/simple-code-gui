@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import type { KSpecDraft, ExtendedApi } from '../../api/types'
+import { parseKSpec, toYaml, validateDraftContent, type ParsedKSpecDraft } from './specDraftEditorUtils'
 
 interface SpecDraftEditorProps {
   api: ExtendedApi
@@ -45,66 +46,7 @@ export function SpecDraftEditor({
   const getDraftModuleId = (draft: KSpecDraft) => draft.moduleId || draft.id
   const getDraftUpdatedAt = (draft: KSpecDraft) => draft.updatedAt || draft.lastModified || Date.now()
 
-  // --- YAML Parsing & Serialization ---
-  
-  const parseKSpec = (yaml: string) => {
-    const lines = yaml.split('\n')
-    const getValue = (key: string) => lines.find(l => l.startsWith(`${key}:`))?.split(':')[1]?.trim().replace(/^['"]|['"]$/g, '') || ''
-    
-    // Simple AC parser
-    const acs: any[] = []
-    let currentAc: any = null
-    let currentField: string | null = null
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i]
-      const trimmed = line.trim()
-      
-      if (trimmed.startsWith('- id:')) {
-        if (currentAc) acs.push(currentAc)
-        currentAc = { id: trimmed.split(':')[1]?.trim() || '', given: '', when: '', then: '' }
-        currentField = null
-      } else if (currentAc) {
-        if (trimmed.startsWith('given:')) {
-          currentField = 'given'
-          if (trimmed.includes('|')) currentAc.given = ''
-          else currentAc.given = trimmed.split(':')[1]?.trim() || ''
-        } else if (trimmed.startsWith('when:')) {
-          currentField = 'when'
-          if (trimmed.includes('|')) currentAc.when = ''
-          else currentAc.when = trimmed.split(':')[1]?.trim() || ''
-        } else if (trimmed.startsWith('then:')) {
-          currentField = 'then'
-          if (trimmed.includes('|')) currentAc.then = ''
-          else currentAc.then = trimmed.split(':')[1]?.trim() || ''
-        } else if (line.startsWith('      ') && currentField) {
-          currentAc[currentField] += (currentAc[currentField] ? '\n' : '') + line.substring(6)
-        }
-      }
-    }
-    if (currentAc) acs.push(currentAc)
-
-    return {
-      title: getValue('title'),
-      type: getValue('type'),
-      description: yaml.match(/description: >-\s+([\s\S]*?)(?=\n\S|$)/)?.[1]?.trim() || '',
-      maturity: yaml.match(/maturity:\s+(\S+)/)?.[1] || 'draft',
-      acceptance_criteria: acs
-    }
-  }
-
-  const toYaml = (data: any) => {
-    let yaml = `title: ${data.title}\ntype: ${data.type}\nstatus:\n  maturity: ${data.maturity}\ndescription: >-\n  ${data.description.replace(/\n/g, '\n  ')}\nacceptance_criteria:\n`
-    data.acceptance_criteria.forEach((ac: any) => {
-      yaml += `  - id: ${ac.id}\n`
-      yaml += `    given: |\n      ${ac.given.replace(/\n/g, '\n      ')}\n`
-      yaml += `    when: |\n      ${ac.when.replace(/\n/g, '\n      ')}\n`
-      yaml += `    then: |\n      ${ac.then.replace(/\n/g, '\n      ')}\n`
-    })
-    return yaml
-  }
-
-  const [formData, setFormData] = useState<any>(null)
+  const [formData, setFormData] = useState<ParsedKSpecDraft | null>(null)
 
   useEffect(() => {
     if (selectedDraft) {
@@ -112,37 +54,30 @@ export function SpecDraftEditor({
     }
   }, [selectedDraft, draftContent])
 
-  const updateFormField = (field: string, value: any) => {
+  const updateFormField = (field: keyof ParsedKSpecDraft, value: any) => {
+    if (!formData) return
     const newData = { ...formData, [field]: value }
     setFormData(newData)
     setDraftContent(toYaml(newData))
   }
 
   const updateAcField = (index: number, field: string, value: string) => {
+    if (!formData) return
     const newAcs = [...formData.acceptance_criteria]
     newAcs[index] = { ...newAcs[index], [field]: value }
     updateFormField('acceptance_criteria', newAcs)
   }
 
   const addAc = () => {
+    if (!formData) return
     const newAcs = [...formData.acceptance_criteria, { id: `ac-${formData.acceptance_criteria.length + 1}`, given: '', when: '', then: '' }]
     updateFormField('acceptance_criteria', newAcs)
   }
 
   const removeAc = (index: number) => {
+    if (!formData) return
     const newAcs = formData.acceptance_criteria.filter((_: any, i: number) => i !== index)
     updateFormField('acceptance_criteria', newAcs)
-  }
-
-  const validateDraftContent = (content: string): string[] => {
-    const trimmed = content.trim()
-    const errors: string[] = []
-    if (!trimmed) errors.push('Draft content is empty.')
-    if (!/^title:\s+\S+/m.test(trimmed)) errors.push('Missing top-level title.')
-    if (!/^type:\s+\S+/m.test(trimmed)) errors.push('Missing top-level type.')
-    if (!/^status:\s*$/m.test(trimmed) && !/^status:\s+\S+/m.test(trimmed) && !/maturity:/m.test(trimmed)) errors.push('Missing status block.')
-    if (!/acceptance_criteria:/m.test(trimmed)) errors.push('Missing acceptance_criteria section.')
-    return errors
   }
 
   const draftValidation = validateDraftContent(draftContent)

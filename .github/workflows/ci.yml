@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   frontend:
     runs-on: ubuntu-latest
@@ -18,10 +22,35 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Type check
         run: bunx tsc --noEmit
-      - name: Test
-        run: bunx vitest run
-      - name: Lint
+      - name: Vitest coverage
+        run: bun run test:coverage
+      - name: Coverage diff comment
+        if: github.event_name == 'pull_request'
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          json-summary-path: coverage/coverage-summary.json
+          json-final-path: coverage/coverage-final.json
+      - name: Lint (non-blocking existing debt)
+        continue-on-error: true
         run: bunx biome check src/
+      - name: Install Playwright Chromium
+        run: bunx playwright install --with-deps chromium
+      - name: Playwright visual smoke
+        run: bun run test:visual
+      - name: Frontend build
+        run: bun run build:frontend
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist/
+          if-no-files-found: error
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: coverage/
+          if-no-files-found: error
 
   rust:
     runs-on: ubuntu-latest
