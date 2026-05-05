@@ -1,0 +1,16 @@
+_ulid: 01KQV53AA79X0KA8MBRC6NRC98
+slugs:
+  - task-synaptic-orchestration-hub
+title: "Implement: Synaptic Orchestration Hub"
+type: task
+spec_ref: "@01KQV52W7310ZWQG3CAAA00ZFR"
+derivation: auto
+status: pending
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-05-05T04:07:20.135Z
+todos: []
