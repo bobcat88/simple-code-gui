@@ -958,6 +958,7 @@ export interface SwarmSnapshot {
   snapshot_path: string;
   worktree_path?: string;
   timestamp: number;
+  handoff_notes?: string;
 }
 
 // ============================================================================

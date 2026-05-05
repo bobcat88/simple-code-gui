@@ -17,7 +17,7 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import type { ExtendedApi } from '../../api/types';
+import type { ExtendedApi, McpServerConfig } from '../../api/types';
 
 interface SynapticExpansionProps {
   api: ExtendedApi;

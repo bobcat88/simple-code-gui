@@ -65,7 +65,7 @@ export function useThoughtChain(api: ExtendedApi, nodes: Node[]): ThoughtChainSt
               {
                 planId: '',
                 eventType: 'LEARNING',
-                message: `Cognitive adjustment captured: ${payload.action} - ${payload.feedback}`,
+                message: `Cognitive adjustment captured: ${payload.payload?.action ?? payload.eventType} - ${payload.payload?.feedback ?? ''}`,
                 timestamp: Date.now(),
               } as GsdExecutionEvent,
               ...prev,

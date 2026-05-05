@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
-import type { BackendId, Settings, Workspace, TokenHistoryResponse, OptimizationStatsResponse } from '../api/types';
+import type { BackendId, Settings, Workspace, TokenHistoryResponse, OptimizationStatsResponse, McpServerConfig } from '../api/types';
 import type {
   TokenStatsResponse,
   ExtensionRegistryResponse,

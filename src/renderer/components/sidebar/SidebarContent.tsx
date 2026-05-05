@@ -444,7 +444,7 @@ export function SidebarContent(props: SidebarContentProps): React.ReactElement {
           <section className="space-y-3 pt-4 border-t border-white/5 h-[300px] flex flex-col">
             <h4 className="px-1 text-xs font-bold uppercase text-muted-foreground tracking-widest">Swarm Stream</h4>
             <div className="flex-1 p-1 rounded-xl bg-white/5 backdrop-blur-md border border-white/5 overflow-hidden">
-              <SwarmActivityStream />
+              <SwarmActivityStream api={api as any} projectPath={focusedProjectPath || ''} />
             </div>
           </section>
           

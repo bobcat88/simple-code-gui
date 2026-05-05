@@ -107,7 +107,7 @@ export const NeuralSwarmGraph: React.FC<NeuralSwarmGraphProps> = ({ messages }) 
               repeat: Infinity, 
               ease: "linear" 
             }}
-            style={{ filter: 'blur(1px)', shadowBlur: 5, shadowColor: '#ccff00' }}
+            style={{ filter: 'blur(1px) drop-shadow(0 0 5px #ccff00)' }}
           />
         )}
       </svg>

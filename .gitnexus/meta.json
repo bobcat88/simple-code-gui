@@ -1,12 +1,12 @@
 {
   "repoPath": "/home/_johan/Documents/Projects/simple-code-gui",
-  "lastCommit": "d654e201d625f6b790479a100a39c2e52278eaac",
-  "indexedAt": "2026-05-05T08:50:14.989Z",
+  "lastCommit": "427bd964f46746aeaabdbca569486a34fd19acba",
+  "indexedAt": "2026-05-05T09:31:58.932Z",
   "stats": {
     "files": 451,
-    "nodes": 7938,
-    "edges": 14217,
-    "communities": 299,
+    "nodes": 7969,
+    "edges": 14301,
+    "communities": 298,
     "processes": 300,
     "embeddings": 0
   }

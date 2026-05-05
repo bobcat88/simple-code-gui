@@ -29,6 +29,9 @@ interface HeaderProps {
   onToggleIntelligence: () => void
   intelligenceCollapsed: boolean
   api: any
+  onRenameTab?: (id: string, title: string) => void
+  swipeContainerRef?: React.RefObject<HTMLElement | null>
+  onOpenSidebar?: () => void
 }
 
 export function Header({ 
