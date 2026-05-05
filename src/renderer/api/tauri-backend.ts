@@ -31,7 +31,8 @@ import {
   GsdApprovalRequest,
   SwarmSnapshot,
   DistributedNode,
-  RemoteToolBid
+  RemoteToolBid,
+  OptimizationStatsResponse
 } from './types'
 import { tauriIpc } from '../lib/tauri-ipc'
 import { check } from '@tauri-apps/plugin-updater'
@@ -177,36 +178,6 @@ export class TauriBackend implements ExtendedApi {
     }
   }
 
-  onSettingsChanged(callback: (settings: Settings) => void): Unsubscribe {
-    let unlisten: (() => void) | undefined;
-    tauriIpc.onSettingsChanged(callback).then(fn => unlisten = fn);
-    return () => unlisten?.();
-  }
-
-  onWorkspaceChanged(callback: (workspace: Workspace) => void): Unsubscribe {
-    let unlisten: (() => void) | undefined;
-    tauriIpc.onWorkspaceChanged(callback).then(fn => unlisten = fn);
-    return () => unlisten?.();
-  }
-
-  onJobProgress(callback: (data: { jobId: string; progress: number; message?: string }) => void): Unsubscribe {
-    let unlisten: (() => void) | undefined;
-    tauriIpc.listen<{ jobId: string; progress: number; message?: string }>('job-progress', (event) => callback(event.payload)).then(fn => unlisten = fn);
-    return () => unlisten?.();
-  }
-
-  onJobStatusChanged(callback: (data: { jobId: string; status: string }) => void): Unsubscribe {
-    let unlisten: (() => void) | undefined;
-    tauriIpc.listen<{ jobId: string; status: string }>('job-status-changed', (event) => callback(event.payload)).then(fn => unlisten = fn);
-    return () => unlisten?.();
-  }
-
-  onAgentStatusChanged(callback: (data: { agentId: string; status: string }) => void): Unsubscribe {
-    let unlisten: (() => void) | undefined;
-    tauriIpc.listen<{ agentId: string; status: string }>('agent-status-changed', (event) => callback(event.payload)).then(fn => unlisten = fn);
-    return () => unlisten?.();
-  }
-
   onAgentMetricsChanged(callback: (data: { agentId: string; metrics: any }) => void): Unsubscribe {
     let unlisten: (() => void) | undefined;
     tauriIpc.listen<{ agentId: string; metrics: any }>('agent-metrics-changed', (event) => callback(event.payload)).then(fn => unlisten = fn);
@@ -218,24 +189,6 @@ export class TauriBackend implements ExtendedApi {
     return () => unlisten?.();
   }
 
-  onModelPlanSwitched(callback: (event: { old_plan: string; new_plan: string; health_score: number }) => void): Unsubscribe {
-    let unlisten: (() => void) | undefined;
-    tauriIpc.listen<{ old_plan: string; new_plan: string; health_score: number }>('model-plan-switched', (event) => callback(event.payload)).then(fn => unlisten = fn);
-    return () => unlisten?.();
-  }
-
-  onAiEvolutionCompleted(callback: (discoveries: any[]) => void): Unsubscribe {
-    let unlisten: (() => void) | undefined;
-    tauriIpc.listen<any[]>('ai-evolution-completed', (event) => callback(event.payload)).then(fn => unlisten = fn);
-    return () => unlisten?.();
-  }
-
-  onOptimizationStatsUpdated(callback: (stats: any) => void): Unsubscribe {
-    let unlisten: (() => void) | undefined;
-    tauriIpc.listen<any>('optimization-stats-updated', (event) => callback(event.payload)).then(fn => unlisten = fn);
-    return () => unlisten?.();
-  }
-
   // Voice & TTS
   async ttsInstallInstructions(projectPath: string): Promise<{ success: boolean }> { 
     return await tauriIpc.voiceInstallPiper(); 
@@ -244,9 +197,8 @@ export class TauriBackend implements ExtendedApi {
     return await tauriIpc.voiceSpeak(text, voice, speed); 
   }
 
-  async voiceStopSpeaking(): Promise<{ success: boolean }> { 
+  async voiceStopSpeaking(): Promise<void> {
     await tauriIpc.voiceStop();
-    return { success: true };
   }
 
   async voiceCheckTTS(): Promise<any> { return await tauriIpc.voiceCheckTTS(); }
@@ -300,7 +252,6 @@ export class TauriBackend implements ExtendedApi {
   async windowIsMaximized(): Promise<boolean> { return await tauriIpc.windowIsMaximized(); }
   windowStartDragging(): void { tauriIpc.windowStartDragging(); }
   getPathForFile(file: File): string { return (file as any).path || ''; }
-  async readClipboardImage(): Promise<{ success: boolean; hasImage?: boolean; path?: string; error?: string }> { return { success: false }; }
   async getVersion(): Promise<string> { return '2.0.0-tauri'; }
   async isDebugMode(): Promise<boolean> { return true; }
   async refresh(): Promise<void> { window.location.reload(); }
@@ -590,14 +541,14 @@ export class TauriBackend implements ExtendedApi {
   async jobsCreate(jobType: string, payload: any): Promise<string> { return await tauriIpc.jobsCreate(jobType, payload); }
   async jobsGet(id: string): Promise<any> { return await tauriIpc.jobsGet(id); }
   async jobsList(limit?: number): Promise<any[]> { return await tauriIpc.jobsList(limit); }
-  onJobProgress(callback: (data: { id: string, progress: number, message: string }) => void): Unsubscribe {
+  onJobProgress(callback: (data: { jobId: string; progress: number; message?: string }) => void): Unsubscribe {
     let unlisten: (() => void) | undefined;
-    tauriIpc.onJobProgress(callback).then(fn => unlisten = fn);
+    tauriIpc.onJobProgress((data) => callback({ jobId: data.id, progress: data.progress, message: data.message })).then(fn => unlisten = fn);
     return () => unlisten?.();
   }
-  onAgentStatusChanged(callback: (data: { id: string, status: string }) => void): Unsubscribe {
+  onAgentStatusChanged(callback: (data: { agentId: string; status: string }) => void): Unsubscribe {
     let unlisten: (() => void) | undefined;
-    tauriIpc.onAgentStatusChanged(callback).then(fn => unlisten = fn);
+    tauriIpc.onAgentStatusChanged((data) => callback({ agentId: data.id, status: data.status })).then(fn => unlisten = fn);
     return () => unlisten?.();
   }
 
@@ -607,9 +558,9 @@ export class TauriBackend implements ExtendedApi {
     return () => unlisten?.();
   }
 
-  onJobStatusChanged(callback: (id: string) => void): Unsubscribe {
+  onJobStatusChanged(callback: (data: { jobId: string; status: string }) => void): Unsubscribe {
     let unlisten: (() => void) | undefined;
-    tauriIpc.onJobStatusChanged(callback).then(fn => unlisten = fn);
+    tauriIpc.onJobStatusChanged((id) => callback({ jobId: id, status: 'unknown' })).then(fn => unlisten = fn);
     return () => unlisten?.();
   }
 
@@ -738,7 +689,7 @@ export class TauriBackend implements ExtendedApi {
   async gsdCreateSwarmSnapshot(cwd: string, name: string, handoffNotes?: string): Promise<{ success: boolean; snapshotId?: string; error?: string }> {
     try {
       const snapshotId = await tauriIpc.createSwarmSnapshot(cwd, name, handoffNotes);
-      return { success: true, snapshotId };
+      return { success: true, snapshotId: snapshotId as string | undefined };
     } catch (e) {
       return { success: false, error: String(e) };
     }
@@ -774,7 +725,7 @@ export class TauriBackend implements ExtendedApi {
   async aiTriggerEvolution(): Promise<any[]> {
     return await tauriIpc.ai_trigger_evolution();
   }
-  async aiRecordFeedback(feedback: { actionId: string; stepId: string; feedbackType: string; comment?: string }): Promise<{ success: boolean }> {
+  async aiRecordFeedback(feedback: { context_id: string; action: string; feedback: string; is_positive: boolean }): Promise<{ success: boolean }> {
     return await tauriIpc.aiRecordFeedback(feedback);
   }
 
@@ -792,27 +743,27 @@ export class TauriBackend implements ExtendedApi {
 
   // CLI Status & Health
   async claudeCheck(): Promise<{ installed: boolean; npmInstalled: boolean; gitBashInstalled: boolean }> {
-    return tauriIpc.claudeCheck()
+    return tauriIpc.claudeCheck() as any
   }
 
   async geminiCheck(): Promise<{ installed: boolean; npmInstalled: boolean }> {
-    return tauriIpc.geminiCheck()
+    return tauriIpc.geminiCheck() as any
   }
 
   async codexCheck(): Promise<{ installed: boolean; npmInstalled: boolean }> {
-    return tauriIpc.codexCheck()
+    return tauriIpc.codexCheck() as any
   }
 
   async opencodeCheck(): Promise<{ installed: boolean; npmInstalled: boolean }> {
-    return tauriIpc.opencodeCheck()
+    return tauriIpc.opencodeCheck() as any
   }
 
   async aiderCheck(): Promise<{ installed: boolean; pipInstalled: boolean }> {
-    return tauriIpc.aiderCheck()
+    return tauriIpc.aiderCheck() as any
   }
 
   async gsdCheck(): Promise<{ installed: boolean; npmInstalled: boolean }> {
-    return tauriIpc.gsdCheck()
+    return tauriIpc.gsdCheck() as any
   }
 
   // Installation Handlers
@@ -857,15 +808,41 @@ export class TauriBackend implements ExtendedApi {
   }
 
   // Mobile Sync (Transwarp Nexus)
-  async mobileGetConnectionInfo(): Promise<{ success: boolean; ip?: string; port?: number; token?: string; error?: string }> {
-    return await tauriIpc.mobileGetConnectionInfo();
+  async mobileGetConnectionInfo(): Promise<{ host: string; port: number; token: string }> {
+    const info = await tauriIpc.mobileGetConnectionInfo();
+    return { host: info.ip ?? '', port: info.port ?? 0, token: info.token ?? '' };
   }
 
-  async mobileRegenerateToken(): Promise<string> {
-    return await tauriIpc.mobileRegenerateToken();
+  async mobileRegenerateToken(): Promise<{ host: string; port: number; token: string }> {
+    const token = await tauriIpc.mobileRegenerateToken();
+    const info = await tauriIpc.mobileGetConnectionInfo();
+    return { host: info.ip ?? '', port: info.port ?? 0, token };
   }
 
   async readClipboardImage(): Promise<{ success: boolean; hasImage?: boolean; path?: string; error?: string }> {
     return await tauriIpc.readClipboardImage();
+  }
+
+  // TTS (mapped to voice layer)
+  async ttsSpeak(text: string): Promise<{ success: boolean; audioData?: string; error?: string }> {
+    return await tauriIpc.voiceSpeak(text) as any;
+  }
+  async ttsStop(): Promise<{ success: boolean }> {
+    await tauriIpc.voiceStop();
+    return { success: true };
+  }
+
+  // MCP Server Management
+  async mcpDiscoverServers(): Promise<any[]> {
+    return await tauriIpc.mcpDiscoverServers();
+  }
+  async registerMcpServer(config: any): Promise<void> {
+    return await tauriIpc.registerMcpServer(config);
+  }
+  async mcpTrustNode(name: string): Promise<void> {
+    return await tauriIpc.mcpTrustNode(name);
+  }
+  async mcpIsNodeTrusted(name: string): Promise<boolean> {
+    return await tauriIpc.mcpIsNodeTrusted(name);
   }
 }

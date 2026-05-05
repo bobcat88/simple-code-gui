@@ -1,6 +1,8 @@
 
 export interface TokenStatsResponse {
-  totalTokens: number
+  totalInput: number
+  totalOutput: number
+  totalSaved: number
   totalCost: number
   [key: string]: unknown
 }
@@ -30,6 +32,8 @@ export interface ProjectIntelligenceResponse {
 
 export interface CheckToolResponse {
   installed: boolean
+  npmInstalled?: boolean
+  gitBashInstalled?: boolean
   version?: string
   path?: string
   error?: string

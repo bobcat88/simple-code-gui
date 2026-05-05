@@ -161,7 +161,7 @@ export const tauriIpc = {
   getTokenStats: (projectId?: string) =>
     invoke<TokenStatsResponse>('get_token_stats', { projectId }),
 
-  getTokenHistory: (filters?: Record<string, unknown>) =>
+  getTokenHistory: (filters?: any) =>
     invoke<TokenHistoryResponse>('get_token_history', { filters }),
 
   aiGetOptimizationStats: (sessionId?: string) =>
