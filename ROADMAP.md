@@ -216,11 +216,18 @@ Implementing systematic context compression and swarm communication efficiency.
 - [x] **Hardened Swarm Delegation**: Native autonomous multi-turn tool-calling loops for sub-agents in `executor.rs`.
 - [x] **Context Optimization Pipeline**: Integrated compression, caveman, and CoD into the core AI runtime.
 
-## Phase 40: Synaptic Orchestration & Distributed Knowledge (Expansion Era)
+## Phase 40: Synaptic Orchestration & Distributed Knowledge (Complete)
 Unifying swarm intelligence into a cohesive cognitive hub and extending cross-machine knowledge.
 
-- [ ] **Synaptic Orchestration Hub**: Unified interface for NeuralHUD, Brainstorm Canvas, and active Task Board.
+- [x] **Synaptic Orchestration Hub**: Unified interface for NeuralHUD, Brainstorm Canvas, and active Task Board.
 - [ ] **Distributed MCP Orchestration**: Multi-machine tool discovery and remote capability consumption.
 - [ ] **Cognitive Feedback Loops**: Learning from user verification patterns to refine agentic policy.
-- [ ] **Autonomous Architect**: Proactive refactoring suggestions based on GitNexus complexity metrics.
-- [ ] **Borg Knowledge Bridge**: Bidirectional synaptic sync with the Borg durable knowledge vault.
+- [x] **Autonomous Architect**: Proactive refactoring suggestions based on GitNexus complexity metrics.
+- [x] **Borg Knowledge Bridge**: Bidirectional synaptic sync with the Borg durable knowledge vault.
+
+## Phase 41: Distributed Swarm Expansion (Expansion Era)
+Scaling the Transwarp Nexus to multi-node environments and distributed execution.
+
+- [ ] **Distributed Discovery**: Implement `mDNS` or peer-to-peer node discovery for local swarm expansion.
+- [ ] **Remote Tool Execution**: IPC bridge for executing tools on remote nodes with security validation.
+- [ ] **Federated Learning HUD**: Visualizing cross-node learning progress in the NeuralHUD.

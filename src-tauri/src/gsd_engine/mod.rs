@@ -19,6 +19,7 @@ pub mod governance;
 pub mod sync;
 pub mod quantum_sync;
 pub mod borg;
+pub mod distributed;
 
 
 pub struct GsdEngine {
@@ -29,6 +30,7 @@ pub struct GsdEngine {
     pub governance: Arc<Mutex<governance::GovernanceEngine>>,
     pub is_syncing: std::sync::Arc<std::sync::atomic::AtomicBool>,
     pub quantum_sync: Arc<Mutex<Option<quantum_sync::QuantumSyncManager>>>,
+    pub distributed: Arc<Mutex<Option<distributed::DistributedManager>>>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -53,6 +55,7 @@ impl GsdEngine {
             governance: Arc::new(Mutex::new(governance::GovernanceEngine::new_default())),
             is_syncing: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
             quantum_sync: Arc::new(Mutex::new(None)),
+            distributed: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -876,35 +879,43 @@ pub async fn gsd_trigger_expansion_loop(
     Ok(())
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DistributedNode {
-    pub id: String,
-    pub name: String,
-    pub node_type: String,
-    pub status: String,
-    pub latency: u64,
-}
-
 #[tauri::command]
-pub async fn gsd_start_distributed_discovery() -> Result<(), String> {
+pub async fn gsd_start_distributed_discovery(
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<(), String> {
+    let mut dist = state.distributed.lock().await;
+    if dist.is_none() {
+        // TODO: Get real redis URL and node name from settings
+        let redis_url = "redis://127.0.0.1/".to_string();
+        let node_name = "Nexus-Node".to_string();
+        *dist = Some(distributed::DistributedManager::new(node_name, redis_url));
+    }
+    
+    if let Some(mgr) = dist.as_ref() {
+        mgr.start_discovery().await?;
+    }
     Ok(())
 }
 
 #[tauri::command]
-pub async fn gsd_stop_distributed_discovery() -> Result<(), String> {
+pub async fn gsd_stop_distributed_discovery(
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<(), String> {
+    let dist = state.distributed.lock().await;
+    if let Some(mgr) = dist.as_ref() {
+        mgr.stop_discovery().await;
+    }
     Ok(())
 }
 
 #[tauri::command]
-pub async fn gsd_get_distributed_nodes() -> Result<Vec<DistributedNode>, String> {
-    Ok(vec![
-        DistributedNode {
-            id: "local-swarm".to_string(),
-            name: "Local Swarm".to_string(),
-            node_type: "orchestrator".to_string(),
-            status: "active".to_string(),
-            latency: 2,
-        }
-    ])
+pub async fn gsd_get_distributed_nodes(
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<Vec<distributed::DistributedNode>, String> {
+    let dist = state.distributed.lock().await;
+    if let Some(mgr) = dist.as_ref() {
+        Ok(mgr.get_nodes().await)
+    } else {
+        Ok(Vec::new())
+    }
 }

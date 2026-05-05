@@ -27,6 +27,8 @@ import { SynapticExpansion } from './SynapticExpansion';
 
 import { BrainstormTab } from './BrainstormTab';
 import { GovernanceTab } from './GovernanceTab';
+import { AgentBoard } from '../AgentBoard';
+import { ListTodo } from 'lucide-react';
 
 interface SwarmCognitiveHubProps {
   api: ExtendedApi;
@@ -34,7 +36,7 @@ interface SwarmCognitiveHubProps {
 }
 
 export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({ api, projectPath }) => {
-  const [activeLayer, setActiveLayer] = useState<'neural' | 'stream' | 'memory' | 'synaptic' | 'brainstorm' | 'governance'>('neural');
+  const [activeLayer, setActiveLayer] = useState<'neural' | 'stream' | 'memory' | 'synaptic' | 'brainstorm' | 'governance' | 'tasks'>('neural');
   const { snapshots, refresh: refreshSnapshots } = useSwarmSnapshots(projectPath);
 
   return (
@@ -86,6 +88,12 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({ api, proje
             label="Stream"
           />
           <NavButton 
+            active={activeLayer === 'tasks'} 
+            onClick={() => setActiveLayer('tasks')}
+            icon={<ListTodo size={14} />}
+            label="Tasks"
+          />
+          <NavButton 
             active={activeLayer === 'memory'} 
             onClick={() => setActiveLayer('memory')}
             icon={<History size={14} />}
@@ -126,6 +134,11 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({ api, proje
         {activeLayer === 'memory' && (
           <div className="absolute inset-0 p-4 animate-in slide-in-from-right-4 duration-500 overflow-y-auto custom-scrollbar">
             <MemoryVault snapshots={snapshots} onRefresh={refreshSnapshots} api={api} projectPath={projectPath} />
+          </div>
+        )}
+        {activeLayer === 'tasks' && (
+          <div className="absolute inset-0 p-4 animate-in slide-in-from-top-4 duration-500 overflow-y-auto custom-scrollbar">
+            <AgentBoard />
           </div>
         )}
 

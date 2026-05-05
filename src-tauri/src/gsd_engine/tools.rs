@@ -323,6 +323,15 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
 
             Ok(results.join("\n\n"))
         }
+        "gsd_remote_execute" => {
+            let node_id = args["node_id"].as_str().ok_or("Missing node_id argument")?;
+            let tool_name = args["tool_name"].as_str().ok_or("Missing tool_name argument")?;
+            let tool_args = args["arguments"].as_str().unwrap_or("{}");
+            
+            // Foundation: Log the attempt to remote execution for now.
+            // Future: Implement actual P2P tool forwarding via Redis/IPC.
+            Ok(format!("__GSD_REMOTE_EXECUTION_STUB__\nTarget Node: {}\nTool: {}\nArgs: {}", node_id, tool_name, tool_args))
+        }
         _ => Err(format!("Unknown tool: {}", name)),
     }
 }
@@ -578,29 +587,32 @@ pub fn get_gsd_tools() -> Vec<crate::ai_runtime::types::ToolDefinition> {
             }),
         },
         crate::ai_runtime::types::ToolDefinition {
-            name: "gsd_identify_refactors".to_string(),
-            description: "Proactively identify refactoring opportunities and technical debt across the codebase using semantic graph analysis.".to_string(),
-            parameters: json!({
-                "type": "object",
-                "properties": {}
-            }),
-        },
-        crate::ai_runtime::types::ToolDefinition {
-            name: "gitnexus_detect_changes".to_string(),
-            description: "Analyze uncommitted git changes and find affected execution flows. Use this for safety audits before commit.".to_string(),
-            parameters: json!({
-                "type": "object",
-                "properties": {
-                    "scope": { "type": "string", "enum": ["unstaged", "staged", "all"], "description": "What to analyze (defaults to unstaged)" }
-                }
-            }),
-        },
-        crate::ai_runtime::types::ToolDefinition {
             name: "kspec_validate".to_string(),
             description: "Run Kspec validation on the codebase to ensure requirement alignment and AC coverage.".to_string(),
             parameters: json!({
                 "type": "object",
                 "properties": {}
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "gsd_proactive_audit".to_string(),
+            description: "Perform a multi-stage architectural audit (Complexity, Fan-in, Cycles) to drive refactoring decisions.".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {}
+            }),
+        },
+        crate::ai_runtime::types::ToolDefinition {
+            name: "gsd_remote_execute".to_string(),
+            description: "Forward a tool execution request to a discovered swarm node for distributed processing.".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "node_id": { "type": "string", "description": "ID of the target node" },
+                    "tool_name": { "type": "string", "description": "Name of the tool to execute" },
+                    "arguments": { "type": "string", "description": "JSON string of arguments for the tool" }
+                },
+                "required": ["node_id", "tool_name"]
             }),
         },
     ]
