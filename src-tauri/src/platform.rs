@@ -35,6 +35,8 @@ pub fn get_additional_paths() -> Vec<PathBuf> {
         paths.push(home.join(".bun/bin"));
         paths.push(home.join(".cargo/bin"));
         paths.push(PathBuf::from("/usr/local/bin"));
+        paths.push(PathBuf::from("/usr/bin"));
+        paths.push(PathBuf::from("/bin"));
     }
     paths
 }
