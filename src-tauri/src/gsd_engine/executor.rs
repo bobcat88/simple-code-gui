@@ -323,6 +323,18 @@ impl Executor {
         Ok(())
     }
 
+    pub fn get_project_name(&self) -> String {
+        if let Some(ref path) = self.project_path {
+            std::path::Path::new(path)
+                .file_name()
+                .and_then(|s| s.to_str())
+                .unwrap_or("unknown-project")
+                .to_string()
+        } else {
+            "unknown-project".to_string()
+        }
+    }
+
     pub async fn execute_step(
         &self,
         plan_id: &str,
@@ -1065,6 +1077,7 @@ impl Executor {
         let project_path = self.project_path.clone();
         let active_project_paths = self.active_project_paths.clone();
 
+        let project_name = self.get_project_name();
         tokio::spawn(async move {
             // 1. AI-Driven Summarization
             let prompt = format!(
@@ -1099,18 +1112,8 @@ impl Executor {
                 .output();
 
             // 3. Durable Vault Persistence (Borg)
-            let borg_path = std::path::Path::new("/home/_johan/Documents/Borg/200 Notes/Learnings/chronicle.md");
-            let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
-            let entry = format!("\n### [{}] {}\n{}\n", timestamp, step_title, learning);
-            
-            if let Ok(mut file) = std::fs::OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(borg_path)
-            {
-                use std::io::Write;
-                let _ = writeln!(file, "{}", entry);
-            }
+            let bridge = crate::gsd_engine::borg::BorgBridge::new();
+            let _ = bridge.record_learning(&project_name, &step_title, &learning);
         });
 
         self.emit_execution_event(

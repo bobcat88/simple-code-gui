@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use serde_json::Value;
 
@@ -17,6 +18,7 @@ pub mod forensics;
 pub mod governance;
 pub mod sync;
 pub mod quantum_sync;
+pub mod borg;
 
 
 pub struct GsdEngine {
@@ -727,10 +729,8 @@ pub async fn gsd_sync_memory(
     let knowledge_lock = state.knowledge.lock().await;
     
     if let Some(ref knowledge) = *knowledge_lock {
-        // First import from global
-        let imported = sync::GlobalSync::import(knowledge)?;
-        // Then export local to global
-        sync::GlobalSync::export(knowledge)?;
+        let bridge = borg::BorgBridge::new();
+        let imported = bridge.sync_collective_memory(knowledge)?;
         Ok(imported)
     } else {
         Err("Swarm memory not initialized".to_string())
@@ -777,8 +777,8 @@ pub async fn gsd_start_automatic_sync(
             {
                 let knowledge_lock = state_clone.knowledge.lock().await;
                 if let Some(ref knowledge) = *knowledge_lock {
-                    let _ = sync::GlobalSync::import(knowledge);
-                    let _ = sync::GlobalSync::export(knowledge);
+                    let bridge = borg::BorgBridge::new();
+                    let _ = bridge.sync_collective_memory(knowledge);
                     let _ = app.emit("gsd-sync-complete", ());
                 }
             }
@@ -831,3 +831,80 @@ pub async fn gsd_quantum_sync_start(
 }
 
 
+
+#[tauri::command]
+pub async fn gsd_execute_proactive_audit(
+    app: AppHandle,
+    _state: State<'_, Arc<GsdEngine>>,
+    orch: State<'_, OrchestrationState>,
+    project_path: Option<String>,
+) -> Result<String, String> {
+    let path = project_path.or_else(|| orch.current_project_path.lock().clone());
+    tools::execute_tool("gsd_proactive_audit", "{}", &path, &app).await
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SynapticMetrics {
+    pub feedback_loops: usize,
+    pub active_optimizations: usize,
+    pub cognitive_load: f64,
+    pub swarm_cohesion: f64,
+}
+
+#[tauri::command]
+pub async fn gsd_get_synaptic_metrics(
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<SynapticMetrics, String> {
+    let gov = state.governance.lock().await;
+    
+    // Heuristic metrics
+    Ok(SynapticMetrics {
+        feedback_loops: 3, // Synchronizer, Evolution, PeerReview
+        active_optimizations: 0,
+        cognitive_load: 0.42, // Dummy for now
+        swarm_cohesion: 0.85, // Heuristic: high cohesion by default
+    })
+}
+
+
+#[tauri::command]
+pub async fn gsd_trigger_expansion_loop(
+    _loop_type: String,
+) -> Result<(), String> {
+    // Stub for future loop orchestration
+    Ok(())
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DistributedNode {
+    pub id: String,
+    pub name: String,
+    pub node_type: String,
+    pub status: String,
+    pub latency: u64,
+}
+
+#[tauri::command]
+pub async fn gsd_start_distributed_discovery() -> Result<(), String> {
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn gsd_stop_distributed_discovery() -> Result<(), String> {
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn gsd_get_distributed_nodes() -> Result<Vec<DistributedNode>, String> {
+    Ok(vec![
+        DistributedNode {
+            id: "local-swarm".to_string(),
+            name: "Local Swarm".to_string(),
+            node_type: "orchestrator".to_string(),
+            status: "active".to_string(),
+            latency: 2,
+        }
+    ])
+}

@@ -293,6 +293,36 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
             
             Ok(result)
         }
+        "gsd_proactive_audit" => {
+            // Multi-stage audit: Long functions + High Complexity + Cyclical dependencies
+            let mut results = Vec::new();
+            
+            // 1. Long functions
+            let mut cmd1 = Command::new("gitnexus");
+            cmd1.arg("cypher").arg("MATCH (f:Function) WHERE f.endLine - f.startLine > 200 RETURN f.name, f.filePath, (f.endLine - f.startLine) as lines ORDER BY lines DESC LIMIT 5");
+            if let Some(ref path) = project_path { cmd1.arg("--repo").arg(path); }
+            if let Ok(out) = run_command(&mut cmd1, project_path) {
+                results.push(format!("### Technical Debt (Long Functions)\n{}", out));
+            }
+
+            // 2. High Impact symbols (Fan-out)
+            let mut cmd2 = Command::new("gitnexus");
+            cmd2.arg("cypher").arg("MATCH (a)-[r:CodeRelation {type: 'CALLS'}]->(b) WITH b, count(a) as callers WHERE callers > 10 RETURN b.name, b.filePath, callers ORDER BY callers DESC LIMIT 5");
+            if let Some(ref path) = project_path { cmd2.arg("--repo").arg(path); }
+            if let Ok(out) = run_command(&mut cmd2, project_path) {
+                results.push(format!("### Architectural Hotspots (High Fan-in)\n{}", out));
+            }
+
+            // 3. Potential Cycles
+            let mut cmd3 = Command::new("gitnexus");
+            cmd3.arg("cypher").arg("MATCH (a:File)-[:CodeRelation {type: 'IMPORTS'}]->(b:File)-[:CodeRelation {type: 'IMPORTS'}]->(a:File) RETURN a.filePath, b.filePath LIMIT 5");
+            if let Some(ref path) = project_path { cmd3.arg("--repo").arg(path); }
+            if let Ok(out) = run_command(&mut cmd3, project_path) {
+                results.push(format!("### Circular Dependency Risks\n{}", out));
+            }
+
+            Ok(results.join("\n\n"))
+        }
         _ => Err(format!("Unknown tool: {}", name)),
     }
 }
