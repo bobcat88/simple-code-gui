@@ -296,41 +296,30 @@ features:
         created: 2026-04-20T16:50:55.804Z
         notes: []
       - _ulid: 01KPNWTRXKAQ76CQYFP8CA18X9
-        slugs: []
+        slugs:
+          - rtk-telemetry
         title: Savings Telemetry (RTK/MCP)
         type: requirement
         description: Calculation and display of tokens saved by using RTK, MCP, and local intelligence.
         status:
           maturity: draft
           implementation: implemented
-        acceptance_criteria:
-          - given: the Savings Telemetry (RTK/MCP) is implemented
-            id: ac-gen-1
-            then: it works as expected
-            when: it is used
-        created: 2026-04-28T22:21:13.876Z
-      - status:
-          maturity: draft
-          implementation: not_started
         depends_on: []
         implements: []
         relates_to: []
         tests: []
         traits: []
         acceptance_criteria:
-          - given: the feature is implemented
-            id: ac-gen-1
-            then: it works as expected
-            when: it is used
+          - given: RTK/MCP optimizations active
+            id: ac-savings-1
+            then: the telemetry correctly reports the token reduction achieved
+            when: measuring savings
         tags: []
-        given: RTK/MCP optimizations active
-        id: ac-savings-1
-        then: the telemetry correctly reports the token reduction achieved
-        when: measuring savings
         created: 2026-04-20T16:50:57.587Z
         notes: []
       - _ulid: 01KPNWTTH2GSHV3Q4W2W7F7KV8
-        slugs: []
+        slugs:
+          - token-history
         title: Token Burn History
         type: requirement
         description: SQLite-backed logging of all token transactions for historical analysis.

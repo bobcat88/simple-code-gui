@@ -1,0 +1,19 @@
+{
+  "id": "e9b8043a-4cd6-4389-bf0e-2951ac701b87",
+  "name": "Commit: chore: remove scratch files",
+  "project_path": "/home/_johan/Documents/Projects/simple-code-gui",
+  "timestamp": "2026-05-01T17:44:30.415927Z",
+  "messages": [
+    {
+      "id": "test-msg-id",
+      "timestamp": 1777657467811,
+      "from_agent": "TestAgent",
+      "to_agent": "User",
+      "message_type": "text",
+      "content": "This is a test message for snapshotting",
+      "metadata": {
+        "test": true
+      }
+    }
+  ]
+}
