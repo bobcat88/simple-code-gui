@@ -17,7 +17,7 @@ import {
   Database,
   Timer
 } from 'lucide-react'
-import { AgentAction, AgentStatus, OrchestrationState } from './types'
+import { AgentAction, AgentStatus, OrchestrationState, SystemTelemetry } from './types'
 import './OrchestrationPanel.css'
 
 declare global {
@@ -86,7 +86,7 @@ export function OrchestrationPanel() {
       })
     })
 
-    const unsubTelemetry = window.api.onTelemetry((telemetry: any) => {
+    const unsubTelemetry = window.api.onTelemetry((telemetry: SystemTelemetry) => {
       setState(prev => ({ ...prev, telemetry }))
     })
 
@@ -247,10 +247,10 @@ export function OrchestrationPanel() {
                 </div>
                 <div className="action-message-container">
                   <span className="action-message">{action.message}</span>
-                  {action.metadata?.file && (
+                  {action.metadata?.file != null && (
                     <div className="action-file">
                       <ExternalLink size={10} />
-                      <span>{action.metadata.file}</span>
+                      <span>{String(action.metadata.file)}</span>
                     </div>
                   )}
                 </div>

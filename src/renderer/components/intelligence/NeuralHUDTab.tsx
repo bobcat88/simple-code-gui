@@ -45,7 +45,7 @@ interface NeuralHUDTabProps {
 }
 
 export function NeuralHUDTab({ api, projectPath, embedded }: NeuralHUDTabProps) {
-  const fgRef = useRef<any>()
+  const fgRef = useRef<any>(null)
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] })
   const [isLoading, setIsLoading] = useState(false)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)

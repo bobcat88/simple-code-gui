@@ -141,7 +141,7 @@ export function NeuralHUD() {
     }) ?? (() => {});
 
     if (api?.gsdQuantumSyncStart) {
-      api.gsdQuantumSyncStart().catch(err => console.error("Quantum sync failed to start:", err));
+      api.gsdQuantumSyncStart().catch((err: unknown) => console.error("Quantum sync failed to start:", err));
     }
 
     return () => {

@@ -1182,7 +1182,7 @@ export interface SwarmKnowledge {
 }
 
 export type InsightSeverity = 'high' | 'medium' | 'low';
-export type InsightType = 'technical' | 'architectural' | 'optimization';
+export type InsightType = 'technical' | 'architectural' | 'optimization' | 'learning';
 
 export interface NeuralInsight {
   id: string;

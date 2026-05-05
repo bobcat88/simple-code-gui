@@ -29,8 +29,8 @@ export function GovernanceTab({ api, projectPath }: GovernanceTabProps) {
     // Check if auto sync is already running
     const checkSyncStatus = async () => {
       try {
-        const running = await api.gsdGetSyncStatus();
-        setAutoSync(running);
+        const running = await api.gsdGetSyncStatus?.();
+        setAutoSync(running ?? false);
       } catch (err) {
         console.error('Failed to get sync status:', err)
       }
@@ -44,7 +44,7 @@ export function GovernanceTab({ api, projectPath }: GovernanceTabProps) {
   const handleManualSync = async () => {
     setSyncStatus('syncing')
     try {
-      const imported = await api.gsdSyncMemory()
+      const imported = await api.gsdSyncMemory?.()
       setSyncStatus('success')
       setLastSync(new Date().toLocaleTimeString())
       setTimeout(() => setSyncStatus('idle'), 3000)
@@ -57,10 +57,10 @@ export function GovernanceTab({ api, projectPath }: GovernanceTabProps) {
   const toggleAutoSync = async () => {
     try {
       if (autoSync) {
-        await api.gsdStopAutomaticSync()
+        await api.gsdStopAutomaticSync?.()
         setAutoSync(false)
       } else {
-        await api.gsdStartAutomaticSync()
+        await api.gsdStartAutomaticSync?.()
         setAutoSync(true)
       }
     } catch (err) {
