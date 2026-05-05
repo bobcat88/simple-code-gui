@@ -28,11 +28,13 @@ pub struct McpServerConfig {
 pub enum McpTransport {
     Local {
         stdin: Arc<Mutex<ChildStdin>>,
+        credits: Arc<Mutex<i64>>,
     },
     Remote {
         url: String,
         client: reqwest::Client,
         post_url: Arc<Mutex<Option<String>>>,
+        credits: Arc<Mutex<i64>>,
     },
 }
 
@@ -43,6 +45,7 @@ pub struct McpServerHandle {
     pub app_handle: Option<AppHandle>,
     pub status: Arc<Mutex<String>>, // "online", "offline", "degraded"
     pub last_latency: Arc<Mutex<u64>>, // in ms
+    pub credits: Arc<Mutex<i64>>, // Swarm credits balance
 }
 
 pub struct McpManager {
@@ -105,7 +108,7 @@ impl McpManager {
                             // Actually just return online for now
                             Ok(())
                         }
-                        McpTransport::Remote { url, client, post_url } => {
+                        McpTransport::Remote { url, client, post_url, .. } => {
                             let p_url = post_url.lock().await;
                             let target = p_url.as_ref().unwrap_or(url);
                             let res = client.post(target)
@@ -181,6 +184,7 @@ struct JsonRpcError {
 impl McpServerHandle {
     pub async fn spawn(config: McpServerConfig, app_handle: Option<AppHandle>) -> Result<Self, String> {
         let pending_requests: Arc<Mutex<HashMap<Value, oneshot::Sender<Result<Value, String>>>>> = Arc::new(Mutex::new(HashMap::new()));
+        let credits = Arc::new(Mutex::new(1000)); // Initial stipend
 
         let transport = if let Some(url) = &config.url {
             // Remote HTTP/SSE Transport
@@ -191,6 +195,7 @@ impl McpServerHandle {
             let name_clone = config.name.clone();
             let client_clone = client.clone();
             let app_handle_clone = app_handle.clone();
+            let credits_clone = credits.clone();
 
             // Background SSE listener for remote server with auto-recovery
             tokio::spawn(async move {
@@ -236,6 +241,12 @@ impl McpServerHandle {
                                                             eprintln!("[Swarm] Synchronized remote memory from {}: {}", name_clone, entry.content);
                                                         }
                                                     }
+                                                } else if current_event == "credit-update" {
+                                                    if let Ok(balance) = data.parse::<i64>() {
+                                                        let mut creds = credits_clone.lock().await;
+                                                        *creds = balance;
+                                                        eprintln!("[Swarm] Updated credits for {}: {}", name_clone, balance);
+                                                    }
                                                 }
 
                                                 let _ = app.emit("mcp-notification", json!({
@@ -259,6 +270,7 @@ impl McpServerHandle {
                 url: url.clone(),
                 client,
                 post_url,
+                credits: credits.clone(),
             }
         } else if let Some(command) = &config.command {
             // Local Process Transport
@@ -308,7 +320,7 @@ impl McpServerHandle {
                 }
             });
 
-            McpTransport::Local { stdin: stdin_mutex }
+            McpTransport::Local { stdin: stdin_mutex, credits: credits.clone() }
         } else {
             return Err(format!("MCP server {} has neither command nor url", config.name));
         };
@@ -320,6 +332,7 @@ impl McpServerHandle {
             app_handle,
             status: Arc::new(Mutex::new("online".to_string())),
             last_latency: Arc::new(Mutex::new(0)),
+            credits,
         };
 
         // Send initialize request
@@ -348,7 +361,7 @@ impl McpServerHandle {
         };
 
         match &self.transport {
-            McpTransport::Local { stdin } => {
+            McpTransport::Local { stdin, .. } => {
                 let (tx, rx) = oneshot::channel();
                 {
                     let mut pending = self.pending_requests.lock().await;
@@ -364,7 +377,7 @@ impl McpServerHandle {
 
                 rx.await.map_err(|e| format!("oneshot error: {}", e))?
             }
-            McpTransport::Remote { url, client, post_url } => {
+            McpTransport::Remote { url, client, post_url, .. } => {
                 let target_url = {
                     let p_url = post_url.lock().await;
                     p_url.as_ref().cloned().unwrap_or_else(|| url.clone())
@@ -399,14 +412,14 @@ impl McpServerHandle {
         });
 
         match &self.transport {
-            McpTransport::Local { stdin } => {
+            McpTransport::Local { stdin, .. } => {
                 let json = serde_json::to_string(&request).map_err(|e| e.to_string())?;
                 let mut stdin_lock = stdin.lock().await;
                 stdin_lock.write_all(format!("{}\n", json).as_bytes()).await.map_err(|e| e.to_string())?;
                 stdin_lock.flush().await.map_err(|e| e.to_string())?;
                 Ok(())
             }
-            McpTransport::Remote { url, client, post_url } => {
+            McpTransport::Remote { url, client, post_url, .. } => {
                 let target_url = {
                     let p_url = post_url.lock().await;
                     p_url.as_ref().cloned().unwrap_or_else(|| url.clone())
