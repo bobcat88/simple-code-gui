@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, lazy, Suspense } from 'react'
 import {
   Activity,
   AlertCircle,
@@ -23,8 +23,8 @@ import type {
 } from '../../api/types'
 import { BrainstormTab } from './BrainstormTab'
 import { GovernanceTab } from './GovernanceTab'
-import { NeuralHUDTab } from './NeuralHUDTab'
 import { SwarmCognitiveHub } from './SwarmCognitiveHub'
+const NeuralHUDTab = lazy(() => import('./NeuralHUDTab').then(m => ({ default: m.NeuralHUDTab })))
 import { InitializationWizardSection } from './InitializationWizardSection'
 import { RefactoringSection } from './RefactoringSection'
 import { VectorIndexSection } from './VectorIndexSection'
