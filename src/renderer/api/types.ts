@@ -944,6 +944,8 @@ export interface ExtendedApi extends Api {
   mcpDiscoverServers: () => Promise<McpServerConfig[]>
   registerMcpServer: (config: McpServerConfig) => Promise<void>
   mcpLoadConfig: () => Promise<void>
+  mcpTrustNode: (name: string) => Promise<void>
+  mcpIsNodeTrusted: (name: string) => Promise<boolean>
 }
 
 export interface SwarmSnapshot {

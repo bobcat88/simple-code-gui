@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{ChildStdin, Command};
@@ -40,12 +40,14 @@ pub struct McpServerHandle {
 
 pub struct McpManager {
     pub servers: Arc<Mutex<HashMap<String, McpServerHandle>>>,
+    pub trusted_nodes: Arc<Mutex<HashSet<String>>>,
 }
 
 impl McpManager {
     pub fn new() -> Self {
         Self {
             servers: Arc::new(Mutex::new(HashMap::new())),
+            trusted_nodes: Arc::new(Mutex::new(HashSet::new())),
         }
     }
 }
@@ -313,6 +315,25 @@ pub async fn register_mcp_server(
 }
 
 #[tauri::command]
+pub async fn mcp_trust_node(
+    name: String,
+    manager: State<'_, McpManager>,
+) -> Result<(), String> {
+    let mut trusted = manager.trusted_nodes.lock().await;
+    trusted.insert(name);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn mcp_is_node_trusted(
+    name: String,
+    manager: State<'_, McpManager>,
+) -> Result<bool, String> {
+    let trusted = manager.trusted_nodes.lock().await;
+    Ok(trusted.contains(&name))
+}
+
+#[tauri::command]
 pub async fn get_registered_mcp_servers(
     manager: State<'_, McpManager>,
 ) -> Result<Vec<McpServerConfig>, String> {
@@ -339,6 +360,15 @@ pub async fn mcp_call_tool(
 ) -> Result<Value, String> {
     let servers = manager.servers.lock().await;
     let server = servers.get(&server_name).ok_or_else(|| format!("Server {} not found", server_name))?;
+    
+    // Security check for remote servers
+    if let McpTransport::Remote { .. } = &server.transport {
+        let trusted = manager.trusted_nodes.lock().await;
+        if !trusted.contains(&server_name) {
+            return Err(format!("UNTRUSTED_REMOTE_NODE: {}", server_name));
+        }
+    }
+
     server.call("tools/call", json!({
         "name": tool_name,
         "arguments": args

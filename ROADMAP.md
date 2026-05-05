@@ -220,14 +220,14 @@ Implementing systematic context compression and swarm communication efficiency.
 Unifying swarm intelligence into a cohesive cognitive hub and extending cross-machine knowledge.
 
 - [x] **Synaptic Orchestration Hub**: Unified interface for NeuralHUD, Brainstorm Canvas, and active Task Board.
-- [ ] **Distributed MCP Orchestration**: Multi-machine tool discovery and remote capability consumption.
+- [x] **Distributed MCP Orchestration**: Multi-machine tool discovery and remote capability consumption.
 - [x] **Cognitive Feedback Loops**: Learning from user verification patterns to refine agentic policy.
 - [x] **Autonomous Architect**: Proactive refactoring suggestions based on GitNexus complexity metrics.
 - [x] **Borg Knowledge Bridge**: Bidirectional synaptic sync with the Borg durable knowledge vault.
 
-## Phase 41: Distributed Swarm Expansion (Expansion Era)
+## Phase 41: Distributed Swarm Expansion (Complete)
 Scaling the Transwarp Nexus to multi-node environments and distributed execution.
 
 - [x] **Distributed Discovery**: Implement `mDNS` or peer-to-peer node discovery for local swarm expansion.
-- [ ] **Remote Tool Execution**: IPC bridge for executing tools on remote nodes with security validation.
-- [ ] **Federated Learning HUD**: Visualizing cross-node learning progress in the NeuralHUD.
+- [x] **Remote Tool Execution**: IPC bridge for executing tools on remote nodes with security validation.
+- [x] **Federated Learning HUD**: Visualizing cross-node learning progress in the NeuralHUD.

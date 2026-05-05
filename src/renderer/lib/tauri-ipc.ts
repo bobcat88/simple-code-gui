@@ -117,6 +117,10 @@ export const tauriIpc = {
     invoke<McpServerConfig[]>('mcp_discover_servers'),
   registerMcpServer: (config: McpServerConfig) =>
     invoke<void>('register_mcp_server', { config }),
+  mcpTrustNode: (name: string) =>
+    invoke<void>('mcp_trust_node', { name }),
+  mcpIsNodeTrusted: (name: string) =>
+    invoke<boolean>('mcp_is_node_trusted', { name }),
 
   discoverSessions: (projectPath: string, backend?: string) =>
     invoke<any[]>('discover_sessions', { projectPath, backend }),

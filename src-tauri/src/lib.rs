@@ -29,8 +29,9 @@ use database::{
     TokenHistoryResponse, TokenTransactionInput,
 };
 use mcp_bridge::{
-    get_registered_mcp_servers, mcp_call_tool, mcp_discover_servers, mcp_list_resources,
-    mcp_list_tools, mcp_load_config, mcp_read_resource, register_mcp_server, McpManager,
+    get_registered_mcp_servers, mcp_call_tool, mcp_discover_servers, mcp_is_node_trusted,
+    mcp_list_resources, mcp_list_tools, mcp_load_config, mcp_read_resource, mcp_trust_node,
+    register_mcp_server, McpManager,
 };
 use orchestration::{
     beads_check, beads_complete, beads_create, beads_delete, beads_init, beads_list, beads_show,
@@ -717,6 +718,10 @@ pub fn run() {
             mcp_read_resource,
             mcp_load_config,
             mcp_discover_servers,
+            mcp_trust_node,
+            mcp_is_node_trusted,
+            get_registered_mcp_servers,
+            register_mcp_server,
             voice_save_settings,
             vector_search,
             vector_get_status,

@@ -12,7 +12,9 @@ import {
   Lock,
   Eye,
   Settings,
-  Loader2
+  Loader2,
+  ShieldCheck,
+  ShieldAlert
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { ExtendedApi } from '../../api/types';
@@ -80,16 +82,37 @@ const DistributedMCPSection: React.FC<{ api: ExtendedApi }> = ({ api }) => {
   const [nodes, setNodes] = useState<McpServerConfig[]>([]);
   const [loading, setLoading] = useState(false);
   const [discovering, setDiscovering] = useState(false);
+  const [trustedNodes, setTrustedNodes] = useState<Set<string>>(new Set());
 
   const fetchNodes = async () => {
     setLoading(true);
     try {
       const data = await api.mcpGetServers();
       setNodes(data);
+      
+      const trustStatus = new Set<string>();
+      for (const node of data) {
+        if (!node.command) { // remote
+          const isTrusted = await api.mcpIsNodeTrusted(node.name);
+          if (isTrusted) trustStatus.add(node.name);
+        }
+      }
+      setTrustedNodes(trustStatus);
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTrust = async (name: string) => {
+    try {
+      await api.mcpTrustNode(name);
+      const nextTrusted = new Set(trustedNodes);
+      nextTrusted.add(name);
+      setTrustedNodes(nextTrusted);
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -159,8 +182,23 @@ const DistributedMCPSection: React.FC<{ api: ExtendedApi }> = ({ api }) => {
             <div className="flex items-center gap-2">
               <div className={cn(
                 "w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor]",
-                "bg-codex-neon text-codex-neon"
+                node.command || trustedNodes.has(node.name) ? "bg-codex-neon text-codex-neon" : "bg-red-500 text-red-500"
               )} />
+              {!node.command && !trustedNodes.has(node.name) && (
+                <button 
+                  onClick={() => handleTrust(node.name)}
+                  className="px-2 py-1 bg-red-500/10 border border-red-500/20 rounded text-[9px] font-bold text-red-400 hover:bg-red-500/20 transition-all flex items-center gap-1"
+                >
+                  <ShieldAlert size={10} />
+                  TRUST
+                </button>
+              )}
+              {!node.command && trustedNodes.has(node.name) && (
+                <div className="flex items-center gap-1 text-[9px] font-bold text-codex-neon/60">
+                  <ShieldCheck size={10} />
+                  SECURE
+                </div>
+              )}
               <button className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity rounded hover:bg-white/10 text-white/40 hover:text-white">
                 <Settings size={12} />
               </button>
