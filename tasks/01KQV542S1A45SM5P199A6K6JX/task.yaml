@@ -1,0 +1,16 @@
+_ulid: 01KQV542S1A45SM5P199A6K6JX
+slugs:
+  - task-distributed-mcp-orchestration
+title: "Implement: Distributed MCP Orchestration"
+type: task
+spec_ref: "@01KQV53J0YBKZJD84T5B289W3B"
+derivation: auto
+status: pending
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-05-05T04:07:45.184Z
+todos: []

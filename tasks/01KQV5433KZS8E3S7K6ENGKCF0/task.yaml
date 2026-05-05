@@ -1,0 +1,16 @@
+_ulid: 01KQV5433KZS8E3S7K6ENGKCF0
+slugs:
+  - task-borg-knowledge-bridge
+title: "Implement: Borg Knowledge Bridge"
+type: task
+spec_ref: "@01KQV53JA9N30W50356Q8K350Q"
+derivation: auto
+status: pending
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-05-05T04:07:45.523Z
+todos: []

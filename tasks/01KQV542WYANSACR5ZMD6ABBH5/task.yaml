@@ -1,0 +1,16 @@
+_ulid: 01KQV542WYANSACR5ZMD6ABBH5
+slugs:
+  - task-cognitive-feedback-loops
+title: "Implement: Cognitive Feedback Loops"
+type: task
+spec_ref: "@01KQV53J49ZWM4A2SG52KYWT5P"
+derivation: auto
+status: pending
+blocked_by: []
+depends_on: []
+context: []
+priority: 3
+tags: []
+vcs_refs: []
+created_at: 2026-05-05T04:07:45.310Z
+todos: []

@@ -1164,3 +1164,59 @@
   notes_count: 0
   todos_count: 0
   created_at: 2026-05-05T04:07:20.135Z
+- _ulid: 01KQV542S1A45SM5P199A6K6JX
+  slugs:
+    - task-distributed-mcp-orchestration
+  title: "Implement: Distributed MCP Orchestration"
+  type: task
+  spec_ref: "@01KQV53J0YBKZJD84T5B289W3B"
+  status: pending
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags: []
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-05T04:07:45.184Z
+- _ulid: 01KQV542WYANSACR5ZMD6ABBH5
+  slugs:
+    - task-cognitive-feedback-loops
+  title: "Implement: Cognitive Feedback Loops"
+  type: task
+  spec_ref: "@01KQV53J49ZWM4A2SG52KYWT5P"
+  status: pending
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags: []
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-05T04:07:45.310Z
+- _ulid: 01KQV5430CNR756FNXS2JDK2K1
+  slugs:
+    - task-autonomous-architect
+  title: "Implement: Autonomous Architect"
+  type: task
+  spec_ref: "@01KQV53J7MJYZ4376Q3G6H755G"
+  status: pending
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags: []
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-05T04:07:45.420Z
+- _ulid: 01KQV5433KZS8E3S7K6ENGKCF0
+  slugs:
+    - task-borg-knowledge-bridge
+  title: "Implement: Borg Knowledge Bridge"
+  type: task
+  spec_ref: "@01KQV53JA9N30W50356Q8K350Q"
+  status: pending
+  blocked_by: []
+  depends_on: []
+  priority: 3
+  tags: []
+  notes_count: 0
+  todos_count: 0
+  created_at: 2026-05-05T04:07:45.523Z
