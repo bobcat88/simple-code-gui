@@ -207,10 +207,10 @@ Implementing the high-fidelity swarm management layer and unified cognitive obse
 - [x] **Multi-Model Orchestration**: Per-agent provider/model switcher panel (OrchestrationPanel) with live `setPtyBackend` IPC.
 - [x] **Cognitive Snapshotting v2**: MemoryVault snapshot rows expand inline with Restore Messages and Branch Workspace actions.
 
-## Phase 44: Swarm Economic Incentivization (In Progress)
-- [ ] Resource credit tracking per node
-- [ ] Distributed bidding mechanism for remote tool execution
-- [ ] Dynamic cost-balancing based on node utilization
+## Phase 44: Swarm Economic Incentivization (Complete)
+- [x] Resource credit tracking per node
+- [x] Distributed bidding mechanism for remote tool execution
+- [x] Dynamic cost-balancing based on node utilization
 
 ## Phase 39: Swarm Token Optimization & Hardening (Complete)
 Implementing systematic context compression and swarm communication efficiency.

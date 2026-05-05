@@ -29,7 +29,9 @@ import {
   VectorChunk,
   GsdExecutionEvent,
   GsdApprovalRequest,
-  SwarmSnapshot
+  SwarmSnapshot,
+  DistributedNode,
+  RemoteToolBid
 } from './types'
 import { tauriIpc } from '../lib/tauri-ipc'
 import { check } from '@tauri-apps/plugin-updater'
@@ -554,6 +556,26 @@ export class TauriBackend implements ExtendedApi {
 
   async gsdQuantumSyncStart(): Promise<void> {
     await tauriIpc.gsdQuantumSyncStart();
+  }
+
+  async gsdStartDistributedDiscovery(): Promise<void> {
+    await tauriIpc.gsdStartDistributedDiscovery();
+  }
+
+  async gsdStopDistributedDiscovery(): Promise<void> {
+    await tauriIpc.gsdStopDistributedDiscovery();
+  }
+
+  async gsdGetDistributedNodes(): Promise<DistributedNode[]> {
+    return await tauriIpc.gsdGetDistributedNodes();
+  }
+
+  async gsdQuoteRemoteToolExecution(capability: string, baseCostCredits?: number): Promise<RemoteToolBid[]> {
+    return await tauriIpc.gsdQuoteRemoteToolExecution(capability, baseCostCredits);
+  }
+
+  async gsdApplyDistributedCreditDelta(nodeId: string, creditDelta: number, utilization?: number): Promise<DistributedNode> {
+    return await tauriIpc.gsdApplyDistributedCreditDelta(nodeId, creditDelta, utilization);
   }
 
   async gsdSwarmQueryMemory(query: string, patternType?: string, limit?: number): Promise<any[]> {

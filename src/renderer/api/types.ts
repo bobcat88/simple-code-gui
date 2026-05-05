@@ -722,7 +722,9 @@ export interface Api {
   // Phase 40: Synaptic Expansion
   gsdStartDistributedDiscovery?: () => Promise<void>
   gsdStopDistributedDiscovery?: () => Promise<void>
-  gsdGetDistributedNodes?: () => Promise<Array<{ id: string; name: string; type: string; status: string; latency: number }>>
+  gsdGetDistributedNodes?: () => Promise<DistributedNode[]>
+  gsdQuoteRemoteToolExecution?: (capability: string, baseCostCredits?: number) => Promise<RemoteToolBid[]>
+  gsdApplyDistributedCreditDelta?: (nodeId: string, creditDelta: number, utilization?: number) => Promise<DistributedNode>
   gsdExecuteProactiveAudit?: (projectPath: string, scope?: string) => Promise<string>
   gsdGetSynapticMetrics?: () => Promise<{ feedbackLoops: number; activeOptimizations: number; cognitiveLoad: number; swarmCohesion: number }>
   gsdTriggerExpansionLoop?: (loopType: string) => Promise<void>
@@ -1200,6 +1202,31 @@ export interface GsdApprovalRequest {
   arguments: any;
   reason: string;
   risk: 'low' | 'medium' | 'high' | 'critical';
+}
+
+export interface DistributedNode {
+  id: string;
+  name: string;
+  ip: string;
+  port: number;
+  nodeType: string;
+  status: string;
+  lastSeen: number;
+  capabilities: string[];
+  creditBalance: number;
+  utilization: number;
+  bidFloorCredits: number;
+  lastBidCredits: number;
+}
+
+export interface RemoteToolBid {
+  nodeId: string;
+  nodeName: string;
+  capability: string;
+  bidCredits: number;
+  availableCredits: number;
+  utilization: number;
+  reason: string;
 }
 
 export interface SwarmPersona {

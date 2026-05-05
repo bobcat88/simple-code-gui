@@ -382,6 +382,16 @@ export const tauriIpc = {
     invoke<boolean>('gsd_get_sync_status'),
   gsdQuantumSyncStart: () =>
     invoke<void>('gsd_quantum_sync_start'),
+  gsdStartDistributedDiscovery: () =>
+    invoke<void>('gsd_start_distributed_discovery'),
+  gsdStopDistributedDiscovery: () =>
+    invoke<void>('gsd_stop_distributed_discovery'),
+  gsdGetDistributedNodes: () =>
+    invoke<any[]>('gsd_get_distributed_nodes'),
+  gsdQuoteRemoteToolExecution: (capability: string, baseCostCredits?: number) =>
+    invoke<any[]>('gsd_quote_remote_tool_execution', { capability, baseCostCredits }),
+  gsdApplyDistributedCreditDelta: (nodeId: string, creditDelta: number, utilization?: number) =>
+    invoke<any>('gsd_apply_distributed_credit_delta', { nodeId, creditDelta, utilization }),
 
   // Vector Engine
   vectorSearch: (query: string, limit?: number, projectPath?: string) =>

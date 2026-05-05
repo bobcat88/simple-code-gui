@@ -73,15 +73,17 @@ impl McpManager {
         let servers = self.servers.lock().await;
         
         let mut best_node = None;
-        let mut lowest_latency = u64::MAX;
+        let mut lowest_bid = f64::MAX;
 
         for (name, handle) in servers.iter() {
             if trusted.contains(name) {
                 let status = handle.status.lock().await;
                 if *status == "online" {
                     let latency = *handle.last_latency.lock().await;
-                    if latency < lowest_latency {
-                        lowest_latency = latency;
+                    let credits = *handle.credits.lock().await;
+                    let bid = remote_worker_bid(latency, credits);
+                    if bid < lowest_bid {
+                        lowest_bid = bid;
                         best_node = Some(name.clone());
                     }
                 }
@@ -156,6 +158,19 @@ impl McpManager {
             }
         });
     }
+}
+
+fn remote_worker_bid(latency_ms: u64, credits: i64) -> f64 {
+    let latency_cost = latency_ms as f64 / 100.0;
+    let scarcity_penalty = if credits <= 0 {
+        1000.0
+    } else if credits < 100 {
+        25.0
+    } else {
+        1000.0 / credits as f64
+    };
+
+    latency_cost + scarcity_penalty
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -708,6 +723,10 @@ pub async fn gsd_spawn_remote_worker(
     });
 
     handle.notify("swarm/spawn-worker", params).await?;
+    {
+        let mut credits = handle.credits.lock().await;
+        *credits = (*credits - 10).max(0);
+    }
 
     Ok(node_name)
 }

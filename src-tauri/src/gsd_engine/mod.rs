@@ -944,3 +944,40 @@ pub async fn gsd_get_distributed_nodes(
         Ok(Vec::new())
     }
 }
+
+#[tauri::command]
+pub async fn gsd_quote_remote_tool_execution(
+    state: State<'_, Arc<GsdEngine>>,
+    capability: String,
+    base_cost_credits: Option<f64>,
+) -> Result<Vec<distributed::RemoteToolBid>, String> {
+    let dist = state.distributed.lock().await;
+    if let Some(mgr) = dist.as_ref() {
+        Ok(mgr
+            .quote_remote_tool_execution(capability, base_cost_credits.unwrap_or(1.0))
+            .await)
+    } else {
+        Ok(Vec::new())
+    }
+}
+
+#[tauri::command]
+pub async fn gsd_apply_distributed_credit_delta(
+    state: State<'_, Arc<GsdEngine>>,
+    node_id: String,
+    credit_delta: f64,
+    utilization: Option<f64>,
+) -> Result<distributed::DistributedNode, String> {
+    let mut dist = state.distributed.lock().await;
+    if dist.is_none() {
+        // TODO: Get real redis URL and node name from settings
+        let redis_url = "redis://127.0.0.1/".to_string();
+        let node_name = "Nexus-Node".to_string();
+        *dist = Some(distributed::DistributedManager::new(node_name, redis_url));
+    }
+
+    let mgr = dist
+        .as_mut()
+        .ok_or_else(|| "Distributed manager unavailable".to_string())?;
+    mgr.apply_credit_delta(&node_id, credit_delta, utilization).await
+}

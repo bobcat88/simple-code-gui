@@ -777,6 +777,8 @@ pub fn run() {
             gsd_engine::gsd_start_distributed_discovery,
             gsd_engine::gsd_stop_distributed_discovery,
             gsd_engine::gsd_get_distributed_nodes,
+            gsd_engine::gsd_quote_remote_tool_execution,
+            gsd_engine::gsd_apply_distributed_credit_delta,
             gsd_spawn_remote_worker,
             rtk_check,
             claude_check,
