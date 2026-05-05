@@ -112,7 +112,11 @@ export const tauriIpc = {
   mcpLoadConfig: () =>
     invoke<void>('mcp_load_config'),
   mcpGetServers: () =>
-    invoke<any[]>('get_registered_mcp_servers'),
+    invoke<McpServerConfig[]>('get_registered_mcp_servers'),
+  mcpDiscoverServers: () =>
+    invoke<McpServerConfig[]>('mcp_discover_servers'),
+  registerMcpServer: (config: McpServerConfig) =>
+    invoke<void>('register_mcp_server', { config }),
 
   discoverSessions: (projectPath: string, backend?: string) =>
     invoke<any[]>('discover_sessions', { projectPath, backend }),

@@ -938,6 +938,12 @@ export interface ExtendedApi extends Api {
   gitInstall(): Promise<{ success: boolean; error?: string }>
   nodeInstall(): Promise<{ success: boolean; error?: string }>
   pythonInstall(): Promise<{ success: boolean; error?: string }>
+
+  // Distributed MCP Orchestration
+  mcpGetServers: () => Promise<McpServerConfig[]>
+  mcpDiscoverServers: () => Promise<McpServerConfig[]>
+  registerMcpServer: (config: McpServerConfig) => Promise<void>
+  mcpLoadConfig: () => Promise<void>
 }
 
 export interface SwarmSnapshot {
@@ -1152,6 +1158,14 @@ export interface GsdExecutionEvent {
   eventType: string
   message: string
   timestamp: number
+}
+
+export interface McpServerConfig {
+  name: string
+  command?: string
+  args: string[]
+  env: Record<string, string>
+  url?: string
 }
 
 export interface SwarmKnowledge {

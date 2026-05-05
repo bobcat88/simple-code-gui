@@ -77,14 +77,14 @@ export const SynapticExpansion: React.FC<SynapticExpansionProps> = ({ api, proje
 };
 
 const DistributedMCPSection: React.FC<{ api: ExtendedApi }> = ({ api }) => {
-  const [nodes, setNodes] = useState<any[]>([]);
+  const [nodes, setNodes] = useState<McpServerConfig[]>([]);
   const [loading, setLoading] = useState(false);
+  const [discovering, setDiscovering] = useState(false);
 
   const fetchNodes = async () => {
-    if (!api.gsdGetDistributedNodes) return;
     setLoading(true);
     try {
-      const data = await api.gsdGetDistributedNodes();
+      const data = await api.mcpGetServers();
       setNodes(data);
     } catch (e) {
       console.error(e);
@@ -97,13 +97,19 @@ const DistributedMCPSection: React.FC<{ api: ExtendedApi }> = ({ api }) => {
     fetchNodes();
   }, []);
 
-  const handleRegister = async () => {
-    if (!api.gsdStartDistributedDiscovery) return;
+  const handleDiscovery = async () => {
+    setDiscovering(true);
     try {
-      await api.gsdStartDistributedDiscovery();
+      const discovered = await api.mcpDiscoverServers();
+      // For simplicity, automatically register discovered servers for now
+      for (const server of discovered) {
+        await api.registerMcpServer(server);
+      }
       fetchNodes();
     } catch (e) {
       console.error(e);
+    } finally {
+      setDiscovering(false);
     }
   };
 
@@ -129,27 +135,31 @@ const DistributedMCPSection: React.FC<{ api: ExtendedApi }> = ({ api }) => {
         )}
 
         {nodes.map(node => (
-          <div key={node.id} className="p-3 bg-white/5 border border-white/5 rounded-xl flex items-center justify-between group hover:border-codex-neon/30 transition-all">
+          <div key={node.name} className="p-3 bg-white/5 border border-white/5 rounded-xl flex items-center justify-between group hover:border-codex-neon/30 transition-all">
             <div className="flex items-center gap-3">
               <div className={cn(
                 "w-8 h-8 rounded-lg flex items-center justify-center border",
-                node.type === 'local' ? "bg-codex-neon/10 border-codex-neon/20 text-codex-neon" : "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                node.command ? "bg-codex-neon/10 border-codex-neon/20 text-codex-neon" : "bg-blue-500/10 border-blue-500/20 text-blue-400"
               )}>
-                {node.type === 'local' ? <Cpu size={14} /> : <Globe size={14} />}
+                {node.command ? <Cpu size={14} /> : <Globe size={14} />}
               </div>
               <div>
                 <div className="text-[11px] font-bold text-white/90">{node.name}</div>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[8px] font-mono text-white/30 uppercase">{node.id}</span>
+                  <span className="text-[8px] font-mono text-white/30 uppercase">
+                    {node.command ? 'Local Stdio' : 'Remote HTTP'}
+                  </span>
                   <span className="text-white/10">•</span>
-                  <span className="text-[8px] font-bold text-codex-neon/60">{node.latency}ms</span>
+                  <span className="text-[8px] font-bold text-white/40 truncate max-w-[120px]">
+                    {node.url || node.command}
+                  </span>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <div className={cn(
                 "w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor]",
-                node.status === 'active' ? "bg-codex-neon text-codex-neon" : "bg-blue-400 text-blue-400"
+                "bg-codex-neon text-codex-neon"
               )} />
               <button className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity rounded hover:bg-white/10 text-white/40 hover:text-white">
                 <Settings size={12} />
@@ -159,11 +169,12 @@ const DistributedMCPSection: React.FC<{ api: ExtendedApi }> = ({ api }) => {
         ))}
 
         <button 
-          onClick={handleRegister}
-          className="w-full py-2.5 border border-dashed border-white/10 rounded-xl text-[10px] font-bold text-white/20 hover:text-white/40 hover:border-white/20 hover:bg-white/[0.02] transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+          onClick={handleDiscovery}
+          disabled={discovering}
+          className="w-full py-2.5 border border-dashed border-white/10 rounded-xl text-[10px] font-bold text-white/20 hover:text-white/40 hover:border-white/20 hover:bg-white/[0.02] transition-all flex items-center justify-center gap-2 uppercase tracking-widest disabled:opacity-50"
         >
-          <Zap size={12} />
-          Register New Neural Node
+          {discovering ? <Loader2 size={12} className="animate-spin" /> : <Zap size={12} />}
+          {discovering ? 'Discovering Nodes...' : 'Discover Neural Nodes'}
         </button>
       </div>
     </div>
