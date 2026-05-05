@@ -228,6 +228,6 @@ Unifying swarm intelligence into a cohesive cognitive hub and extending cross-ma
 ## Phase 41: Distributed Swarm Expansion (Expansion Era)
 Scaling the Transwarp Nexus to multi-node environments and distributed execution.
 
-- [ ] **Distributed Discovery**: Implement `mDNS` or peer-to-peer node discovery for local swarm expansion.
+- [x] **Distributed Discovery**: Implement `mDNS` or peer-to-peer node discovery for local swarm expansion.
 - [ ] **Remote Tool Execution**: IPC bridge for executing tools on remote nodes with security validation.
 - [ ] **Federated Learning HUD**: Visualizing cross-node learning progress in the NeuralHUD.

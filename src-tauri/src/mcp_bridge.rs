@@ -9,6 +9,7 @@ use tauri::State;
 use std::time::Duration;
 use local_ip_address::local_ip;
 use futures::future::join_all;
+use mdns_sd::{ServiceDaemon, ServiceEvent};
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct McpServerConfig {
@@ -388,7 +389,7 @@ pub async fn mcp_discover_servers() -> Result<Vec<McpServerConfig>, String> {
 
         for &port in &ports {
             let url = format!("http://{}:{}/mcp/info", target_ip, port);
-            tasks.push(async move {
+            tasks.push(tokio::spawn(async move {
                 let client = reqwest::Client::builder()
                     .timeout(Duration::from_millis(200))
                     .build()
@@ -402,16 +403,59 @@ pub async fn mcp_discover_servers() -> Result<Vec<McpServerConfig>, String> {
                     }
                 }
                 None
-            });
+            }));
         }
     }
 
-    let results = join_all(tasks).await;
-    for res in results {
-        if let Some(config) = res {
+    for task in tasks {
+        if let Ok(Some(config)) = task.await {
             discovered.push(config);
         }
     }
 
+    // Also discover via mDNS
+    if let Ok(mdns_nodes) = discover_mdns().await {
+        for node in mdns_nodes {
+            if !discovered.iter().any(|d| d.name == node.name) {
+                discovered.push(node);
+            }
+        }
+    }
+
     Ok(discovered)
+}
+
+async fn discover_mdns() -> Result<Vec<McpServerConfig>, String> {
+    let mdns = ServiceDaemon::new().map_err(|e| e.to_string())?;
+    let service_type = "_mcp._tcp.local.";
+    let receiver = mdns.browse(service_type).map_err(|e| e.to_string())?;
+
+    let mut nodes = Vec::new();
+    let start = std::time::Instant::now();
+    let timeout = Duration::from_secs(2);
+
+    while start.elapsed() < timeout {
+        if let Ok(event) = receiver.recv_timeout(Duration::from_millis(100)) {
+            match event {
+                ServiceEvent::ServiceResolved(info) => {
+                    let name = info.get_fullname().to_string();
+                    let port = info.get_port();
+                    let addresses = info.get_addresses();
+                    
+                    if let Some(addr) = addresses.iter().next() {
+                        nodes.push(McpServerConfig {
+                            name: name.replace("._mcp._tcp.local.", ""),
+                            command: None,
+                            args: vec![],
+                            env: std::collections::HashMap::new(),
+                            url: Some(format!("http://{}:{}/sse", addr, port)),
+                        });
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    Ok(nodes)
 }
