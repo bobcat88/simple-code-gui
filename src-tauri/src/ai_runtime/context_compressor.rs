@@ -113,10 +113,10 @@ mod tests {
                 tool_calls: Some(vec![ToolCall {
                     id: "call".to_string(),
                     name: "tool".to_string(),
-                        cache_control: None,
                     arguments: "{}".to_string(),
                 }]),
                 tool_call_id: None,
+                cache_control: None,
             }],
             ..Default::default()
         };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { 
   Activity, 
   GitBranch, 
@@ -90,6 +90,16 @@ export function IntelligenceSidebar({
   const [refactoringResults, setRefactoringResults] = useState<any[] | null>(null)
   const [isIdentifyingRefactors, setIsIdentifyingRefactors] = useState(false)
   const [refactorDetail, setRefactorDetail] = useState<{ finding: any, details: string } | null>(null)
+  const progressUnsubscribeRef = useRef<(() => void) | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (progressUnsubscribeRef.current) {
+        progressUnsubscribeRef.current()
+        progressUnsubscribeRef.current = null
+      }
+    }
+  }, [])
 
   const handleIdentifyRefactors = async () => {
     setIsIdentifyingRefactors(true)
@@ -464,17 +474,24 @@ export function IntelligenceSidebar({
                               message: 'Starting project initialization...'
                             })
 
-                            const unsubscribe = api.onProjectInitializationProgress?.((p: any) => {
+                            progressUnsubscribeRef.current = api.onProjectInitializationProgress?.((p: any) => {
                               setProgress(p)
-                            })
+                            }) ?? null
 
                             const results = await api.projectApplyProposal(proposal)
-                            
-                            if (unsubscribe) unsubscribe()
+
+                            if (progressUnsubscribeRef.current) {
+                              progressUnsubscribeRef.current()
+                              progressUnsubscribeRef.current = null
+                            }
                             
                             setApplyResult(results)
                             onRefresh()
                           } catch (e) {
+                            if (progressUnsubscribeRef.current) {
+                              progressUnsubscribeRef.current()
+                              progressUnsubscribeRef.current = null
+                            }
                             console.error(e)
                             setProgress(prev => prev ? { ...prev, status: 'failed', error: String(e) } : {
                               proposalId: proposal.id,

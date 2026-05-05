@@ -1,6 +1,16 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
-import type { BackendId } from '../api/types';
+import type { BackendId, Settings, Workspace, TokenHistoryResponse, OptimizationStatsResponse } from '../api/types';
+import type {
+  TokenStatsResponse,
+  HealthStatusResponse,
+  ExtensionRegistryResponse,
+  ProjectScanResponse,
+  InitializationProposalResponse,
+  ProjectIntelligenceResponse,
+  CheckToolResponse,
+  VoiceCheckResponse,
+} from './tauri-ipc-types';
 
 export interface SessionInfo {
   id: String;
@@ -30,8 +40,8 @@ export const tauriIpc = {
   setPtyBackend: (id: string, backend: string) => 
     invoke<void>('set_pty_backend', { id, backend }),
     
-  getSettings: () => 
-    invoke<any>('get_settings'),
+  getSettings: () =>
+    invoke<Settings>('get_settings'),
     
   saveSettings: (settings: any) => 
     invoke<void>('save_settings', { settings }),
@@ -39,8 +49,8 @@ export const tauriIpc = {
   aiSaveKey: (provider: string, key: string, baseUrl?: string) =>
     invoke<void>('ai_save_key', { provider, key, base_url: baseUrl }),
     
-  getWorkspace: () => 
-    invoke<any>('get_workspace'),
+  getWorkspace: () =>
+    invoke<Workspace>('get_workspace'),
     
   saveWorkspace: (workspace: any) => 
     invoke<void>('save_workspace', { workspace }),
@@ -74,7 +84,7 @@ export const tauriIpc = {
 
   // Extensions
   extensionsFetchRegistry: (forceRefresh: boolean) =>
-    invoke<any>('extensions_fetch_registry', { forceRefresh }),
+    invoke<ExtensionRegistryResponse>('extensions_fetch_registry', { forceRefresh }),
   extensionsGetInstalled: () =>
     invoke<any[]>('extensions_get_installed'),
   extensionsGetCustomUrls: () =>
@@ -150,16 +160,16 @@ export const tauriIpc = {
     invoke<void>('log_token_event', { transaction, saved_tokens: savedTokens }),
 
   getTokenStats: (projectId?: string) =>
-    invoke<any>('get_token_stats', { projectId }),
+    invoke<TokenStatsResponse>('get_token_stats', { projectId }),
 
-  getTokenHistory: (filters?: any) =>
-    invoke<any>('get_token_history', { filters }),
+  getTokenHistory: (filters?: Record<string, unknown>) =>
+    invoke<TokenHistoryResponse>('get_token_history', { filters }),
 
   aiGetOptimizationStats: (sessionId?: string) =>
-    invoke<any>('ai_get_optimization_stats', { session_id: sessionId }),
+    invoke<OptimizationStatsResponse>('ai_get_optimization_stats', { session_id: sessionId }),
 
   // Voice & XTTS
-  voiceCheckTTS: () => invoke<any>('voice_check_tts'),
+  voiceCheckTTS: () => invoke<VoiceCheckResponse>('voice_check_tts'),
   voiceFetchCatalog: (forceRefresh?: boolean) => invoke<any[]>('voice_fetch_catalog', { forceRefresh }),
   voiceGetInstalled: () => invoke<string[]>('voice_get_installed'),
   voiceDownloadFromCatalog: (voiceKey: string) => invoke<any>('voice_download_from_catalog', { voiceKey }),
@@ -184,17 +194,17 @@ export const tauriIpc = {
   getAutoAcceptStatus: (ptyId: string) => invoke<boolean>('get_auto_accept_status', { ptyId }),
   setAutoAccept: (ptyId: string, enabled: boolean) => invoke<void>('set_auto_accept', { ptyId, enabled }),
 
-  projectScan: (path: string, options: any) =>
-    invoke<any>('project_scan', { path, options }),
+  projectScan: (path: string, options: Record<string, unknown>) =>
+    invoke<ProjectScanResponse>('project_scan', { path, options }),
 
-  projectGenerateProposal: (scan: any, preset: string, projectName: string, taskBackend: string) =>
-    invoke<any>('project_generate_proposal', { scan, preset, project_name: projectName, task_backend: taskBackend }),
+  projectGenerateProposal: (scan: ProjectScanResponse, preset: string, projectName: string, taskBackend: string) =>
+    invoke<InitializationProposalResponse>('project_generate_proposal', { scan, preset, project_name: projectName, task_backend: taskBackend }),
 
   projectApplyProposal: (proposal: any) =>
     invoke<string[]>('project_apply_proposal', { proposal }),
 
   scanProjectIntelligence: (path: string) =>
-    invoke<any>('scan_project_intelligence', { cwd: path }),
+    invoke<ProjectIntelligenceResponse>('scan_project_intelligence', { cwd: path }),
 
   onProjectInitializationProgress: (callback: (progress: any) => void): Promise<UnlistenFn> =>
     listen<any>('project-initialization-progress', (event) => callback(event.payload)),
@@ -288,7 +298,7 @@ export const tauriIpc = {
 
   // Health & Diagnostics
   healthGetStatus: () =>
-    invoke<any>('health_get_status'),
+    invoke<HealthStatusResponse>('health_get_status'),
   healthLogCheck: (checkType: string, status: string, details?: string) =>
     invoke<void>('health_log_check', { checkType, status, details }),
   diagnosticsGenerateBundle: () =>
@@ -449,12 +459,12 @@ export const tauriIpc = {
     invoke<{ success: boolean; error?: string }>('brainstorm_save_topology', { cwd, content }),
 
   // Health Checks
-  claudeCheck: () => invoke<any>('claude_check'),
-  geminiCheck: () => invoke<any>('gemini_check'),
-  codexCheck: () => invoke<any>('codex_check'),
-  opencodeCheck: () => invoke<any>('opencode_check'),
-  aiderCheck: () => invoke<any>('aider_check'),
-  gsdCheck: () => invoke<any>('gsd_check'),
+  claudeCheck: () => invoke<CheckToolResponse>('claude_check'),
+  geminiCheck: () => invoke<CheckToolResponse>('gemini_check'),
+  codexCheck: () => invoke<CheckToolResponse>('codex_check'),
+  opencodeCheck: () => invoke<CheckToolResponse>('opencode_check'),
+  aiderCheck: () => invoke<CheckToolResponse>('aider_check'),
+  gsdCheck: () => invoke<CheckToolResponse>('gsd_check'),
 
   // Installations
   claudeInstall: () => invoke<{ success: boolean; error?: string }>('claude_install'),

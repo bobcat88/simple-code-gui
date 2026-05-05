@@ -12,7 +12,7 @@ import type {
   UseHostConnectionReturn,
   ConnectOptions
 } from './types.js'
-import { MAX_RECONNECT_ATTEMPTS, PING_INTERVAL, PONG_TIMEOUT } from './constants.js'
+import { MAX_RECONNECT_ATTEMPTS, PING_INTERVAL, PONG_TIMEOUT, WEBSOCKET_TIMEOUT_MS } from './constants.js'
 import {
   generateId,
   loadHosts,
@@ -271,7 +271,7 @@ export function useHostConnection(): UseHostConnectionReturn {
         setConnectionState('error')
         setError('WebSocket connection timeout - check server logs on desktop')
       }
-    }, 10000)
+    }, WEBSOCKET_TIMEOUT_MS)
 
     try {
       console.log('[WebSocket] Creating WebSocket object...')
@@ -425,7 +425,7 @@ export function useHostConnection(): UseHostConnectionReturn {
     const nonce = options?.nonce || host.pendingNonce
     const expectedFingerprint = options?.fingerprint
 
-    if (nonce) {
+    if (nonce && String(nonce).trim().length > 0) {
       setConnectionState('verifying')
 
       const result = await verifyHandshake(host, nonce as string)

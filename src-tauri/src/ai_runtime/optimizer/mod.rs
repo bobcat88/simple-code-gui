@@ -279,8 +279,8 @@ mod tests {
             ..Default::default()
         };
 
-        assert_eq!(pipeline.optimize(request).await.unwrap().max_tokens, Some(512));
-        assert_eq!(pipeline.optimize(explicit).await.unwrap().max_tokens, Some(123));
+        assert_eq!(pipeline.optimize(request, None).await.unwrap().max_tokens, Some(512));
+        assert_eq!(pipeline.optimize(explicit, None).await.unwrap().max_tokens, Some(123));
     }
 
     #[tokio::test]
@@ -301,7 +301,7 @@ mod tests {
             ..Default::default()
         };
 
-        assert_eq!(pipeline.optimize(request).await.unwrap().max_tokens, Some(8_000));
+        assert_eq!(pipeline.optimize(request, None).await.unwrap().max_tokens, Some(8_000));
     }
 
     #[tokio::test]
@@ -325,8 +325,8 @@ mod tests {
             ..Default::default()
         };
 
-        let optimized = pipeline.optimize(request.clone()).await.unwrap();
-        let optimized_again = pipeline.optimize(optimized.clone()).await.unwrap();
+        let optimized = pipeline.optimize(request.clone(), None).await.unwrap();
+        let optimized_again = pipeline.optimize(optimized.clone(), None).await.unwrap();
 
         assert_eq!(optimized.messages[0].role, "system");
         assert_eq!(optimized.messages[0].content, "Stable instructions");
@@ -353,8 +353,8 @@ mod tests {
             ..Default::default()
         };
 
-        let internal_opt = pipeline.optimize(internal).await.unwrap();
-        let human_opt = pipeline.optimize(human).await.unwrap();
+        let internal_opt = pipeline.optimize(internal, None).await.unwrap();
+        let human_opt = pipeline.optimize(human, None).await.unwrap();
 
         assert!(internal_opt
             .messages

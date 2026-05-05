@@ -231,6 +231,8 @@ mod tests {
                 compressions: 1,
                 reasoning_requests: 0,
                 fim_requests: 0,
+                semantic_hits: 0,
+                semantic_misses: 0,
                 transaction_count: 3,
             }
         );

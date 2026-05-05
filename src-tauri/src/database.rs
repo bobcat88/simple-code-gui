@@ -1145,6 +1145,7 @@ mod tests {
                 cost_estimate: 0.012,
                 saved_tokens: Some(0),
                 context_reuse_id: None,
+                cache_control: None,
                 timestamp: Some("2026-04-21 10:00:00".into()),
             },
         )
@@ -1185,6 +1186,7 @@ mod tests {
                 cost_estimate: 0.01,
                 saved_tokens: Some(0),
                 context_reuse_id: None,
+                cache_control: None,
                 timestamp: Some("2026-04-20 08:00:00".into()),
             },
             TokenTransactionInput {
@@ -1198,6 +1200,7 @@ mod tests {
                 cost_estimate: 0.004,
                 saved_tokens: Some(0),
                 context_reuse_id: None,
+                cache_control: None,
                 timestamp: Some("2026-04-21 09:00:00".into()),
             },
             TokenTransactionInput {
@@ -1211,6 +1214,7 @@ mod tests {
                 cost_estimate: 1.0,
                 saved_tokens: Some(0),
                 context_reuse_id: None,
+                cache_control: None,
                 timestamp: Some("2026-04-21 09:00:00".into()),
             },
         ] {
@@ -1258,6 +1262,7 @@ mod tests {
                 cost_estimate: 0.01,
                 saved_tokens: Some(25),
                 context_reuse_id: Some("reuse-1".into()),
+                cache_control: None,
                 timestamp: Some("2026-05-02 10:00:00".into()),
             },
             TokenTransactionInput {
@@ -1271,6 +1276,7 @@ mod tests {
                 cost_estimate: 0.004,
                 saved_tokens: Some(5),
                 context_reuse_id: None,
+                cache_control: None,
                 timestamp: Some("2026-05-02 10:05:00".into()),
             },
             TokenTransactionInput {
@@ -1284,6 +1290,7 @@ mod tests {
                 cost_estimate: 0.002,
                 saved_tokens: Some(10),
                 context_reuse_id: None,
+                cache_control: None,
                 timestamp: Some("2026-05-02 11:00:00".into()),
             },
         ] {
