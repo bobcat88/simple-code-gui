@@ -625,7 +625,9 @@ pub fn run() {
             let pty_manager_arc = Arc::new(pty_manager);
             app.manage(Arc::clone(&pty_manager_arc));
             app.manage(VoiceManager::new());
-            app.manage(McpManager::new());
+            let mcp_manager = McpManager::new();
+            mcp_manager.start_health_monitor(app.handle().clone());
+            app.manage(mcp_manager);
 
             // PTY Watchdog
             let handle = app.handle().clone();

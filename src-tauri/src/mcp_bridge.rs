@@ -41,6 +41,8 @@ pub struct McpServerHandle {
     pub transport: McpTransport,
     pub pending_requests: Arc<Mutex<HashMap<Value, oneshot::Sender<Result<Value, String>>>>>,
     pub app_handle: Option<AppHandle>,
+    pub status: Arc<Mutex<String>>, // "online", "offline", "degraded"
+    pub last_latency: Arc<Mutex<u64>>, // in ms
 }
 
 pub struct McpManager {
@@ -67,15 +69,89 @@ impl McpManager {
         let trusted = self.trusted_nodes.lock().await;
         let servers = self.servers.lock().await;
         
-        // Simple heuristic: pick first trusted remote server
+        let mut best_node = None;
+        let mut lowest_latency = u64::MAX;
+
         for (name, handle) in servers.iter() {
             if trusted.contains(name) {
-                if let McpTransport::Remote { .. } = &handle.transport {
-                    return Some(name.clone());
+                let status = handle.status.lock().await;
+                if *status == "online" {
+                    let latency = *handle.last_latency.lock().await;
+                    if latency < lowest_latency {
+                        lowest_latency = latency;
+                        best_node = Some(name.clone());
+                    }
                 }
             }
         }
-        None
+        best_node
+    }
+
+    pub fn start_health_monitor(&self, app: AppHandle) {
+        let servers_clone = self.servers.clone();
+        let app_clone = app.clone();
+
+        tokio::spawn(async move {
+            loop {
+                let servers = servers_clone.lock().await;
+                let mut health_data = Vec::new();
+
+                for (name, handle) in servers.iter() {
+                    let start = std::time::Instant::now();
+                    // Simple ping: try to list tools with a very short timeout
+                    let result = match &handle.transport {
+                        McpTransport::Local { .. } => {
+                            // For local, we just check if it responds
+                            // Actually just return online for now
+                            Ok(())
+                        }
+                        McpTransport::Remote { url, client, post_url } => {
+                            let p_url = post_url.lock().await;
+                            let target = p_url.as_ref().unwrap_or(url);
+                            let res = client.post(target)
+                                .timeout(Duration::from_millis(1500))
+                                .json(&JsonRpcRequest {
+                                    jsonrpc: "2.0".to_string(),
+                                    id: json!(999),
+                                    method: "ping".to_string(),
+                                    params: json!({}),
+                                })
+                                .send()
+                                .await;
+                            
+                            match res {
+                                Ok(_) => Ok(()),
+                                Err(_) => Err("Offline"),
+                            }
+                        }
+                    };
+
+                    let latency = start.elapsed().as_millis() as u64;
+                    let mut status_lock = handle.status.lock().await;
+                    let mut latency_lock = handle.last_latency.lock().await;
+                    *latency_lock = latency;
+
+                    match result {
+                        Ok(_) => {
+                            *status_lock = "online".to_string();
+                        }
+                        Err(_) => {
+                            *status_lock = "offline".to_string();
+                        }
+                    }
+
+                    health_data.push(json!({
+                        "name": name,
+                        "status": *status_lock,
+                        "latency": latency
+                    }));
+                }
+
+                let _ = app_clone.emit("swarm-health-update", health_data);
+                drop(servers);
+                tokio::time::sleep(Duration::from_secs(10)).await;
+            }
+        });
     }
 }
 
@@ -116,65 +192,67 @@ impl McpServerHandle {
             let client_clone = client.clone();
             let app_handle_clone = app_handle.clone();
 
-            // Background SSE listener for remote server
+            // Background SSE listener for remote server with auto-recovery
             tokio::spawn(async move {
-                let res = match client_clone.get(&sse_url).send().await {
-                    Ok(res) => res,
-                    Err(e) => {
-                        eprintln!("Failed to connect to SSE for {}: {}", name_clone, e);
-                        return;
-                    }
-                };
+                loop {
+                    let res = match client_clone.get(&sse_url).send().await {
+                        Ok(res) => res,
+                        Err(e) => {
+                            eprintln!("Failed to connect to SSE for {}: {}. Retrying in 5s...", name_clone, e);
+                            tokio::time::sleep(Duration::from_secs(5)).await;
+                            continue;
+                        }
+                    };
 
-                let mut stream = res.bytes_stream();
-                let mut current_event = String::new();
+                    let mut stream = res.bytes_stream();
+                    let mut current_event = String::new();
 
-                while let Some(item) = stream.next().await {
-                    if let Ok(bytes) = item {
-                        if let Ok(text) = std::str::from_utf8(&bytes) {
-                            for line in text.lines() {
-                                if line.is_empty() {
-                                    // End of event - currently not doing complex parsing
-                                    current_event.clear();
-                                    continue;
-                                }
+                    while let Some(item) = stream.next().await {
+                        if let Ok(bytes) = item {
+                            if let Ok(text) = std::str::from_utf8(&bytes) {
+                                for line in text.lines() {
+                                    if line.is_empty() {
+                                        current_event.clear();
+                                        continue;
+                                    }
 
-                                if line.starts_with("event:") {
-                                    current_event = line["event:".len()..].trim().to_string();
-                                } else if line.starts_with("data:") {
-                                    let data = line["data:".len()..].trim();
-                                    
-                                    if current_event == "endpoint" {
-                                        let mut p_url = post_url_clone.lock().await;
-                                        *p_url = Some(data.to_string());
-                                        eprintln!("Established MCP SSE endpoint for {}: {}", name_clone, data);
-                                    } else {
-                                        // Other notifications - broadcast to frontend
-                                        if let Some(app) = &app_handle_clone {
-                                            if current_event == "memory-update" {
-                                                if let Ok(entry) = serde_json::from_str::<crate::gsd_engine::sync::MemoryEntry>(data) {
-                                                    let gsd = app.state::<Arc<crate::gsd_engine::GsdEngine>>();
-                                                    let knowledge = gsd.knowledge.lock().await;
-                                                    if let Some(mem) = knowledge.as_ref() {
-                                                        let _ = mem.record(&entry.entry_type, &entry.context, &entry.content, &entry.meta);
-                                                        eprintln!("[Swarm] Synchronized remote memory from {}: {}", name_clone, entry.content);
+                                    if line.starts_with("event:") {
+                                        current_event = line["event:".len()..].trim().to_string();
+                                    } else if line.starts_with("data:") {
+                                        let data = line["data:".len()..].trim();
+                                        
+                                        if current_event == "endpoint" {
+                                            let mut p_url = post_url_clone.lock().await;
+                                            *p_url = Some(data.to_string());
+                                            eprintln!("Established MCP SSE endpoint for {}: {}", name_clone, data);
+                                        } else {
+                                            if let Some(app) = &app_handle_clone {
+                                                if current_event == "memory-update" {
+                                                    if let Ok(entry) = serde_json::from_str::<crate::gsd_engine::sync::MemoryEntry>(data) {
+                                                        let gsd = app.state::<Arc<crate::gsd_engine::GsdEngine>>();
+                                                        let knowledge = gsd.knowledge.lock().await;
+                                                        if let Some(mem) = knowledge.as_ref() {
+                                                            let _ = mem.record(&entry.entry_type, &entry.context, &entry.content, &entry.meta);
+                                                            eprintln!("[Swarm] Synchronized remote memory from {}: {}", name_clone, entry.content);
+                                                        }
                                                     }
                                                 }
-                                            }
 
-                                            let _ = app.emit("mcp-notification", json!({
-                                                "server": name_clone,
-                                                "event": current_event,
-                                                "data": data
-                                            }));
+                                                let _ = app.emit("mcp-notification", json!({
+                                                    "server": name_clone,
+                                                    "event": current_event,
+                                                    "data": data
+                                                }));
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
+                    eprintln!("MCP SSE stream for {} closed. Attempting reconnection in 5s...", name_clone);
+                    tokio::time::sleep(Duration::from_secs(5)).await;
                 }
-                eprintln!("MCP SSE stream for {} closed", name_clone);
             });
 
             McpTransport::Remote {
@@ -240,6 +318,8 @@ impl McpServerHandle {
             transport,
             pending_requests,
             app_handle,
+            status: Arc::new(Mutex::new("online".to_string())),
+            last_latency: Arc::new(Mutex::new(0)),
         };
 
         // Send initialize request
