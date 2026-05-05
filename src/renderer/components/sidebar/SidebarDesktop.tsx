@@ -37,7 +37,7 @@ export function SidebarDesktop(props: SidebarDesktopProps): React.ReactElement {
 }
 
 export interface SidebarCollapsedProps {
-  sidebarRef: React.RefObject<HTMLDivElement>
+  sidebarRef: React.RefObject<HTMLDivElement | null>
   onCollapsedChange: (collapsed: boolean) => void
 }
 

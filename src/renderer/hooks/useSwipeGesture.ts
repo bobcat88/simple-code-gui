@@ -30,7 +30,7 @@ const DEFAULT_EDGE_WIDTH = 20
 const DEFAULT_VELOCITY_THRESHOLD = 0.3
 
 export function useSwipeGesture(
-  ref: RefObject<HTMLElement>,
+  ref: RefObject<HTMLElement | null>,
   options: SwipeOptions
 ): { handlers: SwipeHandlers } {
   const {

@@ -42,7 +42,7 @@ export interface TaskCrudState {
   setEditingTaskId: React.Dispatch<React.SetStateAction<string | null>>
   editingTitle: string
   setEditingTitle: React.Dispatch<React.SetStateAction<string>>
-  editInputRef: React.RefObject<HTMLInputElement>
+  editInputRef: React.RefObject<HTMLInputElement | null>
 }
 
 interface UseBeadsTasksParams {

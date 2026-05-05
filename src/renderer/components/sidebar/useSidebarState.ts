@@ -102,9 +102,9 @@ export interface SidebarState {
   setMcpBrowserOpen: (v: boolean) => void
 
   // Refs
-  sidebarRef: React.RefObject<HTMLDivElement>
-  editInputRef: React.RefObject<HTMLInputElement>
-  categoryEditInputRef: React.RefObject<HTMLInputElement>
+  sidebarRef: React.RefObject<HTMLDivElement | null>
+  editInputRef: React.RefObject<HTMLInputElement | null>
+  categoryEditInputRef: React.RefObject<HTMLInputElement | null>
 
   // Computed values
   focusedTabId: string | null

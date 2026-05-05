@@ -8,7 +8,7 @@ interface BeadsTaskListProps {
   panelHeight: number
   editingTaskId: string | null
   editingTitle: string
-  editInputRef: React.RefObject<HTMLInputElement>
+  editInputRef: React.RefObject<HTMLInputElement | null>
   onComplete: (taskId: string) => void
   onStart: (e: React.MouseEvent, taskId: string) => void
   onCycleStatus: (taskId: string, currentStatus: string) => void
