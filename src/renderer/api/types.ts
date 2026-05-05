@@ -718,6 +718,14 @@ export interface Api {
   gsdIdentifyRefactors?: () => Promise<string>
   gsdApplyRefactor?: (finding: any, dryRun?: boolean) => Promise<string>
   gsdGetRefactorDetails?: (symbolName: string) => Promise<string>
+  
+  // Phase 40: Synaptic Expansion
+  gsdStartDistributedDiscovery?: () => Promise<void>
+  gsdStopDistributedDiscovery?: () => Promise<void>
+  gsdGetDistributedNodes?: () => Promise<Array<{ id: string; name: string; type: string; status: string; latency: number }>>
+  gsdExecuteProactiveAudit?: (projectPath: string, scope?: string) => Promise<string>
+  gsdGetSynapticMetrics?: () => Promise<{ feedbackLoops: number; activeOptimizations: number; cognitiveLoad: number; swarmCohesion: number }>
+  gsdTriggerExpansionLoop?: (loopType: string) => Promise<void>
 
   // ==========================================================================
   // Vector Engine

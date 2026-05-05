@@ -83,7 +83,7 @@ export function IntelligenceSidebar({
   const [applying, setApplying] = useState(false)
   const [applyResult, setApplyResult] = useState<string[] | null>(null)
   const [progress, setProgress] = useState<ProposalProgress | null>(null)
-  const [activeSection, setActiveSection] = useState<'intelligence' | 'brainstorm' | 'governance' | 'swarmhub'>('intelligence')
+  const [activeSection, setActiveSection] = useState<'intelligence' | 'swarmhub'>('intelligence')
   const [suggestions, setSuggestions] = useState<any[]>([])
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const healthScore = Math.round(capabilityScan?.projectHealthScore ?? 0)
@@ -264,30 +264,6 @@ export function IntelligenceSidebar({
           Overview
         </button>
         <button
-          onClick={() => setActiveSection('brainstorm')}
-          className={cn(
-            "pb-2 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
-            activeSection === 'brainstorm' 
-              ? "text-white border-purple-500" 
-              : "text-white/30 border-transparent hover:text-white/60"
-          )}
-        >
-          Brainstorm
-          <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-        </button>
-        <button
-          onClick={() => setActiveSection('governance')}
-          className={cn(
-            "pb-2 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
-            activeSection === 'governance' 
-              ? "text-white border-emerald-500" 
-              : "text-white/30 border-transparent hover:text-white/60"
-          )}
-        >
-          Governance
-          <ShieldCheck size={12} className={cn(activeSection === 'governance' ? "text-emerald-400" : "text-white/20")} />
-        </button>
-        <button
           onClick={() => setActiveSection('swarmhub')}
           className={cn(
             "pb-2 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
@@ -296,23 +272,13 @@ export function IntelligenceSidebar({
               : "text-white/30 border-transparent hover:text-white/60"
           )}
         >
-          Swarm Hub
+          Cognitive Hub
           <Brain size={12} className={cn(activeSection === 'swarmhub' ? "text-codex-neon" : "text-white/20")} />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
-        {activeSection === 'brainstorm' ? (
-          <BrainstormTab 
-            api={api} 
-            projectPath={activeTab?.projectPath || ''} 
-          />
-        ) : activeSection === 'governance' ? (
-          <GovernanceTab 
-            api={api}
-            projectPath={activeTab?.projectPath || ''}
-          />
-        ) : activeSection === 'swarmhub' ? (
+        {activeSection === 'swarmhub' ? (
           <SwarmCognitiveHub 
             api={api}
             projectPath={activeTab?.projectPath || ''}

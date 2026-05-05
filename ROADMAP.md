@@ -215,3 +215,12 @@ Implementing systematic context compression and swarm communication efficiency.
 - [x] **Caveman Middleware**: Filler-stripping for agent-to-agent internal communication (~65% reduction).
 - [x] **Hardened Swarm Delegation**: Native autonomous multi-turn tool-calling loops for sub-agents in `executor.rs`.
 - [x] **Context Optimization Pipeline**: Integrated compression, caveman, and CoD into the core AI runtime.
+
+## Phase 40: Synaptic Orchestration & Distributed Knowledge (Expansion Era)
+Unifying swarm intelligence into a cohesive cognitive hub and extending cross-machine knowledge.
+
+- [ ] **Synaptic Orchestration Hub**: Unified interface for NeuralHUD, Brainstorm Canvas, and active Task Board.
+- [ ] **Distributed MCP Orchestration**: Multi-machine tool discovery and remote capability consumption.
+- [ ] **Cognitive Feedback Loops**: Learning from user verification patterns to refine agentic policy.
+- [ ] **Autonomous Architect**: Proactive refactoring suggestions based on GitNexus complexity metrics.
+- [ ] **Borg Knowledge Bridge**: Bidirectional synaptic sync with the Borg durable knowledge vault.

@@ -23,6 +23,10 @@ import { NeuralHUDTab } from './NeuralHUDTab';
 import { OrchestrationPanel } from './OrchestrationPanel';
 import { useSwarmSnapshots } from '../../hooks/useSwarmSnapshots';
 import { formatDistanceToNow } from 'date-fns';
+import { SynapticExpansion } from './SynapticExpansion';
+
+import { BrainstormTab } from './BrainstormTab';
+import { GovernanceTab } from './GovernanceTab';
 
 interface SwarmCognitiveHubProps {
   api: ExtendedApi;
@@ -30,7 +34,7 @@ interface SwarmCognitiveHubProps {
 }
 
 export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({ api, projectPath }) => {
-  const [activeLayer, setActiveLayer] = useState<'neural' | 'stream' | 'memory'>('neural');
+  const [activeLayer, setActiveLayer] = useState<'neural' | 'stream' | 'memory' | 'synaptic' | 'brainstorm' | 'governance'>('neural');
   const { snapshots, refresh: refreshSnapshots } = useSwarmSnapshots(projectPath);
 
   return (
@@ -50,12 +54,30 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({ api, proje
           </div>
         </div>
         
-        <div className="flex bg-black/40 p-1 rounded-lg border border-white/5 shadow-inner">
+        <div className="flex bg-black/40 p-1 rounded-lg border border-white/5 shadow-inner overflow-x-auto no-scrollbar max-w-[200px]">
           <NavButton 
             active={activeLayer === 'neural'} 
             onClick={() => setActiveLayer('neural')}
             icon={<Activity size={14} />}
             label="Pulse"
+          />
+          <NavButton 
+            active={activeLayer === 'brainstorm'} 
+            onClick={() => setActiveLayer('brainstorm')}
+            icon={<Brain size={14} />}
+            label="Ideate"
+          />
+          <NavButton 
+            active={activeLayer === 'synaptic'} 
+            onClick={() => setActiveLayer('synaptic')}
+            icon={<Share2 size={14} />}
+            label="Expand"
+          />
+          <NavButton 
+            active={activeLayer === 'governance'} 
+            onClick={() => setActiveLayer('governance')}
+            icon={<Shield size={14} />}
+            label="Guard"
           />
           <NavButton 
             active={activeLayer === 'stream'} 
@@ -79,6 +101,21 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({ api, proje
         {activeLayer === 'neural' && (
           <div className="absolute inset-0 animate-in zoom-in-95 duration-500">
              <NeuralHUDTab api={api} projectPath={projectPath} embedded />
+          </div>
+        )}
+        {activeLayer === 'brainstorm' && (
+          <div className="absolute inset-0 p-4 animate-in slide-in-from-right-4 duration-500 overflow-y-auto custom-scrollbar">
+            <BrainstormTab api={api} projectPath={projectPath} />
+          </div>
+        )}
+        {activeLayer === 'synaptic' && (
+          <div className="absolute inset-0 p-4 animate-in slide-in-from-bottom-4 duration-500">
+            <SynapticExpansion api={api} projectPath={projectPath} />
+          </div>
+        )}
+        {activeLayer === 'governance' && (
+          <div className="absolute inset-0 p-4 animate-in slide-in-from-left-4 duration-500 overflow-y-auto custom-scrollbar">
+            <GovernanceTab api={api} projectPath={projectPath} />
           </div>
         )}
         {activeLayer === 'stream' && (
