@@ -848,4 +848,7 @@ export class TauriBackend implements ExtendedApi {
   async borgSyncMemory(): Promise<number> {
     return await tauriIpc.borgSyncMemory();
   }
+  async gsdSpawnRemoteWorker(taskDescription: string): Promise<string> {
+    return await tauriIpc.gsdSpawnRemoteWorker(taskDescription);
+  }
 }

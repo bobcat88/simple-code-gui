@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Network, 
-  RefreshCw, 
-  Database, 
-  Shield, 
-  MessageSquare, 
+import {
+  Network,
+  RefreshCw,
+  Database,
+  Shield,
+  MessageSquare,
   Zap,
   ArrowRight,
   Cpu,
@@ -14,7 +14,10 @@ import {
   Settings,
   Loader2,
   ShieldCheck,
-  ShieldAlert
+  ShieldAlert,
+  Bot,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { ExtendedApi, McpServerConfig } from '../../api/types';
@@ -25,7 +28,7 @@ interface SynapticExpansionProps {
 }
 
 export const SynapticExpansion: React.FC<SynapticExpansionProps> = ({ api, projectPath }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'mcp' | 'feedback' | 'architect' | 'borg'>('mcp');
+  const [activeSubTab, setActiveSubTab] = useState<'mcp' | 'feedback' | 'architect' | 'borg' | 'workers'>('mcp');
 
   return (
     <div className="flex flex-col h-full space-y-4 animate-in slide-in-from-bottom-2 duration-500">
@@ -79,6 +82,18 @@ export const SynapticExpansion: React.FC<SynapticExpansionProps> = ({ api, proje
           <Database size={12} />
           Borg
         </button>
+        <button
+          onClick={() => setActiveSubTab('workers')}
+          className={cn(
+            "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+            activeSubTab === 'workers'
+              ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/30"
+              : "text-white/30 hover:text-white/60"
+          )}
+        >
+          <Bot size={12} />
+          Workers
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar px-1 space-y-4">
@@ -86,6 +101,7 @@ export const SynapticExpansion: React.FC<SynapticExpansionProps> = ({ api, proje
         {activeSubTab === 'feedback' && <CognitiveFeedbackSection api={api} />}
         {activeSubTab === 'architect' && <AutonomousArchitectSection api={api} projectPath={projectPath} />}
         {activeSubTab === 'borg' && <BorgKnowledgeBridgeSection api={api} />}
+        {activeSubTab === 'workers' && <EphemeralSwarmWorkersSection api={api} />}
       </div>
     </div>
   );
@@ -461,6 +477,109 @@ const BorgKnowledgeBridgeSection: React.FC<{ api: ExtendedApi }> = ({ api }) => 
           Inscribe to Chronicle
         </button>
       </div>
+    </div>
+  );
+};
+
+interface SpawnedWorker {
+  id: string;
+  task: string;
+  node: string;
+  spawnedAt: string;
+}
+
+const EphemeralSwarmWorkersSection: React.FC<{ api: ExtendedApi }> = ({ api }) => {
+  const [task, setTask] = useState('');
+  const [spawning, setSpawning] = useState(false);
+  const [workers, setWorkers] = useState<SpawnedWorker[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSpawn = async () => {
+    if (!task.trim()) return;
+    setSpawning(true);
+    setError(null);
+    try {
+      const node = await api.gsdSpawnRemoteWorker?.(task);
+      if (node) {
+        setWorkers(prev => [
+          {
+            id: `worker-${Date.now()}`,
+            task,
+            node,
+            spawnedAt: new Date().toLocaleTimeString(),
+          },
+          ...prev,
+        ]);
+        setTask('');
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to spawn worker');
+    } finally {
+      setSpawning(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em]">Ephemeral Swarm Workers</h3>
+        <span className="text-[9px] font-bold text-indigo-400/60 uppercase tracking-widest">
+          {workers.length} spawned
+        </span>
+      </div>
+
+      {error && (
+        <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-xl text-[10px] text-red-400 flex items-center gap-2">
+          <XCircle size={12} />
+          {error}
+        </div>
+      )}
+
+      <div className="space-y-2 p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl">
+        <h4 className="text-[10px] font-black text-white/50 uppercase tracking-widest">Dispatch Task</h4>
+        <textarea
+          value={task}
+          onChange={e => setTask(e.target.value)}
+          placeholder="Describe the task for the remote worker..."
+          rows={3}
+          className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs text-white/80 placeholder:text-white/20 focus:outline-none focus:border-indigo-500/50 resize-none transition-all"
+        />
+        <button
+          onClick={handleSpawn}
+          disabled={!task.trim() || spawning}
+          className="w-full py-2.5 bg-indigo-500/20 hover:bg-indigo-500/30 disabled:opacity-50 text-indigo-400 border border-indigo-500/30 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all uppercase tracking-widest"
+        >
+          {spawning ? <Loader2 size={14} className="animate-spin" /> : <Bot size={14} />}
+          {spawning ? 'Spawning...' : 'Spawn Worker'}
+        </button>
+      </div>
+
+      {workers.length > 0 && (
+        <div className="space-y-2">
+          <h4 className="text-[10px] font-black text-white/30 uppercase tracking-wider px-1">Active Workers</h4>
+          {workers.map(w => (
+            <div key={w.id} className="p-3 bg-white/5 border border-indigo-500/10 rounded-xl space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={12} className="text-indigo-400 shrink-0" />
+                  <span className="text-[11px] font-bold text-white/90 truncate">{w.node}</span>
+                </div>
+                <span className="text-[9px] font-mono text-white/20 shrink-0">{w.spawnedAt}</span>
+              </div>
+              <p className="text-[10px] text-white/40 line-clamp-2 pl-5">{w.task}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {workers.length === 0 && !error && (
+        <div className="flex flex-col items-center justify-center p-8 text-center border border-dashed border-white/5 rounded-2xl">
+          <Bot size={24} className="text-white/10 mb-2" />
+          <p className="text-[10px] text-white/20 leading-relaxed uppercase tracking-widest font-bold">
+            No workers spawned.<br />Dispatch a task to a trusted MCP node.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

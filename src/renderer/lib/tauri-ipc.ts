@@ -799,4 +799,6 @@ export const tauriIpc = {
     invoke<void>('borg_record_learning', { projectName, title, content }),
   borgSyncMemory: () =>
     invoke<number>('borg_sync_memory'),
+  gsdSpawnRemoteWorker: (taskDescription: string) =>
+    invoke<string>('gsd_spawn_remote_worker', { taskDescription }),
 };

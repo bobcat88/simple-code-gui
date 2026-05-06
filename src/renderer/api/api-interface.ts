@@ -544,6 +544,7 @@ export interface Api {
   gsdTriggerExpansionLoop?: (loopType: string) => Promise<void>;
   borgRecordLearning?: (projectName: string, title: string, content: string) => Promise<void>;
   borgSyncMemory?: () => Promise<number>;
+  gsdSpawnRemoteWorker?: (taskDescription: string) => Promise<string>;
 
   // ==========================================================================
   // Vector Engine
