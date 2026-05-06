@@ -783,16 +783,6 @@ export const tauriIpc = {
   pythonInstall: () =>
     invoke<{ success: boolean; error?: string }>('python_install'),
 
-  // Mobile Sync (Transwarp Nexus)
-  mobileGetConnectionInfo: (): Promise<{
-    success: boolean;
-    ip?: string;
-    port?: number;
-    token?: string;
-    error?: string;
-  }> => invoke('mobile_get_connection_info'),
-  mobileRegenerateToken: (): Promise<string> =>
-    invoke('mobile_regenerate_token'),
   readClipboardImage: (): Promise<{
     success: boolean;
     hasImage?: boolean;

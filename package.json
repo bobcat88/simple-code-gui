@@ -38,7 +38,6 @@
     "framer-motion": "^12.38.0",
     "gitnexus": "^1.6.3",
     "lucide-react": "^1.14.0",
-    "qrcode.react": "^4.2.0",
     "react-force-graph-3d": "^1.29.1",
     "tailwind-merge": "^3.5.0",
     "three": "^0.184.0",

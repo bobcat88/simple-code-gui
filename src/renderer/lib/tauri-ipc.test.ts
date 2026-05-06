@@ -100,8 +100,7 @@ describe('tauriIpc', () => {
 
     expect(invoke).toHaveBeenCalledWith('get_settings')
     expect(invoke).toHaveBeenCalledWith('get_workspace')
-    expect(invoke).toHaveBeenCalledWith('mobile_regenerate_token')
-    expect(invoke).toHaveBeenCalledTimes(183)
+    expect(invoke).toHaveBeenCalledTimes(181)
   })
 
   it('maps event listeners and forwards payloads to callbacks', async () => {

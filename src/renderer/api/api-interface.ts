@@ -823,18 +823,6 @@ export interface ExtendedApi extends Api {
   // Updater
   onUpdateProgress?: (callback: (progress: number) => void) => Unsubscribe;
 
-  // Mobile/Connection
-  mobileGetConnectionInfo?: () => Promise<{
-    host: string;
-    port: number;
-    token: string;
-  }>;
-  mobileRegenerateToken?: () => Promise<{
-    host: string;
-    port: number;
-    token: string;
-  }>;
-
   // Vector Engine (Desktop-specific overrides/extensions if needed)
   vectorSearch: (
     query: string,

@@ -807,18 +807,6 @@ export class TauriBackend implements ExtendedApi {
     return tauriIpc.pythonInstall()
   }
 
-  // Mobile Sync (Transwarp Nexus)
-  async mobileGetConnectionInfo(): Promise<{ host: string; port: number; token: string }> {
-    const info = await tauriIpc.mobileGetConnectionInfo();
-    return { host: info.ip ?? '', port: info.port ?? 0, token: info.token ?? '' };
-  }
-
-  async mobileRegenerateToken(): Promise<{ host: string; port: number; token: string }> {
-    const token = await tauriIpc.mobileRegenerateToken();
-    const info = await tauriIpc.mobileGetConnectionInfo();
-    return { host: info.ip ?? '', port: info.port ?? 0, token };
-  }
-
   async readClipboardImage(): Promise<{ success: boolean; hasImage?: boolean; path?: string; error?: string }> {
     return await tauriIpc.readClipboardImage();
   }
