@@ -9,12 +9,12 @@ import {
   Zap,
 } from 'lucide-react';
 import type React from 'react';
+import { lazy, Suspense } from 'react';
 import type { Api, ApprovalRequest, ExtendedApi } from '../../api/types.js';
 import { cn } from '../../lib/utils';
 import { ActivityFeed } from '../ActivityFeed';
 import { AgentBoard } from '../AgentBoard';
 import { BeadsPanel } from '../BeadsPanel.js';
-import { GSDPlanner } from '../GSDPlanner.js';
 import { GSDStatus } from '../GSDStatus.js';
 import { ToolCatalog } from '../gsd/ToolCatalog';
 import { HealthDashboard } from '../HealthDashboard';
@@ -25,6 +25,10 @@ import { SwarmActivityStream } from '../orchestration/SwarmActivityStream';
 import { TaskAssignmentView } from '../orchestration/TaskAssignmentView.js';
 import { TokenBurnHistory } from '../orchestration/TokenBurnHistory.js';
 import type { OpenTab, SidebarProps } from './types.js';
+
+const GSDPlanner = lazy(() =>
+  import('../GSDPlanner.js').then((module) => ({ default: module.GSDPlanner }))
+);
 
 interface SharedProjectProps {
   api: Api;
@@ -200,7 +204,15 @@ export function GsdSection({
 }: Pick<SharedProjectProps, 'api' | 'beadsProjectPath'>): React.ReactElement {
   return (
     <div className="flex flex-col h-full glass-sidebar animate-in slide-in-from-left duration-200">
-      <GSDPlanner projectPath={beadsProjectPath} api={api} />
+      <Suspense
+        fallback={
+          <div className="flex-1 flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-white/30 animate-pulse">
+            Loading planner...
+          </div>
+        }
+      >
+        <GSDPlanner projectPath={beadsProjectPath} api={api} />
+      </Suspense>
     </div>
   );
 }

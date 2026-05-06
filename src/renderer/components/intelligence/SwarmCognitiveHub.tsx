@@ -1,43 +1,57 @@
-import React, { useState } from 'react';
-import {
-  Brain,
-  Zap,
-  History,
-  Shield,
-  Activity,
-  Share2,
-  Layers,
-  ChevronRight,
-  ChevronDown,
-  Download,
-  Camera,
-  CheckCircle2,
-  TrendingUp,
-  TrendingDown,
-  Minus
-} from 'lucide-react';
-import { cn } from '../../lib/utils';
-import type { ExtendedApi, SwarmSnapshot } from '../../api/types';
-import { SwarmActivityStream } from '../orchestration/SwarmActivityStream';
-import { NeuralHUDTab } from './NeuralHUDTab';
-import { OrchestrationPanel } from './OrchestrationPanel';
-import { useSwarmSnapshots } from '../../hooks/useSwarmSnapshots';
 import { formatDistanceToNow } from 'date-fns';
-import { SynapticExpansion } from './SynapticExpansion';
+import {
+  Activity,
+  Brain,
+  Camera,
+  ChevronDown,
+  ChevronRight,
+  History,
+  Layers,
+  ListTodo,
+  Minus,
+  Share2,
+  Shield,
+  TrendingDown,
+  TrendingUp,
+  Zap,
+} from 'lucide-react';
+import type React from 'react';
+import { lazy, Suspense, useState } from 'react';
+import type { ExtendedApi, SwarmSnapshot } from '../../api/types';
+import { useSwarmSnapshots } from '../../hooks/useSwarmSnapshots';
+import { cn } from '../../lib/utils';
+import { AgentBoard } from '../AgentBoard';
+import { SwarmActivityStream } from '../orchestration/SwarmActivityStream';
 
 import { BrainstormTab } from './BrainstormTab';
 import { GovernanceTab } from './GovernanceTab';
-import { AgentBoard } from '../AgentBoard';
-import { ListTodo } from 'lucide-react';
+import { OrchestrationPanel } from './OrchestrationPanel';
+import { SynapticExpansion } from './SynapticExpansion';
+
+const NeuralHUDTab = lazy(() =>
+  import('./NeuralHUDTab').then((module) => ({ default: module.NeuralHUDTab }))
+);
 
 interface SwarmCognitiveHubProps {
   api: ExtendedApi;
   projectPath: string;
 }
 
-export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({ api, projectPath }) => {
-  const [activeLayer, setActiveLayer] = useState<'neural' | 'stream' | 'memory' | 'synaptic' | 'brainstorm' | 'governance' | 'tasks'>('neural');
-  const { snapshots, refresh: refreshSnapshots } = useSwarmSnapshots(projectPath);
+export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({
+  api,
+  projectPath,
+}) => {
+  const [activeLayer, setActiveLayer] = useState<
+    | 'neural'
+    | 'stream'
+    | 'memory'
+    | 'synaptic'
+    | 'brainstorm'
+    | 'governance'
+    | 'tasks'
+  >('neural');
+  const { snapshots, refresh: refreshSnapshots } =
+    useSwarmSnapshots(projectPath);
 
   return (
     <div className="flex flex-col h-full space-y-4 animate-in fade-in duration-500">
@@ -48,53 +62,57 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({ api, proje
             <Brain size={20} className="text-codex-neon" />
           </div>
           <div>
-            <h2 className="text-sm font-black uppercase tracking-tighter text-white">Cognitive Hub</h2>
+            <h2 className="text-sm font-black uppercase tracking-tighter text-white">
+              Cognitive Hub
+            </h2>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-codex-neon animate-pulse shadow-[0_0_8px_#ccff00]" />
-              <span className="text-[9px] font-bold text-codex-neon/60 uppercase tracking-widest">Synaptic Link Active</span>
+              <span className="text-[9px] font-bold text-codex-neon/60 uppercase tracking-widest">
+                Synaptic Link Active
+              </span>
             </div>
           </div>
         </div>
-        
+
         <div className="flex bg-black/40 p-1 rounded-lg border border-white/5 shadow-inner overflow-x-auto no-scrollbar max-w-[200px]">
-          <NavButton 
-            active={activeLayer === 'neural'} 
+          <NavButton
+            active={activeLayer === 'neural'}
             onClick={() => setActiveLayer('neural')}
             icon={<Activity size={14} />}
             label="Pulse"
           />
-          <NavButton 
-            active={activeLayer === 'brainstorm'} 
+          <NavButton
+            active={activeLayer === 'brainstorm'}
             onClick={() => setActiveLayer('brainstorm')}
             icon={<Brain size={14} />}
             label="Ideate"
           />
-          <NavButton 
-            active={activeLayer === 'synaptic'} 
+          <NavButton
+            active={activeLayer === 'synaptic'}
             onClick={() => setActiveLayer('synaptic')}
             icon={<Share2 size={14} />}
             label="Expand"
           />
-          <NavButton 
-            active={activeLayer === 'governance'} 
+          <NavButton
+            active={activeLayer === 'governance'}
             onClick={() => setActiveLayer('governance')}
             icon={<Shield size={14} />}
             label="Guard"
           />
-          <NavButton 
-            active={activeLayer === 'stream'} 
+          <NavButton
+            active={activeLayer === 'stream'}
             onClick={() => setActiveLayer('stream')}
             icon={<Zap size={14} />}
             label="Stream"
           />
-          <NavButton 
-            active={activeLayer === 'tasks'} 
+          <NavButton
+            active={activeLayer === 'tasks'}
             onClick={() => setActiveLayer('tasks')}
             icon={<ListTodo size={14} />}
             label="Tasks"
           />
-          <NavButton 
-            active={activeLayer === 'memory'} 
+          <NavButton
+            active={activeLayer === 'memory'}
             onClick={() => setActiveLayer('memory')}
             icon={<History size={14} />}
             label="Vault"
@@ -105,10 +123,18 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({ api, proje
       {/* Main Viewport */}
       <div className="flex-1 relative min-h-0 bg-black/20 rounded-2xl border border-white/5 overflow-hidden shadow-inner group/hub">
         <div className="absolute inset-0 bg-gradient-to-br from-codex-neon/5 to-transparent opacity-30 pointer-events-none" />
-        
+
         {activeLayer === 'neural' && (
           <div className="absolute inset-0 animate-in zoom-in-95 duration-500">
-             <NeuralHUDTab api={api} projectPath={projectPath} embedded />
+            <Suspense
+              fallback={
+                <div className="h-full flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-codex-neon/50 animate-pulse">
+                  Loading neural HUD...
+                </div>
+              }
+            >
+              <NeuralHUDTab api={api} projectPath={projectPath} embedded />
+            </Suspense>
           </div>
         )}
         {activeLayer === 'brainstorm' && (
@@ -133,7 +159,12 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({ api, proje
         )}
         {activeLayer === 'memory' && (
           <div className="absolute inset-0 p-4 animate-in slide-in-from-right-4 duration-500 overflow-y-auto custom-scrollbar">
-            <MemoryVault snapshots={snapshots} onRefresh={refreshSnapshots} api={api} projectPath={projectPath} />
+            <MemoryVault
+              snapshots={snapshots}
+              onRefresh={refreshSnapshots}
+              api={api}
+              projectPath={projectPath}
+            />
           </div>
         )}
         {activeLayer === 'tasks' && (
@@ -147,15 +178,19 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({ api, proje
 
         {/* Global Controls Overlay */}
         <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover/hub:opacity-100 transition-opacity duration-300">
-          <ControlButton 
-            icon={<Camera size={14} />} 
-            label="Snapshot" 
-            onClick={() => {/* Trigger snapshot */}}
+          <ControlButton
+            icon={<Camera size={14} />}
+            label="Snapshot"
+            onClick={() => {
+              /* Trigger snapshot */
+            }}
           />
-          <ControlButton 
-            icon={<Share2 size={14} />} 
-            label="Handoff" 
-            onClick={() => {/* Generate handoff */}}
+          <ControlButton
+            icon={<Share2 size={14} />}
+            label="Handoff"
+            onClick={() => {
+              /* Generate handoff */
+            }}
           />
         </div>
       </div>
@@ -177,14 +212,20 @@ interface NavButtonProps {
   label: string;
 }
 
-const NavButton: React.FC<NavButtonProps> = ({ active, onClick, icon, label }) => (
+const NavButton: React.FC<NavButtonProps> = ({
+  active,
+  onClick,
+  icon,
+  label,
+}) => (
   <button
+    type="button"
     onClick={onClick}
     className={cn(
-      "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-tighter transition-all",
-      active 
-        ? "bg-codex-neon text-black shadow-[0_0_15px_rgba(204,255,0,0.3)]" 
-        : "text-white/40 hover:text-white/70 hover:bg-white/5"
+      'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-tighter transition-all',
+      active
+        ? 'bg-codex-neon text-black shadow-[0_0_15px_rgba(204,255,0,0.3)]'
+        : 'text-white/40 hover:text-white/70 hover:bg-white/5'
     )}
   >
     {icon}
@@ -192,8 +233,13 @@ const NavButton: React.FC<NavButtonProps> = ({ active, onClick, icon, label }) =
   </button>
 );
 
-const ControlButton: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void }> = ({ icon, label, onClick }) => (
+const ControlButton: React.FC<{
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}> = ({ icon, label, onClick }) => (
   <button
+    type="button"
     onClick={onClick}
     className="flex items-center gap-2 px-3 py-2 bg-black/80 backdrop-blur-md border border-white/10 rounded-xl text-white/60 hover:text-codex-neon hover:border-codex-neon/50 transition-all shadow-2xl group"
   >
@@ -204,15 +250,25 @@ const ControlButton: React.FC<{ icon: React.ReactNode; label: string; onClick: (
   </button>
 );
 
-const TelemetryCard: React.FC<{ label: string; value: string; trend: 'up' | 'down' | 'stable' }> = ({ label, value, trend }) => (
+const TelemetryCard: React.FC<{
+  label: string;
+  value: string;
+  trend: 'up' | 'down' | 'stable';
+}> = ({ label, value, trend }) => (
   <div className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1">
     <div className="flex items-center justify-between">
-      <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">{label}</span>
+      <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">
+        {label}
+      </span>
       {trend === 'up' && <TrendingUp size={10} className="text-amber-400" />}
-      {trend === 'down' && <TrendingDown size={10} className="text-codex-neon" />}
+      {trend === 'down' && (
+        <TrendingDown size={10} className="text-codex-neon" />
+      )}
       {trend === 'stable' && <Minus size={10} className="text-white/20" />}
     </div>
-    <div className="text-lg font-black text-white/90 tabular-nums leading-none">{value}</div>
+    <div className="text-lg font-black text-white/90 tabular-nums leading-none">
+      {value}
+    </div>
   </div>
 );
 
@@ -224,28 +280,66 @@ export const MemoryVault: React.FC<{
 }> = ({ snapshots, onRefresh, api, projectPath }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [actionState, setActionState] = useState<
-    Record<string, { loading: 'restore' | 'branch' | null; message: string | null; isError: boolean }>
+    Record<
+      string,
+      {
+        loading: 'restore' | 'branch' | null;
+        message: string | null;
+        isError: boolean;
+      }
+    >
   >({});
 
   const getState = (id: string) =>
     actionState[id] ?? { loading: null, message: null, isError: false };
 
   const setLoading = (id: string, loading: 'restore' | 'branch' | null) =>
-    setActionState((prev) => ({ ...prev, [id]: { ...(prev[id] ?? { loading: null, message: null, isError: false }), loading } }));
+    setActionState((prev) => ({
+      ...prev,
+      [id]: {
+        ...(prev[id] ?? { loading: null, message: null, isError: false }),
+        loading,
+      },
+    }));
 
   const setMessage = (id: string, message: string | null, isError = false) => {
-    setActionState((prev) => ({ ...prev, [id]: { ...(prev[id] ?? { loading: null, message: null, isError: false }), loading: null, message, isError } }));
-    if (message) setTimeout(() => setActionState((prev) => ({ ...prev, [id]: { ...(prev[id] ?? { loading: null, message: null, isError: false }), message: null, isError: false } })), 3000);
+    setActionState((prev) => ({
+      ...prev,
+      [id]: {
+        ...(prev[id] ?? { loading: null, message: null, isError: false }),
+        loading: null,
+        message,
+        isError,
+      },
+    }));
+    if (message)
+      setTimeout(
+        () =>
+          setActionState((prev) => ({
+            ...prev,
+            [id]: {
+              ...(prev[id] ?? { loading: null, message: null, isError: false }),
+              message: null,
+              isError: false,
+            },
+          })),
+        3000
+      );
   };
 
   const handleRestore = async (snapshot: SwarmSnapshot) => {
     setLoading(snapshot.id, 'restore');
     try {
       const result = await api.gsdHydrateSwarm(projectPath);
-      if (result.success) setMessage(snapshot.id, `Restored ${result.count} messages`);
+      if (result.success)
+        setMessage(snapshot.id, `Restored ${result.count} messages`);
       else setMessage(snapshot.id, result.error ?? 'Restore failed', true);
     } catch (err) {
-      setMessage(snapshot.id, err instanceof Error ? err.message : String(err), true);
+      setMessage(
+        snapshot.id,
+        err instanceof Error ? err.message : String(err),
+        true
+      );
     }
   };
 
@@ -253,10 +347,15 @@ export const MemoryVault: React.FC<{
     setLoading(snapshot.id, 'branch');
     try {
       const result = await api.gsdCreateSnapshotWorkspace(snapshot.id);
-      if (result.success) setMessage(snapshot.id, `Workspace isolated at: ${result.path}`);
+      if (result.success)
+        setMessage(snapshot.id, `Workspace isolated at: ${result.path}`);
       else setMessage(snapshot.id, result.error ?? 'Branch failed', true);
     } catch (err) {
-      setMessage(snapshot.id, err instanceof Error ? err.message : String(err), true);
+      setMessage(
+        snapshot.id,
+        err instanceof Error ? err.message : String(err),
+        true
+      );
     }
   };
 
@@ -265,9 +364,15 @@ export const MemoryVault: React.FC<{
       <div className="flex items-center justify-between mb-2 px-1">
         <div className="flex items-center gap-2">
           <Shield size={14} className="text-codex-neon" />
-          <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Cognitive Backups</span>
+          <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">
+            Cognitive Backups
+          </span>
         </div>
-        <button onClick={onRefresh} className="text-[9px] font-bold text-codex-neon/60 hover:text-codex-neon uppercase">
+        <button
+          type="button"
+          onClick={onRefresh}
+          className="text-[9px] font-bold text-codex-neon/60 hover:text-codex-neon uppercase"
+        >
           Refresh Vault
         </button>
       </div>
@@ -276,7 +381,9 @@ export const MemoryVault: React.FC<{
         {snapshots.length === 0 ? (
           <div className="py-20 text-center opacity-20 space-y-4">
             <History size={48} className="mx-auto" />
-            <p className="text-[10px] font-bold uppercase tracking-widest">No neural footprints detected</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest">
+              No neural footprints detected
+            </p>
           </div>
         ) : (
           snapshots.map((snapshot) => {
@@ -294,6 +401,7 @@ export const MemoryVault: React.FC<{
               >
                 {/* Row header — clickable */}
                 <button
+                  type="button"
                   onClick={() => setExpandedId(isExpanded ? null : snapshot.id)}
                   className="w-full flex items-center justify-between p-3 text-left"
                 >
@@ -302,54 +410,80 @@ export const MemoryVault: React.FC<{
                       <Layers size={14} className="text-codex-neon" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-white/90 uppercase tracking-tight">{snapshot.name}</h4>
+                      <h4 className="text-xs font-bold text-white/90 uppercase tracking-tight">
+                        {snapshot.name}
+                      </h4>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[9px] text-white/30 font-mono">@{snapshot.commit_sha?.substring(0, 7)}</span>
+                        <span className="text-[9px] text-white/30 font-mono">
+                          @{snapshot.commit_sha?.substring(0, 7)}
+                        </span>
                         <span className="text-white/10">•</span>
                         <span className="text-[9px] text-white/30 italic">
-                          {formatDistanceToNow(new Date(snapshot.timestamp), { addSuffix: true })}
+                          {formatDistanceToNow(new Date(snapshot.timestamp), {
+                            addSuffix: true,
+                          })}
                         </span>
                       </div>
                     </div>
                   </div>
-                  {isExpanded
-                    ? <ChevronDown size={16} className="text-codex-neon/60 transition-transform duration-200" />
-                    : <ChevronRight size={16} className="text-white/40 transition-transform duration-200" />
-                  }
+                  {isExpanded ? (
+                    <ChevronDown
+                      size={16}
+                      className="text-codex-neon/60 transition-transform duration-200"
+                    />
+                  ) : (
+                    <ChevronRight
+                      size={16}
+                      className="text-white/40 transition-transform duration-200"
+                    />
+                  )}
                 </button>
 
                 {/* Expanded actions */}
                 {isExpanded && (
                   <div className="px-3 pb-3 space-y-2 animate-in slide-in-from-top-2 duration-200">
                     {state.message && (
-                      <p className={cn('text-[8px] px-1', state.isError ? 'text-red-400' : 'text-codex-neon/60')}>
+                      <p
+                        className={cn(
+                          'text-[8px] px-1',
+                          state.isError ? 'text-red-400' : 'text-codex-neon/60'
+                        )}
+                      >
                         {state.message}
                       </p>
                     )}
                     <div className="flex gap-2">
                       <button
+                        type="button"
                         aria-label="Restore Messages"
                         onClick={() => handleRestore(snapshot)}
                         disabled={state.loading !== null}
                         className={cn(
                           'flex-1 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest border transition-all',
                           'bg-codex-neon/10 text-codex-neon border-codex-neon/30 hover:bg-codex-neon/20',
-                          state.loading !== null && 'opacity-40 cursor-not-allowed'
+                          state.loading !== null &&
+                            'opacity-40 cursor-not-allowed'
                         )}
                       >
-                        {state.loading === 'restore' ? '…' : '⬇ Restore Messages'}
+                        {state.loading === 'restore'
+                          ? '…'
+                          : '⬇ Restore Messages'}
                       </button>
                       <button
+                        type="button"
                         aria-label="Branch Workspace"
                         onClick={() => handleBranch(snapshot)}
                         disabled={state.loading !== null}
                         className={cn(
                           'flex-1 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest border transition-all',
                           'bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/20',
-                          state.loading !== null && 'opacity-40 cursor-not-allowed'
+                          state.loading !== null &&
+                            'opacity-40 cursor-not-allowed'
                         )}
                       >
-                        {state.loading === 'branch' ? '…' : '⎇ Branch Workspace'}
+                        {state.loading === 'branch'
+                          ? '…'
+                          : '⎇ Branch Workspace'}
                       </button>
                     </div>
                   </div>
