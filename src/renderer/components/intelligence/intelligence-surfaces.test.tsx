@@ -4,9 +4,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExtendedApi, GsdSeed, KSpecDraft } from '../../api/types';
 import { BrainstormCanvas } from './BrainstormCanvas';
 import { BrainstormTab } from './BrainstormTab';
+import { GovernanceTab } from './GovernanceTab';
 import { IdeaInbox } from './IdeaInbox';
 import { NeuralHUDTab } from './NeuralHUDTab';
 import { SpecDraftEditor } from './SpecDraftEditor';
+import { SynapticExpansion } from './SynapticExpansion';
 import {
   parseKSpec,
   toYaml,
@@ -407,5 +409,59 @@ describe('BrainstormTab and BrainstormCanvas', () => {
     );
     fireEvent.click(screen.getByText('Agentic Sketch'));
     await waitFor(() => expect(api.brainstormAgenticSketch).toHaveBeenCalled());
+  });
+});
+
+describe('GovernanceTab', () => {
+  it('renders sync controls and responds to manual sync', async () => {
+    const api = makeApi({
+      gsdGetSyncStatus: vi.fn(() => Promise.resolve(false)),
+      gsdSyncMemory: vi.fn(() => Promise.resolve(3)),
+      gsdStartAutomaticSync: vi.fn(() => Promise.resolve()),
+      gsdStopAutomaticSync: vi.fn(() => Promise.resolve()),
+    });
+    render(<GovernanceTab api={api} projectPath="/repo" />);
+
+    await waitFor(() => expect(api.gsdGetSyncStatus).toHaveBeenCalled());
+    expect(screen.getByText('Quantum Bridge')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Sync Now'));
+    await waitFor(() => expect(api.gsdSyncMemory).toHaveBeenCalled());
+  });
+});
+
+describe('SynapticExpansion', () => {
+  it('renders sub-tabs and shows MCP node list', async () => {
+    const api = makeApi({
+      mcpGetServers: vi.fn(() =>
+        Promise.resolve([
+          { name: 'filesystem', command: 'npx', args: [], env: {} },
+          { name: 'remote-node', args: [], env: {}, url: 'http://remote:8080' },
+        ])
+      ),
+      mcpIsNodeTrusted: vi.fn(() => Promise.resolve(false)),
+      mcpDiscoverServers: vi.fn(() => Promise.resolve([])),
+      registerMcpServer: vi.fn(() => Promise.resolve()),
+      mcpTrustNode: vi.fn(() => Promise.resolve()),
+      gsdGetSynapticMetrics: vi.fn(() =>
+        Promise.resolve({ feedbackLoops: 3, activeOptimizations: 0, cognitiveLoad: 0.4, swarmCohesion: 0.85 })
+      ),
+      gsdTriggerExpansionLoop: vi.fn(() => Promise.resolve()),
+      gsdExecuteProactiveAudit: vi.fn(() => Promise.resolve('audit done')),
+    });
+    render(<SynapticExpansion api={api} projectPath="/repo" />);
+
+    await waitFor(() => expect(api.mcpGetServers).toHaveBeenCalled());
+    expect(screen.getByText('filesystem')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Loops'));
+    await waitFor(() => expect(api.gsdGetSynapticMetrics).toHaveBeenCalled());
+    expect(screen.getByText('Active Loops')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Architect'));
+    expect(screen.getByText('Autonomous Architect')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Borg'));
+    expect(screen.getByText('Borg Knowledge Bridge')).toBeInTheDocument();
   });
 });
