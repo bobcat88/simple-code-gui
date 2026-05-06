@@ -128,4 +128,92 @@ describe('AgentBoard', () => {
 
     expect(screen.getByText('Loading agents...')).toHaveClass('animate-pulse')
   })
+
+  it('renders all role icons without crashing for all role types', () => {
+    vi.spyOn(useAgentBoardModule, 'useAgentBoard').mockReturnValue({
+      ...baseHook,
+      agents: [
+        { ...baseHook.agents[0], id: 'a1', name: 'Planner', role: 'planner', status: 'idle', provider: 'claude' },
+        { ...baseHook.agents[0], id: 'a2', name: 'Builder', role: 'builder', status: 'idle', provider: 'claude' },
+        { ...baseHook.agents[0], id: 'a3', name: 'Reviewer', role: 'reviewer', status: 'idle', provider: 'claude' },
+        { ...baseHook.agents[0], id: 'a4', name: 'GitBot', role: 'git', status: 'idle', provider: 'claude' },
+        { ...baseHook.agents[0], id: 'a5', name: 'Researcher', role: 'researcher', status: 'idle', provider: 'claude' },
+        { ...baseHook.agents[0], id: 'a6', name: 'Unknown', role: 'unknown', status: 'idle', provider: 'claude' },
+      ],
+    })
+    render(<AgentBoard />)
+    expect(screen.getByText('Planner')).toBeInTheDocument()
+    expect(screen.getByText('GitBot')).toBeInTheDocument()
+    expect(screen.getByText('Researcher')).toBeInTheDocument()
+    expect(screen.getByText('Unknown')).toBeInTheDocument()
+    expect(screen.getByText('6 Active')).toBeInTheDocument()
+  })
+
+  it('shows correct status colors for all agent statuses', () => {
+    vi.spyOn(useAgentBoardModule, 'useAgentBoard').mockReturnValue({
+      ...baseHook,
+      agents: [
+        { ...baseHook.agents[0], id: 'a1', name: 'Idle', role: 'builder', status: 'idle', queue_size: 0, active_task: undefined },
+        { ...baseHook.agents[0], id: 'a2', name: 'Working', role: 'builder', status: 'working', queue_size: 0, active_task: undefined },
+        { ...baseHook.agents[0], id: 'a3', name: 'Waiting', role: 'builder', status: 'waiting', queue_size: 0, active_task: undefined },
+        { ...baseHook.agents[0], id: 'a4', name: 'Errored', role: 'builder', status: 'error', queue_size: 0, active_task: undefined },
+      ],
+    })
+    render(<AgentBoard />)
+    expect(screen.getByText('idle')).toBeInTheDocument()
+    expect(screen.getByText('working')).toBeInTheDocument()
+    expect(screen.getByText('waiting')).toBeInTheDocument()
+    expect(screen.getByText('error')).toBeInTheDocument()
+  })
+
+  it('renders provider health colors: undefined and unhealthy providers', () => {
+    vi.spyOn(useAgentBoardModule, 'useAgentBoard').mockReturnValue({
+      ...baseHook,
+      providerHealth: { claude: 'unhealthy' },
+      agents: [
+        { ...baseHook.agents[0], id: 'a1', name: 'NoProvider', role: 'builder', status: 'idle', provider: 'none', queue_size: 0 },
+        { ...baseHook.agents[0], id: 'a2', name: 'Unhealthy', role: 'builder', status: 'idle', provider: 'claude', queue_size: 0 },
+        { ...baseHook.agents[0], id: 'a3', name: 'Unknown', role: 'builder', status: 'idle', provider: 'openai', queue_size: 0 },
+      ],
+    })
+    render(<AgentBoard />)
+    expect(screen.getByText('NoProvider')).toBeInTheDocument()
+    expect(screen.getByText('Unhealthy')).toBeInTheDocument()
+  })
+
+  it('opens queue panel on queue button click and trace panel on trace button click', () => {
+    render(<AgentBoard />)
+
+    // Click queue icon button on agent card
+    const queueButtons = screen.getAllByRole('button').filter(b => b.querySelector('.lucide-list-todo'))
+    fireEvent.click(queueButtons[0])
+    expect(screen.getByLabelText('queue-panel')).toBeInTheDocument()
+
+    // Now switch to trace for same agent
+    const traceButtons = screen.getAllByRole('button').filter(b => b.querySelector('.lucide-activity'))
+    fireEvent.click(traceButtons[0])
+    expect(screen.getByLabelText('trace-panel')).toBeInTheDocument()
+
+    // Close via close button
+    fireEvent.click(screen.getByText('Close Trace'))
+    expect(screen.queryByLabelText('trace-panel')).not.toBeInTheDocument()
+  })
+
+  it('deselects agent when clicking on the selected card again', () => {
+    render(<AgentBoard />)
+
+    fireEvent.click(screen.getByText('Alpha'))
+    expect(screen.getByLabelText('queue-panel')).toBeInTheDocument()
+
+    // Click Alpha again to deselect
+    fireEvent.click(screen.getByText('Alpha'))
+    expect(screen.queryByLabelText('queue-panel')).not.toBeInTheDocument()
+  })
+
+  it('shows empty board when no agents are active', () => {
+    vi.spyOn(useAgentBoardModule, 'useAgentBoard').mockReturnValue({ ...baseHook, agents: [] })
+    render(<AgentBoard />)
+    expect(screen.getByText('0 Active')).toBeInTheDocument()
+    expect(screen.queryByText('Alpha')).not.toBeInTheDocument()
+  })
 })

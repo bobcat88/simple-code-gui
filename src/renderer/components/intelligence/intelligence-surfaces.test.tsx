@@ -7,6 +7,7 @@ import { BrainstormTab } from './BrainstormTab';
 import { GovernanceTab } from './GovernanceTab';
 import { IdeaInbox } from './IdeaInbox';
 import { NeuralHUDTab } from './NeuralHUDTab';
+import { PromotionDialog } from './PromotionDialog';
 import { SpecDraftEditor } from './SpecDraftEditor';
 import { SynapticExpansion } from './SynapticExpansion';
 import {
@@ -463,5 +464,220 @@ describe('SynapticExpansion', () => {
 
     fireEvent.click(screen.getByText('Borg'));
     expect(screen.getByText('Borg Knowledge Bridge')).toBeInTheDocument();
+  });
+});
+
+describe('GovernanceTab — extended', () => {
+  it('toggles auto-sync on and off', async () => {
+    const api = makeApi({
+      gsdGetSyncStatus: vi.fn(() => Promise.resolve(false)),
+      gsdSyncMemory: vi.fn(() => Promise.resolve(0)),
+      gsdStartAutomaticSync: vi.fn(() => Promise.resolve()),
+      gsdStopAutomaticSync: vi.fn(() => Promise.resolve()),
+    });
+    render(<GovernanceTab api={api} projectPath="/repo" />);
+    await waitFor(() => expect(api.gsdGetSyncStatus).toHaveBeenCalled());
+
+    // Toggle auto-sync on
+    const toggleBtn = screen.getAllByRole('button').find(b =>
+      b.className.includes('inline-flex') && b.className.includes('rounded-full')
+    )!;
+    fireEvent.click(toggleBtn);
+    await waitFor(() => expect(api.gsdStartAutomaticSync).toHaveBeenCalled());
+  });
+
+  it('shows sync success state and last sync time after manual sync', async () => {
+    const api = makeApi({
+      gsdGetSyncStatus: vi.fn(() => Promise.resolve(false)),
+      gsdSyncMemory: vi.fn(() => Promise.resolve(2)),
+      gsdStartAutomaticSync: vi.fn(() => Promise.resolve()),
+      gsdStopAutomaticSync: vi.fn(() => Promise.resolve()),
+    });
+    render(<GovernanceTab api={api} projectPath="/repo" />);
+    await waitFor(() => expect(api.gsdGetSyncStatus).toHaveBeenCalled());
+
+    expect(screen.getByText('No sync in this session')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Sync Now'));
+    await waitFor(() => expect(screen.getByText('Synced')).toBeInTheDocument());
+    expect(screen.queryByText('No sync in this session')).not.toBeInTheDocument();
+  });
+
+  it('shows error state when sync fails', async () => {
+    const api = makeApi({
+      gsdGetSyncStatus: vi.fn(() => Promise.resolve(false)),
+      gsdSyncMemory: vi.fn(() => Promise.reject(new Error('network error'))),
+      gsdStartAutomaticSync: vi.fn(() => Promise.resolve()),
+      gsdStopAutomaticSync: vi.fn(() => Promise.resolve()),
+    });
+    render(<GovernanceTab api={api} projectPath="/repo" />);
+    await waitFor(() => expect(api.gsdGetSyncStatus).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByText('Sync Now'));
+    await waitFor(() => expect(screen.getByText('Error')).toBeInTheDocument());
+  });
+
+  it('renders governance policy items and snapshot section', async () => {
+    const api = makeApi({
+      gsdGetSyncStatus: vi.fn(() => Promise.resolve(false)),
+      gsdSyncMemory: vi.fn(() => Promise.resolve(0)),
+      gsdStartAutomaticSync: vi.fn(() => Promise.resolve()),
+      gsdStopAutomaticSync: vi.fn(() => Promise.resolve()),
+    });
+    render(<GovernanceTab api={api} projectPath="/repo" />);
+
+    expect(screen.getByText('Swarm Governance')).toBeInTheDocument();
+    expect(screen.getByText('Persona Configuration')).toBeInTheDocument();
+    expect(screen.getByText('Access Control Policies')).toBeInTheDocument();
+    expect(screen.getByText('Global Knowledge Policy')).toBeInTheDocument();
+    expect(screen.getByText('Cognitive Snapshots')).toBeInTheDocument();
+    expect(screen.getByText('View Snapshot History')).toBeInTheDocument();
+    expect(screen.getByText('Governance is enforced by the GSD Runtime.')).toBeInTheDocument();
+  });
+
+  it('auto-sync toggle turns off when currently on', async () => {
+    const api = makeApi({
+      gsdGetSyncStatus: vi.fn(() => Promise.resolve(true)),
+      gsdSyncMemory: vi.fn(() => Promise.resolve(0)),
+      gsdStartAutomaticSync: vi.fn(() => Promise.resolve()),
+      gsdStopAutomaticSync: vi.fn(() => Promise.resolve()),
+    });
+    render(<GovernanceTab api={api} projectPath="/repo" />);
+    await waitFor(() => expect(api.gsdGetSyncStatus).toHaveBeenCalled());
+
+    const toggleBtn = screen.getAllByRole('button').find(b =>
+      b.className.includes('inline-flex') && b.className.includes('rounded-full')
+    )!;
+    fireEvent.click(toggleBtn);
+    await waitFor(() => expect(api.gsdStopAutomaticSync).toHaveBeenCalled());
+  });
+});
+
+describe('PromotionDialog', () => {
+  const baseSeed: GsdSeed = {
+    id: 'seed-1',
+    slug: 'seed-one',
+    title: 'Test Seed',
+    why: 'For testing',
+    whenToSurface: 'Now',
+    status: 'planted',
+  } as GsdSeed;
+
+  it('renders with seed title pre-filled and promotes to draft', () => {
+    const onClose = vi.fn();
+    const onPromote = vi.fn(() => Promise.resolve());
+    render(
+      <PromotionDialog
+        seed={baseSeed}
+        onClose={onClose}
+        onPromote={onPromote}
+        isPromoting={false}
+      />
+    );
+
+    expect(screen.getByText('Promote Seed to Work')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Test Seed')).toBeInTheDocument();
+    expect(screen.getByText('Create KSpec Draft')).toBeInTheDocument();
+    expect(screen.getByText('This will create a new KSpec module draft in your shadow branch for detailed specification.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Create KSpec Draft'));
+    expect(onPromote).toHaveBeenCalledWith('draft', 'Test Seed', 'For testing');
+  });
+
+  it('switches to task promotion type and shows correct context note', () => {
+    const onPromote = vi.fn(() => Promise.resolve());
+    render(
+      <PromotionDialog
+        seed={baseSeed}
+        onClose={vi.fn()}
+        onPromote={onPromote}
+        isPromoting={false}
+      />
+    );
+
+    fireEvent.click(screen.getByText('Beads Task'));
+    expect(screen.getByText('Create Beads Task')).toBeInTheDocument();
+    expect(screen.getByText('This will create a new high-priority task in your Beads issue tracker for immediate action.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Create Beads Task'));
+    expect(onPromote).toHaveBeenCalledWith('task', 'Test Seed', 'For testing');
+  });
+
+  it('disables promote button when title is empty', () => {
+    render(
+      <PromotionDialog
+        seed={{ ...baseSeed, title: '' }}
+        onClose={vi.fn()}
+        onPromote={vi.fn()}
+        isPromoting={false}
+      />
+    );
+
+    const promoteBtn = screen.getByText('Create KSpec Draft').closest('button')!;
+    expect(promoteBtn).toBeDisabled();
+  });
+
+  it('disables promote button and shows spinner when isPromoting', () => {
+    render(
+      <PromotionDialog
+        seed={baseSeed}
+        onClose={vi.fn()}
+        onPromote={vi.fn()}
+        isPromoting={true}
+      />
+    );
+
+    // The promote button should be disabled
+    const buttons = screen.getAllByRole('button');
+    const disabledBtns = buttons.filter(b => b.hasAttribute('disabled'));
+    expect(disabledBtns.length).toBeGreaterThan(0);
+  });
+
+  it('calls onClose when Cancel clicked', () => {
+    const onClose = vi.fn();
+    render(
+      <PromotionDialog
+        seed={baseSeed}
+        onClose={onClose}
+        onPromote={vi.fn()}
+        isPromoting={false}
+      />
+    );
+
+    fireEvent.click(screen.getByText('Cancel'));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls onClose when X button clicked', () => {
+    const onClose = vi.fn();
+    render(
+      <PromotionDialog
+        seed={baseSeed}
+        onClose={onClose}
+        onPromote={vi.fn()}
+        isPromoting={false}
+      />
+    );
+
+    // X button is the first button in the header
+    const xBtn = screen.getAllByRole('button')[0];
+    fireEvent.click(xBtn);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('allows editing title and why fields before promoting', () => {
+    const onPromote = vi.fn(() => Promise.resolve());
+    render(
+      <PromotionDialog
+        seed={baseSeed}
+        onClose={vi.fn()}
+        onPromote={onPromote}
+        isPromoting={false}
+      />
+    );
+
+    fireEvent.change(screen.getByDisplayValue('Test Seed'), { target: { value: 'Updated Title' } });
+    fireEvent.change(screen.getByDisplayValue('For testing'), { target: { value: 'Updated reason' } });
+    fireEvent.click(screen.getByText('Create KSpec Draft'));
+    expect(onPromote).toHaveBeenCalledWith('draft', 'Updated Title', 'Updated reason');
   });
 });
