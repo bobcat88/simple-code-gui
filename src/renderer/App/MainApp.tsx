@@ -1,57 +1,54 @@
-import React, { useEffect, useState, useCallback, useRef, RefObject } from 'react'
-import { TitleBar } from '../components/TitleBar'
-import { Sidebar } from '../components/Sidebar'
-import { TerminalTabs } from '../components/TerminalTabs'
-import { Terminal } from '../components/terminal/Terminal'
-import { TiledTerminalView } from '../components/tiled/index.js'
-import { SettingsModal } from '../components/SettingsModal'
-import { ProjectInitializationWizard } from '../components/ProjectInitializationWizard'
-import { ErrorBoundary } from '../components/ErrorBoundary'
-import { FileBrowser } from '../components/mobile/FileBrowser'
-import type { HostConfig } from '../hooks/useHostConnection'
-import { useWorkspaceStore } from '../stores/workspace'
-import { useVoice } from '../contexts/VoiceContext'
-import { useModals } from '../contexts/ModalContext'
+import type React from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { Api, ExtendedApi } from '../api';
+import { NeuralHUD } from '../components/gsd/NeuralHUD';
+import { IconBar } from '../components/IconBar';
+import { CognitiveSearchModal } from '../components/intelligence/CognitiveSearchModal';
+import { ConsensusOverlay } from '../components/orchestration/ConsensusOverlay';
+import { ProjectInitializationWizard } from '../components/ProjectInitializationWizard';
+import { SettingsModal } from '../components/SettingsModal';
+import { Spotlight } from '../components/Spotlight';
+import { TitleBar } from '../components/TitleBar';
+import { TranscriptionOverlay } from '../components/voice/TranscriptionOverlay';
+import { DialogProvider } from '../contexts/DialogContext';
+import { useModals } from '../contexts/ModalContext';
+import { useVoice } from '../contexts/VoiceContext';
 import {
+  useApiListeners,
   useInstallation,
+  useJobPolling,
+  useProjectHandlers,
+  useSessionPolling,
   useUpdater,
   useViewState,
   useWorkspaceLoader,
-  useSessionPolling,
-  useApiListeners,
-  useProjectHandlers,
-  useJobPolling
-} from '../hooks'
-import type { Api } from '../api'
-import { InstallationPrompt } from './InstallationPrompt'
-import { MobileConnectModal } from './MobileConnectModal'
-import { IconBar } from '../components/IconBar'
-import { Header } from '../components/Header'
-import {  HelpCircle,
-  LayoutGrid,
-  MessageSquare
-} from 'lucide-react'
-import { cn } from '../lib/utils'
-import { Spotlight } from '../components/Spotlight'
-import { ProjectQuickSwitcher } from '../components/ProjectQuickSwitcher'
-import { IntelligenceSidebar } from '../components/intelligence/IntelligenceSidebar'
-import { useProjectIntelligence } from '../hooks/useProjectIntelligence'
-import { CognitiveSearchModal } from '../components/intelligence/CognitiveSearchModal'
-import { Activity } from 'lucide-react'
-import { TranscriptionOverlay } from '../components/voice/TranscriptionOverlay'
-import { NeuralHUD } from '../components/gsd/NeuralHUD'
-import { ConsensusOverlay } from '../components/orchestration/ConsensusOverlay'
-import { DialogProvider } from '../contexts/DialogContext'
-import { OrchestrationPanel } from '../components/orchestration/OrchestrationPanel'
+} from '../hooks';
+import { useProjectIntelligence } from '../hooks/useProjectIntelligence';
+import { useWorkspaceStore } from '../stores/workspace';
+import {
+  IntelligenceLayout,
+  MobileLayout,
+  SidebarLayout,
+  TerminalLayout,
+} from './MainAppLayouts';
 
 export interface MainAppProps {
-  api: Api
-  isElectron: boolean
-  isTauri?: boolean
-  onDisconnect?: () => void
+  api: Api;
+  isElectron: boolean;
+  isTauri?: boolean;
+  onDisconnect?: () => void;
 }
 
-export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps): React.ReactElement {
+type ProjectAwareApi = Api & {
+  setCurrentProject?: (projectPath: string | null) => Promise<void>;
+};
+
+export function MainApp({
+  api,
+  isElectron,
+  isTauri,
+  onDisconnect,
+}: MainAppProps): React.ReactElement {
   const {
     projects,
     openTabs,
@@ -64,14 +61,20 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
     removeTab,
     updateTab,
     setActiveTab,
-    touchProject
-  } = useWorkspaceStore()
+  } = useWorkspaceStore();
 
-  const { voiceOutputEnabled, setProjectVoice } = useVoice()
-  const voiceOutputEnabledRef = useRef(voiceOutputEnabled)
+  const { voiceOutputEnabled, setProjectVoice } = useVoice();
+  const voiceOutputEnabledRef = useRef(voiceOutputEnabled);
 
   // Modal state from context
-  const { settingsOpen, projectWizardOpen, openSettings, closeSettings, openProjectWizard, closeProjectWizard } = useModals()
+  const {
+    settingsOpen,
+    projectWizardOpen,
+    openSettings,
+    closeSettings,
+    openProjectWizard,
+    closeProjectWizard,
+  } = useModals();
 
   // Installation state from hook
   const {
@@ -84,21 +87,35 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
     checkInstallation,
     handleInstallNode,
     handleInstallGit,
-    handleInstallClaude
-  } = useInstallation(api)
+    handleInstallClaude,
+  } = useInstallation(api);
 
-  const activeTab = openTabs.find(t => t.id === activeTabId) || null
+  const activeTab = openTabs.find((t) => t.id === activeTabId) || null;
+  const extendedApi = api as ExtendedApi;
 
   const handleNewSessionFromHeader = () => {
     if (activeTab) {
-      handleOpenSession(activeTab.projectPath, undefined, undefined, undefined, true)
+      handleOpenSession(
+        activeTab.projectPath,
+        undefined,
+        undefined,
+        undefined,
+        true
+      );
     } else if (projects.length > 0) {
-      handleOpenSession(projects[0].path, undefined, undefined, undefined, true)
+      handleOpenSession(
+        projects[0].path,
+        undefined,
+        undefined,
+        undefined,
+        true
+      );
     }
-  }
+  };
 
   // Updater state from hook
-  const { appVersion, updateStatus, downloadUpdate, installUpdate } = useUpdater()
+  const { appVersion, updateStatus, downloadUpdate, installUpdate } =
+    useUpdater();
 
   // View state from hook
   const {
@@ -116,44 +133,36 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
     intelligenceCollapsed,
     setIntelligenceWidth,
     setIntelligenceCollapsed,
-    toggleViewMode
-  } = useViewState()
+    toggleViewMode,
+  } = useViewState();
 
-  const [cognitiveSearchOpen, setCognitiveSearchOpen] = useState(false)
+  const [cognitiveSearchOpen, setCognitiveSearchOpen] = useState(false);
 
-  const { 
-    intelligence, 
-    capabilityScan, 
+  const {
+    intelligence,
+    capabilityScan,
     vectorStatus,
-    loading: intelligenceLoading, 
+    loading: intelligenceLoading,
     refresh: refreshIntelligence,
     triggerDeepScan,
     syncGlobalKnowledge,
-    reindexProject
-  } = useProjectIntelligence(
-    api as any,
-    activeTab?.projectPath || null
-  )
+    reindexProject,
+  } = useProjectIntelligence(extendedApi, activeTab?.projectPath || null);
 
   // Workspace loader hook
-  const {
-    loading,
-    currentTheme,
-    settings,
-    setCurrentTheme,
-    setSettings
-  } = useWorkspaceLoader({
-    api,
-    checkInstallation,
-    setViewMode,
-    setTileTree
-  })
+  const { loading, currentTheme, settings, setCurrentTheme, setSettings } =
+    useWorkspaceLoader({
+      api,
+      checkInstallation,
+      setViewMode,
+      setTileTree,
+    });
 
   // Session polling hook
-  useSessionPolling({ api, openTabs, updateTab })
-  
+  useSessionPolling({ api, openTabs, updateTab });
+
   // Job polling hook
-  useJobPolling(api)
+  useJobPolling(api);
 
   // API listeners hook
   useApiListeners({
@@ -162,21 +171,17 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
     settings,
     addTab,
     updateTab,
-    setActiveTab
-  })
+    setActiveTab,
+  });
 
   // Project handlers hook
   const {
     handleAddProject,
     handleAddProjectsFromParent,
     handleOpenSession,
-    handleOpenSessionAtPosition,
-    handleAddTabToTile,
     handleCloseTab,
     handleCloseProjectTabs,
     handleProjectCreated,
-    handleUndoCloseTab,
-    canUndoCloseTab
   } = useProjectHandlers({
     api,
     projects,
@@ -187,61 +192,75 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
     removeTab,
     addTab,
     setActiveTab,
-    setTileTree
-  })
+    setTileTree,
+  });
 
-  const handleRenameTab = useCallback((id: string, title: string) => {
-    updateTab(id, { title, customTitle: true })
-  }, [updateTab])
+  const handleRenameTab = useCallback(
+    (id: string, title: string) => {
+      updateTab(id, { title, customTitle: true });
+    },
+    [updateTab]
+  );
 
-  const updateTabTitle = useCallback((id: string, title: string) => {
-    updateTab(id, { title })
-  }, [updateTab])
+  const updateTabTitle = useCallback(
+    (id: string, title: string) => {
+      updateTab(id, { title });
+    },
+    [updateTab]
+  );
 
-  const updateTabPath = useCallback((id: string, path: string) => {
-    updateTab(id, { projectPath: path })
-  }, [updateTab])
+  const updateTabPath = useCallback(
+    (id: string, path: string) => {
+      updateTab(id, { projectPath: path });
+    },
+    [updateTab]
+  );
 
-  const updateTabPid = useCallback((id: string, ptyId: string) => {
-    updateTab(id, { ptyId })
-  }, [updateTab])
+  const updateTabPid = useCallback(
+    (id: string, ptyId: string) => {
+      updateTab(id, { ptyId });
+    },
+    [updateTab]
+  );
 
-  const handleTerminalExit = useCallback((id: string) => {
-    removeTab(id)
-  }, [removeTab])
+  const handleTerminalExit = useCallback(
+    (id: string) => {
+      removeTab(id);
+    },
+    [removeTab]
+  );
 
   // App-specific state
-  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false)
-  const [mobileConnectOpen, setMobileConnectOpen] = useState(false)
-  const [showFileBrowser, setShowFileBrowser] = useState(false)
-  const [orchestrationOpen, setOrchestrationOpen] = useState(false)
-  const [fileBrowserPath, setFileBrowserPath] = useState<string | null>(null)
-  const [activeSection, setActiveSection] = useState('terminal')
-  const [settingsCategory, setSettingsCategory] = useState('general')
-  const isMobile = !isElectron
-  const hadProjectsRef = useRef(false)
-  const terminalContainerRef = useRef<HTMLDivElement>(null)
-  const [spotlightOpen, setSpotlightOpen] = useState(false)
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [, setShowFileBrowser] = useState(false);
+  const [orchestrationOpen, setOrchestrationOpen] = useState(false);
+  const [, setFileBrowserPath] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState('terminal');
+  const [settingsCategory] = useState('general');
+  const isMobile = !isElectron;
+  const hadProjectsRef = useRef(false);
+  const terminalContainerRef = useRef<HTMLDivElement>(null);
+  const [spotlightOpen, setSpotlightOpen] = useState(false);
 
   // Spotlight Hotkey (Cmd+K)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        setSpotlightOpen(prev => !prev)
+        e.preventDefault();
+        setSpotlightOpen((prev) => !prev);
       }
       if (e.key === 'Escape' && spotlightOpen) {
-        setSpotlightOpen(false)
+        setSpotlightOpen(false);
       }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [spotlightOpen])
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [spotlightOpen]);
 
   // Load MCP config on mount
   useEffect(() => {
     if (isTauri && api.mcpLoadConfig) {
-      api.mcpLoadConfig().catch(err => {
+      api.mcpLoadConfig().catch((err) => {
         console.error('Failed to load MCP config:', err);
       });
     }
@@ -249,85 +268,104 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
 
   // Keep ref in sync for callbacks
   useEffect(() => {
-    voiceOutputEnabledRef.current = voiceOutputEnabled
-  }, [voiceOutputEnabled])
+    voiceOutputEnabledRef.current = voiceOutputEnabled;
+  }, [voiceOutputEnabled]);
 
   // Apply per-project voice settings when active tab changes
   useEffect(() => {
     if (!activeTabId) {
-      setProjectVoice(null)
-      return
+      setProjectVoice(null);
+      return;
     }
-    const activeTab = openTabs.find(t => t.id === activeTabId)
+    const activeTab = openTabs.find((t) => t.id === activeTabId);
     if (!activeTab) {
-      setProjectVoice(null)
-      return
+      setProjectVoice(null);
+      return;
     }
-    const project = projects.find(p => p.path === activeTab.projectPath)
+    const project = projects.find((p) => p.path === activeTab.projectPath);
     if (project?.ttsVoice && project?.ttsEngine) {
-      setProjectVoice({ ttsVoice: project.ttsVoice, ttsEngine: project.ttsEngine })
+      setProjectVoice({
+        ttsVoice: project.ttsVoice,
+        ttsEngine: project.ttsEngine,
+      });
     } else {
-      setProjectVoice(null)
+      setProjectVoice(null);
     }
-  }, [activeTabId, openTabs, projects, setProjectVoice])
+  }, [activeTabId, openTabs, projects, setProjectVoice]);
 
   // Sync current project with backend for background orchestration
   useEffect(() => {
-    if (isTauri && (api as any).setCurrentProject) {
-      (api as any).setCurrentProject(activeTab?.projectPath || null).catch((err: unknown) => {
-        console.error('Failed to set current project on backend:', err);
-      });
+    const projectAwareApi = api as ProjectAwareApi;
+    if (isTauri && projectAwareApi.setCurrentProject) {
+      projectAwareApi
+        .setCurrentProject(activeTab?.projectPath || null)
+        .catch((err: unknown) => {
+          console.error('Failed to set current project on backend:', err);
+        });
     }
   }, [activeTab?.projectPath, api, isTauri]);
 
   // Save workspace when it changes
   useEffect(() => {
     if (!loading) {
-      const hadProjects = sessionStorage.getItem('hadProjects') === 'true' || hadProjectsRef.current
+      const hadProjects =
+        sessionStorage.getItem('hadProjects') === 'true' ||
+        hadProjectsRef.current;
 
       if (projects.length === 0 && hadProjects) {
-        console.warn('Skipping save: projects empty but previously had projects (likely hot reload)')
-        return
+        console.warn(
+          'Skipping save: projects empty but previously had projects (likely hot reload)'
+        );
+        return;
       }
 
       if (projects.length > 0) {
-        hadProjectsRef.current = true
-        sessionStorage.setItem('hadProjects', 'true')
+        hadProjectsRef.current = true;
+        sessionStorage.setItem('hadProjects', 'true');
       }
 
       api.saveWorkspace({
         projects,
-        openTabs: openTabs.map(t => ({
+        openTabs: openTabs.map((t) => ({
           id: t.id,
           projectPath: t.projectPath,
           sessionId: t.sessionId,
           title: t.title,
           customTitle: t.customTitle || undefined,
           ptyId: t.ptyId,
-          backend: t.backend
+          backend: t.backend,
         })),
         activeTabId,
         viewMode,
         tileTree: tileTree || undefined,
-        categories
-      })
+        categories,
+      });
     }
-  }, [api, projects, openTabs, activeTabId, loading, viewMode, tileTree, categories])
+  }, [
+    api,
+    projects,
+    openTabs,
+    activeTabId,
+    loading,
+    viewMode,
+    tileTree,
+    categories,
+  ]);
 
   // Mobile drawer handlers
   const openMobileDrawer = useCallback(() => {
-    setMobileDrawerOpen(true)
-  }, [])
+    setMobileDrawerOpen(true);
+  }, []);
 
   const closeMobileDrawer = useCallback(() => {
-    setMobileDrawerOpen(false)
-  }, [])
+    setMobileDrawerOpen(false);
+  }, []);
 
   // Open file browser (mobile only)
   const handleOpenFileBrowser = useCallback((projectPath?: string) => {
-    setFileBrowserPath(projectPath || null)
-    setShowFileBrowser(true)
-  }, [])
+    setFileBrowserPath(projectPath || null);
+    setShowFileBrowser(true);
+  }, []);
 
   if (loading) {
     return (
@@ -336,257 +374,178 @@ export function MainApp({ api, isElectron, isTauri, onDisconnect }: MainAppProps
           <p>Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <DialogProvider>
-    <div className="flex flex-row h-screen w-screen bg-transparent">
-      <div className="flex-1 flex flex-row bg-background/60 backdrop-blur-2xl text-foreground overflow-hidden shadow-2xl relative app-container">
-        {!isMobile && (
-          <div className="animate-entry delay-100 h-full flex flex-row">
-            <IconBar 
-              activeSection={activeSection} 
-              onSectionChange={setActiveSection}
-              activeTabId={activeTabId}
-              focusedTabId={lastFocusedTabId}
-              onOpenSettings={openSettings}
-            />
-          </div>
-        )}
-      
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden animate-entry delay-200">
-        <TitleBar api={api} />
-        
-        <div className="flex-1 flex flex-row relative">
-          <div className="animate-entry delay-300 h-full flex">
-            <Sidebar
-              projects={projects}
-              openTabs={openTabs}
-              activeTabId={activeTabId}
-              lastFocusedTabId={lastFocusedTabId}
-              onAddProject={handleAddProject}
-              onAddProjectsFromParent={handleAddProjectsFromParent}
-              onRemoveProject={removeProject}
-              onOpenSession={handleOpenSession}
-              onSwitchToTab={setActiveTab}
-              onOpenSettings={openSettings}
-              onOpenProjectWizard={openProjectWizard}
-              onUpdateProject={updateProject}
-              onCloseProjectTabs={handleCloseProjectTabs}
-              width={sidebarWidth}
-              collapsed={sidebarCollapsed}
-              onWidthChange={setSidebarWidth}
-              onCollapsedChange={setSidebarCollapsed}
-              isMobileOpen={mobileDrawerOpen}
-              onMobileClose={closeMobileDrawer}
-              onDisconnect={onDisconnect}
-              activeSection={activeSection}
-              api={api}
-            />
-          </div>
-
-          {/* Mobile: render each terminal as its own slide */}
-          {isMobile && openTabs.map((tab) => (
-            <div key={tab.id} className="mobile-terminal-slide">
-              <div className="mobile-slide-header">
-                <span className="mobile-slide-title">{tab.title}</span>
-                <button className="mobile-slide-close" onClick={() => handleCloseTab(tab.id)}>×</button>
-              </div>
-              <div className="mobile-slide-content">
-                <ErrorBoundary componentName={`Terminal (${tab.title || tab.id})`}>
-                  <Terminal
-                    ptyId={tab.id}
-                    isActive={true}
-                    theme={currentTheme}
-                    onFocus={() => setLastFocusedTabId(tab.id)}
-                    projectPath={tab.projectPath}
-                    backend={tab.backend}
-                    api={api}
-                    isMobile={true}
-                    onOpenFileBrowser={() => handleOpenFileBrowser(tab.projectPath || undefined)}
-                  />
-                </ErrorBoundary>
-              </div>
-            </div>
-          ))}
-
-          {/* Desktop: wrap terminals in main-content */}
+      <div className="flex flex-row h-screen w-screen bg-transparent">
+        <div className="flex-1 flex flex-row bg-background/60 backdrop-blur-2xl text-foreground overflow-hidden shadow-2xl relative app-container">
           {!isMobile && (
-            <>
-              <div className="flex-1 flex flex-col min-w-0 bg-background/50 overflow-hidden animate-entry delay-400">
-                {claudeInstalled === false || gitBashInstalled === false ? (
-                  <InstallationPrompt
-                    claudeInstalled={claudeInstalled}
-                    npmInstalled={npmInstalled}
-                    gitBashInstalled={gitBashInstalled}
-                    installing={installing}
-                    installError={installError}
-                    installMessage={installMessage}
-                    onInstallNode={handleInstallNode}
-                    onInstallGit={handleInstallGit}
-                    onInstallClaude={handleInstallClaude}
-                  />
-                ) : openTabs.length > 0 ? (
-                  <>
-                    <Header
-                      activeTab={activeTab}
-                      openTabs={openTabs}
-                      viewMode={viewMode}
-                      onToggleViewMode={toggleViewMode}
-                      onNewSession={handleNewSessionFromHeader}
-                      onSwitchToTab={setActiveTab}
-                      onCloseTab={handleCloseTab}
-                      onToggleIntelligence={() => setIntelligenceCollapsed(!intelligenceCollapsed)}
-                      intelligenceCollapsed={intelligenceCollapsed}
-                      onRenameTab={handleRenameTab}
-                      swipeContainerRef={terminalContainerRef as RefObject<HTMLElement>}
-                      onOpenSidebar={openMobileDrawer}
-                      api={api}
-                    />
-                    <button
-                      className={`orchestration-toggle-btn ${orchestrationOpen ? 'active' : ''}`}
-                      onClick={() => setOrchestrationOpen(!orchestrationOpen)}
-                      title="Toggle Orchestration Hub"
-                    >
-                      🤖
-                    </button>
-                    {viewMode === 'tabs' ? (
-                      <div className="flex-1 relative overflow-hidden" ref={terminalContainerRef}>
-                        {openTabs.map((tab) => (
-                          <div
-                            key={tab.id}
-                            className={cn(
-                              "absolute inset-0 transition-opacity duration-200 pointer-events-none opacity-0",
-                              tab.id === activeTabId && "opacity-100 pointer-events-auto"
-                            )}
-                          >
-                            <ErrorBoundary componentName={`Terminal (${tab.title || tab.id})`}>
-                              <Terminal
-                                ptyId={tab.id}
-                                onTerminalTitle={(title: string) => updateTabTitle(tab.id, title)}
-                                onTerminalPath={(path: string) => updateTabPath(tab.id, path)}
-                                onProcessId={(pid: string) => updateTabPid(tab.id, pid)}
-                                onSessionEnded={() => handleTerminalExit(tab.id)}
-                                isActive={tab.id === activeTabId}
-                                theme={currentTheme}
-                                terminalSettings={settings?.terminal}
-                                api={api}
-                              />
-                            </ErrorBoundary>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex-1 overflow-hidden">
-                        <TiledTerminalView
-                          tabs={openTabs}
-                          projects={projects}
-                          theme={currentTheme}
-                          activeTabId={activeTabId}
-                          onSetActiveTab={setActiveTab}
-                          onCloseTab={handleCloseTab}
-                          onUpdateTabTitle={updateTabTitle}
-                          onUpdateTabPath={updateTabPath}
-                          onUpdateTabPid={updateTabPid}
-                          onTerminalExit={handleTerminalExit}
-                          onRenameTab={updateTabTitle}
-                          onFocusTab={setActiveTab}
-                          tileTree={tileTree}
-                          onTreeChange={setTileTree}
-                          terminalSettings={settings?.terminal}
-                          api={api}
-                        />
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-700">
-                    <div className="w-20 h-20 mb-6 rounded-codex bg-indigo-500/10 flex items-center justify-center text-indigo-400 shadow-inner">
-                      <MessageSquare size={40} strokeWidth={1.5} />
-                    </div>
-                    <h2 className="text-2xl font-bold mb-2 text-white/90">No Active Threads</h2>
-                    <p className="text-muted-foreground max-w-sm">
-                      Add a project from the workspace, then click a session to open a thread.
-                    </p>
-                  </div>
-                )}
-              </div>
-              {/* Right Sidebar: Intelligence */}
-              {!intelligenceCollapsed && (
-                <IntelligenceSidebar
-                  intelligence={intelligence}
-                  capabilityScan={capabilityScan}
-                  vectorStatus={vectorStatus}
-                  api={api as any}
-                  loading={intelligenceLoading}
-                  onClose={() => setIntelligenceCollapsed(true)}
-                  onRefresh={refreshIntelligence}
-                  onDeepScan={triggerDeepScan}
-                  onReindex={reindexProject}
-                  onSyncMemory={syncGlobalKnowledge}
-                  onOpenSearch={() => setCognitiveSearchOpen(true)}
-                  onWidthChange={setIntelligenceWidth}
-                  width={intelligenceWidth}
-                  activeTab={activeTab}
+            <div className="animate-entry delay-100 h-full flex flex-row">
+              <IconBar
+                activeSection={activeSection}
+                onSectionChange={setActiveSection}
+                activeTabId={activeTabId}
+                focusedTabId={lastFocusedTabId}
+                onOpenSettings={openSettings}
+              />
+            </div>
+          )}
+
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden animate-entry delay-200">
+            <TitleBar api={api} />
+
+            <div className="flex-1 flex flex-row relative">
+              <SidebarLayout
+                activeSection={activeSection}
+                activeTabId={activeTabId}
+                api={api}
+                collapsed={sidebarCollapsed}
+                isMobileOpen={mobileDrawerOpen}
+                lastFocusedTabId={lastFocusedTabId}
+                onAddProject={handleAddProject}
+                onAddProjectsFromParent={handleAddProjectsFromParent}
+                onCloseProjectTabs={handleCloseProjectTabs}
+                onCollapsedChange={setSidebarCollapsed}
+                onDisconnect={onDisconnect}
+                onMobileClose={closeMobileDrawer}
+                onOpenProjectWizard={openProjectWizard}
+                onOpenSession={handleOpenSession}
+                onOpenSettings={openSettings}
+                onRemoveProject={removeProject}
+                onSwitchToTab={setActiveTab}
+                onUpdateProject={updateProject}
+                onWidthChange={setSidebarWidth}
+                openTabs={openTabs}
+                projects={projects}
+                width={sidebarWidth}
+              />
+
+              {isMobile && (
+                <MobileLayout
+                  api={api}
+                  currentTheme={currentTheme}
+                  onCloseTab={handleCloseTab}
+                  onFocusTab={setLastFocusedTabId}
+                  onOpenFileBrowser={handleOpenFileBrowser}
+                  openTabs={openTabs}
                 />
               )}
-              {orchestrationOpen && (
-                <div className="orchestration-sidebar">
-                  <OrchestrationPanel />
-                </div>
+
+              {!isMobile && (
+                <>
+                  <TerminalLayout
+                    activeTab={activeTab}
+                    activeTabId={activeTabId}
+                    api={api}
+                    claudeInstalled={claudeInstalled}
+                    currentTheme={currentTheme}
+                    gitBashInstalled={gitBashInstalled}
+                    installError={installError}
+                    installMessage={installMessage}
+                    installing={installing}
+                    intelligenceCollapsed={intelligenceCollapsed}
+                    npmInstalled={npmInstalled}
+                    onCloseTab={handleCloseTab}
+                    onFocusTab={setActiveTab}
+                    onInstallClaude={handleInstallClaude}
+                    onInstallGit={handleInstallGit}
+                    onInstallNode={handleInstallNode}
+                    onNewSession={handleNewSessionFromHeader}
+                    onOpenSidebar={openMobileDrawer}
+                    onRenameTab={handleRenameTab}
+                    onSetActiveTab={setActiveTab}
+                    onTerminalExit={handleTerminalExit}
+                    onToggleIntelligence={() =>
+                      setIntelligenceCollapsed(!intelligenceCollapsed)
+                    }
+                    onToggleOrchestration={() =>
+                      setOrchestrationOpen(!orchestrationOpen)
+                    }
+                    onToggleViewMode={toggleViewMode}
+                    onTreeChange={setTileTree}
+                    onUpdateTabPath={updateTabPath}
+                    onUpdateTabPid={updateTabPid}
+                    onUpdateTabTitle={updateTabTitle}
+                    openTabs={openTabs}
+                    orchestrationOpen={orchestrationOpen}
+                    projects={projects}
+                    settingsTerminal={settings?.terminal}
+                    swipeContainerRef={terminalContainerRef}
+                    terminalContainerRef={terminalContainerRef}
+                    tileTree={tileTree}
+                    viewMode={viewMode}
+                  />
+                  <IntelligenceLayout
+                    activeTab={activeTab}
+                    api={extendedApi}
+                    capabilityScan={capabilityScan}
+                    collapsed={intelligenceCollapsed}
+                    intelligence={intelligence}
+                    loading={intelligenceLoading}
+                    onClose={() => setIntelligenceCollapsed(true)}
+                    onDeepScan={triggerDeepScan}
+                    onOpenSearch={() => setCognitiveSearchOpen(true)}
+                    onRefresh={refreshIntelligence}
+                    onReindex={reindexProject}
+                    onSyncMemory={syncGlobalKnowledge}
+                    onWidthChange={setIntelligenceWidth}
+                    orchestrationOpen={orchestrationOpen}
+                    vectorStatus={vectorStatus}
+                    width={intelligenceWidth}
+                  />
+                </>
               )}
-            </>
-          )}
+            </div>
+          </div>
+
+          <SettingsModal
+            isOpen={settingsOpen}
+            onClose={closeSettings}
+            onThemeChange={setCurrentTheme}
+            onSaved={(newSettings) => setSettings(newSettings)}
+            appVersion={appVersion}
+            updateStatus={updateStatus}
+            onDownloadUpdate={downloadUpdate}
+            onInstallUpdate={installUpdate}
+            projectPath={activeTab?.projectPath || null}
+            focusedTabPtyId={activeTabId}
+            onOpenSession={handleOpenSession}
+            initialCategory={settingsCategory}
+            api={api}
+          />
+
+          <ProjectInitializationWizard
+            isOpen={projectWizardOpen}
+            onClose={closeProjectWizard}
+            onProjectCreated={handleProjectCreated}
+            api={api}
+          />
+
+          <Spotlight
+            isOpen={spotlightOpen}
+            onClose={() => setSpotlightOpen(false)}
+            projects={projects}
+            openTabs={openTabs}
+            onOpenSession={handleOpenSession}
+            onOpenSettings={openSettings}
+            onOpenProjectWizard={openProjectWizard}
+            onSwitchToTab={setActiveTab}
+            api={extendedApi}
+          />
+          <TranscriptionOverlay />
+          <NeuralHUD />
+          <ConsensusOverlay />
+
+          <CognitiveSearchModal
+            isOpen={cognitiveSearchOpen}
+            onClose={() => setCognitiveSearchOpen(false)}
+            api={api}
+            projectPath={activeTab?.projectPath || null}
+          />
         </div>
       </div>
-
-      <SettingsModal
-        isOpen={settingsOpen}
-        onClose={closeSettings}
-        onThemeChange={setCurrentTheme}
-        onSaved={(newSettings) => setSettings(newSettings)}
-        appVersion={appVersion}
-        updateStatus={updateStatus}
-        onDownloadUpdate={downloadUpdate}
-        onInstallUpdate={installUpdate}
-        projectPath={activeTab?.projectPath || null}
-        focusedTabPtyId={activeTabId}
-        onOpenSession={handleOpenSession}
-        initialCategory={settingsCategory}
-        api={api}
-      />
-
-        <ProjectInitializationWizard
-          isOpen={projectWizardOpen}
-          onClose={closeProjectWizard}
-          onProjectCreated={handleProjectCreated}
-          api={api as any}
-        />
-
-        <Spotlight 
-          isOpen={spotlightOpen}
-          onClose={() => setSpotlightOpen(false)}
-          projects={projects}
-          openTabs={openTabs}
-          onOpenSession={handleOpenSession}
-          onOpenSettings={openSettings}
-          onOpenProjectWizard={openProjectWizard}
-          onSwitchToTab={setActiveTab}
-          api={api as any}
-        />
-        <TranscriptionOverlay />
-        <NeuralHUD />
-        <ConsensusOverlay />
-
-        <CognitiveSearchModal
-          isOpen={cognitiveSearchOpen}
-          onClose={() => setCognitiveSearchOpen(false)}
-          api={api}
-          projectPath={activeTab?.projectPath || null}
-        />
-      </div>
-    </div>
     </DialogProvider>
-  )
+  );
 }
