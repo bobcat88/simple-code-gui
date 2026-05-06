@@ -1,121 +1,90 @@
-<p align="center">
-  <img src="assets/header-gui-v3.png" alt="simple-code-gui" width="600">
-</p>
+<!-- generated-by: gsd-doc-writer -->
+# simple-code-gui
 
-<p align="center">
-  <a href="https://donutsdelivery.online/#simplecodegui"><img src="https://img.shields.io/badge/Website-donutsdelivery.online-blue?logo=googlechrome&logoColor=white" alt="Website"></a>
-  <a href="https://discord.gg/ZhvPhXrdZ4"><img src="https://img.shields.io/badge/Discord-Join%20Server-5865F2?logo=discord&logoColor=white" alt="Discord"></a>
-  <img src="https://img.shields.io/github/v/release/DonutsDelivery/simple-code-gui" alt="GitHub Release">
-  <img src="https://img.shields.io/github/downloads/DonutsDelivery/simple-code-gui/total" alt="Downloads">
-  <img src="https://img.shields.io/badge/Electron-33-47848F?logo=electron" alt="Electron">
-  <img src="https://img.shields.io/aur/version/simple-code-gui" alt="AUR">
-</p>
+Desktop GUI for running multiple AI coding assistant sessions (Claude Code, Gemini CLI, Codex, OpenCode, Aider) across different projects in a single window.
 
-A desktop GUI for managing multiple AI coding assistant sessions across different projects in a single window. Supports **Claude Code**, **Gemini CLI**, **Codex**, and **OpenCode**.
+![Version](https://img.shields.io/badge/version-1.3.58-blue) ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-lightgrey)
 
-Stop juggling terminal tabs. Simple Code GUI lets you run AI coding assistants on multiple projects simultaneously, instantly resume past conversations, and switch between sessions with a click. Features voice input/output, image pasting, task tracking with Beads integration, and 9 color themes.
+## What it does
 
-![Main Interface - Tiled View](https://donutsdelivery.online/assets/mockups/thumbs/simplecodegui-mockup-1.svg)
+simple-code-gui wraps AI CLI tools in a native desktop application built with Tauri and React. Each AI session runs in an embedded PTY terminal tab. A Rust backend manages session lifecycle, token tracking, MCP bridge connections, workspace state, voice I/O, and an optional AI routing layer with semantic caching.
 
-## Download
+Key capabilities:
 
-| Platform | Download |
-|----------|----------|
-| Windows | [Installer (.exe)](https://github.com/DonutsDelivery/simple-code-gui/releases/download/v1.3.50/Simple-Code-GUI-Setup-1.3.50.exe) \| [Portable (.exe)](https://github.com/DonutsDelivery/simple-code-gui/releases/download/v1.3.50/Simple-Code-GUI-Portable-1.3.50.exe) |
-| macOS (untested) | [Apple Silicon (.dmg)](https://github.com/DonutsDelivery/simple-code-gui/releases/download/v1.3.50/Simple-Code-GUI-1.3.50-arm64.dmg) |
-| Linux | [AppImage](https://github.com/DonutsDelivery/simple-code-gui/releases/download/v1.3.50/Simple-Code-GUI-1.3.50.AppImage) \| [.deb](https://github.com/DonutsDelivery/simple-code-gui/releases/download/v1.3.50/Simple-Code-GUI-1.3.50.deb) \| [.rpm](https://github.com/DonutsDelivery/simple-code-gui/releases/download/v1.3.50/Simple-Code-GUI-1.3.50.rpm) |
-| Arch Linux | `yay -S simple-code-gui` |
+- Tiled or tabbed terminal layout — run multiple AI agents side by side
+- Project workspace management — switch projects, scan intelligence, apply proposals
+- Orchestration panel — beads and kspec task tracking surfaced inside the app
+- MCP bridge — register and call MCP servers without leaving the window
+- Voice I/O — Piper TTS and Whisper-web transcription
+- Mobile sync — connect a phone via QR code for remote input
+- Token budget HUD — per-session usage meter
 
-[All releases](https://github.com/DonutsDelivery/simple-code-gui/releases)
+Supported backends: Claude Code, Gemini CLI, Codex, OpenCode, Aider (detected and installed from within the app).
 
-<details>
-<summary>macOS: "App is damaged" error fix</summary>
+## Prerequisites
 
-This is macOS Gatekeeper blocking unsigned apps. Run:
-```bash
-sudo xattr -dr com.apple.quarantine "/Applications/Simple Code GUI.app"
-```
-</details>
+- [Rust](https://rustup.rs/) >= 1.77.2
+- [Bun](https://bun.sh/) (JavaScript runtime and package manager)
+- [Tauri CLI prerequisites](https://v2.tauri.app/start/prerequisites/) for your OS (WebKit2GTK on Linux, Xcode on macOS, Visual Studio build tools on Windows)
 
-## Features
-
-### Multi-Backend Support
-- **Claude Code** - Anthropic's Claude AI assistant
-- **Gemini CLI** - Google's Gemini AI
-- **Codex** - OpenAI Codex
-- **OpenCode** - Open source alternative
-
-### Session Management
-- **Tabbed Interface** - Multiple AI sessions open simultaneously
-- **Session Resume** - Pick up conversations where you left off
-- **Session Discovery** - Auto-finds existing sessions
-- **Tiled View** - See multiple terminals side-by-side (toggle with grid button)
-- **Workspace Persistence** - Restores your open tabs and layout on restart
-
-### Project Organization
-- **Project Sidebar** - Save and organize project folders for quick access
-- **Create Projects** - Make new project directories without leaving the app
-- **Session History** - Expand projects to see all past sessions with timestamps
-- **Project Icons** - Custom emoji icons for each project
-- **Per-Project Settings** - Override global settings per project (backend, permissions, voice)
-- **Run Executable** - Launch your app directly from the sidebar
-
-### Voice Features
-- **Speech-to-Text** - Whisper models for voice input (tiny to large)
-- **Text-to-Speech** - Piper voices and XTTS voice clones for spoken responses
-- **Voice Cloning** - Clone your own voice for personalized TTS
-- **Speed Control** - Adjust TTS playback speed
-
-### Terminal
-- **GPU Acceleration** - WebGL-accelerated rendering for smooth terminal output
-- **Image & File Paste** - Paste screenshots and copied files with Ctrl+V
-- **Drag & Drop** - Drop files from file manager into terminal
-- **Smart Ctrl+C** - Copies selection if text selected, sends SIGINT otherwise
-- **Right-Click Menu** - Copy selection or paste with right-click
-- **Full Color Support** - xterm-256color with 10,000 line scrollback
-
-### Customization
-- **9 Color Themes** - Including RGB Gamer mode with animations
-- **Settings Panel** - Configure themes, permissions, backend, and voice
-- **Window Memory** - Remembers size and position
-
-### Task Tracking (Beads Integration)
-- **Task Panel** - Manage project tasks without leaving the app
-- **Create Tasks** - Add tasks with title, description, and priority
-- **Track Progress** - Start, complete, and delete tasks
-- **Auto-Refresh** - Task list updates automatically
-
-### Project Intelligence & Observability
-- **Intelligence Sidebar** - Dedicated dashboard for repository health and metrics
-- **Stack Detection** - Auto-identifies frameworks, configurations, and tools
-- **Git Context** - Real-time branch monitoring, dirty-state tracking, and commit history
-- **GitNexus Integration** - Architectural graph awareness with staleness detection and audit triggers
-- **Dynamic Resizing** - Fluid sidebar interaction with persistence and glassmorphism styling
-
-### Setup & Updates
-- **Auto-Install Dependencies** - Installs Claude Code, Node.js, Git if missing
-- **Auto Updates** - Downloads and installs updates automatically
-- **Cross-Platform** - Windows, macOS (Apple Silicon), and Linux
-
-## Building from Source
+## Installation
 
 ```bash
-git clone https://github.com/DonutsDelivery/simple-code-gui.git
+git clone https://github.com/<your-fork>/simple-code-gui.git
 cd simple-code-gui
-npm install
-npm run dev
+bun install
 ```
 
-## Keyboard Shortcuts
+## Quick start
 
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+C` | Copy selection (or SIGINT if no selection) |
-| `Ctrl+V` | Paste text, files, or images |
-| `Ctrl+Shift+C` | Copy from terminal |
-| `Ctrl+Shift+V` | Paste to terminal |
-| `F12` | Toggle DevTools |
+```bash
+# Development — hot-reload frontend + Rust backend
+bun run tauri:dev
+
+# Production build (outputs a native binary/installer)
+bun run build
+```
+
+The app launches a native window. On first run it detects which AI CLI tools are installed and offers to install missing ones.
+
+## Usage
+
+### Sessions
+
+Each project opens in a terminal tab. Use the sidebar to add projects and switch between them. The tiled view lets you split the window into multiple simultaneous sessions.
+
+### Task tracking
+
+The orchestration panel surfaces beads and kspec issues. You can create, claim, and close tasks without leaving the app.
+
+### MCP servers
+
+Open Settings → MCP to register Model Context Protocol servers. The app bridges IPC calls from the renderer to registered servers via the Rust `mcp_bridge` module.
+
+### Voice
+
+Enable voice output in Settings → Voice. The app uses Piper TTS for speech and `whisper-web-transcriber` for microphone input.
+
+## Development
+
+| Command | Description |
+|---|---|
+| `bun run dev` | Frontend only (Vite dev server, no Tauri) |
+| `bun run tauri:dev` | Full app with hot reload |
+| `bun run build:frontend` | Vite production build |
+| `bun run build` | Full Tauri production build |
+| `bun test` | Run unit tests (Vitest) |
+| `bun run test:watch` | Watch mode |
+| `bun run test:coverage` | Coverage report |
+| `bun run test:visual` | Playwright visual tests |
+| `bun run lint` | Biome lint (`src/`) |
+| `bun run lint:fix` | Biome lint with auto-fix |
+| `bun run format` | Biome format (`src/`) |
+
+Code style is enforced by [Biome](https://biomejs.dev/) (`biome.json`). Husky runs lint on pre-commit.
+
+See [docs/](docs/) for architecture and engine reference notes.
 
 ## License
 
-[PolyForm Noncommercial 1.0.0](LICENSE) - Free for personal use. Commercial distribution requires permission from the author.
+PolyForm Noncommercial License 1.0.0 — see [LICENSE](LICENSE).
