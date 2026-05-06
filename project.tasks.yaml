@@ -325,7 +325,7 @@
   type: task
   spec_ref: "@spec-draft-editor"
   plan_ref: "@plan-plan-brainstorm-companion-implementation"
-  status: pending_review
+  status: completed
   blocked_by: []
   depends_on: []
   priority: 3
@@ -341,6 +341,7 @@
   created_at: 2026-04-29T06:07:54.571Z
   started_at: 2026-05-06T18:37:53.120Z
   submitted_at: 2026-05-06T18:37:54.166Z
+  completed_at: 2026-05-06T18:37:55.148Z
 - _ulid: 01KQBXKS6HR619FWYRZF5JJ2J2
   slugs:
     - implement-promotion-workflow
