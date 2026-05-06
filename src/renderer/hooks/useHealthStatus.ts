@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { tauriIpc } from '../lib/tauri-ipc';
 import type { InstalledExtension } from './useExtensions';
 
@@ -24,25 +24,23 @@ export interface HealthStatus {
 }
 
 export function useHealthStatus() {
-  const [status, setStatus] = useState<HealthStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  const query = useQuery<HealthStatus, Error>({
+    queryKey: ['health-status'],
+    queryFn: async () => await tauriIpc.healthGetStatus(),
+    refetchInterval: 2000,
+    retry: 1,
+    throwOnError: false,
+  });
 
-  const fetchStatus = useCallback(async () => {
-    try {
-      const data = await tauriIpc.healthGetStatus();
-      setStatus(data);
-    } catch (err) {
-      console.error('Failed to fetch health status:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 2000); // Update every 2s
-    return () => clearInterval(interval);
-  }, [fetchStatus]);
-
-  return { status, loading, refresh: fetchStatus };
+  return {
+    status: query.data ?? null,
+    loading: query.isLoading,
+    refresh: async () => {
+      try {
+        await query.refetch();
+      } catch (err) {
+        console.error('Failed to fetch health status:', err);
+      }
+    },
+  };
 }

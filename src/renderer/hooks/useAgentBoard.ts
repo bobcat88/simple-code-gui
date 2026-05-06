@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { useCallback, useEffect } from 'react';
 import { tauriIpc } from '../lib/tauri-ipc';
 
 export interface Agent {
@@ -40,10 +41,21 @@ export interface AgentTrace {
   timestamp: string;
 }
 
+interface AgentBoardData {
+  agents: Agent[];
+  providerHealth: Record<string, string>;
+}
+
+type AgentTraceInput = Partial<AgentTrace> & Record<string, unknown>;
+
+const AGENT_BOARD_QUERY_KEY = ['agent-board'] as const;
+const EMPTY_AGENT_BOARD: AgentBoardData = {
+  agents: [],
+  providerHealth: {},
+};
+
 export function useAgentBoard() {
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [providerHealth, setProviderHealth] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   const refreshBurnRates = useCallback(async () => {
     try {
@@ -53,74 +65,97 @@ export function useAgentBoard() {
     }
   }, []);
 
-  const fetchAgents = useCallback(async () => {
-    try {
+  const query = useQuery<AgentBoardData, Error>({
+    queryKey: AGENT_BOARD_QUERY_KEY,
+    queryFn: async () => {
       await refreshBurnRates();
-      const [list, health] = await Promise.all([
+      const [agents, providerHealth] = await Promise.all([
         tauriIpc.agentList(),
-        tauriIpc.aiGetHealthStatus()
+        tauriIpc.aiGetHealthStatus(),
       ]);
-      setAgents(list);
-      setProviderHealth(health);
-    } catch (err) {
-      console.error('Failed to fetch agents:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [refreshBurnRates]);
+      return { agents, providerHealth };
+    },
+    refetchInterval: 5000,
+    retry: 1,
+    throwOnError: false,
+  });
+
+  const refresh = useCallback(async () => {
+    await query.refetch();
+  }, [query]);
+
+  const patchAgents = useCallback(
+    (patch: (agents: Agent[]) => Agent[]) => {
+      queryClient.setQueryData<AgentBoardData>(
+        AGENT_BOARD_QUERY_KEY,
+        (current) => ({
+          ...(current ?? EMPTY_AGENT_BOARD),
+          agents: patch(current?.agents ?? []),
+        })
+      );
+    },
+    [queryClient]
+  );
 
   useEffect(() => {
-    fetchAgents();
-    const interval = setInterval(fetchAgents, 5000); // Update every 5s
-    
     const pStatus = tauriIpc.onAgentStatusChanged((data) => {
-      setAgents(prev => prev.map(a => a.id === data.id ? { ...a, status: data.status } : a));
+      patchAgents((agents) =>
+        agents.map((agent) =>
+          agent.id === data.id ? { ...agent, status: data.status } : agent
+        )
+      );
     });
 
     const pRegistered = tauriIpc.onAgentRegistered((agent) => {
-      setAgents(prev => {
-        if (prev.some(a => a.id === agent.id)) {
-          return prev.map(a => a.id === agent.id ? agent : a);
+      patchAgents((agents) => {
+        if (agents.some((current) => current.id === agent.id)) {
+          return agents.map((current) =>
+            current.id === agent.id ? agent : current
+          );
         }
-        return [agent, ...prev];
+        return [agent, ...agents];
       });
     });
-    
+
     const pMetrics = tauriIpc.onAgentMetricsChanged((data) => {
-      setAgents(prev => prev.map(a => a.id === data.id ? { 
-        ...a, 
-        burn_rate: data.burn_rate,
-        quality_score: data.quality_score,
-        queue_size: data.queue_size,
-        active_task: data.active_task,
-        evolution_confidence: data.evolution_confidence,
-        evolution_status: data.evolution_status
-      } : a));
+      patchAgents((agents) =>
+        agents.map((agent) =>
+          agent.id === data.id
+            ? {
+                ...agent,
+                burn_rate: data.burn_rate,
+                quality_score: data.quality_score,
+                queue_size: data.queue_size,
+                active_task: data.active_task,
+                evolution_confidence: data.evolution_confidence,
+                evolution_status: data.evolution_status,
+              }
+            : agent
+        )
+      );
     });
 
-    const pTrace = listen('agent-trace-added', (event: any) => {
-      // In a real app we might want to update a local trace cache
-      // For now we'll just let the components re-fetch if they need to
+    const pTrace = listen<unknown>('agent-trace-added', (event) => {
+      // Trace panels fetch their own details; keep this event visible for now.
       console.log('Trace added:', event.payload);
     });
 
     return () => {
-      clearInterval(interval);
       pStatus.then((unsub: UnlistenFn) => unsub());
       pRegistered.then((unsub: UnlistenFn) => unsub());
       pMetrics.then((unsub: UnlistenFn) => unsub());
       pTrace.then((unsub: UnlistenFn) => unsub());
     };
-  }, [fetchAgents]);
+  }, [patchAgents]);
 
   const updateStatus = async (id: string, status: string) => {
     await tauriIpc.agentUpdateStatus(id, status);
-    await fetchAgents();
+    await refresh();
   };
 
   const cancelTask = async (id: string) => {
     await tauriIpc.agentCancelTask(id);
-    await fetchAgents();
+    await refresh();
   };
 
   const listTasks = useCallback(async (agentId: string) => {
@@ -131,17 +166,21 @@ export function useAgentBoard() {
     await tauriIpc.agentUpdateTaskPriority(taskId, priority);
   };
 
-  return { 
-    agents, 
-    providerHealth, 
-    loading, 
-    updateStatus, 
-    cancelTask, 
-    listTasks, 
+  const data = query.data ?? EMPTY_AGENT_BOARD;
+
+  return {
+    agents: data.agents,
+    providerHealth: data.providerHealth,
+    loading: query.isLoading,
+    updateStatus,
+    cancelTask,
+    listTasks,
     updateTaskPriority,
-    listTraces: async (agentId: string) => await tauriIpc.agentListTraces(agentId),
-    addTrace: async (trace: any) => await tauriIpc.agentAddTrace(trace),
-    refresh: fetchAgents, 
-    refreshBurnRates 
+    listTraces: async (agentId: string) =>
+      await tauriIpc.agentListTraces(agentId),
+    addTrace: async (trace: AgentTraceInput) =>
+      await tauriIpc.agentAddTrace(trace),
+    refresh,
+    refreshBurnRates,
   };
 }
