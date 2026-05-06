@@ -462,6 +462,7 @@ pub async fn beads_delete(cwd: String, task_id: String) -> Result<serde_json::Va
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub async fn beads_update(
     cwd: String,
     task_id: String,
@@ -748,6 +749,7 @@ pub async fn kspec_delete(cwd: String, task_id: String) -> Result<serde_json::Va
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub async fn kspec_update(
     cwd: String,
     task_id: String,
@@ -1073,7 +1075,7 @@ pub async fn broadcast_agent_message(
     message: AgentMessage,
 ) -> Result<serde_json::Value, String> {
     let id = message.id.clone();
-    internal_broadcast_agent_message(&app, &*state, &*db, message).await?;
+    internal_broadcast_agent_message(&app, &state, &db, message).await?;
     Ok(serde_json::json!({ "success": true, "id": id }))
 }
 
@@ -1110,14 +1112,14 @@ pub async fn gsd_list_seeds(cwd: String) -> Result<Vec<GsdSeed>, String> {
             let mut status = "planted".to_string();
             
             for line in content.lines() {
-                if line.starts_with("# ") {
-                    title = line[2..].to_string();
-                } else if line.starts_with("why: ") {
-                    why = line[5..].to_string();
-                } else if line.starts_with("whenToSurface: ") {
-                    when_to_surface = line[15..].to_string();
-                } else if line.starts_with("status: ") {
-                    status = line[8..].to_string();
+                if let Some(rest) = line.strip_prefix("# ") {
+                    title = rest.to_string();
+                } else if let Some(rest) = line.strip_prefix("why: ") {
+                    why = rest.to_string();
+                } else if let Some(rest) = line.strip_prefix("whenToSurface: ") {
+                    when_to_surface = rest.to_string();
+                } else if let Some(rest) = line.strip_prefix("status: ") {
+                    status = rest.to_string();
                 }
             }
 
@@ -1483,7 +1485,7 @@ fn generate_snapshot_markdown(
     if let Some(notes) = handoff_notes {
         md.push_str("\n## Handoff Notes\n\n");
         md.push_str(notes);
-        md.push_str("\n");
+        md.push('\n');
     }
 
     md.push_str("\n## Thought Chain (Recent activity)\n\n");

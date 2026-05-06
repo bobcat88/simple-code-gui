@@ -18,6 +18,7 @@ impl GlobalSync {
         "/home/_johan/Documents/Borg/000 OS / Meta/Swarm Memory/collective_memory.yaml".to_string()
     }
 
+    #[allow(dead_code)]
     pub fn export(memory: &SwarmMemory) -> Result<(), String> {
         let entries = memory.get_all_entries().map_err(|e| e.to_string())?;
         let vault_path = Self::get_vault_path();

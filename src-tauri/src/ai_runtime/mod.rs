@@ -691,7 +691,7 @@ impl RuntimeManager {
                     output_tokens: usage.output_tokens as i64,
                     saved_tokens: Some(saved_tokens),
                     cost_estimate: total_cost,
-                    context_reuse_id: rtk_result.map(|r| r.reuse_id).flatten(),
+                    context_reuse_id: rtk_result.and_then(|r| r.reuse_id),
                     cache_control: None,
                     timestamp: None,
                 };
@@ -785,7 +785,7 @@ impl RuntimeManager {
                     }
                 }
 
-                if let Ok(_) = manager.save(settings).await {
+                if manager.save(settings).await.is_ok() {
                     println!("Dynamic Plan Switch: {} -> {} (Health: {})", current_plan, target_plan, health_score);
                     
                     // Emit event if app handle is set

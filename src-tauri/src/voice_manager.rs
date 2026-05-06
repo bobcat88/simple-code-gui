@@ -124,7 +124,7 @@ pub async fn voice_install_piper(app: AppHandle, state: State<'_, VoiceManager>)
         r#type: "piper".to_string(),
         status: "downloading".to_string(),
         percent: 0.0,
-        message: format!("Downloading Piper engine from GitHub..."),
+        message: "Downloading Piper engine from GitHub...".to_string(),
     });
 
     // Download
@@ -325,7 +325,7 @@ pub async fn voice_speak(
     // Fallback to system TTS
     let mut system_tts = state.system_tts.lock();
     if let Some(tts) = system_tts.as_mut() {
-        if let Ok(_) = tts.speak(text, true) {
+        if tts.speak(text, true).is_ok() {
             return Ok(TTSResult {
                 success: true,
                 audio_data: None,
@@ -348,7 +348,7 @@ pub async fn voice_stop(state: State<'_, VoiceManager>) -> Result<(), String> {
 
 fn base64_encode(input: &[u8]) -> String {
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut output = String::with_capacity((input.len() + 2) / 3 * 4);
+    let mut output = String::with_capacity(input.len().div_ceil(3) * 4);
     
     for chunk in input.chunks(3) {
         let b0 = chunk[0] as usize;

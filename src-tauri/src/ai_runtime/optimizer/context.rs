@@ -18,6 +18,7 @@ pub struct OptimizationContext {
     pub human_facing: bool,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ProviderCapabilities {
     pub automatic_prefix_cache: bool,
@@ -28,6 +29,7 @@ pub struct ProviderCapabilities {
 }
 
 impl ProviderCapabilities {
+    #[allow(dead_code)]
     pub fn for_provider(provider: &ProviderKind) -> Self {
         match provider {
             ProviderKind::DeepSeekFlash => Self {

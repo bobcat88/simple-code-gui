@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use crate::ai_runtime::types::CompletionRequest;
 use super::super::context::OptimizationContext;
 use super::super::middleware::OptimizationMiddleware;
+use std::cmp::Reverse;
 use std::fs;
 use std::path::Path;
 use serde_json::Value;
@@ -133,7 +134,7 @@ impl OptimizationMiddleware for CognitiveMiddleware {
             .collect();
 
         // Sort by keyword score descending
-        candidate_msgs.sort_by(|a, b| b.0.cmp(&a.0));
+        candidate_msgs.sort_by_key(|a| Reverse(a.0));
 
         // Hybrid Reranking: If we have an embedding service, rerank the top candidates
         let final_context_msgs = if let Some(service) = embedding_service {

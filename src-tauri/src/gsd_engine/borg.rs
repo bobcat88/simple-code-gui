@@ -52,7 +52,7 @@ impl BorgBridge {
             
             let mut count = 0;
             for entry in entries {
-                if let Ok(_) = memory.record(&entry.entry_type, &entry.context, &entry.content, &entry.meta) {
+                if memory.record(&entry.entry_type, &entry.context, &entry.content, &entry.meta).is_ok() {
                     count += 1;
                 }
             }

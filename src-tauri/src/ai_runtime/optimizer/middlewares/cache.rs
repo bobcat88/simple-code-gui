@@ -40,7 +40,7 @@ impl OptimizationMiddleware for CacheMiddleware {
                 // This usually requires a separate management flow, but we can store the intent.
                 if let Some(ref opt) = request.optimization {
                     if let Some(ref cache) = opt.cache {
-                        if let Some(ref name) = cache.cached_content_name {
+                        if let Some(ref _name) = cache.cached_content_name {
                             // If we already have a cached content name, the provider implementation
                             // should use it instead of sending the full prefix.
                             // We can use the context to track token counts in the future.

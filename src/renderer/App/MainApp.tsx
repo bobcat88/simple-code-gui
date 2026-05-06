@@ -61,6 +61,7 @@ export function MainApp({
     removeTab,
     updateTab,
     setActiveTab,
+    touchProject,
   } = useWorkspaceStore();
 
   const { voiceOutputEnabled, setProjectVoice } = useVoice();
@@ -193,6 +194,7 @@ export function MainApp({
     addTab,
     setActiveTab,
     setTileTree,
+    touchProject,
   });
 
   const handleRenameTab = useCallback(
@@ -232,15 +234,16 @@ export function MainApp({
 
   // App-specific state
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [, setShowFileBrowser] = useState(false);
   const [orchestrationOpen, setOrchestrationOpen] = useState(false);
+  const [, setShowFileBrowser] = useState(false);
   const [, setFileBrowserPath] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState('terminal');
-  const [settingsCategory] = useState('general');
+  const [settingsCategory, setSettingsCategory] = useState('general');
   const isMobile = !isElectron;
   const hadProjectsRef = useRef(false);
   const terminalContainerRef = useRef<HTMLDivElement>(null);
   const [spotlightOpen, setSpotlightOpen] = useState(false);
+  const [quickSwitcherOpen, setQuickSwitcherOpen] = useState(false);
 
   // Spotlight Hotkey (Cmd+K)
   useEffect(() => {
@@ -256,6 +259,21 @@ export function MainApp({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [spotlightOpen]);
+
+  // Project Quick Switcher Hotkey (Ctrl+Tab)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'Tab') {
+        e.preventDefault()
+        setQuickSwitcherOpen(prev => !prev)
+      }
+      if (e.key === 'Escape' && quickSwitcherOpen) {
+        setQuickSwitcherOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [quickSwitcherOpen])
 
   // Load MCP config on mount
   useEffect(() => {

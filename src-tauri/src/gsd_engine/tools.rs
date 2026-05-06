@@ -231,8 +231,8 @@ pub async fn execute_tool(name: &str, arguments: &str, project_path: &Option<Str
             
             crate::orchestration::internal_broadcast_agent_message(
                 app, 
-                &*state, 
-                &*db, 
+                &state,
+                &db,
                 message
             ).await?;
             

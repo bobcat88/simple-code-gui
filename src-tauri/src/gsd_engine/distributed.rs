@@ -121,10 +121,7 @@ impl DistributedManager {
                 let _: redis::RedisResult<()> = conn.expire(registry_key, 60).await; // Cleanup if registry is stale
 
                 // Discover others
-                let nodes: HashMap<String, String> = match conn.hgetall(registry_key).await {
-                    Ok(n) => n,
-                    Err(_) => HashMap::new(),
-                };
+                let nodes: HashMap<String, String> = conn.hgetall(registry_key).await.unwrap_or_default();
 
                 let mut current_peers = peers.lock().await;
                 current_peers.clear();

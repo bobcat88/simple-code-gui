@@ -1,4 +1,4 @@
-use notify::{Watcher, RecursiveMode, Event, Config};
+use notify::{Watcher, RecursiveMode, Event};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use std::path::Path;
@@ -62,7 +62,7 @@ impl QuantumSyncManager {
 
         tauri::async_runtime::spawn(async move {
             println!("QuantumSync: Synaptic watch started on {}", vault_path);
-            while let Some(_) = rx.recv().await {
+            while rx.recv().await.is_some() {
                 println!("QuantumSync: Synaptic shift detected. Synchronizing...");
                 match GlobalSync::import(&memory) {
                     Ok(count) => {
@@ -86,6 +86,7 @@ impl QuantumSyncManager {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn trigger_quantum_export(&self) -> Result<(), String> {
         GlobalSync::export(&self.memory)
     }

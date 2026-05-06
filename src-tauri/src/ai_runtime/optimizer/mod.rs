@@ -14,7 +14,7 @@ use super::types::{
 };
 use super::AIProvider;
 
-pub use context::{OptimizationContext, ProviderCapabilities, EmbeddingService};
+pub use context::{OptimizationContext, EmbeddingService};
 pub use middleware::OptimizationMiddleware;
 use middlewares::*;
 
@@ -55,6 +55,7 @@ impl OptimizationPipeline {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_components(
         mut self,
         semantic_cache: Option<Arc<SemanticCache>>,

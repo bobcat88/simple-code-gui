@@ -137,7 +137,8 @@ fn detect_stacks(cwd: &str) -> Vec<StackInfo> {
     let p = Path::new(cwd);
     let mut stacks = Vec::new();
 
-    let checks: Vec<(&str, &str, &str, Box<dyn Fn(&Path) -> Option<String>>)> = vec![
+    type StackCheck = (&'static str, &'static str, &'static str, Box<dyn Fn(&Path) -> Option<String>>);
+    let checks: Vec<StackCheck> = vec![
         ("package.json", "Node.js", "📦", Box::new(|path| {
             std::fs::read_to_string(path).ok().and_then(|c| {
                 serde_json::from_str::<serde_json::Value>(&c).ok()?.get("version")?.as_str().map(|s| s.to_string())
@@ -258,7 +259,7 @@ fn detect_gitnexus(cwd: &str) -> Option<GitNexusInfo> {
     // Check staleness: compare last_analyzed to last git commit
     let stale = if let Some(analyzed) = meta.get("last_analyzed").and_then(|v| v.as_str()) {
         run_git(cwd, &["log", "-1", "--format=%aI"])
-            .map(|commit_date| commit_date > analyzed.to_string())
+            .map(|commit_date| commit_date.as_str() > analyzed)
             .unwrap_or(true)
     } else {
         true

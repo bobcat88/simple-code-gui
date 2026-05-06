@@ -29,7 +29,8 @@ interface UseProjectHandlersOptions {
   removeTab: (id: string) => void
   addTab: (tab: OpenTab) => void
   setActiveTab: (id: string) => void
-  setTileTree: (tree: TileNode | null) => void
+  setTileTree: (tree: TileNode | null) => void,
+  touchProject: (path: string) => void
 }
 
 interface ClosedTabInfo {
@@ -62,7 +63,8 @@ export function useProjectHandlers({
   removeTab,
   addTab,
   setActiveTab,
-  setTileTree
+  setTileTree,
+  touchProject
 }: UseProjectHandlersOptions): UseProjectHandlersReturn {
   const { showError } = useDialog()
   const closedTabsRef = useRef<ClosedTabInfo[]>([])
@@ -143,6 +145,9 @@ export function useProjectHandlers({
       const { rows, cols } = calculatePtyDimensions(window.innerWidth, window.innerHeight)
 
       const ptyId = await api.spawnPty(projectPath, sessionId, undefined, effectiveBackend, rows, cols, nexusSessionId)
+
+      // Update project recency
+      touchProject(projectPath)
 
       // Add leaf to tree — single operation, no race condition
       const currentTree = tileTreeRef.current

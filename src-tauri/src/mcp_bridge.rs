@@ -8,7 +8,6 @@ use tokio::sync::{oneshot, Mutex};
 use tauri::{AppHandle, Manager, State, Emitter};
 use std::time::Duration;
 use local_ip_address::local_ip;
-use futures::future::join_all;
 use futures::StreamExt;
 use mdns_sd::{ServiceDaemon, ServiceEvent};
 use uuid::Uuid;
@@ -25,6 +24,7 @@ pub struct McpServerConfig {
     pub url: Option<String>, // New: support for remote MCP servers
 }
 
+#[allow(dead_code)]
 pub enum McpTransport {
     Local {
         stdin: Arc<Mutex<ChildStdin>>,
@@ -41,7 +41,9 @@ pub enum McpTransport {
 pub struct McpServerHandle {
     pub config: McpServerConfig,
     pub transport: McpTransport,
+    #[allow(clippy::type_complexity)]
     pub pending_requests: Arc<Mutex<HashMap<Value, oneshot::Sender<Result<Value, String>>>>>,
+    #[allow(dead_code)]
     pub app_handle: Option<AppHandle>,
     pub status: Arc<Mutex<String>>, // "online", "offline", "degraded"
     pub last_latency: Arc<Mutex<u64>>, // in ms
@@ -198,6 +200,7 @@ struct JsonRpcError {
 
 impl McpServerHandle {
     pub async fn spawn(config: McpServerConfig, app_handle: Option<AppHandle>) -> Result<Self, String> {
+        #[allow(clippy::type_complexity)]
         let pending_requests: Arc<Mutex<HashMap<Value, oneshot::Sender<Result<Value, String>>>>> = Arc::new(Mutex::new(HashMap::new()));
         let credits = Arc::new(Mutex::new(1000)); // Initial stipend
 
@@ -236,10 +239,10 @@ impl McpServerHandle {
                                         continue;
                                     }
 
-                                    if line.starts_with("event:") {
-                                        current_event = line["event:".len()..].trim().to_string();
-                                    } else if line.starts_with("data:") {
-                                        let data = line["data:".len()..].trim();
+                                    if let Some(rest) = line.strip_prefix("event:") {
+                                        current_event = rest.trim().to_string();
+                                    } else if let Some(rest) = line.strip_prefix("data:") {
+                                        let data = rest.trim();
                                         
                                         if current_event == "endpoint" {
                                             let mut p_url = post_url_clone.lock().await;
@@ -679,24 +682,18 @@ async fn discover_mdns() -> Result<Vec<McpServerConfig>, String> {
     let timeout = Duration::from_secs(2);
 
     while start.elapsed() < timeout {
-        if let Ok(event) = receiver.recv_timeout(Duration::from_millis(100)) {
-            match event {
-                ServiceEvent::ServiceResolved(info) => {
-                    let name = info.get_fullname().to_string();
-                    let port = info.get_port();
-                    let addresses = info.get_addresses();
-                    
-                    if let Some(addr) = addresses.iter().next() {
-                        nodes.push(McpServerConfig {
-                            name: name.replace("._mcp._tcp.local.", ""),
-                            command: None,
-                            args: vec![],
-                            env: std::collections::HashMap::new(),
-                            url: Some(format!("http://{}:{}/sse", addr, port)),
-                        });
-                    }
-                }
-                _ => {}
+        if let Ok(ServiceEvent::ServiceResolved(info)) = receiver.recv_timeout(Duration::from_millis(100)) {
+            let name = info.get_fullname().to_string();
+            let port = info.get_port();
+            let addresses = info.get_addresses();
+            if let Some(addr) = addresses.iter().next() {
+                nodes.push(McpServerConfig {
+                    name: name.replace("._mcp._tcp.local.", ""),
+                    command: None,
+                    args: vec![],
+                    env: std::collections::HashMap::new(),
+                    url: Some(format!("http://{}:{}/sse", addr, port)),
+                });
             }
         }
     }

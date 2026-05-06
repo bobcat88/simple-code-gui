@@ -146,6 +146,7 @@ impl PtyManager {
         *self.portable_bin_dirs.lock() = dirs;
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn spawn(
         &self,
         app: AppHandle,

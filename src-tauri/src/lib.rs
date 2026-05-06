@@ -76,6 +76,7 @@ use rtk_manager::{rtk_check, rtk_get_history, rtk_get_stats};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 async fn spawn_session(
     state: State<'_, Arc<PtyManager>>,
     app: AppHandle,
@@ -393,6 +394,7 @@ async fn claude_md_save(project_path: String, content: String) -> Result<serde_j
 }
 
 #[tauri::command]
+#[allow(dead_code)]
 fn report_ready() {
     println!("WEBVIEW_READY");
 }

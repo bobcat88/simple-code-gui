@@ -235,7 +235,7 @@ pub fn scan_project(root_path: &str, options: &ScanOptions) -> ProjectCapability
     let max_depth = options.max_depth.unwrap_or(3);
 
     // ── Recursive Marker Detection ──
-    walk_and_detect(&root, &root, 0, max_depth, &mut markers, &mut total_file_count);
+    walk_and_detect(root, root, 0, max_depth, &mut markers, &mut total_file_count);
 
     // ── CLI Health Checks ──
     if options.include_cli_health.unwrap_or(true) {

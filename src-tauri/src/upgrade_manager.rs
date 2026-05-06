@@ -104,7 +104,6 @@ fn run_version_cmd(bin: &str) -> String {
         .ok()
         .and_then(|o| {
             String::from_utf8_lossy(&o.stdout)
-                .trim()
                 .split_whitespace()
                 .last()
                 .map(|s| s.to_string())
@@ -131,7 +130,7 @@ fn get_symbol_impact_count(symbol: &str) -> Option<u32> {
     // Parse "impactedCount": N from the output (heuristic parsing if not JSON)
     if let Some(line) = text.lines().find(|l| l.contains("impactedCount")) {
         line.split(':')
-            .last()?
+            .next_back()?
             .trim()
             .trim_matches(',')
             .parse::<u32>()

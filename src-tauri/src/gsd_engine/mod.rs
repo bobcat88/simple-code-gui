@@ -890,8 +890,8 @@ pub struct SynapticMetrics {
 pub async fn gsd_get_synaptic_metrics(
     state: State<'_, Arc<GsdEngine>>,
 ) -> Result<SynapticMetrics, String> {
-    let gov = state.governance.lock().await;
-    
+    let _gov = state.governance.lock().await;
+
     // Heuristic metrics
     Ok(SynapticMetrics {
         feedback_loops: 3, // Synchronizer, Evolution, PeerReview

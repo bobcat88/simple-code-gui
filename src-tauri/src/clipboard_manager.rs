@@ -26,7 +26,7 @@ pub async fn read_clipboard_image(app: AppHandle) -> Result<ClipboardImageResult
             let file_path = cache_dir.join(file_name);
             
             let file = File::create(&file_path).map_err(|e| format!("Failed to create file: {}", e))?;
-            let ref mut w = BufWriter::new(file);
+            let w = BufWriter::new(file);
             
             let encoder = png::Encoder::new(w, image.width as u32, image.height as u32);
             let mut writer = encoder.write_header().map_err(|e| format!("Failed to write PNG header: {}", e))?;

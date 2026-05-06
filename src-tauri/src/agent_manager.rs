@@ -123,6 +123,7 @@ impl AgentManager {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn update_metrics(
         &self,
         app: &tauri::AppHandle,
@@ -275,6 +276,7 @@ impl AgentManager {
         }).collect())
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn add_trace(
         &self, 
         app: &tauri::AppHandle, 
@@ -345,6 +347,7 @@ pub async fn agent_update_status(
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub async fn agent_update_metrics(
     app: tauri::AppHandle,
     state: tauri::State<'_, Arc<AgentManager>>,
@@ -404,6 +407,7 @@ pub async fn agent_list_traces(
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub async fn agent_add_trace(
     app: tauri::AppHandle,
     state: tauri::State<'_, Arc<AgentManager>>,

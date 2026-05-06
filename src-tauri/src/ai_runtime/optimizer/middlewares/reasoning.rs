@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use crate::ai_runtime::types::{CompletionRequest, ProviderKind};
+use crate::ai_runtime::types::CompletionRequest;
 use super::super::context::OptimizationContext;
 use super::super::middleware::OptimizationMiddleware;
 
@@ -17,15 +17,15 @@ impl OptimizationMiddleware for ReasoningMiddleware {
         context: &OptimizationContext,
         _embedding_service: Option<&dyn crate::ai_runtime::optimizer::context::EmbeddingService>
     ) -> Result<(), String> {
-        let Some(provider) = &context.provider else {
+        if context.provider.is_none() {
             return Ok(());
-        };
-        
+        }
+
         let Some(optimization) = &request.optimization else {
             return Ok(());
         };
-        
-        let Some(reasoning) = &optimization.reasoning else {
+
+        if optimization.reasoning.is_none() {
             return Ok(());
         };
 
@@ -46,10 +46,8 @@ impl ReasoningMiddleware {
     fn inject_cod(request: &mut CompletionRequest) {
         const COD_INSTR: &str = "\n\nThink step by step, but keep each reasoning step to 5 words or fewer (Chain of Draft).";
         if let Some(msg) = request.messages.get_mut(0) {
-            if msg.role == "system" {
-                if !msg.content.contains("Chain of Draft") {
-                    msg.content.push_str(COD_INSTR);
-                }
+            if msg.role == "system" && !msg.content.contains("Chain of Draft") {
+                msg.content.push_str(COD_INSTR);
             }
         }
     }

@@ -88,6 +88,7 @@ pub struct Executor {
 }
 
 impl Executor {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         ai: Arc<RuntimeManager>,
         db: Arc<DatabaseManager>,
@@ -564,7 +565,7 @@ impl Executor {
                                         // Fall through to execute_tool below
                                     }
                                     _ => {
-                                        let error_msg = format!("Governance Denied: User rejected tool execution.");
+                                        let error_msg = "Governance Denied: User rejected tool execution.".to_string();
                                         self.emit_execution_event(
                                             plan_id,
                                             Some(phase_id),
@@ -574,7 +575,7 @@ impl Executor {
                                         ).await;
                                         messages.push(Message {
                                             role: "tool".to_string(),
-                                            content: format!("Error: Tool execution rejected by user."),
+                                            content: "Error: Tool execution rejected by user.".to_string(),
                                             tool_calls: None,
                                             tool_call_id: Some(tc.id.clone()),
                                             cache_control: None,
@@ -1199,10 +1200,7 @@ impl Executor {
 }
 
 fn is_destructive_tool(name: &str) -> bool {
-    match name {
-        "write_file" | "replace_file_content" | "multi_replace_file_content" | "run_bash" | "inject_trace" | "gsd_apply_refactor" => true,
-        _ => false,
-    }
+    matches!(name, "write_file" | "replace_file_content" | "multi_replace_file_content" | "run_bash" | "inject_trace" | "gsd_apply_refactor")
 }
 
 #[allow(dead_code)]
