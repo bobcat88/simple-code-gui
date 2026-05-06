@@ -991,3 +991,25 @@ pub async fn gsd_apply_distributed_credit_delta(
         .ok_or_else(|| "Distributed manager unavailable".to_string())?;
     mgr.apply_credit_delta(&node_id, credit_delta, utilization).await
 }
+
+#[tauri::command]
+pub async fn borg_record_learning(
+    project_name: String,
+    title: String,
+    content: String,
+) -> Result<(), String> {
+    let bridge = borg::BorgBridge::new();
+    bridge.record_learning(&project_name, &title, &content)
+}
+
+#[tauri::command]
+pub async fn borg_sync_memory(
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<usize, String> {
+    let bridge = borg::BorgBridge::new();
+    let knowledge = state.knowledge.lock().await;
+    match knowledge.as_ref() {
+        Some(memory) => bridge.sync_collective_memory(memory),
+        None => Ok(0),
+    }
+}

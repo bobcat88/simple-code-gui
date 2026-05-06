@@ -779,6 +779,8 @@ pub fn run() {
             gsd_engine::gsd_get_distributed_nodes,
             gsd_engine::gsd_quote_remote_tool_execution,
             gsd_engine::gsd_apply_distributed_credit_delta,
+            gsd_engine::borg_record_learning,
+            gsd_engine::borg_sync_memory,
             gsd_spawn_remote_worker,
             rtk_check,
             claude_check,

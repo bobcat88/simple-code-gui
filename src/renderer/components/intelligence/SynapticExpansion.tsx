@@ -25,7 +25,7 @@ interface SynapticExpansionProps {
 }
 
 export const SynapticExpansion: React.FC<SynapticExpansionProps> = ({ api, projectPath }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'mcp' | 'feedback' | 'architect'>('mcp');
+  const [activeSubTab, setActiveSubTab] = useState<'mcp' | 'feedback' | 'architect' | 'borg'>('mcp');
 
   return (
     <div className="flex flex-col h-full space-y-4 animate-in slide-in-from-bottom-2 duration-500">
@@ -67,12 +67,25 @@ export const SynapticExpansion: React.FC<SynapticExpansionProps> = ({ api, proje
           <Shield size={12} />
           Architect
         </button>
+        <button
+          onClick={() => setActiveSubTab('borg')}
+          className={cn(
+            "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+            activeSubTab === 'borg'
+              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+              : "text-white/30 hover:text-white/60"
+          )}
+        >
+          <Database size={12} />
+          Borg
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar px-1 space-y-4">
         {activeSubTab === 'mcp' && <DistributedMCPSection api={api} />}
         {activeSubTab === 'feedback' && <CognitiveFeedbackSection api={api} />}
         {activeSubTab === 'architect' && <AutonomousArchitectSection api={api} projectPath={projectPath} />}
+        {activeSubTab === 'borg' && <BorgKnowledgeBridgeSection api={api} />}
       </div>
     </div>
   );
@@ -342,13 +355,110 @@ const AutonomousArchitectSection: React.FC<{ api: ExtendedApi; projectPath: stri
           </div>
         </div>
 
-        <button 
+        <button
           onClick={handleAudit}
           disabled={isAuditing}
           className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-black rounded-xl text-xs font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(245,158,11,0.2)] transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
         >
           {isAuditing ? 'Audit in Progress' : 'Trigger Deep Audit'}
           <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const BorgKnowledgeBridgeSection: React.FC<{ api: ExtendedApi }> = ({ api }) => {
+  const [projectName, setProjectName] = useState('simple-code-gui');
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [syncing, setSyncing] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [syncCount, setSyncCount] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleRecord = async () => {
+    if (!title.trim() || !content.trim()) return;
+    setRecording(true);
+    setError(null);
+    try {
+      await api.borgRecordLearning?.(projectName, title, content);
+      setTitle('');
+      setContent('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to record learning');
+    } finally {
+      setRecording(false);
+    }
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setError(null);
+    try {
+      const count = await api.borgSyncMemory?.() ?? 0;
+      setSyncCount(count);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Sync failed');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em]">Borg Knowledge Bridge</h3>
+        <button
+          onClick={handleSync}
+          disabled={syncing}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[9px] font-black text-emerald-400 hover:bg-emerald-500/20 transition-all disabled:opacity-50"
+        >
+          {syncing ? <Loader2 size={10} className="animate-spin" /> : <RefreshCw size={10} />}
+          Sync Collective
+        </button>
+      </div>
+
+      {syncCount !== null && (
+        <div className="p-2.5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-[10px] text-emerald-400 font-bold">
+          Synced {syncCount} entries from Borg collective memory
+        </div>
+      )}
+
+      {error && (
+        <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-xl text-[10px] text-red-400">
+          {error}
+        </div>
+      )}
+
+      <div className="space-y-3 p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl">
+        <h4 className="text-[10px] font-black text-white/50 uppercase tracking-widest">Record Learning</h4>
+        <input
+          value={projectName}
+          onChange={e => setProjectName(e.target.value)}
+          placeholder="Project name"
+          className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/50 transition-all"
+        />
+        <input
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          placeholder="Learning title..."
+          className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/50 transition-all"
+        />
+        <textarea
+          value={content}
+          onChange={e => setContent(e.target.value)}
+          placeholder="What was learned or decided..."
+          rows={3}
+          className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-xs text-white/80 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/50 resize-none transition-all"
+        />
+        <button
+          onClick={handleRecord}
+          disabled={!title.trim() || !content.trim() || recording}
+          className="w-full py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 disabled:opacity-50 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all uppercase tracking-widest"
+        >
+          {recording ? <Loader2 size={14} className="animate-spin" /> : <Eye size={14} />}
+          Inscribe to Chronicle
         </button>
       </div>
     </div>

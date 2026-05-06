@@ -845,4 +845,19 @@ export class TauriBackend implements ExtendedApi {
   async mcpIsNodeTrusted(name: string): Promise<boolean> {
     return await tauriIpc.mcpIsNodeTrusted(name);
   }
+  async gsdGetSynapticMetrics() {
+    return await tauriIpc.gsdGetSynapticMetrics();
+  }
+  async gsdTriggerExpansionLoop(loopType: string): Promise<void> {
+    return await tauriIpc.gsdTriggerExpansionLoop(loopType);
+  }
+  async gsdExecuteProactiveAudit(projectPath: string): Promise<string> {
+    return await tauriIpc.gsdExecuteProactiveAudit(projectPath);
+  }
+  async borgRecordLearning(projectName: string, title: string, content: string): Promise<void> {
+    return await tauriIpc.borgRecordLearning(projectName, title, content);
+  }
+  async borgSyncMemory(): Promise<number> {
+    return await tauriIpc.borgSyncMemory();
+  }
 }

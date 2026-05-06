@@ -799,4 +799,14 @@ export const tauriIpc = {
     path?: string;
     error?: string;
   }> => invoke('read_clipboard_image'),
+  gsdGetSynapticMetrics: () =>
+    invoke<{ feedbackLoops: number; activeOptimizations: number; cognitiveLoad: number; swarmCohesion: number }>('gsd_get_synaptic_metrics'),
+  gsdTriggerExpansionLoop: (loopType: string) =>
+    invoke<void>('gsd_trigger_expansion_loop', { loopType }),
+  gsdExecuteProactiveAudit: (projectPath: string) =>
+    invoke<string>('gsd_execute_proactive_audit', { projectPath }),
+  borgRecordLearning: (projectName: string, title: string, content: string) =>
+    invoke<void>('borg_record_learning', { projectName, title, content }),
+  borgSyncMemory: () =>
+    invoke<number>('borg_sync_memory'),
 };

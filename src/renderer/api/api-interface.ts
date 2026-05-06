@@ -542,6 +542,8 @@ export interface Api {
     swarmCohesion: number;
   }>;
   gsdTriggerExpansionLoop?: (loopType: string) => Promise<void>;
+  borgRecordLearning?: (projectName: string, title: string, content: string) => Promise<void>;
+  borgSyncMemory?: () => Promise<number>;
 
   // ==========================================================================
   // Vector Engine
@@ -927,6 +929,8 @@ export interface ExtendedApi extends Api {
   mcpLoadConfig: () => Promise<void>;
   mcpTrustNode: (name: string) => Promise<void>;
   mcpIsNodeTrusted: (name: string) => Promise<boolean>;
+  borgRecordLearning: (projectName: string, title: string, content: string) => Promise<void>;
+  borgSyncMemory: () => Promise<number>;
 }
 
 // ============================================================================
