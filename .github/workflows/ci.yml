@@ -24,6 +24,8 @@ jobs:
         run: bunx tsc --noEmit
       - name: Vitest coverage
         run: bun run test:coverage
+      - name: Touched-folder coverage gate
+        run: bun run coverage:touched
       - name: Coverage diff comment
         if: github.event_name == 'pull_request'
         uses: davelosert/vitest-coverage-report-action@v2

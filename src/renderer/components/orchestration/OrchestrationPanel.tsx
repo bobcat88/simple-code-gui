@@ -1,32 +1,59 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { 
-  Activity, 
-  Terminal, 
-  Lightbulb, 
-  AlertCircle, 
-  CheckCircle2, 
-  UserCheck, 
-  ShieldAlert,
-  Cpu,
-  Clock,
-  ExternalLink,
+import {
+  Activity,
+  AlertCircle,
   Brain,
-  Hammer,
-  Eye,
-  Zap,
+  CheckCircle2,
+  Clock,
+  Cpu,
   Database,
-  Timer
-} from 'lucide-react'
-import { AgentAction, AgentStatus, OrchestrationState, SystemTelemetry } from './types'
-import './OrchestrationPanel.css'
+  ExternalLink,
+  Eye,
+  Hammer,
+  Lightbulb,
+  ShieldAlert,
+  Terminal,
+  Timer,
+  Zap,
+} from 'lucide-react';
+import type React from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  type AgentCostSummary,
+  summarizeAgentActionCosts,
+} from './orchestrationTelemetry';
+import type {
+  AgentAction,
+  AgentStatus,
+  OrchestrationState,
+  SystemTelemetry,
+} from './types';
+import './OrchestrationPanel.css';
 
 declare global {
   interface Window {
-    api: any
+    api?: OrchestrationApi;
   }
 }
 
-export function OrchestrationPanel() {
+interface OrchestrationApi {
+  onAgentAction: (callback: (action: AgentAction) => void) => () => void;
+  onAgentStatus: (callback: (status: AgentStatus) => void) => () => void;
+  onTelemetry: (callback: (telemetry: SystemTelemetry) => void) => () => void;
+  approveAction: (id: string) => Promise<void>;
+  rejectAction: (id: string) => Promise<void>;
+}
+
+interface OrchestrationPanelViewProps {
+  state: OrchestrationState;
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+  tokenSummary: AgentCostSummary;
+  handleApprove: (id: string) => Promise<void>;
+  handleReject: (id: string) => Promise<void>;
+}
+
+export function useOrchestrationRuntime(
+  api: OrchestrationApi | undefined = window.api
+) {
   const [state, setState] = useState<OrchestrationState>({
     agents: [],
     recentActions: [],
@@ -36,102 +63,127 @@ export function OrchestrationPanel() {
       memory: 0,
       activeJobs: 0,
       uptime: 0,
-      health: 'healthy'
-    }
-  })
-  const scrollRef = useRef<HTMLDivElement>(null)
+      health: 'healthy',
+    },
+  });
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll activity feed
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [state.recentActions])
+  }, [state.recentActions]);
 
   // Real-time API Integration
   useEffect(() => {
-    if (!window.api) return
+    if (!api) return;
 
-    const unsubAction = window.api.onAgentAction((action: AgentAction) => {
-      setState(prev => {
-        const newState = { ...prev }
-        
+    const unsubAction = api.onAgentAction((action: AgentAction) => {
+      setState((prev) => {
+        const newState = { ...prev };
+
         // Add to recent actions (limit to 50)
-        newState.recentActions = [...prev.recentActions, action].slice(-50)
-        
+        newState.recentActions = [...prev.recentActions, action].slice(-50);
+
         // Handle approvals
         if (action.type === 'approval_request') {
-          newState.pendingApprovals = [...prev.pendingApprovals, action]
+          newState.pendingApprovals = [...prev.pendingApprovals, action];
         } else if (action.type === 'success' || action.type === 'error') {
           // If this was a response to an approval, remove it
-          newState.pendingApprovals = prev.pendingApprovals.filter(a => a.id !== action.id)
+          newState.pendingApprovals = prev.pendingApprovals.filter(
+            (a) => a.id !== action.id
+          );
         }
-        
-        return newState
-      })
-    })
 
-    const unsubStatus = window.api.onAgentStatus((status: AgentStatus) => {
-      setState(prev => {
-        const existingIndex = prev.agents.findIndex(a => a.id === status.id)
-        let newAgents = [...prev.agents]
-        
+        return newState;
+      });
+    });
+
+    const unsubStatus = api.onAgentStatus((status: AgentStatus) => {
+      setState((prev) => {
+        const existingIndex = prev.agents.findIndex((a) => a.id === status.id);
+        const newAgents = [...prev.agents];
+
         if (existingIndex >= 0) {
-          newAgents[existingIndex] = { ...newAgents[existingIndex], ...status }
+          newAgents[existingIndex] = { ...newAgents[existingIndex], ...status };
         } else {
-          newAgents.push(status)
+          newAgents.push(status);
         }
-        
-        return { ...prev, agents: newAgents }
-      })
-    })
 
-    const unsubTelemetry = window.api.onTelemetry((telemetry: SystemTelemetry) => {
-      setState(prev => ({ ...prev, telemetry }))
-    })
+        return { ...prev, agents: newAgents };
+      });
+    });
+
+    const unsubTelemetry = api.onTelemetry((telemetry: SystemTelemetry) => {
+      setState((prev) => ({ ...prev, telemetry }));
+    });
 
     return () => {
-      unsubAction()
-      unsubStatus()
-      unsubTelemetry()
-    }
-  }, [])
+      unsubAction();
+      unsubStatus();
+      unsubTelemetry();
+    };
+  }, [api]);
 
   const handleApprove = async (id: string) => {
+    if (!api) return;
     try {
-      await window.api.approveAction(id)
-      setState(prev => ({
+      await api.approveAction(id);
+      setState((prev) => ({
         ...prev,
-        pendingApprovals: prev.pendingApprovals.filter(a => a.id !== id)
-      }))
+        pendingApprovals: prev.pendingApprovals.filter((a) => a.id !== id),
+      }));
     } catch (err) {
-      console.error('Failed to approve action:', err)
+      console.error('Failed to approve action:', err);
     }
-  }
+  };
 
   const handleReject = async (id: string) => {
+    if (!api) return;
     try {
-      await window.api.rejectAction(id)
-      setState(prev => ({
+      await api.rejectAction(id);
+      setState((prev) => ({
         ...prev,
-        pendingApprovals: prev.pendingApprovals.filter(a => a.id !== id)
-      }))
+        pendingApprovals: prev.pendingApprovals.filter((a) => a.id !== id),
+      }));
     } catch (err) {
-      console.error('Failed to reject action:', err)
+      console.error('Failed to reject action:', err);
     }
-  }
+  };
 
+  const tokenSummary = useMemo(
+    () => summarizeAgentActionCosts(state.recentActions),
+    [state.recentActions]
+  );
+
+  return { state, scrollRef, tokenSummary, handleApprove, handleReject };
+}
+
+export function OrchestrationPanel() {
+  return <OrchestrationPanelView {...useOrchestrationRuntime()} />;
+}
+
+export function OrchestrationPanelView({
+  state,
+  scrollRef,
+  tokenSummary,
+  handleApprove,
+  handleReject,
+}: OrchestrationPanelViewProps) {
   return (
     <div className="orchestration-panel">
       <div className="orchestration-header">
         <div className="header-title-container">
           <h2>Orchestration Hub</h2>
           <div className="system-health">
-            <div className={`health-dot ${state.telemetry?.health || 'healthy'}`}></div>
+            <div
+              className={`health-dot ${state.telemetry?.health || 'healthy'}`}
+            ></div>
             <span>System {state.telemetry?.health || 'Healthy'}</span>
           </div>
         </div>
-        
+
         <div className="system-telemetry">
           <div className="telemetry-item" title="CPU Usage">
             <Zap size={14} />
@@ -145,9 +197,20 @@ export function OrchestrationPanel() {
             <Activity size={14} />
             <span>{state.telemetry?.activeJobs || 0}</span>
           </div>
+          <div className="telemetry-item" title="Agent Tokens">
+            <Brain size={14} />
+            <span>{tokenSummary.totalTokens}</span>
+          </div>
+          <div className="telemetry-item" title="Agent Cost Estimate">
+            <Cpu size={14} />
+            <span>${tokenSummary.costEstimate.toFixed(4)}</span>
+          </div>
           <div className="telemetry-item" title="System Uptime">
             <Clock size={14} />
-            <span>{Math.floor((state.telemetry?.uptime || 0) / 3600)}h {Math.floor(((state.telemetry?.uptime || 0) % 3600) / 60)}m</span>
+            <span>
+              {Math.floor((state.telemetry?.uptime || 0) / 3600)}h{' '}
+              {Math.floor(((state.telemetry?.uptime || 0) % 3600) / 60)}m
+            </span>
           </div>
         </div>
       </div>
@@ -156,7 +219,7 @@ export function OrchestrationPanel() {
         {state.agents.length === 0 && (
           <div className="no-agents">No active agents</div>
         )}
-        {state.agents.map(agent => (
+        {state.agents.map((agent) => (
           <div key={agent.id} className={`agent-card ${agent.status}`}>
             <div className="agent-header">
               <div className="agent-role-icon">
@@ -167,7 +230,9 @@ export function OrchestrationPanel() {
               </div>
               <div className="agent-title">
                 <span className="agent-name">{agent.name}</span>
-                <span className="agent-role-label">{agent.role || 'Agent'}</span>
+                <span className="agent-role-label">
+                  {agent.role || 'Agent'}
+                </span>
               </div>
               <div className={`status-dot ${agent.status}`}></div>
             </div>
@@ -187,7 +252,10 @@ export function OrchestrationPanel() {
               {agent.progress !== undefined && agent.status === 'busy' && (
                 <div className="agent-progress">
                   <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${agent.progress}%` }}></div>
+                    <div
+                      className="progress-fill"
+                      style={{ width: `${agent.progress}%` }}
+                    ></div>
                   </div>
                   <span className="progress-text">{agent.progress}%</span>
                 </div>
@@ -228,21 +296,29 @@ export function OrchestrationPanel() {
               <p>Waiting for agent activity...</p>
             </div>
           )}
-          {state.recentActions.map(action => (
+          {state.recentActions.map((action) => (
             <div key={action.id} className={`action-item ${action.type}`}>
               <div className="action-icon">
                 {action.type === 'thought' && <Lightbulb size={14} />}
                 {action.type === 'command' && <Terminal size={14} />}
                 {action.type === 'error' && <AlertCircle size={14} />}
                 {action.type === 'success' && <CheckCircle2 size={14} />}
-                {action.type === 'approval_request' && <ShieldAlert size={14} />}
+                {action.type === 'approval_request' && (
+                  <ShieldAlert size={14} />
+                )}
               </div>
               <div className="action-content">
                 <div className="action-meta">
                   <span className="action-agent">{action.agentName}</span>
                   <div className="action-time">
                     <Clock size={10} />
-                    <span className="action-timestamp">{new Date(action.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                    <span className="action-timestamp">
+                      {new Date(action.timestamp).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                      })}
+                    </span>
                   </div>
                 </div>
                 <div className="action-message-container">
@@ -263,20 +339,20 @@ export function OrchestrationPanel() {
       {state.pendingApprovals.length > 0 && (
         <div className="approvals-section">
           <h3>Pending Approvals</h3>
-          {state.pendingApprovals.map(approval => (
+          {state.pendingApprovals.map((approval) => (
             <div key={approval.id} className="approval-card">
               <div className="approval-info">
                 <span className="approval-agent">{approval.agentName}</span>
                 <p>{approval.message}</p>
               </div>
               <div className="approval-actions">
-                <button 
+                <button
                   className="btn-approve"
                   onClick={() => handleApprove(approval.id)}
                 >
                   Approve
                 </button>
-                <button 
+                <button
                   className="btn-reject"
                   onClick={() => handleReject(approval.id)}
                 >
@@ -288,5 +364,5 @@ export function OrchestrationPanel() {
         </div>
       )}
     </div>
-  )
+  );
 }
