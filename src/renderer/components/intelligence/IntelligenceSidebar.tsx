@@ -67,7 +67,7 @@ export function IntelligenceSidebar({
   activeTab
 }: IntelligenceSidebarProps) {
   const [isResizing, setIsResizing] = useState(false)
-  const [activeSection, setActiveSection] = useState<'intelligence' | 'swarmhub'>('intelligence')
+  const [activeSection, setActiveSection] = useState<'intelligence' | 'swarmhub' | 'brainstorm'>('intelligence')
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -184,10 +184,26 @@ export function IntelligenceSidebar({
           Cognitive Hub
           <Brain size={12} className={cn(activeSection === 'swarmhub' ? "text-codex-neon" : "text-white/20")} />
         </button>
+        <button
+          onClick={() => setActiveSection('brainstorm')}
+          className={cn(
+            "pb-2 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
+            activeSection === 'brainstorm'
+              ? "text-white border-codex-blue"
+              : "text-white/30 border-transparent hover:text-white/60"
+          )}
+        >
+          Brainstorm
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
-        {activeSection === 'swarmhub' ? (
+        {activeSection === 'brainstorm' ? (
+          <BrainstormTab
+            api={api}
+            projectPath={activeTab?.projectPath || ''}
+          />
+        ) : activeSection === 'swarmhub' ? (
           <SwarmCognitiveHub
             api={api}
             projectPath={activeTab?.projectPath || ''}
