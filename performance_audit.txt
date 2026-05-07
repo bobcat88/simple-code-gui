@@ -1,0 +1,7 @@
+--- Performance Audit: Tauri/Rust vs Baseline ---
+Measuring Cold Startup Time... 15008ms
+Measuring Memory Footprint (RSS)... 150.07MB
+
+--- Results Summary ---
+Startup: 15008ms
+Memory:  150.07MB

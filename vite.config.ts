@@ -12,10 +12,17 @@ export default defineConfig(async () => ({
     },
   },
   build: {
-    chunkSizeWarningLimit: 500,
+    chunkSizeWarningLimit: 800,
+    oxc: true,
     rolldownOptions: {
       output: {
-        codeSplitting: true,
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('three')) return 'vendor-three';
+            if (id.includes('react')) return 'vendor-react';
+            return 'vendor-core';
+          }
+        },
       },
     },
   },
