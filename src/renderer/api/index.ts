@@ -38,9 +38,9 @@ export function getApi(): Api | null {
  */
 export function initializeApi(config?: { host: string; port: number; token: string }): Api {
   if (isTauriEnvironment()) {
-    apiInstance = new TauriBackend()
+    apiInstance = new TauriBackend() as Api
   } else if (config) {
-    apiInstance = new HttpBackend(config)
+    apiInstance = new HttpBackend(config) as Api
   } else {
     throw new Error('Running in unknown environment. Tauri or HTTP config required.')
   }

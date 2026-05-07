@@ -35,7 +35,7 @@ export interface UseTerminalSetupReturn {
 export interface PtyOperations {
   writePty: (id: string, data: string) => void
   resizePty: (id: string, cols: number, rows: number) => void
-  onPtyData: (id: string, callback: (data: string) => void) => (() => void) | undefined
+  onPtyData: (id: string, callback: (data: string | Uint8Array) => void) => (() => void) | undefined
   onPtyExit: (id: string, callback: (code: number) => void) => (() => void) | undefined
   onPtyTitle?: (id: string, callback: (title: string) => void) => (() => void) | undefined
   onPtyPath?: (id: string, callback: (path: string) => void) => (() => void) | undefined

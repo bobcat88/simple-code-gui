@@ -84,6 +84,7 @@ pub struct Executor {
     pub active_project_paths: Vec<String>,
     pub knowledge: Arc<Mutex<Option<Arc<crate::gsd_engine::knowledge::SwarmMemory>>>>,
     pub governance: Arc<Mutex<crate::gsd_engine::governance::GovernanceEngine>>,
+    pub speculative_results: Arc<Mutex<HashMap<String, crate::ai_runtime::types::CompletionResponse>>>,
     pub dry_run: bool,
 }
 
@@ -109,6 +110,7 @@ impl Executor {
             active_project_paths,
             knowledge,
             governance,
+            speculative_results: Arc::new(Mutex::new(HashMap::new())),
             dry_run,
         }
     }
@@ -227,6 +229,14 @@ impl Executor {
                     batch.len()
                 ),
             ).await;
+
+            // PRE-FETCH: Trigger speculation for the NEXT wave
+            if let Some(next_batch) = wave_batches.get(wave_index + 1) {
+                for next_step_index in next_batch.iter().copied() {
+                    let next_step = phase.steps[next_step_index].clone();
+                    self.spawn_speculation(plan_id.to_string(), phase.id.clone(), next_step).await;
+                }
+            }
 
             let mut join_set = JoinSet::new();
 
@@ -455,37 +465,79 @@ impl Executor {
             let mut turn_count = 0;
             let max_turns = 15;
             let mut final_content = String::new();
+            let mut skip_first_dispatch = false;
+
+            // CHECK CACHE: Use speculative result if available for the FIRST turn
+            let cached_response = {
+                let mut results = self.speculative_results.lock().await;
+                results.remove(&format!("{}:{}:{}", plan_id, phase_id, step.id))
+            };
+
+            if let Some(res) = cached_response {
+                self.emit_execution_event(
+                    plan_id,
+                    Some(phase_id),
+                    Some(&step.id),
+                    "speculation_consumed",
+                    "Using pre-computed speculative draft",
+                ).await;
+                
+                final_content = res.content.clone();
+                messages.push(Message {
+                    role: "assistant".to_string(),
+                    content: res.content.clone(),
+                    tool_calls: res.tool_calls.clone(),
+                    tool_call_id: None,
+                    cache_control: None,
+                });
+                
+                skip_first_dispatch = true;
+                // If the cached response has tool calls, the loop will process them immediately.
+            }
 
             while turn_count < max_turns {
                 turn_count += 1;
                 
-                let request = CompletionRequest {
-                    messages: messages.clone(),
-                    tools: Some(tools.clone()),
-                    tool_choice: Some("auto".to_string()),
-                    project_path: self.project_path.clone(),
-                    active_project_paths: self.active_project_paths.clone(),
-                    ..Default::default()
-                };
+                let response = if skip_first_dispatch {
+                    skip_first_dispatch = false;
+                    // Mock a response that matches what we pushed to messages
+                    let last_msg = messages.last().unwrap();
+                    crate::ai_runtime::types::CompletionResponse {
+                        id: "cached".to_string(),
+                        model: "speculative".to_string(),
+                        content: last_msg.content.clone(),
+                        tool_calls: last_msg.tool_calls.clone(),
+                        usage: None,
+                    }
+                } else {
+                    let request = CompletionRequest {
+                        messages: messages.clone(),
+                        tools: Some(tools.clone()),
+                        tool_choice: Some("auto".to_string()),
+                        project_path: self.project_path.clone(),
+                        active_project_paths: self.active_project_paths.clone(),
+                        ..Default::default()
+                    };
 
-                let response = match self.ai.dispatch(request).await {
-                    Ok(res) => res,
-                    Err(e) => {
-                        step.status = StepStatus::Failed(format!("AI Dispatch failed: {}", e));
-                        let _ = self.app.emit("gsd-step-updated", step.clone());
-                        return Ok(step);
+                    match self.ai.dispatch(request).await {
+                        Ok(res) => {
+                            final_content = res.content.clone();
+                            messages.push(Message {
+                                role: "assistant".to_string(),
+                                content: res.content.clone(),
+                                tool_calls: res.tool_calls.clone(),
+                                tool_call_id: None,
+                                cache_control: None,
+                            });
+                            res
+                        },
+                        Err(e) => {
+                            step.status = StepStatus::Failed(format!("AI Dispatch failed: {}", e));
+                            let _ = self.app.emit("gsd-step-updated", step.clone());
+                            return Ok(step);
+                        }
                     }
                 };
-
-                final_content = response.content.clone();
-                
-                messages.push(Message {
-                    role: "assistant".to_string(),
-                    content: response.content.clone(),
-                    tool_calls: response.tool_calls.clone(),
-                    tool_call_id: None,
-                    cache_control: None,
-                });
 
                 if let Some(tool_calls) = response.tool_calls {
                     for tc in tool_calls {
@@ -1195,7 +1247,63 @@ impl Executor {
             .output()
             .map_err(|e| e.to_string())?;
 
-        Ok(branch_name)
+    pub async fn spawn_speculation(
+        &self,
+        plan_id: String,
+        phase_id: String,
+        next_step: GsdStep,
+    ) {
+        let executor = self.clone();
+        tokio::spawn(async move {
+            let step_id = next_step.id.clone();
+            
+            // 1. Prepare system prompt (simplified for speculation)
+            let system_prompt = "You are a Transwarp Nexus GSD Agent. \
+                Provide initial reasoning and identify the first tool to use for the following task. \
+                Your response will be used as a speculative draft.";
+
+            let messages = vec![
+                Message { 
+                    role: "system".to_string(), 
+                    content: system_prompt.to_string(), 
+                    tool_calls: None, 
+                    tool_call_id: None,
+                    cache_control: None,
+                },
+                Message { 
+                    role: "user".to_string(), 
+                    content: format!("Task: {}\nDescription: {}", next_step.title, next_step.description), 
+                    tool_calls: None, 
+                    tool_call_id: None,
+                    cache_control: None,
+                },
+            ];
+
+            let tools = get_gsd_tools();
+            let request = CompletionRequest {
+                messages,
+                tools: Some(tools),
+                tool_choice: Some("auto".to_string()),
+                project_path: executor.project_path.clone(),
+                active_project_paths: executor.active_project_paths.clone(),
+                optimization: Some(crate::ai_runtime::types::OptimizationRequest {
+                    human_facing: Some(false),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            };
+
+            if let Ok(response) = executor.ai.dispatch(request).await {
+                let mut results = executor.speculative_results.lock().await;
+                results.insert(format!("{}:{}:{}", plan_id, phase_id, step_id), response);
+                
+                let _ = executor.app.emit("gsd-speculation-ready", serde_json::json!({
+                    "plan_id": plan_id,
+                    "phase_id": phase_id,
+                    "step_id": step_id,
+                }));
+            }
+        });
     }
 }
 

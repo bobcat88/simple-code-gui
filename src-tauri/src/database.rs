@@ -758,6 +758,53 @@ impl DatabaseManager {
         .await
         .map_err(|e| e.to_string())?;
 
+        // FTS5 Virtual Table for Hybrid Search
+        sqlx::query(
+            "CREATE VIRTUAL TABLE IF NOT EXISTS vector_chunks_fts USING fts5(
+                content,
+                symbol_name,
+                file_path,
+                content='vector_chunks',
+                content_rowid='id'
+            )",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        // Triggers to keep FTS in sync
+        sqlx::query(
+            "CREATE TRIGGER IF NOT EXISTS vector_chunks_ai AFTER INSERT ON vector_chunks BEGIN
+                INSERT INTO vector_chunks_fts(rowid, content, symbol_name, file_path) 
+                VALUES (new.rowid, new.content, new.symbol_name, new.file_path);
+            END",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        sqlx::query(
+            "CREATE TRIGGER IF NOT EXISTS vector_chunks_ad AFTER DELETE ON vector_chunks BEGIN
+                INSERT INTO vector_chunks_fts(vector_chunks_fts, rowid, content, symbol_name, file_path) 
+                VALUES('delete', old.rowid, old.content, old.symbol_name, old.file_path);
+            END",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        sqlx::query(
+            "CREATE TRIGGER IF NOT EXISTS vector_chunks_au AFTER UPDATE ON vector_chunks BEGIN
+                INSERT INTO vector_chunks_fts(vector_chunks_fts, rowid, content, symbol_name, file_path) 
+                VALUES('delete', old.rowid, old.content, old.symbol_name, old.file_path);
+                INSERT INTO vector_chunks_fts(rowid, content, symbol_name, file_path) 
+                VALUES (new.rowid, new.content, new.symbol_name, new.file_path);
+            END",
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
         // Swarm Snapshots Table
         sqlx::query(
             "CREATE TABLE IF NOT EXISTS swarm_snapshots (
@@ -892,6 +939,41 @@ pub async fn get_vector_chunks(
         .fetch_all(pool)
         .await
     }.map_err(|e| e.to_string())?;
+
+    let chunks = rows.into_iter().map(|(id, project_path, file_path, symbol_name, content, embedding_json, metadata_json)| {
+        let embedding = embedding_json.and_then(|s| serde_json::from_str(&s).ok());
+        let metadata = serde_json::from_str(&metadata_json).unwrap_or_default();
+
+        crate::vector_engine::types::VectorChunk {
+            id,
+            project_path,
+            file_path,
+            symbol_name,
+            content,
+            embedding,
+            metadata,
+        }
+    }).collect();
+
+    Ok(chunks)
+}
+
+pub async fn search_vector_chunks_fts(
+    pool: &sqlx::SqlitePool,
+    query: &str,
+    limit: usize,
+) -> Result<Vec<crate::vector_engine::types::VectorChunk>, String> {
+    let rows = sqlx::query_as::<_, (String, String, String, String, String, Option<String>, String)>(
+        "SELECT id, project_path, file_path, symbol_name, content, embedding, metadata 
+         FROM vector_chunks 
+         WHERE rowid IN (SELECT rowid FROM vector_chunks_fts WHERE vector_chunks_fts MATCH ?)
+         LIMIT ?",
+    )
+    .bind(query)
+    .bind(limit as i64)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
 
     let chunks = rows.into_iter().map(|(id, project_path, file_path, symbol_name, content, embedding_json, metadata_json)| {
         let embedding = embedding_json.and_then(|s| serde_json::from_str(&s).ok());

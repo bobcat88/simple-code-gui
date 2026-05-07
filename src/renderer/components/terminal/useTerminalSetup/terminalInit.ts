@@ -538,7 +538,7 @@ export function initTerminal(
  * Handles PTY data output.
  */
 export function handlePtyData(
-  data: string,
+  data: string | Uint8Array,
   terminal: XTerm | null,
   fitAddon: FitAddon | null,
   containerRef: MutableRefObject<HTMLDivElement>,
@@ -552,13 +552,15 @@ export function handlePtyData(
   api: UseTerminalSetupOptions['api'],
   state: InitState
 ): void {
-  addToBuffer(ptyId, data)
+  const stringData = typeof data === 'string' ? data : new TextDecoder().decode(data)
+  
+  addToBuffer(ptyId, stringData)
 
   // Strip markers from display
-  let displayData = data.replace(TTS_GUILLEMET_REGEX, '').replace(SUMMARY_MARKER_DISPLAY_REGEX, '')
+  let displayData = stringData.replace(TTS_GUILLEMET_REGEX, '').replace(SUMMARY_MARKER_DISPLAY_REGEX, '')
 
   // Process TTS, summary, and autowork
-  const cleanChunk = stripAnsi(data)
+  const cleanChunk = stripAnsi(stringData)
   onTTSChunk(cleanChunk)
   onSummaryChunk(cleanChunk)
   onAutoWorkMarker(cleanChunk)

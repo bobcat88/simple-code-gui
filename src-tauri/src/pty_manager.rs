@@ -247,7 +247,7 @@ impl PtyManager {
                         }
 
                         output_buffer_clone.lock().append(&data);
-                        let _ = app_clone.emit(&format!("pty-data-{}", id_clone), data);
+                        let _ = app_clone.emit(&format!("pty-data-{}", id_clone), buf[..n].to_vec());
                     }
                     Ok(_) => break, // EOF
                     Err(_) => break, // Error

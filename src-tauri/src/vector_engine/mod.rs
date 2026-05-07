@@ -10,11 +10,25 @@ pub mod indexer;
 use crate::vector_engine::indexer::ProjectIndexer;
 use std::path::PathBuf;
 
+use crate::ai_runtime::RuntimeManager;
+use crate::ai_runtime::types::EmbeddingRequest;
+use crate::vector_engine::types::{VectorChunk, VectorIndexStatus, VectorSearchResult};
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use hnsw_rs::prelude::*;
+
+pub mod types;
+pub mod indexer;
+
+use crate::vector_engine::indexer::ProjectIndexer;
+use std::path::PathBuf;
+
 pub struct VectorEngine {
     runtime: Arc<RuntimeManager>,
     pool: sqlx::SqlitePool,
     chunks: Arc<Mutex<Vec<VectorChunk>>>,
     status: Arc<Mutex<VectorIndexStatus>>,
+    hnsw: Arc<Mutex<Hnsw<f32, DistCosine>>>,
 }
 
 impl VectorEngine {
@@ -27,21 +41,34 @@ impl VectorEngine {
             last_updated: 0,
         }));
 
+        // Initialize HNSW index
+        // M: 16, max_elements: 100000, max_layer: 16, ef_construction: 200
+        let hnsw = Arc::new(Mutex::new(Hnsw::<f32, DistCosine>::new(16, 100000, 16, 200, DistCosine {})));
+
         let chunks_clone = chunks.clone();
         let status_clone = status.clone();
         let pool_clone = pool.clone();
+        let hnsw_clone = hnsw.clone();
 
         // Load existing chunks from database in a background task
         tokio::spawn(async move {
             if let Ok(existing_chunks) = crate::database::get_vector_chunks(&pool_clone, None).await {
                 let mut chunks_lock = chunks_clone.lock().await;
                 let mut status_lock = status_clone.lock().await;
+                let mut hnsw_lock = hnsw_clone.lock().await;
                 
                 status_lock.total_chunks = existing_chunks.len();
-                status_lock.indexed_chunks = existing_chunks.iter().filter(|c| c.embedding.is_some()).count();
+                
+                for (i, chunk) in existing_chunks.iter().enumerate() {
+                    if let Some(embedding) = &chunk.embedding {
+                        hnsw_lock.insert((embedding, i));
+                        status_lock.indexed_chunks += 1;
+                    }
+                }
+                
                 *chunks_lock = existing_chunks;
                 
-                println!("[VectorEngine] Loaded {} chunks from database ({} indexed)", 
+                println!("[VectorEngine] Loaded {} chunks from database ({} indexed into HNSW)", 
                     status_lock.total_chunks, status_lock.indexed_chunks);
             }
         });
@@ -51,6 +78,7 @@ impl VectorEngine {
             pool,
             chunks,
             status,
+            hnsw,
         }
     }
 
@@ -70,13 +98,14 @@ impl VectorEngine {
         if !status.is_indexing {
             let engine_chunks = self.chunks.clone();
             let engine_status = self.status.clone();
+            let engine_hnsw = self.hnsw.clone();
             let runtime = self.runtime.clone();
             let pool = self.pool.clone();
             
             status.is_indexing = true;
             
             tokio::spawn(async move {
-                Self::indexing_loop(engine_chunks, engine_status, runtime, pool).await;
+                Self::indexing_loop(engine_chunks, engine_status, engine_hnsw, runtime, pool).await;
             });
         }
     }
@@ -84,6 +113,7 @@ impl VectorEngine {
     async fn indexing_loop(
         chunks_mutex: Arc<Mutex<Vec<VectorChunk>>>,
         status_mutex: Arc<Mutex<VectorIndexStatus>>,
+        hnsw_mutex: Arc<Mutex<Hnsw<f32, DistCosine>>>,
         runtime: Arc<RuntimeManager>,
         pool: sqlx::SqlitePool,
     ) {
@@ -114,7 +144,13 @@ impl VectorEngine {
                         if let Some(embedding) = response.embeddings.into_iter().next() {
                             let mut chunks = chunks_mutex.lock().await;
                             if index < chunks.len() {
-                                chunks[index].embedding = Some(embedding);
+                                chunks[index].embedding = Some(embedding.clone());
+                                
+                                // Insert into HNSW
+                                {
+                                    let mut hnsw = hnsw_mutex.lock().await;
+                                    hnsw.insert((&embedding, index));
+                                }
                                 
                                 // Persist updated chunk with embedding to database
                                 let _ = crate::database::insert_vector_chunk(&pool, &chunks[index]).await;
@@ -149,7 +185,7 @@ impl VectorEngine {
     pub async fn search(&self, query: String, limit: usize) -> Result<Vec<VectorSearchResult>, String> {
         let request = EmbeddingRequest {
             model: None,
-            input: vec![query],
+            input: vec![query.clone()],
             policy: None,
         };
 
@@ -157,23 +193,73 @@ impl VectorEngine {
         let query_vec = response.embeddings.into_iter().next()
             .ok_or("No embedding returned for query")?;
 
-        let chunks = self.chunks.lock().await;
-        let mut results = Vec::new();
+        // 1. Semantic search using HNSW
+        let mut semantic_results = Vec::new();
+        {
+            let hnsw = self.hnsw.lock().await;
+            let search_limit = limit * 2; 
+            let neighbors = hnsw.search(&query_vec, search_limit, 100);
+            
+            let chunks = self.chunks.lock().await;
+            for neighbor in neighbors {
+                let index = neighbor.d_id;
+                if index < chunks.len() {
+                    semantic_results.push(VectorSearchResult {
+                        chunk: chunks[index].clone(),
+                        score: 1.0 - neighbor.distance, 
+                    });
+                }
+            }
+        }
 
-        for chunk in chunks.iter() {
-            if let Some(chunk_vec) = &chunk.embedding {
-                let score = cosine_similarity(&query_vec, chunk_vec);
-                results.push(VectorSearchResult {
-                    chunk: chunk.clone(),
-                    score,
+        // 2. Keyword search using FTS5
+        let keyword_chunks = crate::database::search_vector_chunks_fts(&self.pool, &query, limit * 2).await
+            .unwrap_or_default();
+        
+        let keyword_results: Vec<VectorSearchResult> = keyword_chunks.into_iter()
+            .map(|chunk| VectorSearchResult { chunk, score: 1.0 })
+            .collect();
+
+        // 3. Hybrid Search: Reciprocal Rank Fusion (RRF)
+        // RRF Score = sum(1 / (rank + k)) where k = 60
+        let k = 60.0;
+        let mut rrf_scores: std::collections::HashMap<String, f32> = std::collections::HashMap::new();
+
+        // Add semantic ranks
+        for (i, res) in semantic_results.iter().enumerate() {
+            let score = 1.0 / (i as f32 + 1.0 + k);
+            rrf_scores.insert(res.chunk.id.clone(), score);
+        }
+
+        // Add keyword ranks
+        for (i, res) in keyword_results.iter().enumerate() {
+            let score = 1.0 / (i as f32 + 1.0 + k);
+            let entry = rrf_scores.entry(res.chunk.id.clone()).or_insert(0.0);
+            *entry += score;
+        }
+
+        // Collect and sort by RRF score
+        let mut final_results: Vec<VectorSearchResult> = Vec::new();
+        
+        // We need the original chunks for final results. 
+        // We'll combine from both result sets to ensure we have the data.
+        let mut all_hits = std::collections::HashMap::new();
+        for res in semantic_results { all_hits.insert(res.chunk.id.clone(), res.chunk); }
+        for res in keyword_results { all_hits.insert(res.chunk.id.clone(), res.chunk); }
+
+        for (id, rrf_score) in rrf_scores {
+            if let Some(chunk) = all_hits.remove(&id) {
+                final_results.push(VectorSearchResult {
+                    chunk,
+                    score: rrf_score,
                 });
             }
         }
 
-        results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
-        results.truncate(limit);
+        final_results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        final_results.truncate(limit);
 
-        Ok(results)
+        Ok(final_results)
     }
 
     pub async fn get_status(&self) -> VectorIndexStatus {

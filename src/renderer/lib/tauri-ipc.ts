@@ -130,9 +130,9 @@ export const tauriIpc = {
 
   onPtyData: (
     id: string,
-    callback: (data: string) => void
+    callback: (data: string | Uint8Array) => void
   ): Promise<UnlistenFn> =>
-    listen<string>(`pty-data-${id}`, (event) => callback(event.payload)),
+    listen<string | Uint8Array>(`pty-data-${id}`, (event) => callback(event.payload)),
 
   onPtyExit: (
     id: string,

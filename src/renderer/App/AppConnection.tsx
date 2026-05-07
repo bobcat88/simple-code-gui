@@ -41,7 +41,7 @@ export function AppConnection(): React.ReactElement | null {
 
   // Handle successful connection from ConnectionScreen
   const handleConnected = useCallback((connectedApi: HttpBackend) => {
-    setApiState(connectedApi)
+    setApiState(connectedApi as Api)
     setIsConnected(true)
   }, [])
 

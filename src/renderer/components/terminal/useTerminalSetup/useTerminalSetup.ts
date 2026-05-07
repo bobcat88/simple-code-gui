@@ -28,7 +28,7 @@ function createPtyOperations(api: UseTerminalSetupOptions['api']): PtyOperations
     resizePty: (id: string, cols: number, rows: number) => {
       api?.resizePty(id, cols, rows)
     },
-    onPtyData: (id: string, callback: (data: string) => void) => {
+    onPtyData: (id: string, callback: (data: string | Uint8Array) => void) => {
       return api?.onPtyData(id, callback) || (() => {})
     },
     onPtyExit: (id: string, callback: (code: number) => void) => {

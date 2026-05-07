@@ -30,7 +30,7 @@ export interface Session {
 
 export type Unsubscribe = () => void;
 
-export type PtyDataCallback = (data: string) => void;
+export type PtyDataCallback = (data: string | Uint8Array) => void;
 
 export type PtyExitCallback = (code: number) => void;
 

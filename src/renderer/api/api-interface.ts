@@ -322,7 +322,7 @@ export interface Api {
   /**
    * Subscribe to PTY output
    */
-  onPtyData: (id: string, callback: (data: string) => void) => Unsubscribe;
+  onPtyData: (id: string, callback: (data: string | Uint8Array) => void) => Unsubscribe;
 
   /**
    * Subscribe to PTY exit

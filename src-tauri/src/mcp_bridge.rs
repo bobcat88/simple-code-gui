@@ -12,6 +12,16 @@ use futures::StreamExt;
 use mdns_sd::{ServiceDaemon, ServiceEvent};
 use uuid::Uuid;
 use chrono::Utc;
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct NodeCapabilities {
+    pub has_gpu: bool,
+    pub storage_speed: u64, // MB/s
+    pub memory_gb: u32,
+    pub cpu_cores: u32,
+    pub cached_models: Vec<String>,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct McpServerConfig {
@@ -22,6 +32,7 @@ pub struct McpServerConfig {
     #[serde(default)]
     pub env: HashMap<String, String>,
     pub url: Option<String>, // New: support for remote MCP servers
+    pub capabilities: Option<NodeCapabilities>,
 }
 
 #[allow(dead_code)]
@@ -70,7 +81,7 @@ impl McpManager {
         }
     }
 
-    pub async fn get_best_worker_node(&self) -> Option<String> {
+    pub async fn get_best_worker_node(&self, task_type: Option<&str>) -> Option<String> {
         let trusted = self.trusted_nodes.lock().await;
         let servers = self.servers.lock().await;
         
@@ -83,7 +94,9 @@ impl McpManager {
                 if *status == "online" {
                     let latency = *handle.last_latency.lock().await;
                     let credits = *handle.credits.lock().await;
-                    let bid = remote_worker_bid(latency, credits);
+                    let caps = handle.config.capabilities.clone().unwrap_or_default();
+                    
+                    let bid = remote_worker_bid(latency, credits, &caps, task_type);
                     if bid < lowest_bid {
                         lowest_bid = bid;
                         best_node = Some(name.clone());
@@ -162,17 +175,27 @@ impl McpManager {
     }
 }
 
-fn remote_worker_bid(latency_ms: u64, credits: i64) -> f64 {
-    let latency_cost = latency_ms as f64 / 100.0;
+fn remote_worker_bid(latency_ms: u64, credits: i64, caps: &NodeCapabilities, task_type: Option<&str>) -> f64 {
+    let mut base_cost = latency_ms as f64 / 100.0;
+    
+    // Scarcity/Credit weighting
     let scarcity_penalty = if credits <= 0 {
         1000.0
     } else if credits < 100 {
         25.0
     } else {
-        1000.0 / credits as f64
+        100.0 / (credits as f64 / 10.0).max(1.0)
     };
 
-    latency_cost + scarcity_penalty
+    // Capability Specialization (Efficiency Multipliers)
+    let efficiency_bonus = match task_type {
+        Some("compression") | Some("indexing") if caps.has_gpu => -10.0, // GPU nodes get massive bonus for ML tasks
+        Some("repo_scan") if caps.storage_speed > 500 => -5.0, // High-speed storage nodes get bonus for scanning
+        Some("heavy_reasoning") if caps.cpu_cores > 16 => -8.0,
+        _ => 0.0,
+    };
+
+    (base_cost + scarcity_penalty + efficiency_bonus).max(0.1)
 }
 
 #[derive(Debug, Serialize, Deserialize)]
