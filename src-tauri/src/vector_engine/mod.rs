@@ -3,25 +3,13 @@ use crate::ai_runtime::types::EmbeddingRequest;
 use crate::vector_engine::types::{VectorChunk, VectorIndexStatus, VectorSearchResult};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-
-pub mod types;
-pub mod indexer;
-
-use crate::vector_engine::indexer::ProjectIndexer;
-use std::path::PathBuf;
-
-use crate::ai_runtime::RuntimeManager;
-use crate::ai_runtime::types::EmbeddingRequest;
-use crate::vector_engine::types::{VectorChunk, VectorIndexStatus, VectorSearchResult};
-use std::sync::Arc;
-use tokio::sync::Mutex;
 use hnsw_rs::prelude::*;
+use std::path::PathBuf;
 
 pub mod types;
 pub mod indexer;
 
 use crate::vector_engine::indexer::ProjectIndexer;
-use std::path::PathBuf;
 
 pub struct VectorEngine {
     runtime: Arc<RuntimeManager>,
@@ -53,7 +41,7 @@ impl VectorEngine {
         // Load existing chunks from database in a background task
         tokio::spawn(async move {
             if let Ok(existing_chunks) = crate::database::get_vector_chunks(&pool_clone, None).await {
-                let mut chunks_lock = chunks_clone.lock().await;
+                let chunks_lock = chunks_clone.lock().await;
                 let mut status_lock = status_clone.lock().await;
                 let mut hnsw_lock = hnsw_clone.lock().await;
                 
@@ -66,7 +54,9 @@ impl VectorEngine {
                     }
                 }
                 
-                *chunks_lock = existing_chunks;
+                // Use a block to drop the lock early if needed, or just assign
+                let mut chunks_data = chunks_lock;
+                *chunks_data = existing_chunks;
                 
                 println!("[VectorEngine] Loaded {} chunks from database ({} indexed into HNSW)", 
                     status_lock.total_chunks, status_lock.indexed_chunks);

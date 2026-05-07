@@ -1247,6 +1247,9 @@ impl Executor {
             .output()
             .map_err(|e| e.to_string())?;
 
+        Ok(branch_name)
+    }
+
     pub async fn spawn_speculation(
         &self,
         plan_id: String,

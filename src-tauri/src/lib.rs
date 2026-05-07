@@ -602,6 +602,12 @@ pub fn run() {
                 ));
                 ai_runtime.set_learning_manager(Arc::clone(&learning_manager)).await;
 
+                // Initialize Vector Engine
+                let vector_engine = Arc::new(VectorEngine::new(
+                    Arc::clone(&ai_runtime),
+                    db_arc.pool.clone(),
+                ));
+
                 // Initialize Mcp Manager
                 let mcp_manager = Arc::new(McpManager::new());
                 let mcp_manager_spawn = Arc::clone(&mcp_manager);
