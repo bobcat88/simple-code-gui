@@ -39,13 +39,13 @@ pub struct McpServerConfig {
 pub enum McpTransport {
     Local {
         stdin: Arc<Mutex<ChildStdin>>,
-        credits: Arc<Mutex<i64>>,
+        credits: Arc<parking_lot::Mutex<i64>>,
     },
     Remote {
         url: String,
         client: reqwest::Client,
-        post_url: Arc<Mutex<Option<String>>>,
-        credits: Arc<Mutex<i64>>,
+        post_url: Arc<parking_lot::Mutex<Option<String>>>,
+        credits: Arc<parking_lot::Mutex<i64>>,
     },
 }
 
@@ -56,44 +56,45 @@ pub struct McpServerHandle {
     pub pending_requests: Arc<Mutex<HashMap<Value, oneshot::Sender<Result<Value, String>>>>>,
     #[allow(dead_code)]
     pub app_handle: Option<AppHandle>,
-    pub status: Arc<Mutex<String>>, // "online", "offline", "degraded"
-    pub last_latency: Arc<Mutex<u64>>, // in ms
-    pub credits: Arc<Mutex<i64>>, // Swarm credits balance
+    pub status: Arc<parking_lot::Mutex<String>>, // "online", "offline", "degraded"
+    pub last_latency: Arc<parking_lot::Mutex<u64>>, // in ms
+    pub credits: Arc<parking_lot::Mutex<i64>>, // Swarm credits balance
 }
 
 pub struct McpManager {
-    pub servers: Arc<Mutex<HashMap<String, McpServerHandle>>>,
-    pub trusted_nodes: Arc<Mutex<HashSet<String>>>,
+    pub servers: Arc<parking_lot::Mutex<HashMap<String, McpServerHandle>>>,
+    pub trusted_nodes: Arc<parking_lot::Mutex<HashSet<String>>>,
 }
 
 impl McpManager {
     pub fn new() -> Self {
         Self {
-            servers: Arc::new(Mutex::new(HashMap::new())),
-            trusted_nodes: Arc::new(Mutex::new(HashSet::new())),
+            servers: Arc::new(parking_lot::Mutex::new(HashMap::new())),
+            trusted_nodes: Arc::new(parking_lot::Mutex::new(HashSet::new())),
         }
     }
 
+
     pub async fn broadcast(&self, method: &str, params: Value) {
-        let servers = self.servers.lock().await;
+        let servers = self.servers.lock();
         for handle in servers.values() {
             let _ = handle.notify(method, params.clone()).await;
         }
     }
 
     pub async fn get_best_worker_node(&self, task_type: Option<&str>) -> Option<String> {
-        let trusted = self.trusted_nodes.lock().await;
-        let servers = self.servers.lock().await;
+        let trusted = self.trusted_nodes.lock();
+        let servers = self.servers.lock();
         
         let mut best_node = None;
         let mut lowest_bid = f64::MAX;
 
         for (name, handle) in servers.iter() {
             if trusted.contains(name) {
-                let status = handle.status.lock().await;
+                let status = handle.status.lock();
                 if *status == "online" {
-                    let latency = *handle.last_latency.lock().await;
-                    let credits = *handle.credits.lock().await;
+                    let latency = *handle.last_latency.lock();
+                    let credits = *handle.credits.lock();
                     let caps = handle.config.capabilities.clone().unwrap_or_default();
                     
                     let bid = remote_worker_bid(latency, credits, &caps, task_type);
@@ -107,13 +108,12 @@ impl McpManager {
         best_node
     }
 
-    pub fn start_health_monitor(&self, app: AppHandle) {
+    pub async fn run_health_monitor(&self, app: AppHandle) {
         let servers_clone = self.servers.clone();
         let app_clone = app.clone();
 
-        tokio::spawn(async move {
-            loop {
-                let servers = servers_clone.lock().await;
+        loop {
+            let servers = servers_clone.lock();
                 let mut health_data = Vec::new();
 
                 for (name, handle) in servers.iter() {
@@ -126,7 +126,7 @@ impl McpManager {
                             Ok(())
                         }
                         McpTransport::Remote { url, client, post_url, .. } => {
-                            let p_url = post_url.lock().await;
+                            let p_url = post_url.lock();
                             let target = p_url.as_ref().unwrap_or(url);
                             let res = client.post(target)
                                 .timeout(Duration::from_millis(1500))
@@ -147,8 +147,8 @@ impl McpManager {
                     };
 
                     let latency = start.elapsed().as_millis() as u64;
-                    let mut status_lock = handle.status.lock().await;
-                    let mut latency_lock = handle.last_latency.lock().await;
+                    let mut status_lock = handle.status.lock();
+                    let mut latency_lock = handle.last_latency.lock();
                     *latency_lock = latency;
 
                     match result {
@@ -165,13 +165,13 @@ impl McpManager {
                         "status": *status_lock,
                         "latency": latency
                     }));
+
                 }
 
                 let _ = app_clone.emit("swarm-health-update", health_data);
                 drop(servers);
                 tokio::time::sleep(Duration::from_secs(10)).await;
             }
-        });
     }
 }
 
@@ -225,7 +225,7 @@ impl McpServerHandle {
     pub async fn spawn(config: McpServerConfig, app_handle: Option<AppHandle>) -> Result<Self, String> {
         #[allow(clippy::type_complexity)]
         let pending_requests: Arc<Mutex<HashMap<Value, oneshot::Sender<Result<Value, String>>>>> = Arc::new(Mutex::new(HashMap::new()));
-        let credits = Arc::new(Mutex::new(1000)); // Initial stipend
+        let credits = Arc::new(parking_lot::Mutex::new(1000)); // Initial stipend
 
         let transport = if let Some(url) = &config.url {
             // Remote HTTP/SSE Transport
@@ -268,7 +268,7 @@ impl McpServerHandle {
                                         let data = rest.trim();
                                         
                                         if current_event == "endpoint" {
-                                            let mut p_url = post_url_clone.lock().await;
+                                            let mut p_url = post_url_clone.lock();
                                             *p_url = Some(data.to_string());
                                             eprintln!("Established MCP SSE endpoint for {}: {}", name_clone, data);
                                         } else {
@@ -276,7 +276,7 @@ impl McpServerHandle {
                                                 if current_event == "memory-update" {
                                                     if let Ok(entry) = serde_json::from_str::<crate::gsd_engine::sync::MemoryEntry>(data) {
                                                         let gsd = app.state::<Arc<crate::gsd_engine::GsdEngine>>();
-                                                        let knowledge = gsd.knowledge.lock().await;
+                                                        let knowledge = gsd.knowledge.lock();
                                                         if let Some(mem) = knowledge.as_ref() {
                                                             let _ = mem.record(&entry.entry_type, &entry.context, &entry.content, &entry.meta);
                                                             eprintln!("[Swarm] Synchronized remote memory from {}: {}", name_clone, entry.content);
@@ -284,7 +284,7 @@ impl McpServerHandle {
                                                     }
                                                 } else if current_event == "credit-update" {
                                                     if let Ok(balance) = data.parse::<i64>() {
-                                                        let mut creds = credits_clone.lock().await;
+                                                        let mut creds = credits_clone.lock();
                                                         *creds = balance;
                                                         eprintln!("[Swarm] Updated credits for {}: {}", name_clone, balance);
                                                     }
@@ -338,7 +338,7 @@ impl McpServerHandle {
                 while let Ok(Some(line)) = reader.next_line().await {
                     if let Ok(response) = serde_json::from_str::<JsonRpcResponse>(&line) {
                         if let Some(id) = response.id {
-                            let mut pending = pending_clone.lock().await;
+                            let mut pending = pending_clone.lock();
                             if let Some(tx) = pending.remove(&id) {
                                 if let Some(error) = response.error {
                                     let _ = tx.send(Err(format!("MCP Error {}: {}", error.code, error.message)));
@@ -371,8 +371,8 @@ impl McpServerHandle {
             transport,
             pending_requests,
             app_handle,
-            status: Arc::new(Mutex::new("online".to_string())),
-            last_latency: Arc::new(Mutex::new(0)),
+            status: Arc::new(parking_lot::Mutex::new("online".to_string())),
+            last_latency: Arc::new(parking_lot::Mutex::new(0)),
             credits,
         };
 
@@ -420,7 +420,7 @@ impl McpServerHandle {
             }
             McpTransport::Remote { url, client, post_url, .. } => {
                 let target_url = {
-                    let p_url = post_url.lock().await;
+                    let p_url = post_url.lock();
                     p_url.as_ref().cloned().unwrap_or_else(|| url.clone())
                 };
 
@@ -462,7 +462,7 @@ impl McpServerHandle {
             }
             McpTransport::Remote { url, client, post_url, .. } => {
                 let target_url = {
-                    let p_url = post_url.lock().await;
+                    let p_url = post_url.lock();
                     p_url.as_ref().cloned().unwrap_or_else(|| url.clone())
                 };
 
@@ -541,7 +541,7 @@ pub async fn register_mcp_server(
     app_handle: AppHandle,
     manager: State<'_, McpManager>,
 ) -> Result<(), String> {
-    let mut servers = manager.servers.lock().await;
+    let mut servers = manager.servers.lock();
     
     // If already running, we might want to restart it or just skip
     if servers.contains_key(&config.name) {
@@ -559,7 +559,7 @@ pub async fn mcp_trust_node(
     name: String,
     manager: State<'_, McpManager>,
 ) -> Result<(), String> {
-    let mut trusted = manager.trusted_nodes.lock().await;
+    let mut trusted = manager.trusted_nodes.lock();
     trusted.insert(name);
     Ok(())
 }
@@ -569,7 +569,7 @@ pub async fn mcp_is_node_trusted(
     name: String,
     manager: State<'_, McpManager>,
 ) -> Result<bool, String> {
-    let trusted = manager.trusted_nodes.lock().await;
+    let trusted = manager.trusted_nodes.lock();
     Ok(trusted.contains(&name))
 }
 
@@ -577,7 +577,7 @@ pub async fn mcp_is_node_trusted(
 pub async fn get_registered_mcp_servers(
     manager: State<'_, McpManager>,
 ) -> Result<Vec<McpServerConfig>, String> {
-    let servers = manager.servers.lock().await;
+    let servers = manager.servers.lock();
     Ok(servers.values().map(|h| h.config.clone()).collect())
 }
 
@@ -586,7 +586,7 @@ pub async fn mcp_list_tools(
     server_name: String,
     manager: State<'_, McpManager>,
 ) -> Result<Value, String> {
-    let servers = manager.servers.lock().await;
+    let servers = manager.servers.lock();
     let server = servers.get(&server_name).ok_or_else(|| format!("Server {} not found", server_name))?;
     server.call("tools/list", json!({})).await
 }
@@ -598,12 +598,12 @@ pub async fn mcp_call_tool(
     args: Value,
     manager: State<'_, McpManager>,
 ) -> Result<Value, String> {
-    let servers = manager.servers.lock().await;
+    let servers = manager.servers.lock();
     let server = servers.get(&server_name).ok_or_else(|| format!("Server {} not found", server_name))?;
     
     // Security check for remote servers
     if let McpTransport::Remote { .. } = &server.transport {
-        let trusted = manager.trusted_nodes.lock().await;
+        let trusted = manager.trusted_nodes.lock();
         if !trusted.contains(&server_name) {
             return Err(format!("UNTRUSTED_REMOTE_NODE: {}", server_name));
         }
@@ -620,7 +620,7 @@ pub async fn mcp_list_resources(
     server_name: String,
     manager: State<'_, McpManager>,
 ) -> Result<Value, String> {
-    let servers = manager.servers.lock().await;
+    let servers = manager.servers.lock();
     let server = servers.get(&server_name).ok_or_else(|| format!("Server {} not found", server_name))?;
     server.call("resources/list", json!({})).await
 }
@@ -631,7 +631,7 @@ pub async fn mcp_read_resource(
     uri: String,
     manager: State<'_, McpManager>,
 ) -> Result<Value, String> {
-    let servers = manager.servers.lock().await;
+    let servers = manager.servers.lock();
     let server = servers.get(&server_name).ok_or_else(|| format!("Server {} not found", server_name))?;
     server.call("resources/read", json!({
         "uri": uri
@@ -728,10 +728,10 @@ pub async fn gsd_spawn_remote_worker(
     mcp: State<'_, Arc<McpManager>>,
     task_description: String,
 ) -> Result<String, String> {
-    let node_name = mcp.get_best_worker_node().await
+    let node_name = mcp.get_best_worker_node(None).await
         .ok_or_else(|| "No trusted remote nodes available for worker spawning".to_string())?;
 
-    let servers = mcp.servers.lock().await;
+    let servers = mcp.servers.lock();
     let handle = servers.get(&node_name)
         .ok_or_else(|| "Selected node unexpectedly vanished".to_string())?;
 
@@ -744,7 +744,7 @@ pub async fn gsd_spawn_remote_worker(
 
     handle.notify("swarm/spawn-worker", params).await?;
     {
-        let mut credits = handle.credits.lock().await;
+        let mut credits = handle.credits.lock();
         *credits = (*credits - 10).max(0);
     }
 

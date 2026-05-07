@@ -602,8 +602,13 @@ pub fn run() {
                 ));
                 ai_runtime.set_learning_manager(Arc::clone(&learning_manager)).await;
 
-                // Initialize Vector Engine
-                let vector_engine = Arc::new(vector_engine::VectorEngine::new(Arc::clone(&ai_runtime), db_arc.pool.clone()));
+                // Initialize Mcp Manager
+                let mcp_manager = Arc::new(McpManager::new());
+                let mcp_manager_spawn = Arc::clone(&mcp_manager);
+                let app_handle_spawn = app_handle.clone();
+                tauri::async_runtime::spawn(async move {
+                    mcp_manager_spawn.run_health_monitor(app_handle_spawn).await;
+                });
 
                 app_handle.manage(db_arc);
                 app_handle.manage(settings_manager);
@@ -619,15 +624,13 @@ pub fn run() {
                 app_handle.manage(rtk_context_manager);
                 app_handle.manage(learning_manager);
                 app_handle.manage(vector_engine);
+                app_handle.manage(mcp_manager);
             });
 
             let pty_manager = PtyManager::new();
             let pty_manager_arc = Arc::new(pty_manager);
             app.manage(Arc::clone(&pty_manager_arc));
             app.manage(VoiceManager::new());
-            let mcp_manager = McpManager::new();
-            mcp_manager.start_health_monitor(app.handle().clone());
-            app.manage(mcp_manager);
 
             // PTY Watchdog
             let handle = app.handle().clone();
