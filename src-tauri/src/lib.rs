@@ -770,6 +770,7 @@ pub fn run() {
             crate::gsd_engine::gsd_list_tools,
             gsd_engine::gsd_get_governance_status,
             gsd_engine::gsd_get_cognitive_topology,
+            gsd_engine::gsd_get_thought_chain,
             gsd_engine::gsd_initiate_consensus,
             gsd_engine::gsd_get_consensus_rounds,
             gsd_engine::gsd_swarm_query_memory,

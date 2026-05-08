@@ -35,6 +35,8 @@ import type {
   AgentVote,
   ConsensusProposal,
   ConsensusRound,
+  ThoughtStep,
+  ThoughtChain,
   SynapticMetrics,
   OptimizationStatsResponse,
   RemoteToolBid,
@@ -813,6 +815,8 @@ export const tauriIpc = {
     invoke<void>('gsd_apply_policy_proposal', { proposalId }),
   gsdGetCognitiveTopology: () =>
     invoke<CognitiveTopology>('gsd_get_cognitive_topology'),
+  gsdGetThoughtChain: (id: string) =>
+    invoke<ThoughtChain | null>('gsd_get_thought_chain', { id }),
   gsdInitiateConsensus: (issue: string, proposals: ConsensusProposal[]) =>
     invoke<string>('gsd_initiate_consensus', { issue, proposals }),
   gsdGetConsensusRounds: () =>

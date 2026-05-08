@@ -469,3 +469,19 @@ export interface ConsensusRound {
   status: 'ACTIVE' | 'RESOLVED';
   winnerId?: string;
 }
+
+export interface ThoughtStep {
+  id: string;
+  parentId?: string;
+  timestamp: number;
+  role: 'hypothesis' | 'evidence' | 'evaluation' | 'decision';
+  content: string;
+  evaluationScore?: number;
+  status: 'active' | 'completed' | 'discarded';
+}
+
+export interface ThoughtChain {
+  agentId: string;
+  taskId: string;
+  steps: ThoughtStep[];
+}

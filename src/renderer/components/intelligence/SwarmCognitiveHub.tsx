@@ -31,6 +31,7 @@ import { SynapticExpansion } from './SynapticExpansion';
 import { EvolverPanel } from '../gsd/EvolverPanel';
 import { QuantumSwarmGraph } from '../gsd/QuantumSwarmGraph';
 import { ConsensusPanel } from '../gsd/ConsensusPanel';
+import { ThoughtChainVisualizer } from '../gsd/ThoughtChainVisualizer';
 
 const NeuralHUDTab = lazy(() =>
   import('./NeuralHUDTab').then((module) => ({ default: module.NeuralHUDTab }))
@@ -56,6 +57,7 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({
     | 'topology'
     | 'consensus'
   >('neural');
+  const [selectedTraceTaskId, setSelectedTraceTaskId] = useState<string | null>(null);
   const { snapshots, refresh: refreshSnapshots } =
     useSwarmSnapshots(projectPath);
 
@@ -141,6 +143,15 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({
       {/* Main Viewport */}
       <div className="flex-1 relative min-h-0 bg-black/20 rounded-2xl border border-white/5 overflow-hidden shadow-inner group/hub">
         <div className="absolute inset-0 bg-gradient-to-br from-codex-neon/5 to-transparent opacity-30 pointer-events-none" />
+
+        {selectedTraceTaskId && (
+            <div className="absolute inset-4 z-50">
+                <ThoughtChainVisualizer 
+                    taskId={selectedTraceTaskId} 
+                    onClose={() => setSelectedTraceTaskId(null)} 
+                />
+            </div>
+        )}
 
         {activeLayer === 'neural' && (
           <div className="absolute inset-0 animate-in zoom-in-95 duration-500">

@@ -291,3 +291,10 @@ Multi-agent decision-making for architectural conflict resolution.
 - [x] **Consensus Engine**: Orchestrated voting rounds where specialized agents review and score competing proposals.
 - [x] **Expertise-Driven Voting**: Agents cast votes based on their `SwarmPersona` expertise (Security, Architecture, etc.).
 - [x] **Adjudication UI**: `ConsensusPanel` for user-in-the-loop settlement of swarm conflicts.
+
+## Phase 53: Quantum Reasoning Chains (Complete)
+Real-time visualization and interaction with speculative agent reasoning paths.
+
+- [x] **Reasoning Engine**: Captures and structures intermediate thought steps (hypotheses, evidence, decisions).
+- [x] **Cognitive Trace IPC**: Streaming bridge for real-time delivery of branching deliberations.
+- [x] **Thought Chain Visualizer**: Vertical timeline UI with status indicators and evaluation scoring for deep transparency.

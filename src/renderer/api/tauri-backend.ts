@@ -39,6 +39,7 @@ import {
   CognitiveTopology,
   ConsensusProposal,
   ConsensusRound,
+  ThoughtChain,
   SynapticMetrics
 } from './types'
 import { tauriIpc } from '../lib/tauri-ipc'
@@ -860,6 +861,9 @@ export class TauriBackend implements ExtendedApi {
   }
   async gsdGetCognitiveTopology(): Promise<CognitiveTopology> {
     return await tauriIpc.gsdGetCognitiveTopology();
+  }
+  async gsdGetThoughtChain(id: string): Promise<ThoughtChain | null> {
+    return await tauriIpc.gsdGetThoughtChain(id);
   }
   async gsdInitiateConsensus(issue: string, proposals: ConsensusProposal[]): Promise<string> {
     return await tauriIpc.gsdInitiateConsensus(issue, proposals);

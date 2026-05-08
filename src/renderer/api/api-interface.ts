@@ -36,6 +36,8 @@ import type {
   AgentVote,
   ConsensusProposal,
   ConsensusRound,
+  ThoughtStep,
+  ThoughtChain,
   SynapticMetrics,
   TokenHistoryFilters,
   TokenHistoryResponse,
@@ -551,6 +553,7 @@ export interface Api {
   gsdProposePolicyRefinement?: (report: ArchitectAuditReport) => Promise<PolicyProposal[]>;
   gsdApplyPolicyProposal?: (proposalId: string) => Promise<void>;
   gsdGetCognitiveTopology?: () => Promise<CognitiveTopology>;
+  gsdGetThoughtChain?: (id: string) => Promise<ThoughtChain | null>;
   gsdInitiateConsensus?: (issue: string, proposals: ConsensusProposal[]) => Promise<string>;
   gsdGetConsensusRounds?: () => Promise<ConsensusRound[]>;
   gsdSpawnShadowTest?: (personaId: string, mutationType: string, mutationValue: string) => Promise<string>;
@@ -931,6 +934,7 @@ export interface ExtendedApi extends Api {
   gsdProposePolicyRefinement: (report: ArchitectAuditReport) => Promise<PolicyProposal[]>;
   gsdApplyPolicyProposal: (proposalId: string) => Promise<void>;
   gsdGetCognitiveTopology: () => Promise<CognitiveTopology>;
+  gsdGetThoughtChain: (id: string) => Promise<ThoughtChain | null>;
   gsdInitiateConsensus: (issue: string, proposals: ConsensusProposal[]) => Promise<string>;
   gsdGetConsensusRounds: () => Promise<ConsensusRound[]>;
   gsdSpawnShadowTest: (personaId: string, mutationType: string, mutationValue: string) => Promise<string>;

@@ -24,6 +24,7 @@ pub mod architect;
 pub mod evolver;
 pub mod cognitive_map;
 pub mod consensus;
+pub mod reasoning;
 
 
 pub struct GsdEngine {
@@ -35,6 +36,7 @@ pub struct GsdEngine {
     pub evolver: Arc<evolver::EvolverEngine>,
     pub cognitive_map: Arc<cognitive_map::CognitiveMapEngine>,
     pub consensus: Arc<consensus::ConsensusEngine>,
+    pub reasoning: Arc<reasoning::ReasoningEngine>,
     pub is_syncing: std::sync::Arc<std::sync::atomic::AtomicBool>,
     pub quantum_sync: Arc<Mutex<Option<quantum_sync::QuantumSyncManager>>>,
     pub distributed: Arc<Mutex<Option<distributed::DistributedManager>>>,
@@ -60,6 +62,7 @@ impl GsdEngine {
         let evolver = Arc::new(evolver::EvolverEngine::new(Arc::clone(&governance)));
         let cognitive_map = Arc::new(cognitive_map::CognitiveMapEngine::new(Arc::clone(&governance), Arc::clone(&knowledge)));
         let consensus = Arc::new(consensus::ConsensusEngine::new(Arc::clone(&governance)));
+        let reasoning = Arc::new(reasoning::ReasoningEngine::new());
         
         Self {
             active_plans: Arc::new(Mutex::new(HashMap::new())),
@@ -70,6 +73,7 @@ impl GsdEngine {
             evolver,
             cognitive_map,
             consensus,
+            reasoning,
             is_syncing: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
             quantum_sync: Arc::new(Mutex::new(None)),
             distributed: Arc::new(Mutex::new(None)),
@@ -797,6 +801,14 @@ pub async fn gsd_get_cognitive_topology(
 }
 
 #[tauri::command]
+pub async fn gsd_get_thought_chain(
+    id: String,
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<Option<reasoning::ThoughtChain>, String> {
+    Ok(state.reasoning.get_chain(&id).await)
+}
+
+#[tauri::command]
 pub async fn gsd_initiate_consensus(
     issue: String,
     proposals: Vec<consensus::ConsensusProposal>,
@@ -1053,8 +1065,8 @@ pub async fn gsd_get_architect_status(
 
 #[tauri::command]
 pub async fn gsd_trigger_expansion_loop(
-    state: State<'_, Arc<GsdEngine>>,
-    app: AppHandle,
+    _state: State<'_, Arc<GsdEngine>>,
+    _app: AppHandle,
     loop_type: String,
 ) -> Result<(), String> {
     match loop_type.as_str() {
