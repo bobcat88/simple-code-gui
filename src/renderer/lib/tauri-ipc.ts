@@ -26,6 +26,8 @@ import type {
   McpServerConfig,
   McpToolListResponse,
   NeuralInsight,
+  ArchitectAuditReport,
+  SynapticMetrics,
   OptimizationStatsResponse,
   RemoteToolBid,
   Session,

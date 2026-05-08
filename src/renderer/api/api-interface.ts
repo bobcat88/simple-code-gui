@@ -27,6 +27,8 @@ import type {
   ProjectIntelligence,
   ProposalProgress,
   ScanOptions,
+  ArchitectAuditReport,
+  SynapticMetrics,
   TokenHistoryFilters,
   TokenHistoryResponse,
   TokenTransactionInput,
@@ -534,13 +536,9 @@ export interface Api {
   gsdExecuteProactiveAudit?: (
     projectPath: string,
     scope?: string
-  ) => Promise<string>;
-  gsdGetSynapticMetrics?: () => Promise<{
-    feedbackLoops: number;
-    activeOptimizations: number;
-    cognitiveLoad: number;
-    swarmCohesion: number;
-  }>;
+  ) => Promise<ArchitectAuditReport>;
+  gsdGetArchitectStatus?: () => Promise<ArchitectAuditReport>;
+  gsdGetSynapticMetrics?: () => Promise<SynapticMetrics>;
   gsdTriggerExpansionLoop?: (loopType: string) => Promise<void>;
   borgRecordLearning?: (projectName: string, title: string, content: string) => Promise<void>;
   borgSyncMemory?: () => Promise<number>;
@@ -912,6 +910,8 @@ export interface ExtendedApi extends Api {
   pythonInstall(): Promise<{ success: boolean; error?: string }>;
 
   // Distributed MCP Orchestration
+  gsdExecuteProactiveAudit: (projectPath: string) => Promise<ArchitectAuditReport>;
+  gsdGetArchitectStatus: () => Promise<ArchitectAuditReport>;
   mcpGetServers: () => Promise<McpServerConfig[]>;
   mcpDiscoverServers: () => Promise<McpServerConfig[]>;
   registerMcpServer: (config: McpServerConfig) => Promise<void>;

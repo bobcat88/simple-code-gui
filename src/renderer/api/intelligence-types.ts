@@ -375,3 +375,31 @@ export interface ProjectIntelligence {
     stale: boolean;
   };
 }
+
+// ============================================================================
+// Phase 47: Synaptic & Architect Types
+// ============================================================================
+
+export interface SynapticMetrics {
+  feedbackLoops: number;
+  activeOptimizations: number;
+  cognitiveLoad: number;
+  swarmCohesion: number;
+}
+
+export interface ArchitectFinding {
+  id: string;
+  severity: 'HIGH' | 'MEDIUM' | 'LOW';
+  findingType: 'COMPLEXITY' | 'CYCLE' | 'FAN_IN';
+  title: string;
+  description: string;
+  filePath: string;
+  symbolName: string;
+}
+
+export interface ArchitectAuditReport {
+  structuralDrift: number;
+  graphStability: number;
+  findings: ArchitectFinding[];
+  timestamp: number;
+}

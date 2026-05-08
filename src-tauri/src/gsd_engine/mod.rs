@@ -20,6 +20,7 @@ pub mod sync;
 pub mod quantum_sync;
 pub mod borg;
 pub mod distributed;
+pub mod architect;
 
 
 pub struct GsdEngine {
@@ -31,6 +32,7 @@ pub struct GsdEngine {
     pub is_syncing: std::sync::Arc<std::sync::atomic::AtomicBool>,
     pub quantum_sync: Arc<Mutex<Option<quantum_sync::QuantumSyncManager>>>,
     pub distributed: Arc<Mutex<Option<distributed::DistributedManager>>>,
+    pub architect: Arc<architect::ArchitectEngine>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -46,7 +48,7 @@ pub enum UserResponse {
 }
 
 impl GsdEngine {
-    pub fn new(db: Arc<DatabaseManager>) -> Self {
+    pub fn new(db: Arc<DatabaseManager>, app: AppHandle) -> Self {
         Self {
             active_plans: Arc::new(Mutex::new(HashMap::new())),
             pending_responses: Arc::new(Mutex::new(HashMap::new())),
@@ -56,6 +58,7 @@ impl GsdEngine {
             is_syncing: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
             quantum_sync: Arc::new(Mutex::new(None)),
             distributed: Arc::new(Mutex::new(None)),
+            architect: Arc::new(architect::ArchitectEngine::new(app)),
         }
     }
 
@@ -889,25 +892,70 @@ pub struct SynapticMetrics {
 #[tauri::command]
 pub async fn gsd_get_synaptic_metrics(
     state: State<'_, Arc<GsdEngine>>,
+    jobs: State<'_, Arc<Mutex<crate::jobs_manager::JobsManager>>>,
 ) -> Result<SynapticMetrics, String> {
-    let _gov = state.governance.lock().await;
+    let plans = state.active_plans.lock().await;
+    let job_manager = jobs.lock().await;
 
-    // Heuristic metrics
+    // 1. Calculate Cognitive Load (Active jobs vs Capacity)
+    let active_jobs = job_manager.get_active_jobs().await.map(|j| j.len()).unwrap_or(0);
+    let cognitive_load = (active_jobs as f64 / 10.0).min(1.0);
+
+    // 2. Calculate Swarm Cohesion (Completed vs Failed plans)
+    let total_plans = plans.len() as f64;
+    let mut completed_plans = 0;
+    for plan in plans.values() {
+        if plan.phases.iter().all(|p| matches!(p.status, crate::gsd_engine::types::StepStatus::Completed)) {
+            completed_plans += 1;
+        }
+    }
+    let swarm_cohesion = if total_plans > 0.0 {
+        (completed_plans as f64 / total_plans).max(0.1)
+    } else {
+        0.85 // Baseline cohesion
+    };
+
+    // 3. Feedback Loops (Active Managers)
+    let mut feedback_loops = 1; // Base GSD loop
+    if state.is_syncing.load(std::sync::atomic::Ordering::SeqCst) { feedback_loops += 1; }
+    if state.quantum_sync.lock().await.is_some() { feedback_loops += 1; }
+
     Ok(SynapticMetrics {
-        feedback_loops: 3, // Synchronizer, Evolution, PeerReview
+        feedback_loops,
         active_optimizations: 0,
-        cognitive_load: 0.42, // Dummy for now
-        swarm_cohesion: 0.85, // Heuristic: high cohesion by default
+        cognitive_load,
+        swarm_cohesion,
     })
 }
 
+#[tauri::command]
+pub async fn gsd_get_architect_status(
+    state: State<'_, Arc<GsdEngine>>,
+    orch: State<'_, OrchestrationState>,
+) -> Result<architect::ArchitectAuditReport, String> {
+    let path = orch.current_project_path.lock().clone()
+        .ok_or_else(|| "No active project".to_string())?;
+    
+    // For status, we'll just run a quick audit or return cached results if we had them.
+    // For now, run a fresh one.
+    state.architect.run_deep_audit(&path).await
+}
 
 #[tauri::command]
 pub async fn gsd_trigger_expansion_loop(
-    _loop_type: String,
+    state: State<'_, Arc<GsdEngine>>,
+    app: AppHandle,
+    loop_type: String,
 ) -> Result<(), String> {
-    // Stub for future loop orchestration
-    Ok(())
+    match loop_type.as_str() {
+        "policy-refinement" => {
+            // Logic to refine synaptic policy based on feedback and cohesion
+            println!("[Synaptic] Triggering policy-refinement loop...");
+            // Stub for Phase 48: Actual AI-driven refinement
+            Ok(())
+        },
+        _ => Err(format!("Unknown loop type: {}", loop_type))
+    }
 }
 
 #[tauri::command]

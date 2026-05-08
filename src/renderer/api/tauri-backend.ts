@@ -32,7 +32,9 @@ import {
   SwarmSnapshot,
   DistributedNode,
   RemoteToolBid,
-  OptimizationStatsResponse
+  OptimizationStatsResponse,
+  ArchitectAuditReport,
+  SynapticMetrics
 } from './types'
 import { tauriIpc } from '../lib/tauri-ipc'
 import { check } from '@tauri-apps/plugin-updater'
@@ -833,13 +835,16 @@ export class TauriBackend implements ExtendedApi {
   async mcpIsNodeTrusted(name: string): Promise<boolean> {
     return await tauriIpc.mcpIsNodeTrusted(name);
   }
-  async gsdGetSynapticMetrics() {
+  async gsdGetSynapticMetrics(): Promise<SynapticMetrics> {
     return await tauriIpc.gsdGetSynapticMetrics();
+  }
+  async gsdGetArchitectStatus(): Promise<ArchitectAuditReport> {
+    return await tauriIpc.gsdGetArchitectStatus();
   }
   async gsdTriggerExpansionLoop(loopType: string): Promise<void> {
     return await tauriIpc.gsdTriggerExpansionLoop(loopType);
   }
-  async gsdExecuteProactiveAudit(projectPath: string): Promise<string> {
+  async gsdExecuteProactiveAudit(projectPath: string): Promise<ArchitectAuditReport> {
     return await tauriIpc.gsdExecuteProactiveAudit(projectPath);
   }
   async borgRecordLearning(projectName: string, title: string, content: string): Promise<void> {

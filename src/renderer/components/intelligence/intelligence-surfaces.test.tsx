@@ -448,7 +448,18 @@ describe('SynapticExpansion', () => {
         Promise.resolve({ feedbackLoops: 3, activeOptimizations: 0, cognitiveLoad: 0.4, swarmCohesion: 0.85 })
       ),
       gsdTriggerExpansionLoop: vi.fn(() => Promise.resolve()),
-      gsdExecuteProactiveAudit: vi.fn(() => Promise.resolve('audit done')),
+      gsdExecuteProactiveAudit: vi.fn(() => Promise.resolve({
+        structuralDrift: 0.1,
+        graphStability: 0.9,
+        findings: [],
+        timestamp: Date.now()
+      })),
+      gsdGetArchitectStatus: vi.fn(() => Promise.resolve({
+        structuralDrift: 0.1,
+        graphStability: 0.9,
+        findings: [],
+        timestamp: Date.now()
+      })),
     });
     render(<SynapticExpansion api={api} projectPath="/repo" />);
 

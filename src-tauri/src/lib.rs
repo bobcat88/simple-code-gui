@@ -563,7 +563,7 @@ pub fn run() {
                     .await;
 
                 // Initialize GSD Engine
-                let gsd_engine = Arc::new(gsd_engine::GsdEngine::new(Arc::clone(&db_arc)));
+                let gsd_engine = Arc::new(gsd_engine::GsdEngine::new(Arc::clone(&db_arc), app_handle.clone()));
 
 
                 // Initialize Jobs Manager
@@ -781,6 +781,7 @@ pub fn run() {
             gsd_engine::gsd_get_sync_status,
             gsd_engine::gsd_quantum_sync_start,
             gsd_engine::gsd_execute_proactive_audit,
+            gsd_engine::gsd_get_architect_status,
             gsd_engine::gsd_get_synaptic_metrics,
             gsd_engine::gsd_trigger_expansion_loop,
             gsd_engine::gsd_start_distributed_discovery,

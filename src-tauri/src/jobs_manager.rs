@@ -373,6 +373,32 @@ impl JobsManager {
             error: r.6,
         }).collect())
     }
+
+    pub async fn get_active_jobs(&self) -> Result<Vec<BackgroundJob>, String> {
+        let rows = sqlx::query_as::<_, (String, String, String, String, f32, Option<String>, Option<String>)>(
+            "SELECT id, job_type, payload, status, progress, result, error FROM background_jobs WHERE status IN ('Pending', 'Running')"
+        )
+        .fetch_all(&self.db.pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        Ok(rows.into_iter().map(|r| BackgroundJob {
+            id: r.0,
+            job_type: r.1,
+            payload: r.2,
+            status: match r.3.as_str() {
+                "Pending" => JobStatus::Pending,
+                "Running" => JobStatus::Running,
+                "Completed" => JobStatus::Completed,
+                "Failed" => JobStatus::Failed,
+                "Cancelled" => JobStatus::Cancelled,
+                _ => JobStatus::Pending,
+            },
+            progress: r.4,
+            result: r.5,
+            error: r.6,
+        }).collect())
+    }
 }
 
 // Tauri Commands
