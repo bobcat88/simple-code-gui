@@ -96,4 +96,16 @@ impl CognitiveMapEngine {
 
         Ok(CognitiveTopology { nodes, links })
     }
+
+    pub async fn update_link(
+        &self,
+        source_id: String,
+        target_id: String,
+        link_type: String,
+    ) -> Result<(), String> {
+        // Phase 55: In a real implementation, this would persist the link
+        // to a dedicated links table in SwarmMemory (SQLite) or update Borg.
+        println!("[CognitiveMap] User manual re-wire: {} -> {} ({})", source_id, target_id, link_type);
+        Ok(())
+    }
 }

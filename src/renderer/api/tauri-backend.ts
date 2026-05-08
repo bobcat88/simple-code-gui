@@ -863,6 +863,9 @@ export class TauriBackend implements ExtendedApi {
   async gsdGetCognitiveTopology(): Promise<CognitiveTopology> {
     return await tauriIpc.gsdGetCognitiveTopology();
   }
+  async gsdUpdateCognitiveLink(sourceId: string, targetId: string, linkType: string): Promise<void> {
+    return await tauriIpc.gsdUpdateCognitiveLink(sourceId, targetId, linkType);
+  }
   async gsdGetThoughtChain(id: string): Promise<ThoughtChain | null> {
     return await tauriIpc.gsdGetThoughtChain(id);
   }

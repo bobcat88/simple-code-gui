@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import ForceGraph3D, { type ForceGraphMethods } from 'react-force-graph-3d';
 import { useApi } from '../../contexts/ApiContext';
 import { cn } from '../../lib/utils';
-import { Loader2, Zap, Brain, Shield, ChevronLeft } from 'lucide-react';
+import { Loader2, Zap, Brain, Shield, ChevronLeft, RefreshCw } from 'lucide-react';
 import SpriteText from 'three-spritetext';
 import type { CognitiveNode, CognitiveLink } from '../../api/intelligence-types';
 
@@ -72,6 +72,14 @@ export const QuantumSwarmGraph: React.FC = () => {
         );
     }
   }, []);
+
+  const handleNodeDragEnd = useCallback((node: any) => {
+      const n = node as SwarmNode;
+      if (api.gsdUpdateCognitiveLink) {
+          api.gsdUpdateCognitiveLink(n.id, "manual_reposition", "spatial_rebalancing")
+            .catch(console.error);
+      }
+  }, [api]);
 
   const resetView = () => {
       setActiveNode(null);
@@ -156,7 +164,8 @@ export const QuantumSwarmGraph: React.FC = () => {
         linkDirectionalParticleColor={() => COLORS.particle}
         linkDirectionalParticleWidth={1.5}
         showNavInfo={false}
-        enableNodeDrag={false}
+        enableNodeDrag={true}
+        onNodeDragEnd={handleNodeDragEnd}
       />
 
       <div className="absolute bottom-4 right-4 z-20 flex gap-4 pointer-events-none">
@@ -172,5 +181,3 @@ export const QuantumSwarmGraph: React.FC = () => {
     </div>
   );
 };
-
-import { RefreshCw } from 'lucide-react';

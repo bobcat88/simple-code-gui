@@ -816,6 +816,8 @@ export const tauriIpc = {
     invoke<void>('gsd_apply_policy_proposal', { proposalId }),
   gsdGetCognitiveTopology: () =>
     invoke<CognitiveTopology>('gsd_get_cognitive_topology'),
+  gsdUpdateCognitiveLink: (sourceId: string, targetId: string, linkType: string) =>
+    invoke<void>('gsd_update_cognitive_link', { sourceId, targetId, linkType }),
   gsdGetThoughtChain: (id: string) =>
     invoke<ThoughtChain | null>('gsd_get_thought_chain', { id }),
   gsdGenerateCognitiveHandoff: (taskId: string) =>

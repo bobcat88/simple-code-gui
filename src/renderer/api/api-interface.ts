@@ -554,6 +554,7 @@ export interface Api {
   gsdProposePolicyRefinement?: (report: ArchitectAuditReport) => Promise<PolicyProposal[]>;
   gsdApplyPolicyProposal?: (proposalId: string) => Promise<void>;
   gsdGetCognitiveTopology?: () => Promise<CognitiveTopology>;
+  gsdUpdateCognitiveLink?: (sourceId: string, targetId: string, linkType: string) => Promise<void>;
   gsdGetThoughtChain?: (id: string) => Promise<ThoughtChain | null>;
   gsdGenerateCognitiveHandoff?: (taskId: string) => Promise<CognitiveHandoffArtifact>;
   gsdInjectCognitiveHandoff?: (targetAgentId: string, handoff: CognitiveHandoffArtifact) => Promise<void>;
@@ -937,6 +938,7 @@ export interface ExtendedApi extends Api {
   gsdProposePolicyRefinement: (report: ArchitectAuditReport) => Promise<PolicyProposal[]>;
   gsdApplyPolicyProposal: (proposalId: string) => Promise<void>;
   gsdGetCognitiveTopology: () => Promise<CognitiveTopology>;
+  gsdUpdateCognitiveLink: (sourceId: string, targetId: string, linkType: string) => Promise<void>;
   gsdGetThoughtChain: (id: string) => Promise<ThoughtChain | null>;
   gsdGenerateCognitiveHandoff: (taskId: string) => Promise<CognitiveHandoffArtifact>;
   gsdInjectCognitiveHandoff: (targetAgentId: string, handoff: CognitiveHandoffArtifact) => Promise<void>;

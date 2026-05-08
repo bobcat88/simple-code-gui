@@ -770,6 +770,7 @@ pub fn run() {
             crate::gsd_engine::gsd_list_tools,
             gsd_engine::gsd_get_governance_status,
             gsd_engine::gsd_get_cognitive_topology,
+            gsd_engine::gsd_update_cognitive_link,
             gsd_engine::gsd_get_thought_chain,
             gsd_engine::gsd_generate_cognitive_handoff,
             gsd_engine::gsd_inject_cognitive_handoff,
