@@ -36,6 +36,9 @@ import {
   ArchitectAuditReport,
   PolicyProposal,
   PersonaEvolutionProposal,
+  CognitiveTopology,
+  ConsensusProposal,
+  ConsensusRound,
   SynapticMetrics
 } from './types'
 import { tauriIpc } from '../lib/tauri-ipc'
@@ -854,6 +857,15 @@ export class TauriBackend implements ExtendedApi {
   }
   async gsdApplyPolicyProposal(proposalId: string): Promise<void> {
     return await tauriIpc.gsdApplyPolicyProposal(proposalId);
+  }
+  async gsdGetCognitiveTopology(): Promise<CognitiveTopology> {
+    return await tauriIpc.gsdGetCognitiveTopology();
+  }
+  async gsdInitiateConsensus(issue: string, proposals: ConsensusProposal[]): Promise<string> {
+    return await tauriIpc.gsdInitiateConsensus(issue, proposals);
+  }
+  async gsdGetConsensusRounds(): Promise<ConsensusRound[]> {
+    return await tauriIpc.gsdGetConsensusRounds();
   }
   async gsdSpawnShadowTest(personaId: string, mutationType: string, mutationValue: string): Promise<string> {
     return await tauriIpc.gsdSpawnShadowTest(personaId, mutationType, mutationValue);

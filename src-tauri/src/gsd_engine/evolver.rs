@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use crate::gsd_engine::governance::{SwarmPersona, GovernanceEngine};
+use crate::gsd_engine::governance::GovernanceEngine;
 use tauri::AppHandle;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

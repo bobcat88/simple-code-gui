@@ -22,6 +22,8 @@ pub mod borg;
 pub mod distributed;
 pub mod architect;
 pub mod evolver;
+pub mod cognitive_map;
+pub mod consensus;
 
 
 pub struct GsdEngine {
@@ -31,6 +33,8 @@ pub struct GsdEngine {
     pub knowledge: Arc<Mutex<Option<Arc<knowledge::SwarmMemory>>>>,
     pub governance: Arc<Mutex<governance::GovernanceEngine>>,
     pub evolver: Arc<evolver::EvolverEngine>,
+    pub cognitive_map: Arc<cognitive_map::CognitiveMapEngine>,
+    pub consensus: Arc<consensus::ConsensusEngine>,
     pub is_syncing: std::sync::Arc<std::sync::atomic::AtomicBool>,
     pub quantum_sync: Arc<Mutex<Option<quantum_sync::QuantumSyncManager>>>,
     pub distributed: Arc<Mutex<Option<distributed::DistributedManager>>>,
@@ -52,15 +56,20 @@ pub enum UserResponse {
 impl GsdEngine {
     pub fn new(db: Arc<DatabaseManager>, app: AppHandle) -> Self {
         let governance = Arc::new(Mutex::new(governance::GovernanceEngine::new_default()));
+        let knowledge = Arc::new(Mutex::new(None));
         let evolver = Arc::new(evolver::EvolverEngine::new(Arc::clone(&governance)));
+        let cognitive_map = Arc::new(cognitive_map::CognitiveMapEngine::new(Arc::clone(&governance), Arc::clone(&knowledge)));
+        let consensus = Arc::new(consensus::ConsensusEngine::new(Arc::clone(&governance)));
         
         Self {
             active_plans: Arc::new(Mutex::new(HashMap::new())),
             pending_responses: Arc::new(Mutex::new(HashMap::new())),
             db,
-            knowledge: Arc::new(Mutex::new(None)),
+            knowledge,
             governance,
             evolver,
+            cognitive_map,
+            consensus,
             is_syncing: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
             quantum_sync: Arc::new(Mutex::new(None)),
             distributed: Arc::new(Mutex::new(None)),
@@ -781,14 +790,37 @@ pub async fn gsd_sync_memory(
 }
 
 #[tauri::command]
+pub async fn gsd_get_cognitive_topology(
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<cognitive_map::CognitiveTopology, String> {
+    state.cognitive_map.generate_topology().await
+}
+
+#[tauri::command]
+pub async fn gsd_initiate_consensus(
+    issue: String,
+    proposals: Vec<consensus::ConsensusProposal>,
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<String, String> {
+    state.consensus.initiate_round(issue, proposals).await
+}
+
+#[tauri::command]
+pub async fn gsd_get_consensus_rounds(
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<Vec<consensus::ConsensusRound>, String> {
+    Ok(state.consensus.get_rounds().await)
+}
+
+#[tauri::command]
 pub async fn gsd_spawn_shadow_test(
-    app: AppHandle,
+    _app: AppHandle,
     persona_id: String,
     mutation_type: String,
     mutation_value: String,
     state: State<'_, Arc<GsdEngine>>,
 ) -> Result<String, String> {
-    state.evolver.spawn_shadow_test(&app, persona_id, mutation_type, mutation_value).await
+    state.evolver.spawn_shadow_test(&_app, persona_id, mutation_type, mutation_value).await
 }
 
 #[tauri::command]

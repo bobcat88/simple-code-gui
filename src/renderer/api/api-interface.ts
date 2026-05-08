@@ -30,6 +30,12 @@ import type {
   ArchitectAuditReport,
   PolicyProposal,
   PersonaEvolutionProposal,
+  CognitiveNode,
+  CognitiveLink,
+  CognitiveTopology,
+  AgentVote,
+  ConsensusProposal,
+  ConsensusRound,
   SynapticMetrics,
   TokenHistoryFilters,
   TokenHistoryResponse,
@@ -544,6 +550,9 @@ export interface Api {
   gsdTriggerExpansionLoop?: (loopType: string) => Promise<void>;
   gsdProposePolicyRefinement?: (report: ArchitectAuditReport) => Promise<PolicyProposal[]>;
   gsdApplyPolicyProposal?: (proposalId: string) => Promise<void>;
+  gsdGetCognitiveTopology?: () => Promise<CognitiveTopology>;
+  gsdInitiateConsensus?: (issue: string, proposals: ConsensusProposal[]) => Promise<string>;
+  gsdGetConsensusRounds?: () => Promise<ConsensusRound[]>;
   gsdSpawnShadowTest?: (personaId: string, mutationType: string, mutationValue: string) => Promise<string>;
   gsdGetPersonaProposals?: () => Promise<PersonaEvolutionProposal[]>;
   gsdApplyPersonaEvolution?: (proposalId: string) => Promise<void>;
@@ -921,6 +930,9 @@ export interface ExtendedApi extends Api {
   gsdGetArchitectStatus: () => Promise<ArchitectAuditReport>;
   gsdProposePolicyRefinement: (report: ArchitectAuditReport) => Promise<PolicyProposal[]>;
   gsdApplyPolicyProposal: (proposalId: string) => Promise<void>;
+  gsdGetCognitiveTopology: () => Promise<CognitiveTopology>;
+  gsdInitiateConsensus: (issue: string, proposals: ConsensusProposal[]) => Promise<string>;
+  gsdGetConsensusRounds: () => Promise<ConsensusRound[]>;
   gsdSpawnShadowTest: (personaId: string, mutationType: string, mutationValue: string) => Promise<string>;
   gsdGetPersonaProposals: () => Promise<PersonaEvolutionProposal[]>;
   gsdApplyPersonaEvolution: (proposalId: string) => Promise<void>;

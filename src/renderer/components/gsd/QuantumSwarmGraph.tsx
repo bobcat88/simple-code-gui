@@ -1,23 +1,19 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import ForceGraph3D, { type ForceGraphMethods } from 'react-force-graph-3d';
 import { useApi } from '../../contexts/ApiContext';
 import { cn } from '../../lib/utils';
-import { Loader2, Zap, Brain, Shield } from 'lucide-react';
+import { Loader2, Zap, Brain, Shield, ChevronLeft } from 'lucide-react';
 import SpriteText from 'three-spritetext';
+import type { CognitiveNode, CognitiveLink } from '../../api/intelligence-types';
 
-interface SwarmNode {
-  id: string;
-  name: string;
-  type: 'agent' | 'memory' | 'task' | 'node';
-  val: number;
-  color?: string;
+interface SwarmNode extends CognitiveNode {
+  x?: number;
+  y?: number;
+  z?: number;
 }
 
-interface SwarmLink {
-  source: string;
-  target: string;
-  value: number;
-  type?: string;
+interface SwarmLink extends CognitiveLink {
+  // force-graph specific props if needed
 }
 
 interface GraphData {
@@ -30,67 +26,58 @@ export const QuantumSwarmGraph: React.FC = () => {
   const fgRef = useRef<any>(null);
   const [data, setData] = useState<GraphData>({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
+  const [activeNode, setActiveNode] = useState<SwarmNode | null>(null);
 
   // Colors from "Toxic Glow" palette
   const COLORS = {
     agent: '#ccff00', // neon-green
     memory: '#a855f7', // purple-500
     task: '#3b82f6', // blue-500
-    node: '#f59e0b', // amber-500
-    link: 'rgba(204, 255, 0, 0.2)',
+    cluster: '#f59e0b', // amber-500
+    node: '#ffffff',
+    link: 'rgba(204, 255, 0, 0.15)',
     particle: '#ccff00'
   };
 
   const fetchGraphData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch Personas (Agents)
-      const personas = api.gsdGetPersonas ? await api.gsdGetPersonas() : [];
+      if (!api.gsdGetCognitiveTopology) return;
+      const topology = await api.gsdGetCognitiveTopology();
       
-      const nodes: SwarmNode[] = [];
-      const links: SwarmLink[] = [];
-
-      personas.forEach((p: any) => {
-        nodes.push({
-          id: p.id,
-          name: p.name,
-          type: 'agent',
-          val: 20,
-          color: COLORS.agent
-        });
+      setData({
+        nodes: topology.nodes as SwarmNode[],
+        links: topology.links as SwarmLink[]
       });
-
-      // 2. Mock some memory nodes for visualization foundation
-      // In a real scenario, we would fetch recent patterns from gsd_swarm_query_memory
-      for (let i = 0; i < 15; i++) {
-        const id = `mem-${i}`;
-        nodes.push({
-          id,
-          name: `Memory ${i}`,
-          type: 'memory',
-          val: 8,
-          color: COLORS.memory
-        });
-        
-        // Random link to an agent
-        if (nodes.length > personas.length) {
-            const agentId = personas[Math.floor(Math.random() * personas.length)]?.id;
-            if (agentId) {
-                links.push({
-                    source: agentId,
-                    target: id,
-                    value: 2
-                });
-            }
-        }
-      }
-
-      setData({ nodes, links });
     } catch (error) {
       console.error('Failed to fetch swarm graph data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNodeClick = useCallback((node: any) => {
+    const n = node as SwarmNode;
+    setActiveNode(n);
+
+    // Aim at node from outside it
+    const distance = 40;
+    const distRatio = 1 + distance / Math.hypot(n.x || 0, n.y || 0, n.z || 0);
+
+    if (fgRef.current) {
+        fgRef.current.cameraPosition(
+            { x: (n.x || 0) * distRatio, y: (n.y || 0) * distRatio, z: (n.z || 0) * distRatio }, // new position
+            n, // lookAt ({x,y,z})
+            2000  // ms transition duration
+        );
+    }
+  }, []);
+
+  const resetView = () => {
+      setActiveNode(null);
+      if (fgRef.current) {
+          fgRef.current.zoomToFit(1000);
+      }
   };
 
   useEffect(() => {
@@ -106,23 +93,33 @@ export const QuantumSwarmGraph: React.FC = () => {
         </div>
       )}
 
-      <div className="absolute top-4 left-4 z-10 space-y-2 pointer-events-none">
+      <div className="absolute top-4 left-4 z-20 space-y-2 pointer-events-none">
         <div className="flex items-center gap-2 bg-black/60 border border-neon-green/20 p-2 rounded-lg backdrop-blur-md">
           <Brain className="w-4 h-4 text-neon-green" />
           <h2 className="text-[10px] font-black text-white uppercase tracking-widest">Quantum Swarm Topology</h2>
         </div>
         
-        <div className="flex flex-wrap gap-2">
-            {Object.entries(COLORS).filter(([k]) => ['agent', 'memory', 'task', 'node'].includes(k)).map(([type, color]) => (
-                <div key={type} className="flex items-center gap-1.5 px-2 py-1 bg-black/40 rounded border border-white/5 backdrop-blur-sm">
-                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}` }} />
-                    <span className="text-[8px] font-bold text-white/40 uppercase tracking-tighter">{type}</span>
+        {activeNode && (
+            <div className="flex flex-col gap-1 p-3 bg-neon-green/10 border border-neon-green/30 rounded-xl backdrop-blur-xl animate-in slide-in-from-left-2 duration-300 pointer-events-auto max-w-[200px]">
+                <div className="flex items-center justify-between mb-2">
+                    <span className="text-[8px] font-black text-neon-green uppercase tracking-widest">Active Node</span>
+                    <button onClick={resetView} className="p-1 hover:bg-neon-green/20 rounded transition-colors">
+                        <ChevronLeft className="w-3 h-3 text-neon-green" />
+                    </button>
                 </div>
-            ))}
-        </div>
+                <h3 className="text-xs font-black text-white truncate">{activeNode.name}</h3>
+                <p className="text-[9px] text-white/60 font-mono uppercase italic">{activeNode.nodeType}</p>
+                {activeNode.metadata && Object.entries(activeNode.metadata).map(([k, v]) => (
+                    <div key={k} className="mt-1">
+                        <span className="text-[7px] text-white/30 uppercase block">{k}</span>
+                        <span className="text-[8px] text-white/70 break-all">{Array.isArray(v) ? v.join(', ') : String(v)}</span>
+                    </div>
+                ))}
+            </div>
+        )}
       </div>
 
-      <div className="absolute top-4 right-4 z-10">
+      <div className="absolute top-4 right-4 z-20">
         <button 
             onClick={fetchGraphData}
             className="p-2 bg-black/60 border border-white/10 rounded-lg hover:border-neon-green/40 text-white/40 hover:text-neon-green transition-all backdrop-blur-sm active:scale-95"
@@ -137,14 +134,15 @@ export const QuantumSwarmGraph: React.FC = () => {
         graphData={data}
         backgroundColor="#000000"
         nodeLabel="name"
-        nodeColor={node => (node as SwarmNode).color || '#ffffff'}
+        nodeColor={node => (node as SwarmNode).color || COLORS.node}
+        onNodeClick={handleNodeClick}
         nodeThreeObject={node => {
           const n = node as SwarmNode;
           const sprite = new SpriteText(n.name);
           sprite.color = n.color || '#ffffff';
-          sprite.textHeight = 4;
+          sprite.textHeight = n.nodeType === 'agent' ? 5 : 3;
           sprite.padding = 2;
-          sprite.backgroundColor = 'rgba(0,0,0,0.4)';
+          sprite.backgroundColor = 'rgba(0,0,0,0.6)';
           sprite.borderRadius = 2;
           sprite.borderWidth = 0.5;
           sprite.borderColor = 'rgba(255,255,255,0.1)';
@@ -154,17 +152,17 @@ export const QuantumSwarmGraph: React.FC = () => {
         linkColor={() => COLORS.link}
         linkWidth={1}
         linkDirectionalParticles={2}
-        linkDirectionalParticleSpeed={d => 0.005}
+        linkDirectionalParticleSpeed={() => 0.005}
         linkDirectionalParticleColor={() => COLORS.particle}
         linkDirectionalParticleWidth={1.5}
         showNavInfo={false}
         enableNodeDrag={false}
       />
 
-      <div className="absolute bottom-4 right-4 z-10 flex gap-4 pointer-events-none">
+      <div className="absolute bottom-4 right-4 z-20 flex gap-4 pointer-events-none">
           <div className="text-right">
-              <div className="text-[10px] font-black text-white/60 uppercase tracking-widest">Nodes</div>
-              <div className="text-xl font-black text-neon-green tabular-nums">{data.nodes.length}</div>
+              <div className="text-[10px] font-black text-white/60 uppercase tracking-widest">Dimensions</div>
+              <div className="text-xl font-black text-neon-green tabular-nums">3D</div>
           </div>
           <div className="text-right">
               <div className="text-[10px] font-black text-white/60 uppercase tracking-widest">Synapses</div>
@@ -175,5 +173,4 @@ export const QuantumSwarmGraph: React.FC = () => {
   );
 };
 
-// Helper for Lucide icons in Sprite (not easily done without canvas drawing, keeping SpriteText for now)
 import { RefreshCw } from 'lucide-react';

@@ -29,6 +29,12 @@ import type {
   ArchitectAuditReport,
   PolicyProposal,
   PersonaEvolutionProposal,
+  CognitiveNode,
+  CognitiveLink,
+  CognitiveTopology,
+  AgentVote,
+  ConsensusProposal,
+  ConsensusRound,
   SynapticMetrics,
   OptimizationStatsResponse,
   RemoteToolBid,
@@ -805,6 +811,12 @@ export const tauriIpc = {
     invoke<PolicyProposal[]>('gsd_propose_policy_refinement', { report }),
   gsdApplyPolicyProposal: (proposalId: string) =>
     invoke<void>('gsd_apply_policy_proposal', { proposalId }),
+  gsdGetCognitiveTopology: () =>
+    invoke<CognitiveTopology>('gsd_get_cognitive_topology'),
+  gsdInitiateConsensus: (issue: string, proposals: ConsensusProposal[]) =>
+    invoke<string>('gsd_initiate_consensus', { issue, proposals }),
+  gsdGetConsensusRounds: () =>
+    invoke<ConsensusRound[]>('gsd_get_consensus_rounds'),
   gsdSpawnShadowTest: (personaId: string, mutationType: string, mutationValue: string) =>
     invoke<string>('gsd_spawn_shadow_test', { personaId, mutationType, mutationValue }),
   gsdGetPersonaProposals: () =>

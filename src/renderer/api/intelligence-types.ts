@@ -425,3 +425,47 @@ export interface PersonaEvolutionProposal {
   rationale: string;
   status: 'PENDING' | 'APPLIED' | 'REJECTED';
 }
+
+export interface CognitiveNode {
+  id: string;
+  name: string;
+  nodeType: 'agent' | 'memory' | 'task' | 'cluster';
+  val: number;
+  color: string;
+  children?: CognitiveNode[];
+  metadata?: Record<string, any>;
+}
+
+export interface CognitiveLink {
+  source: string;
+  target: string;
+  linkType: string;
+}
+
+export interface CognitiveTopology {
+  nodes: CognitiveNode[];
+  links: CognitiveLink[];
+}
+
+export interface AgentVote {
+  agentId: string;
+  agentName: string;
+  proposalId: string;
+  score: number;
+  rationale: string;
+}
+
+export interface ConsensusProposal {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export interface ConsensusRound {
+  id: string;
+  issueDescription: string;
+  competingProposals: ConsensusProposal[];
+  votes: AgentVote[];
+  status: 'ACTIVE' | 'RESOLVED';
+  winnerId?: string;
+}

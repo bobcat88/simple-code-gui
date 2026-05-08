@@ -11,6 +11,7 @@ import {
   Minus,
   Share2,
   Shield,
+  Scale,
   TrendingDown,
   TrendingUp,
   Zap,
@@ -29,6 +30,7 @@ import { OrchestrationPanel } from './OrchestrationPanel';
 import { SynapticExpansion } from './SynapticExpansion';
 import { EvolverPanel } from '../gsd/EvolverPanel';
 import { QuantumSwarmGraph } from '../gsd/QuantumSwarmGraph';
+import { ConsensusPanel } from '../gsd/ConsensusPanel';
 
 const NeuralHUDTab = lazy(() =>
   import('./NeuralHUDTab').then((module) => ({ default: module.NeuralHUDTab }))
@@ -52,6 +54,7 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({
     | 'governance'
     | 'tasks'
     | 'topology'
+    | 'consensus'
   >('neural');
   const { snapshots, refresh: refreshSnapshots } =
     useSwarmSnapshots(projectPath);
@@ -83,6 +86,12 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({
             onClick={() => setActiveLayer('neural')}
             icon={<Activity size={14} />}
             label="Pulse"
+          />
+          <NavButton
+            active={activeLayer === 'consensus'}
+            onClick={() => setActiveLayer('consensus')}
+            icon={<Scale size={14} />}
+            label="Resolve"
           />
           <NavButton
             active={activeLayer === 'topology'}
@@ -149,6 +158,11 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({
         {activeLayer === 'topology' && (
           <div className="absolute inset-0 animate-in zoom-in-95 duration-500">
             <QuantumSwarmGraph />
+          </div>
+        )}
+        {activeLayer === 'consensus' && (
+          <div className="absolute inset-0 p-4 animate-in slide-in-from-top-4 duration-500">
+            <ConsensusPanel />
           </div>
         )}
         {activeLayer === 'brainstorm' && (

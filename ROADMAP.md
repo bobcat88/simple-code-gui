@@ -277,3 +277,17 @@ Autonomous agent evolution through sandboxed shadow testing and mutation.
 - [x] **Shadow Swarm Framework**: `EvolverEngine` for cloning personas and simulating mutations in dry-runs.
 - [x] **Persona Evolution Proposals**: Captured performance gains and rationales for agent capability enhancements.
 - [x] **Evolver Control Panel**: Dedicated UI for monitoring shadow tests and promoting successful mutations to the live swarm.
+
+## Phase 51: Multi-Dimensional Cognitive Maps (Complete)
+Hierarchical 3D visualization and deep cognitive exploration.
+
+- [x] **Cognitive Map Engine**: Hierarchical clustering of memory patterns and agent deliberations.
+- [x] **Hierarchical 3D Graph**: Enhanced `QuantumSwarmGraph` with "Click-to-Zoom" and cluster navigation.
+- [x] **Spatial Metadata Overlays**: holographic 2D details for agents, clusters, and individual memory nodes.
+
+## Phase 52: Swarm Consensus Protocol (Complete)
+Multi-agent decision-making for architectural conflict resolution.
+
+- [x] **Consensus Engine**: Orchestrated voting rounds where specialized agents review and score competing proposals.
+- [x] **Expertise-Driven Voting**: Agents cast votes based on their `SwarmPersona` expertise (Security, Architecture, etc.).
+- [x] **Adjudication UI**: `ConsensusPanel` for user-in-the-loop settlement of swarm conflicts.
