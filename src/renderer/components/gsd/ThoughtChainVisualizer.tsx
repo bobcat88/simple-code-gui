@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, Zap, Shield, Search, CheckCircle2, XCircle, ChevronRight, Activity } from 'lucide-react';
-import type { ThoughtChain, ThoughtStep } from '../../api/intelligence-types';
+import { Brain, Zap, Shield, Search, CheckCircle2, XCircle, ChevronRight, Activity, Share2 } from 'lucide-react';
+import type { ThoughtChain, ThoughtStep, CognitiveHandoffArtifact } from '../../api/intelligence-types';
 import { useApi } from '../../contexts/ApiContext';
 import { cn } from '../../lib/utils';
 
@@ -14,6 +14,7 @@ export const ThoughtChainVisualizer: React.FC<ThoughtChainVisualizerProps> = ({ 
   const api = useApi();
   const [chain, setChain] = useState<ThoughtChain | null>(null);
   const [loading, setLoading] = useState(true);
+  const [handoffArtifact, setHandoffArtifact] = useState<CognitiveHandoffArtifact | null>(null);
 
   const fetchChain = async () => {
     if (!api.gsdGetThoughtChain) return;
@@ -24,6 +25,17 @@ export const ThoughtChainVisualizer: React.FC<ThoughtChainVisualizerProps> = ({ 
       console.error('Failed to fetch thought chain:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGenerateHandoff = async () => {
+    if (!api.gsdGenerateCognitiveHandoff) return;
+    try {
+        const artifact = await api.gsdGenerateCognitiveHandoff(taskId);
+        setHandoffArtifact(artifact);
+        console.log('Cognitive Handoff Generated:', artifact);
+    } catch (error) {
+        console.error('Failed to generate cognitive handoff:', error);
     }
   };
 
@@ -54,11 +66,23 @@ export const ThoughtChainVisualizer: React.FC<ThoughtChainVisualizerProps> = ({ 
             <span className="text-[8px] font-mono text-neon-green/60 uppercase mt-1 block">Task: {taskId.substring(0, 12)}...</span>
           </div>
         </div>
-        {onClose && (
-            <button onClick={onClose} className="p-1 hover:bg-white/5 rounded-lg text-white/40 hover:text-white transition-colors">
-                <XCircle className="w-4 h-4" />
+        <div className="flex items-center gap-2">
+            <button 
+                onClick={handleGenerateHandoff}
+                className={cn(
+                    "flex items-center gap-1.5 px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest transition-all",
+                    handoffArtifact ? "bg-neon-green text-black shadow-[0_0_10px_#ccff00]" : "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white"
+                )}
+            >
+                <Share2 className="w-3 h-3" />
+                {handoffArtifact ? 'Artifact Ready' : 'Generate Handoff'}
             </button>
-        )}
+            {onClose && (
+                <button onClick={onClose} className="p-1 hover:bg-white/5 rounded-lg text-white/40 hover:text-white transition-colors">
+                    <XCircle className="w-4 h-4" />
+                </button>
+            )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
@@ -70,7 +94,6 @@ export const ThoughtChainVisualizer: React.FC<ThoughtChainVisualizerProps> = ({ 
         ) : (
             <div className="relative border-l border-white/10 ml-3 pl-8 space-y-8">
                 {chain?.steps.map((step, idx) => {
-                    const isLast = idx === chain.steps.length - 1;
                     const getRoleIcon = (role: string) => {
                         switch(role) {
                             case 'hypothesis': return <Search className="w-3 h-3" />;
@@ -138,9 +161,16 @@ export const ThoughtChainVisualizer: React.FC<ThoughtChainVisualizerProps> = ({ 
       <div className="p-4 bg-neon-green/5 border-t border-neon-green/10 shrink-0">
           <div className="flex items-start gap-3">
               <Activity className="w-4 h-4 text-neon-green shrink-0 mt-0.5" />
-              <p className="text-[9px] text-neon-green/60 leading-relaxed font-bold uppercase tracking-tight">
-                  Thought chains represent speculative reasoning paths. Discarded steps indicate branches the agent explored but rejected in favor of more optimal solutions.
-              </p>
+              <div className="flex-1">
+                  <p className="text-[9px] text-neon-green/60 leading-relaxed font-bold uppercase tracking-tight">
+                      Thought chains represent speculative reasoning paths. Discarded steps indicate branches the agent explored but rejected in favor of more optimal solutions.
+                  </p>
+                  {handoffArtifact && (
+                      <div className="mt-2 p-2 bg-neon-green/10 border border-neon-green/30 rounded text-[8px] text-neon-green font-mono break-all animate-in fade-in slide-in-from-bottom-1 duration-300">
+                          COGNITIVE_HANDOFF_TOKEN: {btoa(JSON.stringify(handoffArtifact)).substring(0, 64)}...
+                      </div>
+                  )}
+              </div>
           </div>
       </div>
     </div>

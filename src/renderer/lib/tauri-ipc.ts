@@ -37,6 +37,7 @@ import type {
   ConsensusRound,
   ThoughtStep,
   ThoughtChain,
+  CognitiveHandoffArtifact,
   SynapticMetrics,
   OptimizationStatsResponse,
   RemoteToolBid,
@@ -817,6 +818,10 @@ export const tauriIpc = {
     invoke<CognitiveTopology>('gsd_get_cognitive_topology'),
   gsdGetThoughtChain: (id: string) =>
     invoke<ThoughtChain | null>('gsd_get_thought_chain', { id }),
+  gsdGenerateCognitiveHandoff: (taskId: string) =>
+    invoke<CognitiveHandoffArtifact>('gsd_generate_cognitive_handoff', { taskId }),
+  gsdInjectCognitiveHandoff: (targetAgentId: string, handoff: CognitiveHandoffArtifact) =>
+    invoke<void>('gsd_inject_cognitive_handoff', { targetAgentId, handoff }),
   gsdInitiateConsensus: (issue: string, proposals: ConsensusProposal[]) =>
     invoke<string>('gsd_initiate_consensus', { issue, proposals }),
   gsdGetConsensusRounds: () =>

@@ -485,3 +485,10 @@ export interface ThoughtChain {
   taskId: string;
   steps: ThoughtStep[];
 }
+
+export interface CognitiveHandoffArtifact {
+  taskId: string;
+  sourceAgentId: string;
+  condensedThoughtChain: ThoughtStep[];
+  timestamp: number;
+}

@@ -40,6 +40,7 @@ import {
   ConsensusProposal,
   ConsensusRound,
   ThoughtChain,
+  CognitiveHandoffArtifact,
   SynapticMetrics
 } from './types'
 import { tauriIpc } from '../lib/tauri-ipc'
@@ -864,6 +865,12 @@ export class TauriBackend implements ExtendedApi {
   }
   async gsdGetThoughtChain(id: string): Promise<ThoughtChain | null> {
     return await tauriIpc.gsdGetThoughtChain(id);
+  }
+  async gsdGenerateCognitiveHandoff(taskId: string): Promise<CognitiveHandoffArtifact> {
+    return await tauriIpc.gsdGenerateCognitiveHandoff(taskId);
+  }
+  async gsdInjectCognitiveHandoff(targetAgentId: string, handoff: CognitiveHandoffArtifact): Promise<void> {
+    return await tauriIpc.gsdInjectCognitiveHandoff(targetAgentId, handoff);
   }
   async gsdInitiateConsensus(issue: string, proposals: ConsensusProposal[]): Promise<string> {
     return await tauriIpc.gsdInitiateConsensus(issue, proposals);

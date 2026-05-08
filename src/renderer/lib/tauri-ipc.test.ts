@@ -100,7 +100,7 @@ describe('tauriIpc', () => {
 
     expect(invoke).toHaveBeenCalledWith('get_settings')
     expect(invoke).toHaveBeenCalledWith('get_workspace')
-    expect(invoke).toHaveBeenCalledTimes(192)
+    expect(invoke).toHaveBeenCalledTimes(194)
   })
 
   it('maps event listeners and forwards payloads to callbacks', async () => {

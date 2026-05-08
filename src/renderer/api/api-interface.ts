@@ -38,6 +38,7 @@ import type {
   ConsensusRound,
   ThoughtStep,
   ThoughtChain,
+  CognitiveHandoffArtifact,
   SynapticMetrics,
   TokenHistoryFilters,
   TokenHistoryResponse,
@@ -554,6 +555,8 @@ export interface Api {
   gsdApplyPolicyProposal?: (proposalId: string) => Promise<void>;
   gsdGetCognitiveTopology?: () => Promise<CognitiveTopology>;
   gsdGetThoughtChain?: (id: string) => Promise<ThoughtChain | null>;
+  gsdGenerateCognitiveHandoff?: (taskId: string) => Promise<CognitiveHandoffArtifact>;
+  gsdInjectCognitiveHandoff?: (targetAgentId: string, handoff: CognitiveHandoffArtifact) => Promise<void>;
   gsdInitiateConsensus?: (issue: string, proposals: ConsensusProposal[]) => Promise<string>;
   gsdGetConsensusRounds?: () => Promise<ConsensusRound[]>;
   gsdSpawnShadowTest?: (personaId: string, mutationType: string, mutationValue: string) => Promise<string>;
@@ -935,6 +938,8 @@ export interface ExtendedApi extends Api {
   gsdApplyPolicyProposal: (proposalId: string) => Promise<void>;
   gsdGetCognitiveTopology: () => Promise<CognitiveTopology>;
   gsdGetThoughtChain: (id: string) => Promise<ThoughtChain | null>;
+  gsdGenerateCognitiveHandoff: (taskId: string) => Promise<CognitiveHandoffArtifact>;
+  gsdInjectCognitiveHandoff: (targetAgentId: string, handoff: CognitiveHandoffArtifact) => Promise<void>;
   gsdInitiateConsensus: (issue: string, proposals: ConsensusProposal[]) => Promise<string>;
   gsdGetConsensusRounds: () => Promise<ConsensusRound[]>;
   gsdSpawnShadowTest: (personaId: string, mutationType: string, mutationValue: string) => Promise<string>;

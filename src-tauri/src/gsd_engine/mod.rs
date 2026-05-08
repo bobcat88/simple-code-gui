@@ -809,6 +809,23 @@ pub async fn gsd_get_thought_chain(
 }
 
 #[tauri::command]
+pub async fn gsd_generate_cognitive_handoff(
+    task_id: String,
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<reasoning::CognitiveHandoffArtifact, String> {
+    state.reasoning.export_handoff(&task_id).await
+}
+
+#[tauri::command]
+pub async fn gsd_inject_cognitive_handoff(
+    target_agent_id: String,
+    handoff: reasoning::CognitiveHandoffArtifact,
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<(), String> {
+    state.reasoning.import_handoff(handoff, target_agent_id).await
+}
+
+#[tauri::command]
 pub async fn gsd_initiate_consensus(
     issue: String,
     proposals: Vec<consensus::ConsensusProposal>,

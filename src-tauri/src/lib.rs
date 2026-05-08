@@ -771,6 +771,8 @@ pub fn run() {
             gsd_engine::gsd_get_governance_status,
             gsd_engine::gsd_get_cognitive_topology,
             gsd_engine::gsd_get_thought_chain,
+            gsd_engine::gsd_generate_cognitive_handoff,
+            gsd_engine::gsd_inject_cognitive_handoff,
             gsd_engine::gsd_initiate_consensus,
             gsd_engine::gsd_get_consensus_rounds,
             gsd_engine::gsd_swarm_query_memory,
