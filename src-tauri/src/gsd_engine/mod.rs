@@ -21,6 +21,7 @@ pub mod quantum_sync;
 pub mod borg;
 pub mod distributed;
 pub mod architect;
+pub mod evolver;
 
 
 pub struct GsdEngine {
@@ -29,6 +30,7 @@ pub struct GsdEngine {
     pub db: Arc<DatabaseManager>,
     pub knowledge: Arc<Mutex<Option<Arc<knowledge::SwarmMemory>>>>,
     pub governance: Arc<Mutex<governance::GovernanceEngine>>,
+    pub evolver: Arc<evolver::EvolverEngine>,
     pub is_syncing: std::sync::Arc<std::sync::atomic::AtomicBool>,
     pub quantum_sync: Arc<Mutex<Option<quantum_sync::QuantumSyncManager>>>,
     pub distributed: Arc<Mutex<Option<distributed::DistributedManager>>>,
@@ -49,12 +51,16 @@ pub enum UserResponse {
 
 impl GsdEngine {
     pub fn new(db: Arc<DatabaseManager>, app: AppHandle) -> Self {
+        let governance = Arc::new(Mutex::new(governance::GovernanceEngine::new_default()));
+        let evolver = Arc::new(evolver::EvolverEngine::new(Arc::clone(&governance)));
+        
         Self {
             active_plans: Arc::new(Mutex::new(HashMap::new())),
             pending_responses: Arc::new(Mutex::new(HashMap::new())),
             db,
             knowledge: Arc::new(Mutex::new(None)),
-            governance: Arc::new(Mutex::new(governance::GovernanceEngine::new_default())),
+            governance,
+            evolver,
             is_syncing: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
             quantum_sync: Arc::new(Mutex::new(None)),
             distributed: Arc::new(Mutex::new(None)),
@@ -772,6 +778,78 @@ pub async fn gsd_sync_memory(
     } else {
         Err("Swarm memory not initialized".to_string())
     }
+}
+
+#[tauri::command]
+pub async fn gsd_spawn_shadow_test(
+    app: AppHandle,
+    persona_id: String,
+    mutation_type: String,
+    mutation_value: String,
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<String, String> {
+    state.evolver.spawn_shadow_test(&app, persona_id, mutation_type, mutation_value).await
+}
+
+#[tauri::command]
+pub async fn gsd_get_persona_proposals(
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<Vec<evolver::PersonaEvolutionProposal>, String> {
+    Ok(state.evolver.get_proposals().await)
+}
+
+#[tauri::command]
+pub async fn gsd_apply_persona_evolution(
+    proposal_id: String,
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<(), String> {
+    let mut proposals = state.evolver.active_proposals.lock().await;
+    let proposal_idx = proposals.iter().position(|p| p.id == proposal_id)
+        .ok_or_else(|| format!("Proposal {} not found", proposal_id))?;
+    
+    let mut proposal = proposals.remove(proposal_idx);
+    
+    // Apply mutation to governance
+    let mut gov = state.governance.lock().await;
+    let persona = gov.policy.personas.iter_mut()
+        .find(|p| p.id == proposal.persona_id)
+        .ok_or_else(|| format!("Persona {} not found", proposal.persona_id))?;
+    
+    match proposal.mutation_type.as_str() {
+        "ADD_TOOL" => {
+            if !persona.tools.contains(&proposal.mutation_value) {
+                persona.tools.push(proposal.mutation_value.clone());
+            }
+        },
+        "ADD_EXPERTISE" => {
+            if !persona.expertise.contains(&proposal.mutation_value) {
+                persona.expertise.push(proposal.mutation_value.clone());
+            }
+        },
+        _ => return Err("Invalid mutation type".to_string()),
+    }
+    
+    proposal.status = "APPLIED".to_string();
+    
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn gsd_propose_policy_refinement(
+    report: architect::ArchitectAuditReport,
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<Vec<governance::PolicyProposal>, String> {
+    let gov = state.governance.lock().await;
+    Ok(gov.propose_refinement(&report))
+}
+
+#[tauri::command]
+pub async fn gsd_apply_policy_proposal(
+    _proposal_id: String,
+    _state: State<'_, Arc<GsdEngine>>,
+) -> Result<(), String> {
+    // Phase 48: Implementation for applying the proposal
+    Ok(())
 }
 
 #[tauri::command]

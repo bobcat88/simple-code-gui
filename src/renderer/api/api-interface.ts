@@ -28,6 +28,8 @@ import type {
   ProposalProgress,
   ScanOptions,
   ArchitectAuditReport,
+  PolicyProposal,
+  PersonaEvolutionProposal,
   SynapticMetrics,
   TokenHistoryFilters,
   TokenHistoryResponse,
@@ -540,6 +542,11 @@ export interface Api {
   gsdGetArchitectStatus?: () => Promise<ArchitectAuditReport>;
   gsdGetSynapticMetrics?: () => Promise<SynapticMetrics>;
   gsdTriggerExpansionLoop?: (loopType: string) => Promise<void>;
+  gsdProposePolicyRefinement?: (report: ArchitectAuditReport) => Promise<PolicyProposal[]>;
+  gsdApplyPolicyProposal?: (proposalId: string) => Promise<void>;
+  gsdSpawnShadowTest?: (personaId: string, mutationType: string, mutationValue: string) => Promise<string>;
+  gsdGetPersonaProposals?: () => Promise<PersonaEvolutionProposal[]>;
+  gsdApplyPersonaEvolution?: (proposalId: string) => Promise<void>;
   borgRecordLearning?: (projectName: string, title: string, content: string) => Promise<void>;
   borgSyncMemory?: () => Promise<number>;
   gsdSpawnRemoteWorker?: (taskDescription: string) => Promise<string>;
@@ -912,6 +919,11 @@ export interface ExtendedApi extends Api {
   // Distributed MCP Orchestration
   gsdExecuteProactiveAudit: (projectPath: string) => Promise<ArchitectAuditReport>;
   gsdGetArchitectStatus: () => Promise<ArchitectAuditReport>;
+  gsdProposePolicyRefinement: (report: ArchitectAuditReport) => Promise<PolicyProposal[]>;
+  gsdApplyPolicyProposal: (proposalId: string) => Promise<void>;
+  gsdSpawnShadowTest: (personaId: string, mutationType: string, mutationValue: string) => Promise<string>;
+  gsdGetPersonaProposals: () => Promise<PersonaEvolutionProposal[]>;
+  gsdApplyPersonaEvolution: (proposalId: string) => Promise<void>;
   mcpGetServers: () => Promise<McpServerConfig[]>;
   mcpDiscoverServers: () => Promise<McpServerConfig[]>;
   registerMcpServer: (config: McpServerConfig) => Promise<void>;

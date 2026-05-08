@@ -27,6 +27,8 @@ import type {
   McpToolListResponse,
   NeuralInsight,
   ArchitectAuditReport,
+  PolicyProposal,
+  PersonaEvolutionProposal,
   SynapticMetrics,
   OptimizationStatsResponse,
   RemoteToolBid,
@@ -796,7 +798,19 @@ export const tauriIpc = {
   gsdTriggerExpansionLoop: (loopType: string) =>
     invoke<void>('gsd_trigger_expansion_loop', { loopType }),
   gsdExecuteProactiveAudit: (projectPath: string) =>
-    invoke<string>('gsd_execute_proactive_audit', { projectPath }),
+    invoke<ArchitectAuditReport>('gsd_execute_proactive_audit', { projectPath }),
+  gsdGetArchitectStatus: () =>
+    invoke<ArchitectAuditReport>('gsd_get_architect_status'),
+  gsdProposePolicyRefinement: (report: ArchitectAuditReport) =>
+    invoke<PolicyProposal[]>('gsd_propose_policy_refinement', { report }),
+  gsdApplyPolicyProposal: (proposalId: string) =>
+    invoke<void>('gsd_apply_policy_proposal', { proposalId }),
+  gsdSpawnShadowTest: (personaId: string, mutationType: string, mutationValue: string) =>
+    invoke<string>('gsd_spawn_shadow_test', { personaId, mutationType, mutationValue }),
+  gsdGetPersonaProposals: () =>
+    invoke<PersonaEvolutionProposal[]>('gsd_get_persona_proposals'),
+  gsdApplyPersonaEvolution: (proposalId: string) =>
+    invoke<void>('gsd_apply_persona_evolution', { proposalId }),
   borgRecordLearning: (projectName: string, title: string, content: string) =>
     invoke<void>('borg_record_learning', { projectName, title, content }),
   borgSyncMemory: () =>

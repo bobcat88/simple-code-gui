@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { ExtendedApi, McpServerConfig } from '../../api/types';
+import type { ArchitectAuditReport } from '../../api/intelligence-types';
+import { PolicyRefinementPanel } from '../gsd/PolicyRefinementPanel';
 
 interface SynapticExpansionProps {
   api: ExtendedApi;
@@ -315,18 +317,27 @@ const CognitiveFeedbackSection: React.FC<{ api: ExtendedApi }> = ({ api }) => {
 
 const AutonomousArchitectSection: React.FC<{ api: ExtendedApi; projectPath: string }> = ({ api, projectPath }) => {
   const [isAuditing, setIsAuditing] = useState(false);
+  const [report, setReport] = useState<ArchitectAuditReport | null>(null);
 
   const handleAudit = async () => {
     if (!api.gsdExecuteProactiveAudit) return;
     setIsAuditing(true);
     try {
-      await api.gsdExecuteProactiveAudit(projectPath);
+      const result = await api.gsdExecuteProactiveAudit(projectPath);
+      setReport(result);
     } catch (e) {
       console.error(e);
     } finally {
       setIsAuditing(false);
     }
   };
+
+  useEffect(() => {
+    // Optionally fetch initial status
+    if (api.gsdGetArchitectStatus) {
+      api.gsdGetArchitectStatus().then(setReport).catch(console.error);
+    }
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -360,14 +371,24 @@ const AutonomousArchitectSection: React.FC<{ api: ExtendedApi; projectPath: stri
               <Database size={12} className="text-amber-500/60" />
               <span className="text-[10px] font-bold text-white/70">Structural Drift</span>
             </div>
-            <span className="text-[10px] font-black text-amber-400">Minimal (0.04)</span>
+            <span className={cn(
+              "text-[10px] font-black",
+              (report?.structuralDrift || 0) > 0.5 ? "text-red-400" : "text-amber-400"
+            )}>
+              {report ? report.structuralDrift.toFixed(2) : '0.00'}
+            </span>
           </div>
           <div className="p-2.5 bg-black/40 rounded-xl border border-white/5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Network size={12} className="text-amber-500/60" />
               <span className="text-[10px] font-bold text-white/70">Graph Stability</span>
             </div>
-            <span className="text-[10px] font-black text-emerald-400">99.8%</span>
+            <span className={cn(
+              "text-[10px] font-black",
+              (report?.graphStability || 1) < 0.7 ? "text-red-400" : "text-emerald-400"
+            )}>
+              {report ? `${(report.graphStability * 100).toFixed(1)}%` : '100%'}
+            </span>
           </div>
         </div>
 
@@ -380,6 +401,16 @@ const AutonomousArchitectSection: React.FC<{ api: ExtendedApi; projectPath: stri
           <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
         </button>
       </div>
+
+      {report && (
+        <PolicyRefinementPanel 
+          report={report} 
+          onApplied={() => {
+            // Re-fetch architect status after policy update
+            api.gsdGetArchitectStatus?.().then(setReport).catch(console.error);
+          }}
+        />
+      )}
     </div>
   );
 };

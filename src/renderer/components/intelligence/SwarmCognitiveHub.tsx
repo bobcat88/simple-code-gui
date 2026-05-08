@@ -27,6 +27,8 @@ import { BrainstormTab } from './BrainstormTab';
 import { GovernanceTab } from './GovernanceTab';
 import { OrchestrationPanel } from './OrchestrationPanel';
 import { SynapticExpansion } from './SynapticExpansion';
+import { EvolverPanel } from '../gsd/EvolverPanel';
+import { QuantumSwarmGraph } from '../gsd/QuantumSwarmGraph';
 
 const NeuralHUDTab = lazy(() =>
   import('./NeuralHUDTab').then((module) => ({ default: module.NeuralHUDTab }))
@@ -49,6 +51,7 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({
     | 'brainstorm'
     | 'governance'
     | 'tasks'
+    | 'topology'
   >('neural');
   const { snapshots, refresh: refreshSnapshots } =
     useSwarmSnapshots(projectPath);
@@ -82,6 +85,12 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({
             label="Pulse"
           />
           <NavButton
+            active={activeLayer === 'topology'}
+            onClick={() => setActiveLayer('topology')}
+            icon={<Share2 size={14} />}
+            label="Topology"
+          />
+          <NavButton
             active={activeLayer === 'brainstorm'}
             onClick={() => setActiveLayer('brainstorm')}
             icon={<Brain size={14} />}
@@ -90,7 +99,7 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({
           <NavButton
             active={activeLayer === 'synaptic'}
             onClick={() => setActiveLayer('synaptic')}
-            icon={<Share2 size={14} />}
+            icon={<Layers size={14} />}
             label="Expand"
           />
           <NavButton
@@ -137,6 +146,11 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({
             </Suspense>
           </div>
         )}
+        {activeLayer === 'topology' && (
+          <div className="absolute inset-0 animate-in zoom-in-95 duration-500">
+            <QuantumSwarmGraph />
+          </div>
+        )}
         {activeLayer === 'brainstorm' && (
           <div className="absolute inset-0 p-4 animate-in slide-in-from-right-4 duration-500 overflow-y-auto custom-scrollbar">
             <BrainstormTab api={api} projectPath={projectPath} />
@@ -144,7 +158,7 @@ export const SwarmCognitiveHub: React.FC<SwarmCognitiveHubProps> = ({
         )}
         {activeLayer === 'synaptic' && (
           <div className="absolute inset-0 p-4 animate-in slide-in-from-bottom-4 duration-500">
-            <SynapticExpansion api={api} projectPath={projectPath} />
+            <EvolverPanel />
           </div>
         )}
         {activeLayer === 'governance' && (

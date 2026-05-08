@@ -403,3 +403,25 @@ export interface ArchitectAuditReport {
   findings: ArchitectFinding[];
   timestamp: number;
 }
+
+export interface PolicyProposal {
+  id: string;
+  title: string;
+  description: string;
+  currentValue: string;
+  proposedValue: string;
+  rationale: string;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+}
+
+export interface PersonaEvolutionProposal {
+  id: string;
+  personaId: string;
+  title: string;
+  description: string;
+  mutationType: 'ADD_TOOL' | 'ADD_EXPERTISE';
+  mutationValue: string;
+  performanceGain: number;
+  rationale: string;
+  status: 'PENDING' | 'APPLIED' | 'REJECTED';
+}

@@ -65,6 +65,18 @@ pub struct SwarmPolicy {
     pub personas: Vec<SwarmPersona>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PolicyProposal {
+    pub id: String,
+    pub title: String,
+    pub description: String,
+    pub current_value: String,
+    pub proposed_value: String,
+    pub rationale: String,
+    pub risk_level: String, // "LOW", "MEDIUM", "HIGH"
+}
+
 pub struct GovernanceEngine {
     pub policy: SwarmPolicy,
 }
@@ -143,6 +155,36 @@ impl GovernanceEngine {
                 ],
             },
         }
+    }
+
+    pub fn propose_refinement(&self, report: &super::architect::ArchitectAuditReport) -> Vec<PolicyProposal> {
+        let mut proposals = Vec::new();
+
+        if report.structural_drift > 0.5 {
+            proposals.push(PolicyProposal {
+                id: uuid::Uuid::new_v4().to_string(),
+                title: "Tighten Tool Governance".to_string(),
+                description: "Increase governance mode to Strict due to high structural drift.".to_string(),
+                current_value: format!("{:?}", self.policy.default_mode),
+                proposed_value: "Strict".to_string(),
+                rationale: "High drift indicates autonomous agents may be deviating from architectural standards. Strict mode enforces approval for all sensitive tools.".to_string(),
+                risk_level: "LOW".to_string(),
+            });
+        }
+
+        if report.graph_stability < 0.7 {
+            proposals.push(PolicyProposal {
+                id: uuid::Uuid::new_v4().to_string(),
+                title: "Restrict Architecture-Modifying Tools".to_string(),
+                description: "Require approval for all tools modifying project structure.".to_string(),
+                current_value: "Mixed".to_string(),
+                proposed_value: "RequireApproval for all structural tools".to_string(),
+                rationale: "Low stability score detected. Restricting structural tools prevents accidental cycle creation and fan-out bloat.".to_string(),
+                risk_level: "MEDIUM".to_string(),
+            });
+        }
+
+        proposals
     }
 
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self, String> {

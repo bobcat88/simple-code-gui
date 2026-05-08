@@ -25,6 +25,7 @@ import { cn } from '../../lib/utils';
 import type { NeuralInsight, GsdApprovalRequest, SwarmPolicy, SwarmPersona, GsdExecutionEvent } from '../../api/types';
 import { ForensicReport } from './ForensicReport';
 import { PermissionGuard } from './PermissionGuard';
+import { QuantumSwarmGraph } from './QuantumSwarmGraph';
 
 export function NeuralHUD() {
   const { api } = useApi();
@@ -32,7 +33,7 @@ export function NeuralHUD() {
   const [insights, setInsights] = useState<NeuralInsight[]>([]);
   const [isMinimized, setIsMinimized] = useState(false);
   const [activeInsight, setActiveInsight] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'insights' | 'forensics' | 'swarm' | 'governance' | 'workspace'>('insights');
+  const [viewMode, setViewMode] = useState<'insights' | 'forensics' | 'swarm' | 'governance' | 'workspace' | 'topology'>('insights');
   const [healedSteps, setHealedSteps] = useState<Set<string>>(new Set());
   const [pendingApprovals, setPendingApprovals] = useState<GsdApprovalRequest[]>([]);
   const [personas, setPersonas] = useState<SwarmPersona[]>([]);

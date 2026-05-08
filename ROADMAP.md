@@ -256,3 +256,24 @@ Next-level performance tuning and architectural maturity for the reasoning-execu
 - [x] **Native Compression**: Migrated `LLMLingua-2` to native Rust via `candle` for zero-latency GPU-accelerated pruning.
 - [x] **Zero-Copy PTY**: Binary PTY emitters and `TextDecoder` streaming for high-throughput terminal feedback.
 - [x] **Smart Swarm Bidding**: Capability-aware routing protocol dispatching tasks to nodes based on hardware efficiency (GPU/Storage/Cache).
+
+## Phase 48: AI-Driven Policy Refinement Loop (Complete)
+Implementing a feedback loop where AI can propose and refine system policies based on audit findings.
+
+- [x] **Policy Proposer**: `GovernanceEngine` analyzes `Architect` reports to suggest `SwarmPolicy` updates.
+- [x] **Interactive Refinement UI**: `PolicyRefinementPanel` for user-in-the-loop governance oversight.
+- [x] **IPC Bridge**: Registered `gsd_propose_policy_refinement` and `gsd_apply_policy_proposal`.
+
+## Phase 49: Quantum Swarm Visualization (Complete)
+High-fidelity 3D representation of the swarm's cognitive topology and active data flows.
+
+- [x] **3D Synaptic Graph**: Integrated `react-force-graph-3d` for visualizing swarm knowledge and personas.
+- [x] **Real-time Data Flows**: directional particles visualize tool executions and memory injections.
+- [x] **Immersive HUD Integration**: 3D Topology view available in `SwarmCognitiveHub` and `NeuralHUD`.
+
+## Phase 50: Evolutionary Swarm Intelligence (Complete)
+Autonomous agent evolution through sandboxed shadow testing and mutation.
+
+- [x] **Shadow Swarm Framework**: `EvolverEngine` for cloning personas and simulating mutations in dry-runs.
+- [x] **Persona Evolution Proposals**: Captured performance gains and rationales for agent capability enhancements.
+- [x] **Evolver Control Panel**: Dedicated UI for monitoring shadow tests and promoting successful mutations to the live swarm.

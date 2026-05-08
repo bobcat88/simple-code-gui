@@ -34,6 +34,8 @@ import {
   RemoteToolBid,
   OptimizationStatsResponse,
   ArchitectAuditReport,
+  PolicyProposal,
+  PersonaEvolutionProposal,
   SynapticMetrics
 } from './types'
 import { tauriIpc } from '../lib/tauri-ipc'
@@ -846,6 +848,21 @@ export class TauriBackend implements ExtendedApi {
   }
   async gsdExecuteProactiveAudit(projectPath: string): Promise<ArchitectAuditReport> {
     return await tauriIpc.gsdExecuteProactiveAudit(projectPath);
+  }
+  async gsdProposePolicyRefinement(report: ArchitectAuditReport): Promise<PolicyProposal[]> {
+    return await tauriIpc.gsdProposePolicyRefinement(report);
+  }
+  async gsdApplyPolicyProposal(proposalId: string): Promise<void> {
+    return await tauriIpc.gsdApplyPolicyProposal(proposalId);
+  }
+  async gsdSpawnShadowTest(personaId: string, mutationType: string, mutationValue: string): Promise<string> {
+    return await tauriIpc.gsdSpawnShadowTest(personaId, mutationType, mutationValue);
+  }
+  async gsdGetPersonaProposals(): Promise<PersonaEvolutionProposal[]> {
+    return await tauriIpc.gsdGetPersonaProposals();
+  }
+  async gsdApplyPersonaEvolution(proposalId: string): Promise<void> {
+    return await tauriIpc.gsdApplyPersonaEvolution(proposalId);
   }
   async borgRecordLearning(projectName: string, title: string, content: string): Promise<void> {
     return await tauriIpc.borgRecordLearning(projectName, title, content);
