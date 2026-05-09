@@ -402,7 +402,7 @@ features:
       Bridges the gap between raw thoughts (seeds) and formal requirements.
     status:
       maturity: draft
-      implementation: in_progress
+      implementation: implemented
     depends_on: []
     implements: []
     relates_to: []
