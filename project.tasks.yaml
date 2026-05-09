@@ -1251,12 +1251,12 @@
   title: "Implement: Borg Knowledge Bridge"
   type: task
   spec_ref: "@01KQV53JA9N30W50356Q8K350Q"
-  status: completed
+  status: in_progress
   blocked_by: []
   depends_on: []
   priority: 3
   tags: []
+  notes_count: 0
+  todos_count: 0
   created_at: 2026-05-05T04:07:45.523Z
-  started_at: 2026-05-06T18:50:20.839Z
-  submitted_at: 2026-05-06T18:50:21.635Z
-  completed_at: 2026-05-06T18:50:22.390Z
+  started_at: 2026-05-09T07:22:24.592Z
