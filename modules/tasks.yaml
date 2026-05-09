@@ -275,6 +275,9 @@ features:
     slugs: []
     title: Autonomous Architect
     type: feature
+    status:
+      maturity: draft
+      implementation: in_progress
     depends_on: []
     implements: []
     relates_to: []
