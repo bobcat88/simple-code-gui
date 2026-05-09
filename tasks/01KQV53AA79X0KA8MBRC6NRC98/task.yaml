@@ -5,12 +5,24 @@ title: "Implement: Synaptic Orchestration Hub"
 type: task
 spec_ref: "@01KQV52W7310ZWQG3CAAA00ZFR"
 derivation: auto
-status: pending
+status: in_progress
 blocked_by: []
 depends_on: []
 context: []
 priority: 3
 tags: []
 vcs_refs: []
+history:
+  - author: Johan.P
+    changes:
+      status:
+        new: in_progress
+        previous: pending
+      started_at:
+        new: 2026-05-09T07:22:11.411Z
+        previous: null
+    command: task-start
+    timestamp: 2026-05-09T07:22:11.411Z
 created_at: 2026-05-05T04:07:20.135Z
+started_at: 2026-05-09T07:22:11.411Z
 todos: []

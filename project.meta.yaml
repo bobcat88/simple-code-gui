@@ -109,13 +109,17 @@ conventions:
     domain: architecture
     examples: []
     rules:
-      - "PLACEHOLDER: Replace this rule with your project's architectural constraints and patterns"
+      - Use Tauri 2.0+ with Rust backend and Vite/React 19 frontend
+      - Maintain strict separation between `ai_runtime` optimization logic and provider implementations
+      - All long-running operations must be managed by the `JobsManager` worker loop
+      - Use SQLite for all local state persistence and vector metadata
   - _ulid: 01KPPC8YYMCSQZXAZGT7BEXBME
     domain: testing
     examples: []
     rules:
-      - "PLACEHOLDER: Replace this rule with your project's testing expectations and coverage
-        requirements"
+      - Minimum 60% statement coverage for all new frontend components
+      - Rust backend must pass `cargo check` and `clippy` without warnings
+      - Integration tests must verify IPC bridge contract parity
 hooks:
   - _ulid: 01KPPC8YZA212VV7BA3697Y5ZJ
     action:
