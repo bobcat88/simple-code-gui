@@ -251,8 +251,8 @@
     - task-foundation-terminal
   title: "Foundation: Terminal Management"
   type: task
-  spec_ref: "@pty-lifecycle"
-  status: completed
+  spec_ref: "@01KK67BAXYFC28NYYSCWDPARHC"
+  status: in_progress
   blocked_by: []
   depends_on: []
   priority: 3
@@ -260,7 +260,7 @@
   notes_count: 0
   todos_count: 0
   created_at: 2026-04-28T22:18:38.913Z
-  automation: eligible
+  started_at: 2026-05-09T07:22:41.079Z
 - _ulid: 01KQB2RKCHEYTGPPCE1N60FG3G
   slugs:
     - task-foundation-voice
