@@ -20,13 +20,15 @@ pub struct PersonaEvolutionProposal {
 
 pub struct EvolverEngine {
     pub governance: Arc<Mutex<GovernanceEngine>>,
+    pub event_bus: Arc<crate::gsd_engine::events::SwarmEventBus>,
     pub active_proposals: Mutex<Vec<PersonaEvolutionProposal>>,
 }
 
 impl EvolverEngine {
-    pub fn new(governance: Arc<Mutex<GovernanceEngine>>) -> Self {
+    pub fn new(governance: Arc<Mutex<GovernanceEngine>>, event_bus: Arc<crate::gsd_engine::events::SwarmEventBus>) -> Self {
         Self {
             governance,
+            event_bus,
             active_proposals: Mutex::new(Vec::new()),
         }
     }
@@ -44,6 +46,13 @@ impl EvolverEngine {
             .find(|p| p.id == persona_id)
             .ok_or_else(|| format!("Persona {} not found", persona_id))?;
 
+        // Phase 55: Emit Swarm Event
+        self.event_bus.emit(crate::gsd_engine::events::SwarmEvent::PersonaMutationSuggested {
+            persona_id: persona_id.clone(),
+            mutation_type: mutation_type.clone(),
+            mutation_value: mutation_value.clone(),
+        });
+        
         let mut shadow_persona = persona.clone();
         
         match mutation_type.as_str() {

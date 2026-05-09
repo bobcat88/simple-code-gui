@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use tokio::sync::broadcast;
-use std::sync::Arc;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

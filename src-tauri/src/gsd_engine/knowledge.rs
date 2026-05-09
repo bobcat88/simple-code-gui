@@ -41,6 +41,22 @@ impl SwarmMemory {
         Ok(())
     }
 
+    pub fn count_entries(&self) -> Result<usize> {
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare("SELECT count(*) FROM swarm_knowledge")?;
+        let count: usize = stmt.query_row([], |row| row.get(0))?;
+        Ok(count)
+    }
+
+    pub fn prune_old_entries(&self, keep_latest: usize) -> Result<usize> {
+        let conn = self.conn.lock().unwrap();
+        // FTS5 doesn't have ROWID by default if not specified, but we can use rank or delete based on total count
+        // For simplicity, we'll clear the table and the distiller will re-insert distilled knowledge.
+        // In a production scenario, we'd use a real ID or timestamp.
+        let deleted = conn.execute("DELETE FROM swarm_knowledge WHERE rowid NOT IN (SELECT rowid FROM swarm_knowledge ORDER BY rowid DESC LIMIT ?1)", params![keep_latest])?;
+        Ok(deleted)
+    }
+
     /// Query the collective memory
     pub fn query(&self, term: &str, entry_type: Option<&str>, limit: Option<usize>) -> Result<Vec<crate::gsd_engine::sync::MemoryEntry>> {
         let conn = self.conn.lock().unwrap();

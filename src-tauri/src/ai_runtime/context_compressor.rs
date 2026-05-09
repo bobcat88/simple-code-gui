@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use super::types::CompletionRequest;
-use candle_core::{Device, Tensor};
+use candle_core::Device;
 
 #[derive(Debug, Clone)]
 pub struct ContextCompressor {

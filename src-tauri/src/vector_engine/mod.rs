@@ -43,7 +43,7 @@ impl VectorEngine {
             if let Ok(existing_chunks) = crate::database::get_vector_chunks(&pool_clone, None).await {
                 let chunks_lock = chunks_clone.lock().await;
                 let mut status_lock = status_clone.lock().await;
-                let mut hnsw_lock = hnsw_clone.lock().await;
+                let hnsw_lock = hnsw_clone.lock().await;
                 
                 status_lock.total_chunks = existing_chunks.len();
                 
@@ -138,7 +138,7 @@ impl VectorEngine {
                                 
                                 // Insert into HNSW
                                 {
-                                    let mut hnsw = hnsw_mutex.lock().await;
+                                    let hnsw = hnsw_mutex.lock().await;
                                     hnsw.insert((&embedding, index));
                                 }
                                 
@@ -301,20 +301,7 @@ pub async fn vector_index_session(
     Ok(())
 }
 
-fn cosine_similarity(v1: &[f32], v2: &[f32]) -> f32 {
-    if v1.len() != v2.len() {
-        return 0.0;
-    }
-    let dot_product: f32 = v1.iter().zip(v2.iter()).map(|(a, b)| a * b).sum();
-    let norm1: f32 = v1.iter().map(|a| a * a).sum::<f32>().sqrt();
-    let norm2: f32 = v2.iter().map(|a| a * a).sum::<f32>().sqrt();
-    
-    if norm1 == 0.0 || norm2 == 0.0 {
-        return 0.0;
-    }
-    
-    dot_product / (norm1 * norm2)
-}
+
 
 #[tauri::command]
 pub async fn vector_index_project(

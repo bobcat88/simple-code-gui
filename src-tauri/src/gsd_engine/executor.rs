@@ -84,6 +84,8 @@ pub struct Executor {
     pub active_project_paths: Vec<String>,
     pub knowledge: Arc<Mutex<Option<Arc<crate::gsd_engine::knowledge::SwarmMemory>>>>,
     pub governance: Arc<Mutex<crate::gsd_engine::governance::GovernanceEngine>>,
+    pub reasoning: Arc<crate::gsd_engine::reasoning::ReasoningEngine>,
+    pub event_bus: Arc<crate::gsd_engine::events::SwarmEventBus>,
     pub speculative_results: Arc<Mutex<HashMap<String, crate::ai_runtime::types::CompletionResponse>>>,
     pub dry_run: bool,
 }
@@ -99,6 +101,8 @@ impl Executor {
         active_project_paths: Vec<String>,
         knowledge: Arc<Mutex<Option<Arc<crate::gsd_engine::knowledge::SwarmMemory>>>>,
         governance: Arc<Mutex<crate::gsd_engine::governance::GovernanceEngine>>,
+        reasoning: Arc<crate::gsd_engine::reasoning::ReasoningEngine>,
+        event_bus: Arc<crate::gsd_engine::events::SwarmEventBus>,
         dry_run: bool,
     ) -> Self {
         Self {
@@ -110,6 +114,8 @@ impl Executor {
             active_project_paths,
             knowledge,
             governance,
+            reasoning,
+            event_bus,
             speculative_results: Arc::new(Mutex::new(HashMap::new())),
             dry_run,
         }
@@ -483,6 +489,29 @@ impl Executor {
                 ).await;
                 
                 final_content = res.content.clone();
+                
+                // Phase 55: Record Reasoning Step for Speculation
+                let thought_id = uuid::Uuid::new_v4().to_string();
+                let _ = self.reasoning.record_step(
+                    "GSD-Agent-Speculative".to_string(), 
+                    step.id.clone(), 
+                    crate::gsd_engine::reasoning::ThoughtStep {
+                        id: thought_id.clone(),
+                        parent_id: None,
+                        timestamp: Utc::now().timestamp_millis() as u64,
+                        role: "hypothesis".to_string(),
+                        content: format!("[Speculative] {}", res.content),
+                        evaluation_score: Some(0.8), // Speculative score
+                        status: "completed".to_string(),
+                    }
+                ).await;
+
+                self.event_bus.emit(crate::gsd_engine::events::SwarmEvent::ReasoningStepCaptured {
+                    task_id: step.id.clone(),
+                    agent_id: "GSD-Agent-Speculative".to_string(),
+                    step_id: thought_id,
+                });
+
                 messages.push(Message {
                     role: "assistant".to_string(),
                     content: res.content.clone(),
@@ -529,6 +558,29 @@ impl Executor {
                                 tool_call_id: None,
                                 cache_control: None,
                             });
+
+                            // Phase 55: Record Reasoning Step and Emit Swarm Event
+                            let thought_id = uuid::Uuid::new_v4().to_string();
+                            let _ = self.reasoning.record_step(
+                                "GSD-Agent".to_string(), 
+                                step.id.clone(), 
+                                crate::gsd_engine::reasoning::ThoughtStep {
+                                    id: thought_id.clone(),
+                                    parent_id: None,
+                                    timestamp: Utc::now().timestamp_millis() as u64,
+                                    role: if res.tool_calls.is_some() { "hypothesis".to_string() } else { "decision".to_string() },
+                                    content: res.content.clone(),
+                                    evaluation_score: None,
+                                    status: "completed".to_string(),
+                                }
+                            ).await;
+                            
+                            self.event_bus.emit(crate::gsd_engine::events::SwarmEvent::ReasoningStepCaptured {
+                                task_id: step.id.clone(),
+                                agent_id: "GSD-Agent".to_string(),
+                                step_id: thought_id,
+                            });
+
                             res
                         },
                         Err(e) => {

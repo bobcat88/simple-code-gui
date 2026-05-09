@@ -34,13 +34,15 @@ pub struct ConsensusRound {
 
 pub struct ConsensusEngine {
     pub governance: Arc<Mutex<GovernanceEngine>>,
+    pub event_bus: Arc<crate::gsd_engine::events::SwarmEventBus>,
     pub active_rounds: Mutex<Vec<ConsensusRound>>,
 }
 
 impl ConsensusEngine {
-    pub fn new(governance: Arc<Mutex<GovernanceEngine>>) -> Self {
+    pub fn new(governance: Arc<Mutex<GovernanceEngine>>, event_bus: Arc<crate::gsd_engine::events::SwarmEventBus>) -> Self {
         Self {
             governance,
+            event_bus,
             active_rounds: Mutex::new(Vec::new()),
         }
     }
@@ -52,6 +54,12 @@ impl ConsensusEngine {
     ) -> Result<String, String> {
         let gov = self.governance.lock().await;
         let round_id = uuid::Uuid::new_v4().to_string();
+        
+        // Phase 55: Emit Swarm Event
+        self.event_bus.emit(crate::gsd_engine::events::SwarmEvent::ConsensusRoundInitiated {
+            round_id: round_id.clone(),
+            issue: issue.clone(),
+        });
         
         let mut votes = Vec::new();
 
@@ -88,6 +96,39 @@ impl ConsensusEngine {
         rounds.push(round);
 
         Ok(round_id)
+    }
+
+    pub async fn resolve_round(&self, round_id: &str) -> Result<String, String> {
+        let mut rounds = self.active_rounds.lock().await;
+        let round = rounds.iter_mut().find(|r| r.id == round_id)
+            .ok_or_else(|| format!("Round {} not found", round_id))?;
+        
+        if round.status == "RESOLVED" {
+            return round.winner_id.clone().ok_or_else(|| "Round resolved but no winner found".to_string());
+        }
+
+        // Calculate scores per proposal
+        let mut scores: std::collections::HashMap<String, i32> = std::collections::HashMap::new();
+        for vote in &round.votes {
+            *scores.entry(vote.proposal_id.clone()).or_insert(0) += vote.score;
+        }
+
+        // Find winner
+        let winner = scores.into_iter()
+            .max_by_key(|&(_, score)| score)
+            .map(|(id, _)| id)
+            .ok_or_else(|| "No winner could be determined".to_string())?;
+
+        round.winner_id = Some(winner.clone());
+        round.status = "RESOLVED".to_string();
+
+        // Phase 55: Emit Swarm Event
+        self.event_bus.emit(crate::gsd_engine::events::SwarmEvent::ConsensusResolved {
+            round_id: round_id.to_string(),
+            winner_id: winner.clone(),
+        });
+
+        Ok(winner)
     }
 
     pub async fn get_rounds(&self) -> Vec<ConsensusRound> {

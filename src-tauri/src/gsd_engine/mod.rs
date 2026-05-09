@@ -62,12 +62,12 @@ impl GsdEngine {
         let governance = Arc::new(Mutex::new(governance::GovernanceEngine::new_default()));
         let knowledge = Arc::new(Mutex::new(None));
         let event_bus = Arc::new(events::SwarmEventBus::new());
-        let evolver = Arc::new(evolver::EvolverEngine::new(Arc::clone(&governance)));
+        let evolver = Arc::new(evolver::EvolverEngine::new(Arc::clone(&governance), Arc::clone(&event_bus)));
         let cognitive_map = Arc::new(cognitive_map::CognitiveMapEngine::new(Arc::clone(&governance), Arc::clone(&knowledge)));
-        let consensus = Arc::new(consensus::ConsensusEngine::new(Arc::clone(&governance)));
+        let consensus = Arc::new(consensus::ConsensusEngine::new(Arc::clone(&governance), Arc::clone(&event_bus)));
         let reasoning = Arc::new(reasoning::ReasoningEngine::new());
         
-        Self {
+        let engine = Self {
             active_plans: Arc::new(Mutex::new(HashMap::new())),
             pending_responses: Arc::new(Mutex::new(HashMap::new())),
             db,
@@ -77,12 +77,24 @@ impl GsdEngine {
             cognitive_map,
             consensus,
             reasoning,
-            event_bus,
+            event_bus: Arc::clone(&event_bus),
             is_syncing: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
             quantum_sync: Arc::new(Mutex::new(None)),
             distributed: Arc::new(Mutex::new(None)),
-            architect: Arc::new(architect::ArchitectEngine::new(app)),
-        }
+            architect: Arc::new(architect::ArchitectEngine::new(app.clone())),
+        };
+
+        // Phase 55: Start background event forwarding loop
+        let app_handle = app;
+        tauri::async_runtime::spawn(async move {
+            let mut receiver = event_bus.subscribe();
+            println!("[Swarm] Event forwarding loop started");
+            while let Ok(event) = receiver.recv().await {
+                let _ = app_handle.emit("swarm-event", event);
+            }
+        });
+
+        engine
     }
 
     pub async fn save_plan(&self, project_path: &str, plan: &GsdPlan) -> Result<(), String> {
@@ -522,6 +534,8 @@ pub async fn gsd_execute_plan(
             active_project_paths,
             engine.knowledge.clone(),
             engine.governance.clone(),
+            engine.reasoning.clone(),
+            engine.event_bus.clone(),
             plan.dry_run
         );
         let max_phase_step_count = plan
@@ -827,7 +841,16 @@ pub async fn gsd_generate_cognitive_handoff(
     task_id: String,
     state: State<'_, Arc<GsdEngine>>,
 ) -> Result<reasoning::CognitiveHandoffArtifact, String> {
-    state.reasoning.export_handoff(&task_id).await
+    let artifact = state.reasoning.export_handoff(&task_id).await?;
+    
+    // Phase 55: Emit Swarm Event
+    state.event_bus.emit(crate::gsd_engine::events::SwarmEvent::CognitiveHandoffTriggered {
+        task_id: task_id.clone(),
+        source_agent: artifact.source_agent_id.clone(),
+        target_agent: "Pending Delegation".to_string(),
+    });
+    
+    Ok(artifact)
 }
 
 #[tauri::command]
@@ -846,6 +869,14 @@ pub async fn gsd_initiate_consensus(
     state: State<'_, Arc<GsdEngine>>,
 ) -> Result<String, String> {
     state.consensus.initiate_round(issue, proposals).await
+}
+
+#[tauri::command]
+pub async fn gsd_resolve_consensus(
+    round_id: String,
+    state: State<'_, Arc<GsdEngine>>,
+) -> Result<String, String> {
+    state.consensus.resolve_round(&round_id).await
 }
 
 #[tauri::command]
@@ -945,6 +976,64 @@ pub async fn gsd_update_policy(
     }
     
     Ok(())
+}
+
+#[tauri::command]
+pub async fn gsd_distill_memory(
+    state: State<'_, Arc<GsdEngine>>,
+    ai: State<'_, Arc<RuntimeManager>>,
+) -> Result<String, String> {
+    let knowledge_lock = state.knowledge.lock().await;
+    let memory = knowledge_lock.as_ref().ok_or_else(|| "Swarm memory not initialized".to_string())?;
+    
+    let count = memory.count_entries().map_err(|e| e.to_string())?;
+    if count < 5 {
+        return Ok("Not enough entries for distillation (min 5 required).".to_string());
+    }
+
+    let entries = memory.get_all_entries().map_err(|e| e.to_string())?;
+    let prompt = format!(
+        "You are the Swarm Memory Distiller. Analyze the following {} raw learning patterns and distill them into a concise set of 3-5 high-level 'Project Heuristics'. \
+        Focus on recurring technical traps, project-specific conventions, and optimization strategies. \
+        \n\nRAW PATTERNS:\n{}\n\nOutput ONLY the distilled heuristics, one per line, prefixed with [HEURISTIC].",
+        entries.len(),
+        entries.iter().map(|e| format!("- [{}]: {}", e.context, e.content)).collect::<Vec<_>>().join("\n")
+    );
+
+    let request = crate::ai_runtime::types::CompletionRequest {
+        messages: vec![crate::ai_runtime::types::Message {
+            role: "user".to_string(),
+            content: prompt,
+            tool_calls: None,
+            tool_call_id: None,
+            cache_control: None,
+        }],
+        optimization: Some(crate::ai_runtime::types::OptimizationRequest {
+            human_facing: Some(false),
+            reasoning: Some(crate::ai_runtime::types::ReasoningOptimization {
+                effort: Some(crate::ai_runtime::types::ReasoningEffort::None),
+                budget_tokens: Some(0),
+                include_thoughts: false,
+                preserve_reasoning_items: false,
+            }),
+            ..Default::default()
+        }),
+        ..Default::default()
+    };
+
+    let response = ai.dispatch(request).await.map_err(|e| e.to_string())?;
+    let distilled = response.content;
+
+    // Prune old entries and record the new heuristics
+    let _ = memory.prune_old_entries(3); // Keep last 3 raw patterns for context
+    for line in distilled.lines() {
+        if line.starts_with("[HEURISTIC]") {
+            let heuristic = line.replace("[HEURISTIC]", "").trim().to_string();
+            let _ = memory.record("heuristic", "distilled_wisdom", &heuristic, "{}");
+        }
+    }
+
+    Ok(format!("Distillation complete. Created new heuristics from {} raw patterns.", count))
 }
 
 #[tauri::command]
