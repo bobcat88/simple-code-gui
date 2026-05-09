@@ -6,7 +6,7 @@ type: module
 description: Tiled and tabbed terminal layout, sidebar navigation, project management UI
 status:
   maturity: draft
-  implementation: not_started
+  implementation: in_progress
 depends_on: []
 implements: []
 relates_to: []
