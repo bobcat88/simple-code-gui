@@ -1217,7 +1217,7 @@
   title: "Implement: Cognitive Feedback Loops"
   type: task
   spec_ref: "@01KQV53J49ZWM4A2SG52KYWT5P"
-  status: in_progress
+  status: pending_review
   blocked_by: []
   depends_on: []
   priority: 3
@@ -1226,6 +1226,7 @@
   todos_count: 0
   created_at: 2026-05-05T04:07:45.310Z
   started_at: 2026-05-09T07:22:17.984Z
+  submitted_at: 2026-05-09T07:22:19.102Z
 - _ulid: 01KQV5430CNR756FNXS2JDK2K1
   slugs:
     - task-autonomous-architect
