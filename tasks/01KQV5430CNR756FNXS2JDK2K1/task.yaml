@@ -5,12 +5,24 @@ title: "Implement: Autonomous Architect"
 type: task
 spec_ref: "@01KQV53J7MJYZ4376Q3G6H755G"
 derivation: auto
-status: pending
+status: in_progress
 blocked_by: []
 depends_on: []
 context: []
 priority: 3
 tags: []
 vcs_refs: []
+history:
+  - author: Johan.P
+    changes:
+      status:
+        new: in_progress
+        previous: pending
+      started_at:
+        new: 2026-05-09T07:22:21.305Z
+        previous: null
+    command: task-start
+    timestamp: 2026-05-09T07:22:21.305Z
 created_at: 2026-05-05T04:07:45.420Z
+started_at: 2026-05-09T07:22:21.305Z
 todos: []
