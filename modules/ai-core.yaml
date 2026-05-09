@@ -530,6 +530,9 @@ features:
     slugs: []
     title: Distributed MCP Orchestration
     type: feature
+    status:
+      maturity: draft
+      implementation: in_progress
     depends_on: []
     implements: []
     relates_to: []
