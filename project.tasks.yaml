@@ -217,8 +217,8 @@
     - task-foundation-layout
   title: "Foundation: Layout & Navigation"
   type: task
-  spec_ref: "@tiled-layout"
-  status: completed
+  spec_ref: "@01KK67BC64PX1P0T8AQG7P1Y1A"
+  status: in_progress
   blocked_by: []
   depends_on: []
   priority: 3
@@ -226,7 +226,7 @@
   notes_count: 0
   todos_count: 0
   created_at: 2026-04-28T22:18:35.405Z
-  automation: eligible
+  started_at: 2026-05-09T07:22:34.484Z
 - _ulid: 01KQB2RFS22ZAQ1C4C0RNT48N0
   slugs:
     - task-foundation-tasks
