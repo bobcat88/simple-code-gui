@@ -6,7 +6,7 @@ type: module
 description: Integrated task tracking via Beads and Kspec backends with unified adapter pattern
 status:
   maturity: draft
-  implementation: in_progress
+  implementation: implemented
 depends_on: []
 implements: []
 relates_to: []
