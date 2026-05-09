@@ -1,4 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Activity,
   AlertCircle,
@@ -10,10 +11,17 @@ import {
   Brain,
   Users,
   Lightbulb,
-  Play
+  Play,
+  ChevronRight,
+  Plus,
+  Settings,
+  Sparkles,
+  Trash2,
+  User
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { SwarmActivityStream } from '../orchestration/SwarmActivityStream'
+const QuantumSwarmGraph = lazy(() => import('../gsd/QuantumSwarmGraph').then(m => ({ default: m.QuantumSwarmGraph })))
 import type {
   ProjectIntelligence,
   ProjectCapabilityScan,
@@ -23,7 +31,7 @@ import type {
 } from '../../api/types'
 import { BrainstormTab } from './BrainstormTab'
 import { GovernanceTab } from './GovernanceTab'
-import { SwarmCognitiveHub } from './SwarmCognitiveHub'
+const SwarmCognitiveHub = lazy(() => import('./SwarmCognitiveHub').then(m => ({ default: m.SwarmCognitiveHub })))
 const NeuralHUDTab = lazy(() => import('./NeuralHUDTab').then(m => ({ default: m.NeuralHUDTab })))
 import { InitializationWizardSection } from './InitializationWizardSection'
 import { RefactoringSection } from './RefactoringSection'
@@ -49,6 +57,63 @@ interface IntelligenceSidebarProps {
   activeTab?: OpenTab | null
 }
 
+interface CollapsibleSectionProps {
+  title: string;
+  icon: React.ElementType;
+  children: React.ReactNode;
+  isOpen: boolean;
+  onToggle: () => void;
+  badge?: string | number;
+}
+
+function CollapsibleSection({ title, icon: Icon, children, isOpen, onToggle, badge }: CollapsibleSectionProps) {
+  return (
+    <div className="flex flex-col border-b border-white/5 last:border-none">
+      <button
+        onClick={onToggle}
+        className={cn(
+          "flex items-center justify-between p-4 hover:bg-white/5 transition-all group",
+          isOpen ? "bg-white/5" : "bg-transparent"
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <Icon size={16} className={cn(isOpen ? "text-primary" : "text-white/40 group-hover:text-white/60")} />
+          <span className={cn("text-xs font-bold uppercase tracking-widest", isOpen ? "text-white" : "text-white/30 group-hover:text-white/60")}>
+            {title}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {badge !== undefined && (
+            <span className="px-2 py-0.5 rounded-full bg-white/5 text-[9px] font-bold text-white/40">
+              {badge}
+            </span>
+          )}
+          <ChevronRight 
+            size={14} 
+            className={cn("text-white/20 group-hover:text-white/40 transition-transform duration-300", isOpen && "rotate-90 text-primary")} 
+          />
+        </div>
+      </button>
+      
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+            className="overflow-hidden"
+          >
+            <div className="p-4 pt-0 space-y-6">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function IntelligenceSidebar({
   intelligence,
   capabilityScan,
@@ -67,7 +132,16 @@ export function IntelligenceSidebar({
   activeTab
 }: IntelligenceSidebarProps) {
   const [isResizing, setIsResizing] = useState(false)
-  const [activeSection, setActiveSection] = useState<'intelligence' | 'swarmhub' | 'brainstorm'>('intelligence')
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set(['overview', 'git']))
+
+  const toggleSection = (id: string) => {
+    setOpenSections(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -79,7 +153,7 @@ export function IntelligenceSidebar({
 
     const handleMouseMove = (e: MouseEvent) => {
       const newWidth = window.innerWidth - e.clientX
-      if (newWidth >= 200 && newWidth <= 600) {
+      if (newWidth >= 250 && newWidth <= 800) {
         onWidthChange(newWidth)
       }
     }
@@ -104,7 +178,7 @@ export function IntelligenceSidebar({
         <p className="text-white/40 text-sm">No project intelligence available. Select a project to scan.</p>
         <button
           onClick={onClose}
-          className="mt-6 text-xs text-white/60 hover:text-white transition-colors"
+          className="mt-6 text-xs text-white/60 hover:text-white transition-colors underline"
         >
           Close Panel
         </button>
@@ -118,7 +192,7 @@ export function IntelligenceSidebar({
     <div
       className={cn(
         "h-full flex flex-col relative transition-all duration-300 ease-in-out",
-        "glass-sidebar shadow-2xl z-20",
+        "glass-sidebar shadow-2xl z-20 overflow-hidden",
         isResizing && "transition-none"
       )}
       style={{ width }}
@@ -131,23 +205,16 @@ export function IntelligenceSidebar({
         onMouseDown={handleMouseDown}
       />
 
-      <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
+      <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5 backdrop-blur-md">
         <div className="flex items-center gap-2">
-          <Activity size={18} className="text-indigo-400" />
-          <h2 className="font-semibold text-white/90">Intelligence</h2>
+          <Activity size={18} className="text-primary" />
+          <h2 className="font-bold text-white/90 uppercase tracking-tighter">Nerve Center</h2>
         </div>
         <div className="flex items-center gap-1">
           <button
-            onClick={onDeepScan}
-            className="p-1.5 rounded-md hover:bg-white/10 text-white/40 hover:text-white/80 transition-all"
-            title="Trigger Deep Scan (Background Job)"
-          >
-            <ShieldCheck size={14} />
-          </button>
-          <button
             onClick={onRefresh}
             className="p-1.5 rounded-md hover:bg-white/10 text-white/40 hover:text-white/80 transition-all"
-            title="Refresh View"
+            title="Refresh Intelligence"
           >
             <RefreshCw size={14} className={cn(loading && "animate-spin")} />
           </button>
@@ -160,117 +227,93 @@ export function IntelligenceSidebar({
         </div>
       </div>
 
-      <div className="px-4 py-2 border-b border-white/5 flex gap-4">
-        <button
-          onClick={() => setActiveSection('intelligence')}
-          className={cn(
-            "pb-2 text-xs font-bold uppercase tracking-wider transition-all border-b-2",
-            activeSection === 'intelligence'
-              ? "text-white border-indigo-500"
-              : "text-white/30 border-transparent hover:text-white/60"
-          )}
-        >
-          Overview
-        </button>
-        <button
-          onClick={() => setActiveSection('swarmhub')}
-          className={cn(
-            "pb-2 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
-            activeSection === 'swarmhub'
-              ? "text-white border-codex-neon"
-              : "text-white/30 border-transparent hover:text-white/60"
-          )}
-        >
-          Cognitive Hub
-          <Brain size={12} className={cn(activeSection === 'swarmhub' ? "text-codex-neon" : "text-white/20")} />
-        </button>
-        <button
-          onClick={() => setActiveSection('brainstorm')}
-          className={cn(
-            "pb-2 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5",
-            activeSection === 'brainstorm'
-              ? "text-white border-codex-blue"
-              : "text-white/30 border-transparent hover:text-white/60"
-          )}
-        >
-          Brainstorm
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
-        {activeSection === 'brainstorm' ? (
-          <BrainstormTab
-            api={api}
-            projectPath={activeTab?.projectPath || ''}
-          />
-        ) : activeSection === 'swarmhub' ? (
-          <SwarmCognitiveHub
-            api={api}
-            projectPath={activeTab?.projectPath || ''}
-          />
+      <div className="flex-1 overflow-y-auto no-scrollbar">
+        {capabilityScan ? (
+          <div className="px-4 py-2 border-b border-white/5 flex flex-wrap items-center gap-2 text-[11px] text-white/50">
+            <span className="text-white/70 font-medium">{capabilityScan.initializationState.replace(/([A-Z])/g, ' $1').trim()}</span>
+            <span>·</span>
+            <span>{capabilityScan.totalFileCount} files | {capabilityScan.scanDurationMs}ms</span>
+            <span>·</span>
+            <span>{Math.round(capabilityScan.projectHealthScore)}%</span>
+            <span>·</span>
+            <span>Last scan: {new Date(capabilityScan.scannedAt).toLocaleTimeString()}</span>
+          </div>
         ) : (
-          <>
-            <InitializationWizardSection
-              capabilityScan={capabilityScan}
-              api={api}
-              loading={loading}
-              onRefresh={onRefresh}
-            />
+          <div className="px-4 py-2 border-b border-white/5 text-[11px] text-white/40">
+            <span>Ready</span>
+          </div>
+        )}
+        <CollapsibleSection
+          title="Repo Health"
+          icon={ShieldCheck} 
+          isOpen={openSections.has('health')} 
+          onToggle={() => toggleSection('health')}
+          badge={health ? `${health.score}%` : undefined}
+        >
+          <div className="grid grid-cols-2 gap-2 mt-4">
+            <HealthItem label="Git" active={health?.hasGit} />
+            <HealthItem label="README" active={health?.hasReadme} />
+            <HealthItem label="CI/CD" active={health?.hasCi} />
+            <HealthItem label="Tests" active={health?.hasTests} />
+            <HealthItem label="Linter" active={health?.hasLinter} />
+            <HealthItem label="Lockfile" active={health?.hasLockfile} />
+          </div>
+          <p className="text-[10px] text-white/30 italic leading-relaxed mt-4">
+            Health score is a heuristic based on project hygiene: Git tracking, documentation, automation gates, and test presence.
+          </p>
+        </CollapsibleSection>
 
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-white/40">Repo Health</h3>
-                {health && (
-                  <span className={cn(
-                    "px-2.5 py-1 rounded-full text-[10px] font-bold tracking-tight shadow-lg backdrop-blur-md",
-                    health.score > 80 ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" :
-                    health.score > 50 ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" :
-                    "bg-red-500/20 text-red-300 border border-red-500/30"
-                  )}>
-                    {health.score}%
-                  </span>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <HealthItem label="Git" active={health?.hasGit} />
-                <HealthItem label="README" active={health?.hasReadme} />
-                <HealthItem label="CI/CD" active={health?.hasCi} />
-                <HealthItem label="Tests" active={health?.hasTests} />
-                <HealthItem label="Linter" active={health?.hasLinter} />
-                <HealthItem label="Lockfile" active={health?.hasLockfile} />
-              </div>
-            </section>
-
-            <section>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-white/40 mb-3">Detected Stacks</h3>
-              <div className="space-y-2">
-                {stacks && stacks.length > 0 ? stacks.map((stack, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 transition-colors group"
-                  >
-                    <div className="w-8 h-8 rounded-md bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
-                      <Layers size={16} />
-                    </div>
-                    <div>
-                      <div className="text-xs font-medium text-white/90">{stack.name}</div>
-                      <div className="text-[10px] text-white/40 flex items-center gap-1">
-                        <FileCode size={10} />
-                        {stack.configFile}
-                      </div>
-                    </div>
-                    {stack.version && (
-                      <div className="ml-auto text-[10px] text-white/30 font-mono">v{stack.version}</div>
-                    )}
+        <CollapsibleSection 
+          title="Project Stacks" 
+          icon={Layers} 
+          isOpen={openSections.has('stacks')} 
+          onToggle={() => toggleSection('stacks')}
+          badge={stacks?.length}
+        >
+          <div className="space-y-2 mt-4">
+            {stacks && stacks.length > 0 ? stacks.map((stack, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 transition-all group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <Layers size={16} />
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-white/90">{stack.name}</div>
+                  <div className="text-[10px] text-white/40 flex items-center gap-1">
+                    <FileCode size={10} />
+                    {stack.configFile}
                   </div>
-                )) : (
-                  <div className="text-xs text-white/30 italic py-2">No specific stacks detected</div>
+                </div>
+                {stack.version && (
+                  <div className="ml-auto text-[10px] text-white/30 font-mono">v{stack.version}</div>
                 )}
               </div>
-            </section>
+            )) : (
+              <div className="text-xs text-white/30 italic py-2">No specific stacks detected</div>
+            )}
+          </div>
+        </CollapsibleSection>
 
+        <CollapsibleSection 
+          title="Git Context" 
+          icon={Activity} 
+          isOpen={openSections.has('git')} 
+          onToggle={() => toggleSection('git')}
+        >
+          <div className="mt-4">
             <GitContextSection git={git} />
+          </div>
+        </CollapsibleSection>
 
+        <CollapsibleSection 
+          title="Semantic Cache" 
+          icon={Brain} 
+          isOpen={openSections.has('vector')} 
+          onToggle={() => toggleSection('vector')}
+        >
+          <div className="mt-4">
             <VectorIndexSection
               vectorStatus={vectorStatus}
               api={api}
@@ -279,70 +322,54 @@ export function IntelligenceSidebar({
               onReindex={onReindex}
               onSyncMemory={onSyncMemory}
             />
+          </div>
+        </CollapsibleSection>
 
+        <CollapsibleSection 
+          title="Refactoring" 
+          icon={Sparkles} 
+          isOpen={openSections.has('refactor')} 
+          onToggle={() => toggleSection('refactor')}
+        >
+          <div className="mt-4">
             <RefactoringSection api={api} />
+          </div>
+        </CollapsibleSection>
 
-            <section>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-white/40">Architectural Context</h3>
-                <span className="text-[10px] text-indigo-400/80 font-medium">GitNexus</span>
-              </div>
-              {gitnexus ? (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-2">
-                    <StatCard label="Symbols" value={gitnexus.symbols} />
-                    <StatCard label="Refs" value={gitnexus.relationships} />
-                    <StatCard label="Flows" value={gitnexus.processes} />
-                  </div>
+        <CollapsibleSection 
+          title="Swarm Intelligence" 
+          icon={Users} 
+          isOpen={openSections.has('swarm')} 
+          onToggle={() => toggleSection('swarm')}
+        >
+          <div className="mt-4 min-h-[300px]">
+            <SwarmActivityStream
+              api={api}
+              projectPath={activeTab?.projectPath || ''}
+            />
+          </div>
+        </CollapsibleSection>
 
-                  {gitnexus.stale && (
-                    <div className="p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/10 flex items-start gap-2">
-                      <AlertCircle size={14} className="text-amber-400 shrink-0 mt-0.5" />
-                      <div>
-                        <div className="text-xs font-medium text-amber-400">Index Stale</div>
-                        <p className="text-[10px] text-white/40 leading-normal">The code graph is out of sync with recent changes. Re-index recommended.</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <button className="w-full py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 rounded-lg text-xs font-medium transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2">
-                    <ShieldCheck size={14} />
-                    Run Architectural Audit
-                  </button>
-                </div>
-              ) : (
-                <div className="p-4 rounded-codex border border-dashed border-white/10 flex flex-col items-center justify-center text-center">
-                  <Layers className="w-8 h-8 text-white/10 mb-2" />
-                  <p className="text-[10px] text-white/30 max-w-[140px]">Initialize GitNexus to see architectural insights and blast radius.</p>
-                </div>
-              )}
-            </section>
-
-            <section className="flex-1 min-h-[400px] flex flex-col">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-white/40">Swarm Intelligence</h3>
-                <div className="flex items-center gap-1.5">
-                  <Users size={12} className="text-blue-400" />
-                  <span className="text-[10px] text-blue-400/80 font-medium">Live Stream</span>
-                </div>
-              </div>
-              <SwarmActivityStream
-                api={api}
-                projectPath={activeTab?.projectPath || ''}
-              />
-            </section>
-          </>
-        )}
+        <CollapsibleSection 
+          title="Cognitive Topology" 
+          icon={Users} 
+          isOpen={openSections.has('topology')} 
+          onToggle={() => toggleSection('topology')}
+        >
+          <div className="mt-4 h-[400px]">
+            <Suspense fallback={<div className="h-full flex items-center justify-center text-[10px] text-white/20 animate-pulse uppercase tracking-widest font-black">Loading Topology...</div>}>
+              <QuantumSwarmGraph />
+            </Suspense>
+          </div>
+        </CollapsibleSection>
       </div>
 
-      <div className="p-4 border-t border-white/10 bg-black/20 text-[10px] text-white/40 flex items-center justify-between">
-        <span>
-          Last scan: {capabilityScan ? new Date(capabilityScan.scannedAt).toLocaleTimeString() : new Date().toLocaleTimeString()}
-        </span>
-        <div className="flex items-center gap-1.5 text-emerald-400/80">
-          <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-          {capabilityScan ? `${capabilityScan.totalFileCount} files | ${capabilityScan.scanDurationMs}ms` : 'Ready'}
+      <div className="p-4 border-t border-white/10 bg-black/20 text-[10px] text-white/40 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          <span className="uppercase font-bold tracking-tighter">Intelligence Active</span>
         </div>
+        <span className="opacity-50">Transwarp v2.0</span>
       </div>
     </div>
   )

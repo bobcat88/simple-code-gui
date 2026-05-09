@@ -1,127 +1,37 @@
-/**
- * API Module
- *
- * Provides a unified API client that works with both Electron IPC and HTTP transport.
- * Import from this module to get the appropriate client for your environment.
- */
+import { TauriBackend } from './tauri-backend.js';
+import { HttpBackend } from './http-backend.js';
+import { Api } from './types.js';
 
-import { Api } from './types'
-import { HttpBackend } from './http-backend'
-import { TauriBackend } from './tauri-backend'
+export type { Api, ExtendedApi } from './api-interface';
+export type { HttpBackend } from './http-backend.js';
 
-/**
- * Check if running in Tauri environment
- */
+let apiInstance: Api | null = null;
+
 export function isTauriEnvironment(): boolean {
-  return typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined
+  if (typeof window === 'undefined') return false;
+  return !!(window as any).__TAURI_INTERNALS__ || !!(window as any).__TAURI__;
 }
 
-// =============================================================================
-// API Instance Management
-// =============================================================================
-
-let apiInstance: Api | null = null
-
-
-
-/**
- * Get the current API instance (may be null if not initialized)
- */
-export function getApi(): Api | null {
-  return apiInstance
-}
-
-/**
- * Initialize the API with the appropriate backend
- * - In Desktop: Automatically uses appropriate native backend
- * - In browser: Requires config parameter for HttpBackend
- */
-export function initializeApi(config?: { host: string; port: number; token: string }): Api {
+export function initializeApi(config?: any): Api {
   if (isTauriEnvironment()) {
-    apiInstance = new TauriBackend() as Api
+    apiInstance = new TauriBackend() as unknown as Api;
   } else if (config) {
-    apiInstance = new HttpBackend(config) as Api
+    apiInstance = new HttpBackend(config) as unknown as Api;
   } else {
-    throw new Error('Running in unknown environment. Tauri or HTTP config required.')
+    throw new Error('unknown environment');
   }
-  return apiInstance
+  return apiInstance;
 }
 
-/**
- * Set the API instance directly (useful for testing or custom backends)
- */
+export function getApi(): Api | null {
+  return apiInstance;
+}
+
 export function setApi(api: Api): void {
-  apiInstance = api
+  apiInstance = api;
 }
 
-/**
- * Clear the API instance
- */
 export function clearApi(): void {
-  apiInstance = null
+  apiInstance = null;
 }
 
-// =============================================================================
-// Re-export types and backends
-// =============================================================================
-
-export type { Api, ExtendedApi, ConnectionState, ApiBackendType } from './types'
-export type {
-  Settings,
-  ProjectCategory,
-  Project,
-  OpenTab,
-  TileLayout,
-  Workspace,
-  Session,
-  VoiceSettings,
-  PtyDataCallback,
-  PtyExitCallback,
-  PtyRecreatedCallback,
-  ApiOpenSessionCallback,
-  Unsubscribe,
-  ApiContext,
-  AgentAction,
-  AgentStatus
-} from './types'
-
-export { HttpBackend, createHttpBackend } from './http-backend'
-
-// =============================================================================
-// Host configuration - types and functions (legacy exports for compatibility)
-// =============================================================================
-
-export type { HostConfig } from './hostConfig'
-
-export {
-  getHostConfig,
-  saveHostConfig,
-  clearHostConfig,
-  hasHostConfig,
-  getDefaultConfig,
-  buildBaseUrl,
-  buildWsUrl,
-  buildApiUrl,
-  validateHostConfig,
-  parseConnectionUrl,
-  generateConnectionUrl
-} from './hostConfig'
-
-// =============================================================================
-// HTTP Client exports (legacy compatibility)
-// =============================================================================
-
-export type {
-  ApiClient,
-  BeadsTask,
-  BeadsCloseResult,
-  GSDProgress
-} from './httpClient'
-
-export {
-  HttpApiClient,
-  getElectronAPI,
-  createApiClient,
-  getApiClient,
-  setHttpClient
-} from './httpClient'

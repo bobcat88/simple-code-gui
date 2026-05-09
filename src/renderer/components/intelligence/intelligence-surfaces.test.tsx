@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExtendedApi, GsdSeed, KSpecDraft } from '../../api/types';
+import { DialogProvider } from '../../contexts/DialogContext';
 import { BrainstormCanvas } from './BrainstormCanvas';
 import { BrainstormTab } from './BrainstormTab';
 import { GovernanceTab } from './GovernanceTab';
@@ -104,12 +105,24 @@ vi.mock('../../hooks/useThoughtChain', () => ({
   }),
 }));
 
+const mockUseDialog = {
+  showError: vi.fn(),
+  showInfo: vi.fn(),
+  showConfirm: vi.fn(() => Promise.resolve(true)),
+};
+
 vi.mock('../../contexts/DialogContext', () => ({
-  useDialog: () => ({
-    showError: vi.fn(),
-    showInfo: vi.fn(),
-  }),
+  useDialog: () => mockUseDialog,
+  DialogProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
+
+vi.mock('../../contexts/NexusContexts', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../contexts/NexusContexts')>();
+  return {
+    ...actual,
+    useDialog: () => mockUseDialog,
+  };
+});
 
 const seed: GsdSeed = {
   id: 'seed-1',
@@ -353,7 +366,7 @@ describe('SpecDraftEditor', () => {
 describe('BrainstormTab and BrainstormCanvas', () => {
   it('loads brainstorm data, switches views, promotes seed through dialog, and refreshes', async () => {
     const api = makeApi();
-    render(<BrainstormTab api={api} projectPath="/repo" />);
+    render(<DialogProvider><BrainstormTab api={api} projectPath="/repo" /></DialogProvider>);
 
     await waitFor(() => expect(api.gsdListSeeds).toHaveBeenCalledWith('/repo'));
     fireEvent.click(screen.getByText('Spec Drafts'));
@@ -381,16 +394,18 @@ describe('BrainstormTab and BrainstormCanvas', () => {
   it('adds nodes, exports topology, and invokes agent review/sketch controls', async () => {
     const api = makeApi();
     render(
-      <BrainstormCanvas
-        api={api}
-        projectPath="/repo"
-        canvas={{ nodes: [], edges: [] }}
-        seeds={[seed]}
-        drafts={[draft]}
-        onRefresh={vi.fn(() => Promise.resolve())}
-        onPromoteToDraft={vi.fn(() => Promise.resolve())}
-        onPromoteToTask={vi.fn(() => Promise.resolve())}
-      />
+      <DialogProvider>
+        <BrainstormCanvas
+          api={api}
+          projectPath="/repo"
+          canvas={{ nodes: [], edges: [] }}
+          seeds={[seed]}
+          drafts={[draft]}
+          onRefresh={vi.fn(() => Promise.resolve())}
+          onPromoteToDraft={vi.fn(() => Promise.resolve())}
+          onPromoteToTask={vi.fn(() => Promise.resolve())}
+        />
+      </DialogProvider>
     );
 
     fireEvent.click(screen.getByTitle('Add Seed: Self healing agent'));
