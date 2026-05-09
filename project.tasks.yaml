@@ -1200,7 +1200,7 @@
   title: "Implement: Distributed MCP Orchestration"
   type: task
   spec_ref: "@01KQV53J0YBKZJD84T5B289W3B"
-  status: in_progress
+  status: pending_review
   blocked_by: []
   depends_on: []
   priority: 3
@@ -1209,6 +1209,7 @@
   todos_count: 0
   created_at: 2026-05-05T04:07:45.184Z
   started_at: 2026-05-09T07:22:14.674Z
+  submitted_at: 2026-05-09T07:22:15.826Z
 - _ulid: 01KQV542WYANSACR5ZMD6ABBH5
   slugs:
     - task-cognitive-feedback-loops
