@@ -1183,7 +1183,7 @@
   title: "Implement: Synaptic Orchestration Hub"
   type: task
   spec_ref: "@01KQV52W7310ZWQG3CAAA00ZFR"
-  status: in_progress
+  status: pending_review
   blocked_by: []
   depends_on: []
   priority: 3
@@ -1192,6 +1192,7 @@
   todos_count: 0
   created_at: 2026-05-05T04:07:20.135Z
   started_at: 2026-05-09T07:22:11.411Z
+  submitted_at: 2026-05-09T07:22:12.492Z
 - _ulid: 01KQV542S1A45SM5P199A6K6JX
   slugs:
     - task-distributed-mcp-orchestration
