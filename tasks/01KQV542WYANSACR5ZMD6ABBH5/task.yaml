@@ -5,12 +5,24 @@ title: "Implement: Cognitive Feedback Loops"
 type: task
 spec_ref: "@01KQV53J49ZWM4A2SG52KYWT5P"
 derivation: auto
-status: pending
+status: in_progress
 blocked_by: []
 depends_on: []
 context: []
 priority: 3
 tags: []
 vcs_refs: []
+history:
+  - author: Johan.P
+    changes:
+      status:
+        new: in_progress
+        previous: pending
+      started_at:
+        new: 2026-05-09T07:22:17.984Z
+        previous: null
+    command: task-start
+    timestamp: 2026-05-09T07:22:17.984Z
 created_at: 2026-05-05T04:07:45.310Z
+started_at: 2026-05-09T07:22:17.984Z
 todos: []
