@@ -6,7 +6,7 @@ type: module
 description: Everything related to model providers, agent execution, and repository intelligence.
 status:
   maturity: draft
-  implementation: in_progress
+  implementation: implemented
 depends_on: []
 implements: []
 relates_to: []
