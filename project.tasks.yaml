@@ -218,7 +218,7 @@
   title: "Foundation: Layout & Navigation"
   type: task
   spec_ref: "@01KK67BC64PX1P0T8AQG7P1Y1A"
-  status: in_progress
+  status: pending_review
   blocked_by: []
   depends_on: []
   priority: 3
@@ -227,6 +227,7 @@
   todos_count: 0
   created_at: 2026-04-28T22:18:35.405Z
   started_at: 2026-05-09T07:22:34.484Z
+  submitted_at: 2026-05-09T07:22:35.600Z
 - _ulid: 01KQB2RFS22ZAQ1C4C0RNT48N0
   slugs:
     - task-foundation-tasks
