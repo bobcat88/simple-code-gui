@@ -255,6 +255,9 @@ features:
     slugs: []
     title: Synaptic Orchestration Hub
     type: feature
+    status:
+      maturity: draft
+      implementation: in_progress
     depends_on: []
     implements: []
     relates_to: []
